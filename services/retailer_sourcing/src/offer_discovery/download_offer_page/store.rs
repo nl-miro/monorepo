@@ -1,19 +1,19 @@
-use chrono::{DateTime, Utc};
-use diesel::Insertable;
 use diesel::prelude::*;
 use diesel::r2d2::PoolError;
 use uuid::Uuid;
 
-use super::super::schema::raw_offers;
+use super::super::schema::{offer_details_raw, raw_offers_data};
+use super::entity::RawOffer;
 use super::handler::Store;
-use crate::platform::db::DbPool;
+use super::record::{RawOfferDataPgRecord, RawOfferPgRecord};
+use crate::platform::db::{self, DbPool};
 
 #[derive(Debug, thiserror::Error)]
 pub enum StoreError {
     #[error("connection pool error: {0}")]
     Connection(#[from] PoolError),
 
-    #[error("database error: {0}")]
+    #[error("database error: {}", db::describe(.0))]
     Database(#[from] diesel::result::Error),
 
     #[error("offer page body is too large for storage: {0} bytes")]
@@ -31,56 +31,30 @@ impl PgStore {
     }
 }
 
-#[derive(Insertable)]
-#[diesel(table_name = raw_offers)]
-struct NewRawOffer<'a> {
-    id: Uuid,
-    offer_id: Uuid,
-    url: &'a str,
-    body: &'a str,
-    body_size: i32,
-}
-
 impl Store for PgStore {
-    fn recent_raw_offer(
-        &self,
-        url: &str,
-        since: DateTime<Utc>,
-    ) -> Result<Option<Uuid>, StoreError> {
+    fn store_raw_offer(&self, entity: &RawOffer) -> Result<(), StoreError> {
+        let (record, mut data): (RawOfferPgRecord<'_>, RawOfferDataPgRecord<'_>) =
+            entity.try_into()?;
         let mut connection = self.pool.get()?;
-        let raw_offer_id = raw_offers::table
-            .filter(raw_offers::url.eq(url))
-            .filter(raw_offers::fetched_at.ge(since))
-            .order(raw_offers::fetched_at.desc())
-            .select(raw_offers::id)
-            .first::<Uuid>(&mut connection)
-            .optional()?;
-
-        Ok(raw_offer_id)
-    }
-
-    fn store_raw_offer(&self, offer_id: Uuid, url: &str, body: &str) -> Result<(), StoreError> {
-        let body_size =
-            i32::try_from(body.len()).map_err(|_| StoreError::BodyTooLarge(body.len()))?;
-        let mut connection = self.pool.get()?;
-
-        diesel::insert_into(raw_offers::table)
-            .values(NewRawOffer {
-                id: Uuid::now_v7(),
-                offer_id,
-                url,
-                body,
-                body_size,
-            })
-            .on_conflict(raw_offers::offer_id)
-            .do_update()
-            .set((
-                raw_offers::body.eq(body),
-                raw_offers::body_size.eq(body_size),
-                raw_offers::fetched_at.eq(diesel::dsl::now),
-            ))
-            .execute(&mut connection)?;
-
-        Ok(())
+        connection.transaction(|connection| {
+            data.id = diesel::insert_into(offer_details_raw::table)
+                .values(&record)
+                .on_conflict(offer_details_raw::offer_id)
+                .do_update()
+                .set((
+                    offer_details_raw::retailer_code.eq(&record.retailer_code),
+                    offer_details_raw::body_size.eq(record.body_size),
+                    offer_details_raw::fetched_at.eq(diesel::dsl::now),
+                ))
+                .returning(offer_details_raw::id)
+                .get_result::<Uuid>(connection)?;
+            diesel::insert_into(raw_offers_data::table)
+                .values(&data)
+                .on_conflict(raw_offers_data::id)
+                .do_update()
+                .set(raw_offers_data::body.eq(data.body))
+                .execute(connection)?;
+            Ok(())
+        })
     }
 }

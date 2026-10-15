@@ -1,20 +1,18 @@
-use chrono::{DateTime, Utc};
-use diesel::Insertable;
 use diesel::prelude::*;
 use diesel::r2d2::PoolError;
-use uuid::Uuid;
 
-use super::super::document::RawSitemapDocument;
-use super::super::schema::raw_sitemap_documents;
+use super::super::schema::{raw_sitemap_documents_data, sitemaps_raw};
+use super::entity::RetrievedSitemapDocument;
 use super::handler::Store;
-use crate::platform::db::DbPool;
+use super::record::{RawSitemapDocumentDataPgRecord, RawSitemapDocumentPgRecord};
+use crate::platform::db::{self, DbPool};
 
 #[derive(Debug, thiserror::Error)]
 pub enum StoreError {
     #[error("connection pool error: {0}")]
     Connection(#[from] PoolError),
 
-    #[error("database error: {0}")]
+    #[error("database error: {}", db::describe(.0))]
     Database(#[from] diesel::result::Error),
 
     #[error("raw sitemap body is too large for storage: {0} bytes")]
@@ -32,48 +30,28 @@ impl PgStore {
     }
 }
 
-#[derive(Insertable)]
-#[diesel(table_name = raw_sitemap_documents)]
-struct NewRawSitemapDocument<'a> {
-    id: Uuid,
-    retrieval_id: Uuid,
-    url: &'a str,
-    last_modified: Option<DateTime<Utc>>,
-    body: &'a str,
-    body_size: i32,
-    fetched_at: DateTime<Utc>,
-}
-
 impl Store for PgStore {
-    fn store_documents(
-        &self,
-        retrieval_id: Uuid,
-        documents: &[RawSitemapDocument],
-    ) -> Result<(), StoreError> {
-        let fetched_at = Utc::now();
-        let records = documents
+    fn store_documents(&self, documents: &[RetrievedSitemapDocument]) -> Result<(), StoreError> {
+        let pairs = documents
             .iter()
-            .map(|document| {
-                let body_size = i32::try_from(document.body_size)
-                    .map_err(|_| StoreError::BodyTooLarge(document.body_size))?;
-
-                Ok(NewRawSitemapDocument {
-                    id: Uuid::now_v7(),
-                    retrieval_id,
-                    url: &document.url,
-                    last_modified: document.last_modified,
-                    body: &document.body,
-                    body_size,
-                    fetched_at,
-                })
-            })
-            .collect::<Result<Vec<_>, StoreError>>()?;
+            .map(
+                <(
+                    RawSitemapDocumentPgRecord<'_>,
+                    RawSitemapDocumentDataPgRecord<'_>,
+                )>::try_from,
+            )
+            .collect::<Result<Vec<_>, _>>()?;
+        let (records, data): (Vec<_>, Vec<_>) = pairs.into_iter().unzip();
 
         let mut connection = self.pool.get()?;
-        diesel::insert_into(raw_sitemap_documents::table)
-            .values(&records)
-            .execute(&mut connection)?;
-
-        Ok(())
+        connection.transaction(|connection| {
+            diesel::insert_into(sitemaps_raw::table)
+                .values(&records)
+                .execute(connection)?;
+            diesel::insert_into(raw_sitemap_documents_data::table)
+                .values(&data)
+                .execute(connection)?;
+            Ok(())
+        })
     }
 }

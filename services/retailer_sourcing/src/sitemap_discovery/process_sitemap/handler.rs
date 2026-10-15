@@ -1,11 +1,11 @@
 use bodul_shared::retailer::RetailerCode;
-use chrono::{DateTime, Utc};
 use uuid::Uuid;
 
-use super::super::document::{RawSitemapDocument, SitemapDocument};
-use super::super::{ROOT_SITEMAP_SOURCE, Retailers};
-use super::build::{BuildError, build_tree};
+use sitemap::{BuildError, build_tree};
+
+use super::super::Retailers;
 use super::command::ProcessSitemap;
+use super::entity::{ProcessedSitemap, RawSitemapDocument};
 use super::event::SitemapProcessed;
 use super::store::StoreError;
 use crate::platform::bus::Handle;
@@ -17,9 +17,16 @@ pub trait Store: Send + Sync + 'static {
     fn store_processed(&self, sitemap: &ProcessedSitemap) -> Result<(), StoreError>;
 }
 
-/// Looks up the sitemaps a retailer's tree starts from.
+/// Looks up the sitemaps a retailer's tree starts from, and the child
+/// sitemaps its crawl downloads.
 pub trait RootSitemaps: Send + Sync + 'static {
     fn root_sitemaps(&self, retailer_code: &RetailerCode) -> Option<Vec<String>>;
+
+    /// Whether the crawl downloads the child sitemap at `url`. Every one by
+    /// default.
+    fn sitemap_greylisted(&self, _retailer_code: RetailerCode, _url: &str) -> bool {
+        true
+    }
 }
 
 impl RootSitemaps for Retailers {
@@ -27,16 +34,10 @@ impl RootSitemaps for Retailers {
         self.sitemap_config(retailer_code)
             .map(|config| config.sitemap_url)
     }
-}
 
-/// A retrieval's sitemap tree, ready to store.
-pub struct ProcessedSitemap {
-    pub id: Uuid,
-    pub retrieval_id: Uuid,
-    pub retailer_code: RetailerCode,
-    pub document: SitemapDocument,
-    pub url_count: i32,
-    pub processed_at: DateTime<Utc>,
+    fn sitemap_greylisted(&self, retailer_code: RetailerCode, url: &str) -> bool {
+        Retailers::sitemap_greylisted(*self, retailer_code, url)
+    }
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -46,9 +47,6 @@ pub enum ProcessSitemapError {
 
     #[error("sitemap: {0}")]
     Build(#[from] BuildError),
-
-    #[error("sitemap contains {count} URLs, which exceeds the supported maximum")]
-    TooManyUrls { count: usize },
 
     #[error("processing: {0}")]
     Store(#[from] StoreError),
@@ -85,23 +83,14 @@ impl<S: Store, R: RootSitemaps> Handle for Handler<S, R> {
         let raw_documents = self.store.raw_documents(retrieval_id)?;
 
         // A root sitemap that can't be built is left out of the tree.
-        let (document, errors) = build_tree(&root_urls, &raw_documents)?;
+        let greylisted = |url: &str| self.retailers.sitemap_greylisted(retailer_code, url);
+        let (document, errors) = build_tree(&root_urls, &raw_documents, greylisted)?;
         for error in &errors {
             tracing::warn!(%retrieval_id, ?retailer_code, "sitemap left out of the tree: {error}");
         }
 
-        let url_count = document.all_urls(ROOT_SITEMAP_SOURCE).count();
-        let stored_url_count = i32::try_from(url_count)
-            .map_err(|_| ProcessSitemapError::TooManyUrls { count: url_count })?;
-
-        let processed = ProcessedSitemap {
-            id: Uuid::now_v7(),
-            retrieval_id,
-            retailer_code,
-            document,
-            url_count: stored_url_count,
-            processed_at: Utc::now(),
-        };
+        let processed = ProcessedSitemap::new(retrieval_id, retailer_code, document);
+        let url_count = processed.url_count();
         self.store.store_processed(&processed)?;
         tracing::info!(
             %retrieval_id,
@@ -150,7 +139,7 @@ mod tests {
         }
 
         fn store_processed(&self, sitemap: &ProcessedSitemap) -> Result<(), StoreError> {
-            let url_count = sitemap.document.all_urls(ROOT_SITEMAP_SOURCE).count();
+            let url_count = sitemap.url_count();
             self.processed
                 .lock()
                 .unwrap()

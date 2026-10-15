@@ -1,0 +1,590 @@
+//! Turns normalized data into the product variations the rest of the system consumes: which
+//! facts describe the product as a whole and which belong to one variation.
+//!
+//! The storefront renders the offer twice - as a schema.org island and as its own product record -
+//! and normalization keeps both. This is where they become one variation per variant, each
+//! field taken from whichever rendering states it at the right scope.
+
+use super::normalized::{self, AnkerPlNormalizedDocument, metafields};
+use crate::shared::{
+    Gtin, IdentifierError, ShopifyHandle, ShopifyProductGid, ShopifyProductVariationGid, Sku,
+};
+use chrono::{DateTime, Utc};
+use money::Money;
+use retailer_sauce::item_condition::ItemCondition;
+use serde::Serialize;
+use thiserror::Error;
+
+#[derive(Debug, Clone, PartialEq, Error)]
+pub enum StructuralizeError {
+    #[error(
+        "option `{option_name}` on variant `{variant_id}` carries {count} values, not the 1 every variant option renders"
+    )]
+    InvalidOptionValueCount {
+        variant_id: String,
+        option_name: String,
+        count: usize,
+    },
+
+    #[error(
+        "variant `{variant_id}` selects option `{option_name}`, which the product does not offer"
+    )]
+    UnknownSelectedOption {
+        variant_id: String,
+        option_name: String,
+    },
+
+    #[error(
+        "variant `{variant_id}` selects option `{option_name}` on a product that offers no options"
+    )]
+    UnexpectedOptionOnOptionlessProduct {
+        variant_id: String,
+        option_name: String,
+    },
+
+    #[error(transparent)]
+    Identifier(#[from] IdentifierError),
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize)]
+pub struct AnkerPlDocument {
+    pub variations: Vec<ProductVariation>,
+}
+
+impl AnkerPlDocument {
+    pub fn from_normalized(
+        input: AnkerPlNormalizedDocument,
+    ) -> Result<AnkerPlDocument, StructuralizeError> {
+        let AnkerPlNormalizedDocument {
+            ld_json,
+            canonical_url,
+            product,
+        } = input;
+        let island = ld_json.product;
+
+        let variations_count = product.variants.len();
+        let mut variations = Vec::with_capacity(variations_count);
+
+        for variant in &product.variants {
+            let identifiers = ProductVariationIdentifier::from_normalized(&product, variant)?;
+            let pricing = ProductVariationPricing::from_normalized(variant);
+            let url = variation_url(
+                &canonical_url,
+                &identifiers.shopify_product_variation_gid,
+                variations_count,
+            )?;
+            let content = Content::from_normalized(&island, &product, variant, url);
+            let logistics = ProductVariationLogistics::from_normalized(variant);
+            let options = variation_options(&product, variant)?;
+
+            variations.push(ProductVariation {
+                identifiers,
+                pricing,
+                item_condition: island.offer.item_condition.clone(),
+                content,
+                logistics,
+                options,
+            });
+        }
+
+        Ok(AnkerPlDocument { variations })
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize)]
+pub struct ProductVariation {
+    pub identifiers: ProductVariationIdentifier,
+    pub pricing: ProductVariationPricing,
+    pub item_condition: ItemCondition,
+    pub content: Content,
+    pub logistics: ProductVariationLogistics,
+    pub options: Vec<ProductVariationOption>,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize)]
+pub struct ProductVariationIdentifier {
+    pub gtin: Option<Gtin>,
+    pub sku: Sku,
+    pub shopify_product_gid: ShopifyProductGid,
+    pub shopify_product_variation_gid: ShopifyProductVariationGid,
+    pub shopify_handle: ShopifyHandle,
+}
+
+impl ProductVariationIdentifier {
+    fn from_normalized(
+        product: &normalized::ProductRecord,
+        variant: &normalized::Variant,
+    ) -> Result<ProductVariationIdentifier, StructuralizeError> {
+        Ok(ProductVariationIdentifier {
+            gtin: variant.barcode.clone().map(Gtin::try_from).transpose()?,
+            sku: variant.sku.clone().try_into()?,
+            shopify_product_gid: product.id.clone().try_into()?,
+            shopify_product_variation_gid: variant.id.clone().try_into()?,
+            shopify_handle: product.handle.clone().try_into()?,
+        })
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize)]
+pub struct ProductVariationPricing {
+    /// `None` where the storefront does not sell the variant and renders a placeholder instead.
+    pub price: Option<Money>,
+    /// `None` where the variant is not marked down.
+    pub compare_at_price: Option<Money>,
+}
+
+impl ProductVariationPricing {
+    fn from_normalized(variant: &normalized::Variant) -> ProductVariationPricing {
+        ProductVariationPricing {
+            price: variant.price.clone(),
+            compare_at_price: variant.compare_at_price.clone(),
+        }
+    }
+}
+
+// The island's `offer.url` is the URL the crawler arrived through, escaped and carrying campaign
+// parameters; the page's canonical is clean.
+fn variation_url(
+    canonical_url: &str,
+    gid: &ShopifyProductVariationGid,
+    variations: usize,
+) -> Result<String, StructuralizeError> {
+    if variations < 2 {
+        return Ok(canonical_url.to_owned());
+    }
+
+    Ok(format!("{}?variant={}", canonical_url, gid.numeric_id()?))
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize)]
+pub struct Content {
+    pub name: String,
+    /// The record's, verbatim: some titles wrap the model number in `<b>` markup.
+    pub title: String,
+    pub cta: String,
+    pub description: String,
+    pub brand: String,
+    pub image: ProductVariationImage,
+    pub images: Vec<String>,
+    pub url: String,
+    pub published_at: DateTime<Utc>,
+    pub key_features: Vec<KeyFeature>,
+    pub specifications: Vec<Specification>,
+    pub product_type: Option<String>,
+}
+
+impl Content {
+    fn from_normalized(
+        island: &normalized::ldjson::Product,
+        product: &normalized::ProductRecord,
+        variant: &normalized::Variant,
+        url: String,
+    ) -> Content {
+        Content {
+            name: variant.name.clone(),
+            title: product.title.clone(),
+            cta: island.description.clone(),
+            description: product.description.clone(),
+            brand: island.brand.clone(),
+            image: ProductVariationImage {
+                url: variant.image.url.clone(),
+            },
+            images: island.images.clone(),
+            url,
+            published_at: product.published_at,
+            key_features: product
+                .key_features
+                .iter()
+                .map(KeyFeature::from_normalized)
+                .collect(),
+            specifications: product
+                .specifications
+                .iter()
+                .map(Specification::from_normalized)
+                .collect(),
+            product_type: product.product_type.clone(),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize)]
+pub struct ProductVariationImage {
+    pub url: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize)]
+pub struct KeyFeature {
+    pub title: String,
+    pub body: String,
+}
+
+impl KeyFeature {
+    fn from_normalized(feature: &metafields::KeyFeature) -> KeyFeature {
+        KeyFeature {
+            title: feature.title.clone(),
+            body: feature.body.clone(),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize)]
+pub struct Specification {
+    pub name: String,
+    pub value: String,
+}
+
+impl Specification {
+    fn from_normalized(specification: &metafields::Specification) -> Specification {
+        Specification {
+            name: specification.name.clone(),
+            value: specification.value.clone(),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize)]
+pub struct ProductVariationLogistics {
+    pub quantity_available: i64,
+    pub available_for_sale: bool,
+    pub currently_not_in_stock: bool,
+    pub requires_shipping: bool,
+    /// Unit unknown: the payload states none, and SKUs shared with `ankerau` fit neither kilograms
+    /// nor pounds consistently. `None` where the variant is unweighed.
+    pub weight: Option<f64>,
+}
+
+impl ProductVariationLogistics {
+    fn from_normalized(variant: &normalized::Variant) -> ProductVariationLogistics {
+        ProductVariationLogistics {
+            quantity_available: variant.quantity_available,
+            available_for_sale: variant.available_for_sale,
+            currently_not_in_stock: variant.currently_not_in_stock,
+            requires_shipping: variant.requires_shipping,
+            weight: variant.weight,
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize)]
+pub struct ProductVariationOption {
+    pub id: String,
+    pub name: String,
+    pub display_name: String,
+    pub value: ProductVariationOptionValue,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize)]
+pub struct ProductVariationOptionValue {
+    pub label: String,
+    pub hex_colors: Option<Vec<String>>,
+}
+
+impl ProductVariationOption {
+    fn from_normalized(
+        product: &normalized::ProductRecord,
+        variant: &normalized::Variant,
+        selected: &normalized::VariantOption,
+    ) -> Result<ProductVariationOption, StructuralizeError> {
+        let offered = product
+            .options
+            .iter()
+            .find(|option| option.name == selected.name)
+            .ok_or_else(|| StructuralizeError::UnknownSelectedOption {
+                variant_id: variant.id.clone(),
+                option_name: selected.name.clone(),
+            })?;
+
+        let [value] = selected.values.as_slice() else {
+            return Err(StructuralizeError::InvalidOptionValueCount {
+                variant_id: variant.id.clone(),
+                option_name: selected.name.clone(),
+                count: selected.values.len(),
+            });
+        };
+
+        Ok(ProductVariationOption {
+            id: offered.id.clone(),
+            name: selected.name.clone(),
+            display_name: selected.display_name.clone(),
+            value: ProductVariationOptionValue {
+                label: value.label.clone(),
+                hex_colors: value.hex_colors.clone(),
+            },
+        })
+    }
+}
+
+// A variant names its options but not their ids; only the product's own list carries those.
+fn variation_options(
+    product: &normalized::ProductRecord,
+    variant: &normalized::Variant,
+) -> Result<Vec<ProductVariationOption>, StructuralizeError> {
+    if product.options.is_empty() {
+        return match variant.options.as_slice() {
+            [] => Ok(vec![]),
+            [only] if only.name == SHOPIFY_SINGLE_OPTION_NAME => Ok(vec![]),
+            [first, ..] => Err(StructuralizeError::UnexpectedOptionOnOptionlessProduct {
+                variant_id: variant.id.clone(),
+                option_name: first.name.clone(),
+            }),
+        };
+    }
+
+    variant
+        .options
+        .iter()
+        .map(|selected| ProductVariationOption::from_normalized(product, variant, selected))
+        .collect()
+}
+
+// Shopify names the one option of a product that offers none `Title`, usually valued `Default
+// Title`. It names no choice among variants, and whatever its value, the variant's `name` carries it.
+const SHOPIFY_SINGLE_OPTION_NAME: &str = "Title";
+
+#[cfg(test)]
+mod tests {
+    use super::{AnkerPlDocument, StructuralizeError};
+    use crate::ankerpl::offer_details::v1::normalized::AnkerPlNormalizedDocument;
+    use crate::shared::IdentifierError;
+    use html_extractor::serde_json::{self, Value, json};
+
+    fn pln(amount: i64) -> Value {
+        json!({"amount": amount, "currency": "PLN"})
+    }
+
+    fn variant(id: u64, sku: &str, label: &str) -> Value {
+        json!({
+            "id": format!("gid://shopify/ProductVariant/{id}"), "sku": sku,
+            "barcode": "194644098117", "name": label, "price": pln(7998),
+            "compare_at_price": null, "quantity_available": 13, "available_for_sale": true,
+            "currently_not_in_stock": false, "requires_shipping": true, "weight": 0.291,
+            "image": {"url": format!("https://cdn.shopify.com/{sku}.png"), "alt_text": null,
+                      "width": 1, "height": 1},
+            "options": [{"name": "Color", "display_name": "color",
+                         "values": [{"label": label, "hex_colors": null}]}]
+        })
+    }
+
+    fn normalized_document() -> Value {
+        json!({
+            "ld_json": {"product": {
+                "description": "CTA", "images": ["https://cdn.shopify.com/one.png"],
+                "sku": "A121D321", "gtin": "194644098117", "brand": "Anker",
+                "offer": {
+                    "availability": "in_stock", "price": pln(7998), "item_condition": "new",
+                    "url": "https://www.anker.com/eu-pl/products/a121d?variant=1&amp;utm_source=google"
+                }
+            }},
+            "canonical_url": "https://www.anker.com/eu-pl/products/a121d",
+            "product": {
+                "id": "gid://shopify/Product/1", "handle": "a121d",
+                "title": "Anker <b>641</b> USB-C to Lightning Cable", "description": "Description",
+                "key_features": [], "specifications": [], "product_type": null,
+                "published_at": "2025-09-04T06:34:16Z", "price": pln(7998),
+                "compare_at_price": null, "available_for_sale": true,
+                "options": [{"id": "gid://shopify/ProductOption/7", "name": "Color",
+                             "display_name": "color",
+                             "values": [{"label": "Black", "hex_colors": null},
+                                        {"label": "White", "hex_colors": null}]}],
+                "variants": [variant(1, "A121D321", "Black"), variant(2, "A121D311", "White")]
+            }
+        })
+    }
+
+    fn optionless(label: &str) -> Value {
+        let mut input = normalized_document();
+        input["product"]["options"] = json!([]);
+        input["product"]["variants"] = json!([variant(1, "A8663011", label)]);
+        input["product"]["variants"][0]["options"][0]["name"] = json!("Title");
+        input["product"]["variants"][0]["options"][0]["display_name"] = json!("title");
+        input
+    }
+
+    fn structuralized(input: &Value) -> Value {
+        let result = crate::ankerpl::offer_details::v1::structuralize(&input.to_string())
+            .expect("the document structuralizes");
+
+        serde_json::from_str(&result.document_json.unwrap()).unwrap()
+    }
+
+    fn error(input: Value) -> StructuralizeError {
+        let normalized: AnkerPlNormalizedDocument = serde_json::from_value(input).unwrap();
+
+        AnkerPlDocument::from_normalized(normalized).unwrap_err()
+    }
+
+    fn urls(output: &Value) -> Vec<Value> {
+        output["variations"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|variation| variation["content"]["url"].clone())
+            .collect()
+    }
+
+    #[test]
+    fn each_variation_of_a_multi_variant_document_gets_its_own_url() {
+        assert_eq!(
+            urls(&structuralized(&normalized_document())),
+            [
+                "https://www.anker.com/eu-pl/products/a121d?variant=1",
+                "https://www.anker.com/eu-pl/products/a121d?variant=2"
+            ]
+        );
+    }
+
+    #[test]
+    fn a_single_variant_document_gets_the_bare_canonical() {
+        let mut input = normalized_document();
+        input["product"]["variants"]
+            .as_array_mut()
+            .unwrap()
+            .truncate(1);
+
+        assert_eq!(
+            urls(&structuralized(&input)),
+            ["https://www.anker.com/eu-pl/products/a121d"]
+        );
+    }
+
+    #[test]
+    fn the_islands_arrival_url_reaches_nothing() {
+        let document =
+            crate::ankerpl::offer_details::v1::structuralize(&normalized_document().to_string())
+                .unwrap()
+                .document_json
+                .unwrap();
+
+        for leaked in ["&amp;", "utm_source", "variant=1&"] {
+            assert!(!document.contains(leaked), "{leaked} survived: {document}");
+        }
+    }
+
+    #[test]
+    fn the_title_crosses_with_the_records_markup() {
+        assert_eq!(
+            structuralized(&normalized_document())["variations"][0]["content"]["title"],
+            "Anker <b>641</b> USB-C to Lightning Cable"
+        );
+    }
+
+    #[test]
+    fn the_option_id_is_recovered_from_the_products_own_list() {
+        assert_eq!(
+            structuralized(&normalized_document())["variations"][1]["options"],
+            json!([{
+                "id": "gid://shopify/ProductOption/7", "name": "Color", "display_name": "color",
+                "value": {"label": "White", "hex_colors": null}
+            }])
+        );
+    }
+
+    #[test]
+    fn a_lone_title_on_a_product_offering_no_options_is_not_an_option_whatever_its_value() {
+        for label in ["Default Title", "Midnight Black (6ft)"] {
+            let output = structuralized(&optionless(label));
+
+            assert_eq!(output["variations"][0]["options"], json!([]), "{label}");
+            assert_eq!(output["variations"][0]["content"]["name"], label);
+        }
+    }
+
+    #[test]
+    fn another_selection_on_a_product_offering_no_options_fails() {
+        let mut input = normalized_document();
+        input["product"]["options"] = json!([]);
+
+        assert_eq!(
+            error(input),
+            StructuralizeError::UnexpectedOptionOnOptionlessProduct {
+                variant_id: "gid://shopify/ProductVariant/1".to_string(),
+                option_name: "Color".to_string(),
+            }
+        );
+    }
+
+    #[test]
+    fn an_option_the_product_does_not_offer_fails() {
+        let mut input = normalized_document();
+        input["product"]["variants"][0]["options"][0]["name"] = json!("Length");
+
+        assert_eq!(
+            error(input),
+            StructuralizeError::UnknownSelectedOption {
+                variant_id: "gid://shopify/ProductVariant/1".to_string(),
+                option_name: "Length".to_string(),
+            }
+        );
+    }
+
+    #[test]
+    fn a_variant_option_with_other_than_one_value_fails_with_the_count() {
+        for (values, count) in [
+            (json!([]), 0),
+            (
+                json!([{"label": "Black", "hex_colors": null},
+                       {"label": "White", "hex_colors": null}]),
+                2,
+            ),
+        ] {
+            let mut input = normalized_document();
+            input["product"]["variants"][0]["options"][0]["values"] = values;
+
+            assert_eq!(
+                error(input),
+                StructuralizeError::InvalidOptionValueCount {
+                    variant_id: "gid://shopify/ProductVariant/1".to_string(),
+                    option_name: "Color".to_string(),
+                    count,
+                }
+            );
+        }
+    }
+
+    #[test]
+    fn a_variant_the_storefront_does_not_sell_has_no_price_and_its_siblings_keep_theirs() {
+        let mut input = normalized_document();
+        input["product"]["variants"][0]["price"] = Value::Null;
+
+        let output = structuralized(&input);
+
+        assert_eq!(output["variations"][0]["pricing"]["price"], Value::Null);
+        assert_eq!(output["variations"][1]["pricing"]["price"], pln(7998));
+        assert!(
+            output["variations"][0]["pricing"]
+                .get("discounts")
+                .is_none()
+        );
+    }
+
+    #[test]
+    fn the_products_key_features_and_specifications_reach_every_variation() {
+        let mut input = normalized_document();
+        input["product"]["key_features"] =
+            json!([{"title": "Ultra-Fast Charging", "body": "50% in 30 minutes."}]);
+        input["product"]["specifications"] =
+            json!([{"name": "Total Capacity", "value": "10,000mAh"}]);
+
+        for variation in structuralized(&input)["variations"].as_array().unwrap() {
+            assert_eq!(
+                variation["content"]["key_features"],
+                input["product"]["key_features"]
+            );
+            assert_eq!(
+                variation["content"]["specifications"],
+                input["product"]["specifications"]
+            );
+        }
+    }
+
+    #[test]
+    fn an_unusable_identifier_crosses_as_the_identifier_failure() {
+        let mut input = normalized_document();
+        input["product"]["variants"][0]["sku"] = json!("");
+
+        assert_eq!(
+            error(input),
+            StructuralizeError::Identifier(IdentifierError::EmptySku)
+        );
+    }
+}

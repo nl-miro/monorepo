@@ -1,12 +1,12 @@
 use bodul_shared::link::LinkKind;
 use bodul_shared::retailer::RetailerCode;
+use sitemap::{GroupedLinks, SitemapUrl};
 use uuid::Uuid;
 
 use super::super::Retailers;
-use super::super::document::{SitemapDocument, SitemapUrl};
 use super::command::ConsolidateSitemap;
+use super::entity::{ConsolidatedSitemap, ProcessedSitemap};
 use super::event::SitemapConsolidated;
-use super::links::GroupedLinks;
 use super::store::StoreError;
 use crate::platform::bus::Handle;
 
@@ -26,23 +26,6 @@ impl ClassifyLink for Retailers {
     fn classify(&self, retailer_code: RetailerCode, url: &SitemapUrl) -> LinkKind {
         self.classify_link(retailer_code, &url.location, &url.source, url.images.len())
     }
-}
-
-/// A processed sitemap as this slice reads it.
-pub struct ProcessedSitemap {
-    pub id: Uuid,
-    pub retrieval_id: Uuid,
-    pub retailer_code: RetailerCode,
-    pub document: SitemapDocument,
-}
-
-/// A processed sitemap's URLs sorted by kind, ready to store.
-pub struct ConsolidatedSitemap {
-    pub id: Uuid,
-    pub processed_sitemap_id: Uuid,
-    pub retrieval_id: Uuid,
-    pub retailer_code: RetailerCode,
-    pub links: GroupedLinks,
 }
 
 pub struct Handler<S, C> {
@@ -66,26 +49,19 @@ impl<S: Store, C: ClassifyLink> Handle for Handler<S, C> {
         let links = GroupedLinks::from_document(&processed.document, |url| {
             self.classifier.classify(processed.retailer_code, url)
         });
-        let consolidated = ConsolidatedSitemap {
-            id: Uuid::now_v7(),
-            processed_sitemap_id: processed.id,
-            retrieval_id: processed.retrieval_id,
-            retailer_code: processed.retailer_code,
-            links,
-        };
+        let consolidated = ConsolidatedSitemap::new(&processed, links);
 
         self.store.store_consolidated(&consolidated)?;
 
-        let links = &consolidated.links;
         tracing::info!(
             retrieval_id = %consolidated.retrieval_id,
             retailer_code = ?consolidated.retailer_code,
             consolidated_sitemap_id = %consolidated.id,
-            products = links.product.len(),
-            catalogs = links.catalog.len(),
-            content = links.content.len(),
-            not_interested = links.not_interested.len(),
-            unknown = links.unknown.len(),
+            products = consolidated.product_count(),
+            catalogs = consolidated.catalog_count(),
+            content = consolidated.content_count(),
+            not_interested = consolidated.not_interested_count(),
+            unknown = consolidated.unknown_count(),
             "sitemap consolidated"
         );
         Ok(vec![SitemapConsolidated {
@@ -93,24 +69,25 @@ impl<S: Store, C: ClassifyLink> Handle for Handler<S, C> {
             processed_sitemap_id: consolidated.processed_sitemap_id,
             retrieval_id: consolidated.retrieval_id,
             retailer_code: consolidated.retailer_code,
-            product_count: links.product.len(),
-            catalog_count: links.catalog.len(),
-            content_count: links.content.len(),
-            not_interested_count: links.not_interested.len(),
-            unknown_count: links.unknown.len(),
+            product_count: consolidated.product_count(),
+            catalog_count: consolidated.catalog_count(),
+            content_count: consolidated.content_count(),
+            not_interested_count: consolidated.not_interested_count(),
+            unknown_count: consolidated.unknown_count(),
         }])
     }
 }
 
 #[cfg(test)]
 mod tests {
+    use sitemap::SitemapDocument;
     use std::sync::Mutex;
 
     use super::*;
 
     struct FakeStore {
         document: SitemapDocument,
-        consolidated: Mutex<Vec<GroupedLinks>>,
+        consolidated: Mutex<Vec<ConsolidatedSitemap>>,
     }
 
     impl Store for FakeStore {
@@ -124,10 +101,7 @@ mod tests {
         }
 
         fn store_consolidated(&self, consolidated: &ConsolidatedSitemap) -> Result<(), StoreError> {
-            self.consolidated
-                .lock()
-                .unwrap()
-                .push(consolidated.links.clone());
+            self.consolidated.lock().unwrap().push(consolidated.clone());
             Ok(())
         }
     }
@@ -178,6 +152,12 @@ mod tests {
             })
             .unwrap();
 
+        let saved = handler.store.consolidated.lock().unwrap()[0].clone();
+        assert_eq!(events[0].product_count, saved.product_count());
+        assert_eq!(events[0].catalog_count, saved.catalog_count());
+        assert_eq!(events[0].content_count, saved.content_count());
+        assert_eq!(events[0].not_interested_count, saved.not_interested_count());
+        assert_eq!(events[0].unknown_count, saved.unknown_count());
         assert_eq!(events.len(), 1);
         let event = &events[0];
         assert_eq!(event.processed_sitemap_id, processed_sitemap_id);
@@ -191,7 +171,9 @@ mod tests {
             (2, 1, 0)
         );
         assert_eq!(
-            handler.store.consolidated.lock().unwrap()[0].unknown,
+            handler.store.consolidated.lock().unwrap()[0]
+                .links()
+                .unknown,
             vec!["https://shop.test/pages/about"]
         );
     }

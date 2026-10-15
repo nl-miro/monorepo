@@ -1,11 +1,15 @@
 //! Technical plumbing shared by every feature: the database, outbound HTTP and
 //! the command and event bus. Nothing here knows about the domain.
 
+pub mod auth;
 pub mod bus;
 pub mod bus_api;
 pub mod db;
 pub mod http;
 pub mod logging;
+pub mod state;
+#[cfg(test)]
+pub(crate) mod test_db;
 
 /// The raw capabilities features are built from.
 pub struct Platform {

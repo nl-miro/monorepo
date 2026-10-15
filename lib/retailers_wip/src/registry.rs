@@ -1,5 +1,7 @@
 //! Looks up each retailer in this crate by its `RetailerCode`.
 
+use std::time::Duration;
+
 use bodul_shared::SitemapConfig;
 use bodul_shared::link::LinkKind;
 use bodul_shared::prelude::{NormalizedData, RetailerCode};
@@ -17,6 +19,14 @@ pub fn normalize_for(
 }
 
 pub fn sitemap_config_for(_retailer: &RetailerCode) -> Option<SitemapConfig> {
+    None
+}
+
+pub fn sitemap_pause_for(_retailer: RetailerCode) -> Option<Duration> {
+    None
+}
+
+pub fn sitemap_greylisted_for(_retailer: RetailerCode, _url: &str) -> Option<bool> {
     None
 }
 

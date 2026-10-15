@@ -20,6 +20,7 @@ top-level folder is its own Cargo workspace, with its own `Cargo.lock`.
 | Crate                     | Purpose                                                                     |
 | ------------------------- | --------------------------------------------------------------------------- |
 | `shared`                  | Code shared across the monorepo, including the `health()` liveness response |
+| `object_storage_client`   | Async object storage client using REST or GraphQL |
 | `money`                   | Money handling                                                              |
 | `retailer_sauce`          | Retailer integrations                                                       |
 | `retailer_data_extractor` | Extracting data from retailers                                              |
@@ -28,9 +29,10 @@ top-level folder is its own Cargo workspace, with its own `Cargo.lock`.
 | `retailers_minisforum`    | Integration for the Minisforum retailer                                     |
 | `retailers_ugreen`        | Integration for the Ugreen retailer                                         |
 | `retailers_wip`           | Integration for the WIP retailer                                            |
+| `sitemap`                 | Parsing sitemap XML and building a crawl's sitemap tree                     |
 
-Every crate except `shared` has no code yet, only a placeholder test. Each crate
-has its own README.
+Each crate has its own README. To add a retailer storefront, or finish one,
+follow the [retailer integration playbook](docs/retailer-integration.md).
 
 ### services
 
@@ -39,8 +41,9 @@ has its own README.
 | `customer_facing`   | poem           | poem-openapi        | async-graphql, async-graphql-poem |
 | `offers`            | poem           | poem-openapi        | async-graphql, async-graphql-poem |
 | `retailer_sourcing` | axum           | utoipa, utoipa-axum | async-graphql, async-graphql-axum |
+| `object_storage` | axum | OpenAPI 3.1, utoipa-swagger-ui | async-graphql, custom HTTP adapter |
 
-Every service serves the same routes:
+Services expose these standard routes (object storage requires bearer authentication on every route and accepts only POST at `/graphql`):
 
 | Path                | Purpose                                                   |
 | ------------------- | --------------------------------------------------------- |
@@ -50,12 +53,15 @@ Every service serves the same routes:
 | `/graphql`          | GraphQL over `GET` (query string) and `POST` (body)       |
 | `/graphql/ide`      | GraphiQL, in debug builds only; release builds return 404 |
 
-The GraphQL schema has a single `health` query that returns `ok`.
+The original services have a single GraphQL `health` query that returns `ok`.
+`object_storage` instead exposes immutable artifact creation and retrieval,
+with health only at `/api/health`. See its [setup, API examples and tests](services/object_storage/README.md)
+and [ADR 6](docs/adr/0006-object-storage-startup-and-access.md).
 
 `retailer_sourcing` also runs the sitemap discovery pipeline: it crawls each
 retailer's sitemaps and sorts the page URLs into products, catalogs and other
 content. Offer discovery then records every product URL as an offer and
-downloads its page, skipping URLs downloaded in the last 6 hours. The code is organised as feature slices
+downloads its page. The code is organised as feature slices
 ([ADR 4](docs/adr/0004-feature-slices-for-retailer-sourcing.md)), and the
 pipeline runs only when `DATABASE_URL` is set (see below).
 
@@ -69,7 +75,7 @@ Each serves an index page at `/`.
 - [rustup](https://rustup.rs/). `rust-toolchain.toml` pins Rust 1.98.0 with clippy and rustfmt, and rustup installs it on the first cargo command.
 - libpq (for example `libpq-dev` on Debian/Ubuntu, `libpq` on macOS with Homebrew). The services depend on diesel with the PostgreSQL backend, which links against it.
 - GNU Make.
-- PostgreSQL, only to run the `retailer_sourcing` pipeline.
+- PostgreSQL 16 or later for `object_storage` (a separate UTF8 database), and to run the `retailer_sourcing` pipeline.
 - [Diesel CLI](https://diesel.rs/guides/getting-started) with PostgreSQL support, only for `make migrate` and `make migrate-redo`: `cargo install diesel_cli --no-default-features --features postgres --locked`.
 - [cargo-audit](https://crates.io/crates/cargo-audit), only for `make audit`: `cargo install cargo-audit --locked`.
 
@@ -95,8 +101,45 @@ that crate.
 | `audit`        | `cargo audit`, once per workspace                                                |
 | `doc`          | `cargo doc --no-deps` (lib crates only)                                          |
 | `serve`        | `cargo run` (service and app crates only)                                        |
-| `migrate`      | Apply pending migrations to `DATABASE_URL` (`retailer_sourcing` only)            |
-| `migrate-redo` | Revert and reapply every migration, deleting the data (`retailer_sourcing` only) |
+| `migrate`      | Apply pending migrations to `DATABASE_URL` (`retailer_sourcing` and `object_storage`)            |
+| `migrate-redo` | Revert and reapply every migration, deleting the data (`retailer_sourcing` and `object_storage`) |
+
+`object_storage` and `retailer_sourcing` also provide `make test-postgres`, which
+requires an available `TEST_DATABASE_URL` and tests each case in an isolated
+schema. Retailer sourcing separates domain entities from PostgreSQL records
+throughout sitemap and offer discovery; see [ADR 7](docs/adr/0007-domain-entities-and-postgres-records.md).
+
+More targets run only from the root, against `DATA_DIR`, which defaults to the
+`data` folder next to the monorepo:
+
+| Target                        | What it does                                                                                                                                                                                                                                                                                                       |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `export-offer-sources`        | Write every downloaded offer page to `<DATA_DIR>/<retailer>/offer_details/sources` (needs `DATABASE_URL`)                                                                                                                                                                                                          |
+| `export-sitemaps`             | Write each retailer's latest sitemap crawl, its sources, processed tree and consolidated links, to `<DATA_DIR>/<retailer>/sitemap` (needs `DATABASE_URL`)                                                                                                                                                          |
+| `dump-sitemap-sources`        | Download every fetched sitemap file from `retailer_sourcing`'s `/api/development/sitemaps/sources` to `<DATA_DIR>/<retailer>/sitemaps/sources/<retrieval id>/<url slug>.xml`; set `RETAILER_SOURCING_URL` (default `http://localhost:3000`) and, to override the hardcoded bearer token, `RETAILER_SOURCING_TOKEN` |
+| `dump-offer-details`          | Download the newest fetched page of every offer from `retailer_sourcing`'s `/api/development/offer-details/sources` to `<DATA_DIR>/<retailer>/offer_details/sources/<url path>.html`; set `RETAILER_SOURCING_URL` and `RETAILER_SOURCING_TOKEN` as for `dump-sitemap-sources`                                      |
+| `extract-offer-details`       | Extract each page in `<DATA_DIR>/<retailer>/offer_details/sources` into `offer_details/extracted/<page>.json`; set `RETAILERS` to limit them                                                                                                                                                                       |
+| `normalize-offer-details`     | Normalize each page in `offer_details/extracted` into `offer_details/normalized/<page>.json`; set `RETAILERS` to limit them                                                                                                                                                                                        |
+| `structuralize-offer-details` | Structuralize each page in `offer_details/normalized` into `offer_details/structuralized/<page>.json`; set `RETAILERS` to limit them                                                                                                                                                                               |
+| `process-sitemap-sources`     | Build a sitemap tree from each dumped crawl in `<DATA_DIR>/<retailer>/sitemaps/sources`, as `retailer_sourcing` does, and write it to `<DATA_DIR>/<retailer>/sitemaps/processed/<retrieval id>.json`                                                                                                               |
+| `consolidate-sitemap-sources` | Sort the URLs of each tree in `<DATA_DIR>/<retailer>/sitemaps/processed` by kind of page, as `retailer_sourcing` does, and write them to `<DATA_DIR>/<retailer>/sitemaps/consolidate/<retrieval id>.json`                                                                                                          |
+| `process-offer-details`       | Write the extracted, normalized and structurized stages of those pages; set `RETAILERS` to limit them                                                                                                                                                                                                              |
+
+More targets run only from the root, against `DATA_DIR`, which defaults to the
+`data` folder next to the monorepo:
+
+| Target                        | What it does                                                                                                                                                                                                                                                                                                       |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `export-offer-sources`        | Write every downloaded offer page to `<DATA_DIR>/<retailer>/offer_details/sources` (needs `DATABASE_URL`)                                                                                                                                                                                                          |
+| `export-sitemaps`             | Write each retailer's latest sitemap crawl, its sources, processed tree and consolidated links, to `<DATA_DIR>/<retailer>/sitemap` (needs `DATABASE_URL`)                                                                                                                                                          |
+| `dump-sitemap-sources`        | Download every fetched sitemap file from `retailer_sourcing`'s `/api/development/sitemaps/sources` to `<DATA_DIR>/<retailer>/sitemaps/sources/<retrieval id>/<url slug>.xml`; set `RETAILER_SOURCING_URL` (default `http://localhost:3000`) and, to override the hardcoded bearer token, `RETAILER_SOURCING_TOKEN` |
+| `dump-offer-details`          | Download the newest fetched page of every offer from `retailer_sourcing`'s `/api/development/offer-details/sources` to `<DATA_DIR>/<retailer>/offer_details/sources/<url path>.html`; set `RETAILER_SOURCING_URL` and `RETAILER_SOURCING_TOKEN` as for `dump-sitemap-sources`                                      |
+| `extract-offer-details`       | Extract each page in `<DATA_DIR>/<retailer>/offer_details/sources` into `offer_details/extracted/<page>.json`; set `RETAILERS` to limit them                                                                                                                                                                       |
+| `normalize-offer-details`     | Normalize each page in `offer_details/extracted` into `offer_details/normalized/<page>.json`; set `RETAILERS` to limit them                                                                                                                                                                                        |
+| `structuralize-offer-details` | Structuralize each page in `offer_details/normalized` into `offer_details/structuralized/<page>.json`; set `RETAILERS` to limit them                                                                                                                                                                               |
+| `process-sitemap-sources`     | Build a sitemap tree from each dumped crawl in `<DATA_DIR>/<retailer>/sitemaps/sources`, as `retailer_sourcing` does, and write it to `<DATA_DIR>/<retailer>/sitemaps/processed/<retrieval id>.json`                                                                                                               |
+| `consolidate-sitemap-sources` | Sort the URLs of each tree in `<DATA_DIR>/<retailer>/sitemaps/processed` by kind of page, as `retailer_sourcing` does, and write them to `<DATA_DIR>/<retailer>/sitemaps/consolidate/<retrieval id>.json`                                                                                                          |
+| `process-offer-details`       | Write the extracted, normalized and structurized stages of those pages; set `RETAILERS` to limit them                                                                                                                                                                                                              |
 
 ## Running a service or app
 
@@ -143,6 +186,13 @@ The [Bruno](https://www.usebruno.com/) collection in `bruno/retailer_sourcing`
 has a request for each route. Open the folder in Bruno and pick the `local`
 environment, which targets the `retailer_sourcing` container from the
 workspace's `compose-apps.yaml` at `http://172.28.100.40:3000`.
+
+The [object storage Bruno collection](bruno/object_storage/README.md) covers
+REST and GraphQL creation/retrieval, cross-API retries, health, and documentation.
+Its `local` environment targets `http://localhost:3003` and includes the public
+development bearer token. Its JavaScript request tests run with Bruno CLI; see
+the collection README for Node.js setup and commands. Rust callers can use
+[`object_storage_client`](lib/object_storage_client/README.md) from either transport.
 
 ## Security advisories
 
