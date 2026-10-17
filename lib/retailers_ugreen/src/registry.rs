@@ -21,11 +21,13 @@ use crate::ugreennasuk;
 use crate::ugreennl;
 use crate::ugreenuk;
 use crate::ugreenus;
+use std::time::Duration;
+
 use bodul_shared::SitemapConfig;
 use bodul_shared::link::LinkKind;
 use bodul_shared::prelude::{NormalizedData, RetailerCode};
 use html_extractor::io::Architecture;
-use std::time::Duration;
+use retailer_sauce::structuralized::StructuralizedData;
 
 pub fn architecture_for(retailer: RetailerCode) -> Option<Architecture> {
     match retailer {
@@ -77,6 +79,55 @@ pub fn normalize_for(retailer: RetailerCode, json: &str) -> Option<Result<Normal
         RetailerCode::UgreenNl => Some(ugreennl::prelude::offer_detail_normalize_v1(json)),
         RetailerCode::UgreenUk => Some(ugreenuk::prelude::offer_detail_normalize_v1(json)),
         RetailerCode::UgreenUs => Some(ugreenus::prelude::offer_detail_normalize_v1(json)),
+        _ => None,
+    }
+}
+
+/// Only the storefronts with a structuralizer have an arm; every other code is `None`.
+pub fn structuralize_for(
+    retailer: RetailerCode,
+    json: &str,
+) -> Option<Result<StructuralizedData, String>> {
+    match retailer {
+        RetailerCode::UgreenCom => Some(ugreencom::prelude::offer_detail_structuralize_v1(json)),
+        RetailerCode::UgreenJp => Some(ugreenjp::prelude::offer_detail_structuralize_v1(json)),
+        RetailerCode::UgreenNas => Some(ugreennas::prelude::offer_detail_structuralize_v1(json)),
+        RetailerCode::UgreenNasEu => {
+            Some(ugreennaseu::prelude::offer_detail_structuralize_v1(json))
+        }
+        RetailerCode::UgreenNasFr => {
+            Some(ugreennasfr::prelude::offer_detail_structuralize_v1(json))
+        }
+        RetailerCode::UgreenNasIt => {
+            Some(ugreennasit::prelude::offer_detail_structuralize_v1(json))
+        }
+        RetailerCode::UgreenNasUk => {
+            Some(ugreennasuk::prelude::offer_detail_structuralize_v1(json))
+        }
+        RetailerCode::UgreenEu => Some(ugreeneu::prelude::offer_detail_structuralize_v1(json)),
+        RetailerCode::UgreenFr => Some(ugreenfr::prelude::offer_detail_structuralize_v1(json)),
+        RetailerCode::UgreenIn => Some(ugreenin::prelude::offer_detail_structuralize_v1(json)),
+        RetailerCode::UgreenNasAu => {
+            Some(ugreennasau::prelude::offer_detail_structuralize_v1(json))
+        }
+        RetailerCode::UgreenNasCa => {
+            Some(ugreennasca::prelude::offer_detail_structuralize_v1(json))
+        }
+        RetailerCode::UgreenNasDe => {
+            Some(ugreennasde::prelude::offer_detail_structuralize_v1(json))
+        }
+        RetailerCode::UgreenNasEs => {
+            Some(ugreennases::prelude::offer_detail_structuralize_v1(json))
+        }
+        RetailerCode::UgreenCa => Some(ugreenca::prelude::offer_detail_structuralize_v1(json)),
+        RetailerCode::UgreenDe => Some(ugreende::prelude::offer_detail_structuralize_v1(json)),
+        RetailerCode::UgreenKr => Some(ugreenkr::prelude::offer_detail_structuralize_v1(json)),
+        RetailerCode::UgreenNl => Some(ugreennl::prelude::offer_detail_structuralize_v1(json)),
+        RetailerCode::UgreenUk => Some(ugreenuk::prelude::offer_detail_structuralize_v1(json)),
+        RetailerCode::UgreenUs => Some(ugreenus::prelude::offer_detail_structuralize_v1(json)),
+        RetailerCode::UgreenNasJp => {
+            Some(ugreennasjp::prelude::offer_detail_structuralize_v1(json))
+        }
         _ => None,
     }
 }

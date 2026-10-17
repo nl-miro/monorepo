@@ -30,6 +30,7 @@ Notable changes to this repository. The format follows [Keep a Changelog](https:
 - Sitemap filtering and pacing per retailer: crawls skip child sitemaps a retailer rejects, such as Shopify metaobject sitemaps, and pause after every three downloads, for five seconds on the Ugreen stores that rate-limit.
 - Anker offer details: Next.js, App Router and Liquid storefronts are extracted, normalized and structuralized into offers, with tests over saved product pages.
 - Minisforum offer details: storefront product islands are extracted, normalized and structuralized into offers, with tests over saved product pages.
+- Ugreen offer details, NAS storefronts included: extracted, normalized and structuralized into offers, with tests over saved product pages.
 
 ### Fixed
 
