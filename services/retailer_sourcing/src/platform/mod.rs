@@ -1,11 +1,13 @@
 //! Technical plumbing shared by every feature: the database, outbound HTTP and
 //! the command and event bus. Nothing here knows about the domain.
 
+pub mod auth;
 pub mod bus;
 pub mod bus_api;
 pub mod db;
 pub mod http;
 pub mod logging;
+pub mod state;
 pub use retailer_sourcing::object_storage;
 #[cfg(test)]
 mod postgres_tests;

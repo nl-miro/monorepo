@@ -414,3 +414,12 @@ column without a backfill, so existing raw offers cause it to fail. Migration
 000006 drops inline payloads without copying them. Migrations 000011 and 000012
 deliberately delete pipeline rows. Review the data transition before deploying;
 ordinary CI and fresh-schema tests do not establish populated-upgrade safety.
+
+## Downloaded source APIs
+
+`GET /api/development/sitemaps/sources` and
+`GET /api/development/offer-details/sources` return saved source bodies resolved
+through object storage. Both require the service bearer token and accept
+`limit` and `offset`. Limits must be 1–100 for sitemaps and 1–1000 for offer pages.
+Missing or invalid credentials return 401; invalid limits return 400; without a
+database the endpoints return 503. OpenAPI documents the bearer scheme.
