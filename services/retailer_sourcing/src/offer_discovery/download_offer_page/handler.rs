@@ -1,15 +1,15 @@
-use uuid::Uuid;
-
 use super::command::DownloadOfferPage;
+use super::entity::RawOffer;
 use super::event::OfferPageWasDownloaded;
 use super::store::StoreError;
 use crate::platform::bus::Handle;
 use crate::platform::http::{self, FetchError};
+use crate::platform::object_storage::Stored;
 
 /// The storage this slice needs.
 pub trait Store: Send + Sync + 'static {
     /// Stores the page, replacing any page stored for the offer before.
-    fn store_raw_offer(&self, offer_id: Uuid, url: &str, body: &str) -> Result<(), StoreError>;
+    fn store_raw_offer(&self, entity: &RawOffer) -> Result<Stored<RawOffer>, StoreError>;
 }
 
 /// Fetches the body of one offer page.
@@ -52,6 +52,7 @@ impl<S: Store, F: FetchOfferPage> Handle for Handler<S, F> {
         &self,
         command: DownloadOfferPage,
     ) -> Result<Vec<OfferPageWasDownloaded>, DownloadOfferPageError> {
+        // A failed download fails the command, so it is retried later.
         let body =
             self.fetcher
                 .fetch(&command.url)
@@ -60,12 +61,18 @@ impl<S: Store, F: FetchOfferPage> Handle for Handler<S, F> {
                     error,
                 })?;
 
-        self.store
-            .store_raw_offer(command.offer_id, &command.url, &body)?;
+        let entity = RawOffer {
+            offer_id: command.offer_id,
+            retailer_code: command.retailer_code,
+            url: command.url.clone(),
+            body,
+        };
+        let stored = self.store.store_raw_offer(&entity)?;
         tracing::info!(
+            object_storage_id = %stored.object_storage_id,
             offer_id = %command.offer_id,
             url = %command.url,
-            bytes = body.len(),
+            bytes = entity.body.len(),
             "offer page downloaded"
         );
 
@@ -80,9 +87,9 @@ impl<S: Store, F: FetchOfferPage> Handle for Handler<S, F> {
 
 #[cfg(test)]
 mod tests {
-    use std::sync::Mutex;
-
     use bodul_shared::retailer::RetailerCode;
+    use std::sync::Mutex;
+    use uuid::Uuid;
 
     use super::*;
 
@@ -90,6 +97,7 @@ mod tests {
 
     #[derive(Default)]
     struct FakeStore {
+        fail: bool,
         log: Mutex<Vec<String>>,
     }
 
@@ -101,8 +109,21 @@ mod tests {
     }
 
     impl Store for FakeStore {
-        fn store_raw_offer(&self, _: Uuid, url: &str, body: &str) -> Result<(), StoreError> {
-            self.log(format!("stored {url}: {body}"))
+        fn store_raw_offer(&self, entity: &RawOffer) -> Result<Stored<RawOffer>, StoreError> {
+            if self.fail {
+                return Err(StoreError::ObjectStorage(
+                    crate::platform::object_storage::Error::InvalidRecord,
+                ));
+            }
+
+            self.log(format!(
+                "stored {:?} {}: {}",
+                entity.retailer_code, entity.url, entity.body
+            ))?;
+            Ok(Stored {
+                entity: entity.clone(),
+                object_storage_id: uuid::Uuid::now_v7(),
+            })
         }
     }
 
@@ -144,16 +165,19 @@ mod tests {
         );
         assert_eq!(
             *handler.store.log.lock().unwrap(),
-            vec![format!("stored {URL}: <html>offer</html>")]
+            vec![format!("stored UgreenCa {URL}: <html>offer</html>")]
         );
     }
 
     #[test]
     fn downloads_a_url_again_every_time() {
         let handler = Handler::new(FakeStore::default(), Page(Some("<html>offer</html>")));
+
         for _ in 0..2 {
-            assert_eq!(handler.handle(command()).unwrap().len(), 1);
+            let events = handler.handle(command()).unwrap();
+            assert_eq!(events.len(), 1);
         }
+
         assert_eq!(handler.store.log.lock().unwrap().len(), 2);
     }
 
@@ -162,7 +186,21 @@ mod tests {
         let handler = Handler::new(FakeStore::default(), Page(None));
 
         let error = handler.handle(command()).unwrap_err();
-        assert!(matches!(&error, DownloadOfferPageError::Fetch { url, .. } if url == URL));
+
+        assert!(
+            matches!(&error, DownloadOfferPageError::Fetch { url, .. } if url == URL),
+            "{error:?}"
+        );
         assert!(handler.store.log.lock().unwrap().is_empty());
+    }
+
+    #[test]
+    fn storage_failure_prevents_success_events() {
+        let store = FakeStore {
+            fail: true,
+            ..Default::default()
+        };
+        let handler = Handler::new(store, Page(Some("<html>offer</html>")));
+        assert!(handler.handle(command()).is_err());
     }
 }

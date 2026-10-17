@@ -84,14 +84,19 @@ fn parse_port(value: Result<String, VarError>) -> io::Result<u16> {
 /// pending migrations. Without it the service only serves HTTP.
 async fn start_features(database_url: Result<String, VarError>) -> io::Result<Option<BusHandle>> {
     let database_url = match database_url {
+        Ok(database_url) if database_url.is_empty() => return Ok(None),
         Ok(database_url) => database_url,
         Err(VarError::NotPresent) => return Ok(None),
         Err(error) => return Err(io::Error::new(io::ErrorKind::InvalidInput, error)),
     };
-    let platform = tokio::task::spawn_blocking(move || Platform::connect(&database_url))
-        .await
-        .map_err(io::Error::other)?
-        .map_err(io::Error::other)?;
+    let object_storage =
+        platform::object_storage::ObjectStorage::from_env(tokio::runtime::Handle::current())
+            .map_err(io::Error::other)?;
+    let platform =
+        tokio::task::spawn_blocking(move || Platform::connect(&database_url, object_storage))
+            .await
+            .map_err(io::Error::other)?
+            .map_err(io::Error::other)?;
 
     let mut bus = Bus::default();
     sitemap_discovery::prelude::register(&mut bus, &platform);
@@ -283,6 +288,11 @@ mod tests {
                 .unwrap()
                 .is_none()
         );
+    }
+
+    #[tokio::test]
+    async fn features_stay_off_with_an_empty_database_url() {
+        assert!(start_features(Ok(String::new())).await.unwrap().is_none());
     }
 
     #[test]
