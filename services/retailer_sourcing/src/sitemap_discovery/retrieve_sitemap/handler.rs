@@ -2,13 +2,13 @@ use bodul_shared::retailer::RetailerCode;
 use uuid::Uuid;
 
 use super::super::Retailers;
-use super::super::document::RawSitemapDocument;
 use super::command::RetrieveSitemap;
 use super::crawl::crawl;
 use super::event::SitemapRetrieved;
 use super::store::StoreError;
 use crate::platform::bus::Handle;
 use crate::platform::http::{self, FetchError};
+use sitemap::RawSitemapDocument;
 
 #[rustfmt::skip]
 /// The storage this slice needs.

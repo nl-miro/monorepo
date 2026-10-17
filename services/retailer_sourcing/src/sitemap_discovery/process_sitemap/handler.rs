@@ -2,13 +2,12 @@ use bodul_shared::retailer::RetailerCode;
 use chrono::{DateTime, Utc};
 use uuid::Uuid;
 
-use super::super::document::{RawSitemapDocument, SitemapDocument};
-use super::super::{ROOT_SITEMAP_SOURCE, Retailers};
-use super::build::{BuildError, build_tree};
+use super::super::Retailers;
 use super::command::ProcessSitemap;
 use super::event::SitemapProcessed;
 use super::store::StoreError;
 use crate::platform::bus::Handle;
+use sitemap::{BuildError, ROOT_SITEMAP_SOURCE, RawSitemapDocument, SitemapDocument, build_tree};
 
 /// The storage this slice needs.
 pub trait Store: Send + Sync + 'static {
@@ -85,7 +84,7 @@ impl<S: Store, R: RootSitemaps> Handle for Handler<S, R> {
         let raw_documents = self.store.raw_documents(retrieval_id)?;
 
         // A root sitemap that can't be built is left out of the tree.
-        let (document, errors) = build_tree(&root_urls, &raw_documents)?;
+        let (document, errors) = build_tree(&root_urls, &raw_documents, |_| true)?;
         for error in &errors {
             tracing::warn!(%retrieval_id, ?retailer_code, "sitemap left out of the tree: {error}");
         }

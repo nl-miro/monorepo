@@ -4,11 +4,9 @@ use std::collections::{HashSet, VecDeque};
 
 use chrono::{DateTime, Utc};
 
-use super::super::MAX_SITEMAP_DEPTH;
-use super::super::document::RawSitemapDocument;
-use super::super::parse::{ChildRef, Parsed, SitemapParseError, parse};
 use super::handler::FetchSitemapBody;
 use crate::platform::http::FetchError;
+use sitemap::{ChildRef, MAX_SITEMAP_DEPTH, Parsed, RawSitemapDocument, SitemapParseError, parse};
 
 /// A problem with one sitemap file. The crawl skips that file and carries on.
 #[derive(Debug, Clone, thiserror::Error)]

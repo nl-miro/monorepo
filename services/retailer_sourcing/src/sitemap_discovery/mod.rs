@@ -14,8 +14,6 @@
 
 pub mod prelude;
 
-mod document;
-mod parse;
 mod schema;
 
 mod consolidate_sitemap;
@@ -25,12 +23,6 @@ mod retrieve_sitemap;
 use bodul_shared::SitemapConfig;
 use bodul_shared::link::LinkKind;
 use bodul_shared::retailer::RetailerCode;
-
-/// The `source` given to URLs that don't come from a known sitemap file.
-const ROOT_SITEMAP_SOURCE: &str = "main";
-
-/// How deep sitemap indexes may nest before a branch is cut off.
-const MAX_SITEMAP_DEPTH: usize = 32;
 
 /// The retailer registry: each retailer's root sitemaps and link rules.
 #[derive(Debug, Clone, Copy, Default)]
