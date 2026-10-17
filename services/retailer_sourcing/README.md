@@ -434,3 +434,22 @@ folder next to the monorepo. A page's file is named after its decoded URL path
 next export.
 
 Both `DATABASE_URL` and the object-storage connection settings are required.
+
+## Exporting sitemap crawls
+
+`make export-sitemaps` writes each retailer's most recently processed sitemap
+crawl to `<DATA_DIR>/<retailer>/sitemap`, one folder per stage, each named for
+the crawl's retrieval id:
+
+- `sources/<retrieval id>/<url path>.xml`: every sitemap file as fetched.
+  Names follow the offer pages' rule, plus the query with `&` replaced by `_`,
+  since Shopify pages its sitemaps by query (`sitemap_products_1.xml?from=1&to=2` becomes
+  `sitemap_products_1_from=1_to=2.xml`).
+- `processed/<retrieval id>.json`: the files parsed into one sitemap tree.
+- `consolidated/<retrieval id>.json`: the tree's URLs grouped by kind of page,
+  once the crawl has been consolidated.
+
+Exporting the same crawl again overwrites its files. A newer crawl gets its own
+folder and files, so earlier exports stay alongside it.
+
+Both `DATABASE_URL` and the object-storage connection settings are required.
