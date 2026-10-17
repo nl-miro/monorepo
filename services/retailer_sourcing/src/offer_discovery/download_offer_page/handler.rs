@@ -31,6 +31,15 @@ impl FetchOfferPage for http::Client {
     }
 }
 
+#[derive(Debug, thiserror::Error)]
+pub enum DownloadOfferPageError {
+    #[error("offer page download failed for {url}: {error}")]
+    Fetch { url: String, error: FetchError },
+
+    #[error(transparent)]
+    Store(#[from] StoreError),
+}
+
 pub struct Handler<S, F> {
     store: S,
     fetcher: F,
@@ -45,9 +54,12 @@ impl<S, F> Handler<S, F> {
 impl<S: Store, F: FetchOfferPage> Handle for Handler<S, F> {
     type Command = DownloadOfferPage;
     type Event = DownloadOutcome;
-    type Error = StoreError;
+    type Error = DownloadOfferPageError;
 
-    fn handle(&self, command: DownloadOfferPage) -> Result<Vec<DownloadOutcome>, StoreError> {
+    fn handle(
+        &self,
+        command: DownloadOfferPage,
+    ) -> Result<Vec<DownloadOutcome>, DownloadOfferPageError> {
         let since = Utc::now() - Duration::hours(REDOWNLOAD_WINDOW_HOURS);
         if let Some(raw_offer_id) = self.store.recent_raw_offer(&command.url, since)? {
             tracing::info!(
@@ -64,18 +76,13 @@ impl<S: Store, F: FetchOfferPage> Handle for Handler<S, F> {
             })]);
         }
 
-        let body = match self.fetcher.fetch(&command.url) {
-            Ok(body) => body,
-            Err(error) => {
-                // The failure is logged and the command is done, not retried.
-                tracing::warn!(
-                    offer_id = %command.offer_id,
-                    url = %command.url,
-                    "offer page download failed: {error}"
-                );
-                return Ok(Vec::new());
-            }
-        };
+        let body =
+            self.fetcher
+                .fetch(&command.url)
+                .map_err(|error| DownloadOfferPageError::Fetch {
+                    url: command.url.clone(),
+                    error,
+                })?;
 
         self.store
             .store_raw_offer(command.offer_id, &command.url, &body)?;
@@ -189,12 +196,11 @@ mod tests {
     }
 
     #[test]
-    fn completes_the_command_when_the_download_fails() {
+    fn fails_the_command_when_the_download_fails() {
         let handler = Handler::new(FakeStore::default(), Page(None));
 
-        let events = handler.handle(command()).unwrap();
-
-        assert!(events.is_empty());
+        let error = handler.handle(command()).unwrap_err();
+        assert!(matches!(&error, DownloadOfferPageError::Fetch { url, .. } if url == URL));
         assert!(handler.store.log.lock().unwrap().is_empty());
     }
 }
