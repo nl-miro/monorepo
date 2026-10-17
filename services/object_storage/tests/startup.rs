@@ -3,7 +3,7 @@ use std::process::Command;
 #[test]
 fn startup_requires_database_configuration() {
     let output = Command::new(env!("CARGO_BIN_EXE_object_storage"))
-        .env_remove("OBJECE_STORAGE__DATABASE_URL")
+        .env_remove("OBJECT_STORAGE_DATABASE_URL")
         .env("PORT", "0")
         .env(
             "LOG_DIR",
@@ -13,8 +13,7 @@ fn startup_requires_database_configuration() {
         .unwrap();
     assert!(!output.status.success());
     assert!(
-        String::from_utf8_lossy(&output.stderr)
-            .contains("OBJECE_STORAGE__DATABASE_URL is required")
+        String::from_utf8_lossy(&output.stderr).contains("OBJECT_STORAGE_DATABASE_URL is required")
     );
 }
 
@@ -22,7 +21,7 @@ fn startup_requires_database_configuration() {
 fn startup_requires_a_reachable_database() {
     let output = Command::new(env!("CARGO_BIN_EXE_object_storage"))
         .env(
-            "OBJECE_STORAGE__DATABASE_URL",
+            "OBJECT_STORAGE_DATABASE_URL",
             "postgres://127.0.0.1:1/missing?connect_timeout=1",
         )
         .env("PORT", "0")

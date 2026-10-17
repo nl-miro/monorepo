@@ -104,11 +104,11 @@ that crate.
 | `audit`        | `cargo audit`, once per workspace                                                |
 | `doc`          | `cargo doc --no-deps` (lib crates only)                                          |
 | `serve`        | `cargo run` (service and app crates only)                                        |
-| `migrate`      | Apply pending migrations using `RETAILER_SOURCING_DATABASE_URL` (retailer sourcing) or `OBJECE_STORAGE__DATABASE_URL` (object storage)            |
+| `migrate`      | Apply pending migrations using `RETAILER_SOURCING_DATABASE_URL` (retailer sourcing) or `OBJECT_STORAGE_DATABASE_URL` (object storage)            |
 | `migrate-redo` | Revert and reapply every migration, deleting the data (`retailer_sourcing` and `object_storage`) |
 
 `object_storage` and `retailer_sourcing` also provide `make test-postgres`, which
-uses `OBJECE_STORAGE_DATABASE_URL_TEST` for object storage and
+uses `OBJECT_STORAGE_DATABASE_URL_TEST` for object storage and
 `RETAILER_SOURCING_DATABASE_URL_TEST` for retailer sourcing, testing each case
 in an isolated schema. Retailer sourcing separates domain entities from PostgreSQL records
 throughout sitemap and offer discovery; see [ADR 7](docs/adr/0007-domain-entities-and-postgres-records.md).

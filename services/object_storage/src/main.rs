@@ -19,10 +19,10 @@ fn parse_port(value: Result<String, VarError>) -> io::Result<u16> {
 async fn main() -> io::Result<()> {
     let _logs = logging::init();
     let port = parse_port(std::env::var("PORT"))?;
-    let database_url = std::env::var("OBJECE_STORAGE__DATABASE_URL")
+    let database_url = std::env::var("OBJECT_STORAGE_DATABASE_URL")
         .ok()
         .filter(|v| !v.is_empty())
-        .ok_or_else(|| io::Error::other("OBJECE_STORAGE__DATABASE_URL is required."))?;
+        .ok_or_else(|| io::Error::other("OBJECT_STORAGE_DATABASE_URL is required."))?;
     let store = tokio::task::spawn_blocking(move || Store::connect(&database_url))
         .await
         .map_err(io::Error::other)?
