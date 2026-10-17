@@ -33,3 +33,4 @@ Notable changes to this repository. The format follows [Keep a Changelog](https:
 
 - Anker regional sitemaps no longer accept out-of-region URLs listed by a sitemap they do not recognize.
 - `minisforumau` sitemaps no longer report other hosts, the homepage, `agents.md`, `/pages/` or service products such as shipping protection as interesting.
+- `ankercom` sitemaps no longer treat German and Mexican storefront URLs as global.
