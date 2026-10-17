@@ -9,7 +9,7 @@ use crate::platform::bus::Bus;
     unused_imports,
     reason = "offer discovery's final events; no other context reacts to them yet"
 )]
-pub use super::download_offer_page::prelude::{OfferPageDownloadSkipped, OfferPageWasDownloaded};
+pub use super::download_offer_page::prelude::OfferPageWasDownloaded;
 
 /// Registers every offer discovery slice.
 pub fn register(bus: &mut Bus, platform: &Platform) {

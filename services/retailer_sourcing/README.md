@@ -19,7 +19,7 @@ POST /api/sitemap-retrievals
               └─▶ consolidate_sitemap reaction ──▶ ConsolidateSitemap ──▶ consolidate_sitemap handler ──▶ SitemapConsolidated
                     └─▶ discover_offers reaction ──▶ DiscoverOffers ──▶ discover_offers handler ──▶ OfferDiscovered × N
                           └─▶ download_offer_page reaction ──▶ DownloadOfferPage × N ──▶ download_offer_page handler
-                                ──▶ OfferPageWasDownloaded | OfferPageDownloadSkipped | no event (download failed)
+                                ──▶ OfferPageWasDownloaded | no event (download failed)
 ```
 
 | Step | Command              | Handler does                                                                                                                                                                                                    | Event                                                                                 | Reaction that follows                                                 |
@@ -28,7 +28,7 @@ POST /api/sitemap-retrievals
 | 2    | `ProcessSitemap`     | Parses the stored files into one sitemap tree, stores it in `processed_sitemaps`.                                                                                                                               | `SitemapProcessed`                                                                    | `consolidate_sitemap`: queue `ConsolidateSitemap`                     |
 | 3    | `ConsolidateSitemap` | Sorts every URL of the tree into product, catalog, content, not interested and unknown, using the retailer's link rules; stores the groups in `consolidated_sitemaps`.                                          | `SitemapConsolidated`                                                                 | `discover_offers`: queue `DiscoverOffers`, unless it found 0 products |
 | 4    | `DiscoverOffers`     | Reads the product URLs and gives each its own `offer_id`. Writes nothing.                                                                                                                                       | `OfferDiscovered`, one per URL                                                        | `download_offer_page`: queue one `DownloadOfferPage` per offer        |
-| 5    | `DownloadOfferPage`  | If the URL was downloaded in the last 6 hours, skips it. Otherwise downloads the page and stores it in `raw_offers` under the `offer_id`. A failed download fails the command so it can be retried.         | `OfferPageWasDownloaded` or `OfferPageDownloadSkipped`; none when the download failed | none yet                                                              |
+| 5    | `DownloadOfferPage`  | Downloads the page and stores it in `raw_offers` under the `offer_id`. A failed download fails the command so it can be retried.         | `OfferPageWasDownloaded`; none when the download failed | none yet                                                              |
 
 Every row a crawl writes in steps 1 to 3 carries its `retrieval_id`. Each
 step logs its outcome (see [Logging](#logging)); `command_entries` and

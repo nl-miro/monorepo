@@ -1,4 +1,3 @@
-use chrono::{DateTime, Utc};
 use diesel::Insertable;
 use diesel::prelude::*;
 use diesel::r2d2::PoolError;
@@ -42,23 +41,6 @@ struct NewRawOffer<'a> {
 }
 
 impl Store for PgStore {
-    fn recent_raw_offer(
-        &self,
-        url: &str,
-        since: DateTime<Utc>,
-    ) -> Result<Option<Uuid>, StoreError> {
-        let mut connection = self.pool.get()?;
-        let raw_offer_id = raw_offers::table
-            .filter(raw_offers::url.eq(url))
-            .filter(raw_offers::fetched_at.ge(since))
-            .order(raw_offers::fetched_at.desc())
-            .select(raw_offers::id)
-            .first::<Uuid>(&mut connection)
-            .optional()?;
-
-        Ok(raw_offer_id)
-    }
-
     fn store_raw_offer(&self, offer_id: Uuid, url: &str, body: &str) -> Result<(), StoreError> {
         let body_size =
             i32::try_from(body.len()).map_err(|_| StoreError::BodyTooLarge(body.len()))?;

@@ -1,21 +1,13 @@
-use chrono::{DateTime, Duration, Utc};
 use uuid::Uuid;
 
 use super::command::DownloadOfferPage;
-use super::event::{DownloadOutcome, OfferPageDownloadSkipped, OfferPageWasDownloaded};
+use super::event::OfferPageWasDownloaded;
 use super::store::StoreError;
 use crate::platform::bus::Handle;
 use crate::platform::http::{self, FetchError};
 
-/// How recently a URL must have been downloaded for it not to be fetched again.
-const REDOWNLOAD_WINDOW_HOURS: i64 = 6;
-
 /// The storage this slice needs.
 pub trait Store: Send + Sync + 'static {
-    /// The most recent page stored for `url` since `since`, if any.
-    fn recent_raw_offer(&self, url: &str, since: DateTime<Utc>)
-    -> Result<Option<Uuid>, StoreError>;
-
     /// Stores the page, replacing any page stored for the offer before.
     fn store_raw_offer(&self, offer_id: Uuid, url: &str, body: &str) -> Result<(), StoreError>;
 }
@@ -53,29 +45,13 @@ impl<S, F> Handler<S, F> {
 
 impl<S: Store, F: FetchOfferPage> Handle for Handler<S, F> {
     type Command = DownloadOfferPage;
-    type Event = DownloadOutcome;
+    type Event = OfferPageWasDownloaded;
     type Error = DownloadOfferPageError;
 
     fn handle(
         &self,
         command: DownloadOfferPage,
-    ) -> Result<Vec<DownloadOutcome>, DownloadOfferPageError> {
-        let since = Utc::now() - Duration::hours(REDOWNLOAD_WINDOW_HOURS);
-        if let Some(raw_offer_id) = self.store.recent_raw_offer(&command.url, since)? {
-            tracing::info!(
-                offer_id = %command.offer_id,
-                url = %command.url,
-                "offer page skipped: downloaded in the last {REDOWNLOAD_WINDOW_HOURS} hours"
-            );
-            return Ok(vec![DownloadOutcome::Skipped(OfferPageDownloadSkipped {
-                offer_id: command.offer_id,
-                consolidated_sitemap_id: command.consolidated_sitemap_id,
-                retailer_code: command.retailer_code,
-                url: command.url,
-                raw_offer_id,
-            })]);
-        }
-
+    ) -> Result<Vec<OfferPageWasDownloaded>, DownloadOfferPageError> {
         let body =
             self.fetcher
                 .fetch(&command.url)
@@ -93,12 +69,12 @@ impl<S: Store, F: FetchOfferPage> Handle for Handler<S, F> {
             "offer page downloaded"
         );
 
-        Ok(vec![DownloadOutcome::Downloaded(OfferPageWasDownloaded {
+        Ok(vec![OfferPageWasDownloaded {
             offer_id: command.offer_id,
             consolidated_sitemap_id: command.consolidated_sitemap_id,
             retailer_code: command.retailer_code,
             url: command.url,
-        })])
+        }])
     }
 }
 
@@ -114,7 +90,6 @@ mod tests {
 
     #[derive(Default)]
     struct FakeStore {
-        recent: Option<Uuid>,
         log: Mutex<Vec<String>>,
     }
 
@@ -126,10 +101,6 @@ mod tests {
     }
 
     impl Store for FakeStore {
-        fn recent_raw_offer(&self, _: &str, _: DateTime<Utc>) -> Result<Option<Uuid>, StoreError> {
-            Ok(self.recent)
-        }
-
         fn store_raw_offer(&self, _: Uuid, url: &str, body: &str) -> Result<(), StoreError> {
             self.log(format!("stored {url}: {body}"))
         }
@@ -164,12 +135,12 @@ mod tests {
 
         assert_eq!(
             events,
-            vec![DownloadOutcome::Downloaded(OfferPageWasDownloaded {
+            vec![OfferPageWasDownloaded {
                 offer_id: command.offer_id,
                 consolidated_sitemap_id: command.consolidated_sitemap_id,
                 retailer_code: RetailerCode::UgreenCa,
                 url: URL.to_string(),
-            })]
+            }]
         );
         assert_eq!(
             *handler.store.log.lock().unwrap(),
@@ -178,21 +149,12 @@ mod tests {
     }
 
     #[test]
-    fn skips_a_url_downloaded_recently() {
-        let raw_offer_id = Uuid::now_v7();
-        let store = FakeStore {
-            recent: Some(raw_offer_id),
-            ..FakeStore::default()
-        };
-        let handler = Handler::new(store, Page(Some("unused")));
-
-        let events = handler.handle(command()).unwrap();
-
-        assert!(matches!(
-            &events[..],
-            [DownloadOutcome::Skipped(skipped)] if skipped.raw_offer_id == raw_offer_id
-        ));
-        assert!(handler.store.log.lock().unwrap().is_empty());
+    fn downloads_a_url_again_every_time() {
+        let handler = Handler::new(FakeStore::default(), Page(Some("<html>offer</html>")));
+        for _ in 0..2 {
+            assert_eq!(handler.handle(command()).unwrap().len(), 1);
+        }
+        assert_eq!(handler.store.log.lock().unwrap().len(), 2);
     }
 
     #[test]
