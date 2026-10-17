@@ -1,4 +1,5 @@
 mod development;
+mod monitoring;
 mod offer_discovery;
 mod platform;
 mod reporting;
@@ -128,6 +129,7 @@ async fn start_features(database_url: Result<String, VarError>) -> io::Result<Ap
     sitemap_discovery::prelude::register(&mut bus, &platform);
     offer_discovery::prelude::register(&mut bus, &platform);
     development::prelude::register(&mut bus, &platform);
+    monitoring::prelude::register(&mut bus, &platform);
     reporting::prelude::register(&mut bus, &platform);
 
     let db = platform.db.clone();
