@@ -198,6 +198,18 @@ variable per collection:
 
 Both addresses are containers from the `compose-apps.yaml` file.
 
+The workspace's `office0-dev` environment
+(`bruno/environments/office0-dev.yml`) uses the office deployment through Caddy:
+
+| Variable | Address |
+| --- | --- |
+| `objectStorageBaseUrl` | `https://object-storage.service-dev.boduli.com` |
+| `retailerSourcingBaseUrl` | `https://retailer-sourcing.dev-service.boduli.com` |
+
+Select `office0-dev` as the workspace environment while on the office network
+or VPN. For object storage, also select the collection's `local` environment
+for its development bearer token and request variables.
+
 The Bruno collection in `bruno/retailer_sourcing` has a request for each route.
 
 The [object storage Bruno collection](bruno/object_storage/README.md) covers

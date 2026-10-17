@@ -10,6 +10,12 @@ the address as shown below.
 All requests inherit the collection's bearer authentication. The collection's
 `local` environment contains the service's public development token.
 
+For the office deployment, select the workspace's `office0-dev` environment
+and keep this collection's `local` environment selected. Requests then use
+`https://object-storage.service-dev.boduli.com` through Caddy, with the same
+development bearer token. Office network or VPN access is required.
+
+
 Run the collection in sequence. REST and GraphQL creation save `recordId` and
 `graphqlRecordId` as runtime variables for later requests. The GraphQL retry
 also retries the REST-created record, checking that both APIs share storage.
@@ -31,6 +37,8 @@ in Bruno's default safe runtime without external modules.
 npm install -g @usebruno/cli@4.2.1
 cd bruno/object_storage
 bru run --env local --global-env local
+# Office deployment:
+bru run --env local --global-env office0-dev
 # Override the address for a separately started service:
 bru run --env local --global-env local --global-env-var objectStorageBaseUrl=http://localhost:3003
 ```
