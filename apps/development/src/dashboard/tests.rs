@@ -7,14 +7,14 @@ fn report() -> Report {
         row_count_kind: RowCountKind::Estimated,
         tables: vec![
             TableStats {
-                table_name: "small".into(),
+                table_name: "alpha_small".into(),
                 row_count: 7,
                 table_bytes: 512,
                 index_bytes: 512,
                 total_bytes: 1024,
             },
             TableStats {
-                table_name: "large".into(),
+                table_name: "zeta_large".into(),
                 row_count: 12345,
                 table_bytes: 1048576,
                 index_bytes: 4096,
@@ -31,7 +31,10 @@ fn renders_both_panels_sorting_sizes_and_manual_refresh() {
     assert!(html.contains("12,345"));
     assert!(html.contains("1.0 MiB"));
     assert!(html.contains("1,052,672 bytes"));
-    assert!(html.find("<code>large").unwrap() < html.find("<code>small").unwrap());
+    assert!(html.find("<code>alpha_small").unwrap() < html.find("<code>zeta_large").unwrap());
+    assert!(html.contains("aria-sort=\"ascending\""));
+    assert!(html.contains("<i style=\"width:100.00%\"></i>"));
+    assert!(html.contains("<i style=\"width:0.10%\"></i>"));
     assert!(html.contains("Refresh reports"));
     assert!(html.contains("ROW COUNTS ARE ESTIMATES"));
     assert!(!html.contains("<script"));
@@ -62,7 +65,7 @@ fn failures_leave_other_panel_visible_and_totals_labelled() {
     ] {
         let html = render(Ok(report()), Err(error));
         assert!(html.contains(title));
-        assert!(html.contains("<code>large"));
+        assert!(html.contains("<code>zeta_large"));
         assert!(html.contains("available services only"));
     }
     assert!(render(Err(ReportError::Unavailable), Err(ReportError::Unavailable)).contains("0 B"));

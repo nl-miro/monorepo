@@ -130,14 +130,14 @@ fn render_report(html: &mut String, report: &Report) {
         html.push_str(r#"<div class="empty-state"><h3>No tables yet</h3><p>This schema has no ordinary tables to report.</p></div>"#);
         return;
     }
-    html.push_str(r#"<div class="table-scroll" tabindex="0" role="region" aria-label="Table statistics"><table><caption class="sr-only">Storage and estimated rows, ordered by total size</caption><thead><tr><th scope="col">Table</th><th scope="col">Rows <abbr title="Estimated">est.</abbr></th><th scope="col">Table size</th><th scope="col">Indexes</th><th scope="col">Total <span aria-hidden="true">↓</span></th></tr></thead><tbody>"#);
+    html.push_str(r#"<div class="table-scroll" tabindex="0" role="region" aria-label="Table statistics"><table><caption class="sr-only">Storage and estimated rows, ordered alphabetically by table name</caption><thead><tr><th scope="col" aria-sort="ascending">Table <span aria-hidden="true">↑</span></th><th scope="col">Rows <abbr title="Estimated">est.</abbr></th><th scope="col">Table size</th><th scope="col">Indexes</th><th scope="col">Total</th></tr></thead><tbody>"#);
     let mut tables: Vec<_> = report.tables.iter().collect();
-    tables.sort_by(|a, b| {
-        b.total_bytes
-            .cmp(&a.total_bytes)
-            .then(a.table_name.cmp(&b.table_name))
-    });
-    let max = tables[0].total_bytes;
+    tables.sort_by(|a, b| a.table_name.cmp(&b.table_name));
+    let max = tables
+        .iter()
+        .map(|table| table.total_bytes)
+        .max()
+        .unwrap_or(0);
     for table in tables {
         let percent = if max == 0 {
             0.0

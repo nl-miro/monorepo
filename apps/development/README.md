@@ -37,7 +37,7 @@ prove a table is empty. Reporting neither counts table rows nor runs ANALYZE.
 Table bytes include TOAST and auxiliary storage. Index bytes cover indexes
 attached to the table; total bytes are their sum. The dashboard displays IEC
 units, with exact byte values available on hover and to assistive technology.
-Tables are sorted by total size. Combined totals cover only available services.
+Tables are sorted alphabetically by name. Combined totals cover only available services.
 
 ## Testing
 
