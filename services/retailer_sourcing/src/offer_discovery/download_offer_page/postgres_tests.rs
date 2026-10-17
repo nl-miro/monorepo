@@ -59,7 +59,7 @@ pub(super) fn verify_round_trip(db: &Database, objects: ObjectStorage) {
 }
 
 #[test]
-#[ignore = "requires RETAILER_SOURCING_DATABASE_URL_TEST; run make test-postgres"]
+#[ignore = "requires DATABASE_URL_TEST; run make test-postgres"]
 fn postgres_download_entity_preserves_upsert_identity_and_atomicity() {
     let db = Database::new();
     let server = Server::new();
@@ -67,7 +67,7 @@ fn postgres_download_entity_preserves_upsert_identity_and_atomicity() {
 }
 
 #[test]
-#[ignore = "requires RETAILER_SOURCING_DATABASE_URL_TEST; run make test-postgres"]
+#[ignore = "requires DATABASE_URL_TEST; run make test-postgres"]
 fn postgres_failures_preserve_local_state() {
     let db = Database::new();
     let server = Server::new();
@@ -100,7 +100,7 @@ fn postgres_failures_preserve_local_state() {
 }
 
 #[test]
-#[ignore = "requires RETAILER_SOURCING_DATABASE_URL_TEST; run make test-postgres"]
+#[ignore = "requires DATABASE_URL_TEST; run make test-postgres"]
 fn postgres_concurrent_updates_keep_identity_and_complete_references() {
     let db = Database::new();
     let server = Server::new();

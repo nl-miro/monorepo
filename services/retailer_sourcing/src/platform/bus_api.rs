@@ -51,7 +51,7 @@ pub fn routes() -> OpenApiRouter<AppState> {
     responses(
         (status = 200, description = "Run finished", body = RunResponse),
         (status = 400, description = "Limit out of range", body = ErrorBody),
-        (status = 503, description = "The command bus isn't running (no RETAILER_SOURCING_DATABASE_URL)", body = ErrorBody),
+        (status = 503, description = "The command bus isn't running (no DATABASE_URL)", body = ErrorBody),
     )
 )]
 async fn run_commands(
@@ -69,7 +69,7 @@ async fn run_commands(
     responses(
         (status = 200, description = "Run finished", body = RunResponse),
         (status = 400, description = "Limit out of range", body = ErrorBody),
-        (status = 503, description = "The command bus isn't running (no RETAILER_SOURCING_DATABASE_URL)", body = ErrorBody),
+        (status = 503, description = "The command bus isn't running (no DATABASE_URL)", body = ErrorBody),
     )
 )]
 async fn run_events(
@@ -89,8 +89,7 @@ async fn run(
         return error(StatusCode::BAD_REQUEST, message);
     }
     let Some(bus) = bus else {
-        let message =
-            "the command bus is not running; start the service with RETAILER_SOURCING_DATABASE_URL";
+        let message = "the command bus is not running; start the service with DATABASE_URL";
         return error(StatusCode::SERVICE_UNAVAILABLE, message.to_string());
     };
 

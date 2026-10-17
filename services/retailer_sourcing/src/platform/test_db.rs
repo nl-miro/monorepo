@@ -24,11 +24,10 @@ pub(crate) struct Database {
 }
 impl Database {
     pub fn new() -> Self {
-        let url = std::env::var("RETAILER_SOURCING_DATABASE_URL_TEST")
-            .expect("RETAILER_SOURCING_DATABASE_URL_TEST is required; use make test-postgres");
-        let mut admin = PgConnection::establish(&url).expect(
-            "RETAILER_SOURCING_DATABASE_URL_TEST must point to an available PostgreSQL database",
-        );
+        let url = std::env::var("DATABASE_URL_TEST")
+            .expect("DATABASE_URL_TEST is required; use make test-postgres");
+        let mut admin = PgConnection::establish(&url)
+            .expect("DATABASE_URL_TEST must point to an available PostgreSQL database");
         let schema = format!("sitemap_test_{}", Uuid::now_v7().simple());
         admin
             .batch_execute(&format!("CREATE SCHEMA {schema}"))
@@ -88,7 +87,7 @@ mod postgres_tests {
     use super::*;
 
     #[test]
-    #[ignore = "requires RETAILER_SOURCING_DATABASE_URL_TEST; run make test-postgres"]
+    #[ignore = "requires DATABASE_URL_TEST; run make test-postgres"]
     fn postgres_table_renames_preserve_rows_payloads_and_foreign_keys() {
         let db = Database::new();
         let mut conn = db.pool.get().unwrap();

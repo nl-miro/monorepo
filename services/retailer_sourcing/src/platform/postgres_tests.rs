@@ -115,7 +115,7 @@ fn seed_legacy(conn: &mut PgConnection) {
 }
 
 #[test]
-#[ignore = "requires RETAILER_SOURCING_DATABASE_URL_TEST; run make test-postgres"]
+#[ignore = "requires DATABASE_URL_TEST; run make test-postgres"]
 fn postgres_storage_preserves_rows_and_payloads_through_up_down_up() {
     let db = Database::new();
     let mut conn = db.pool.get().unwrap();
@@ -163,7 +163,7 @@ fn postgres_storage_preserves_rows_and_payloads_through_up_down_up() {
 }
 
 #[test]
-#[ignore = "requires RETAILER_SOURCING_DATABASE_URL_TEST; run make test-postgres"]
+#[ignore = "requires DATABASE_URL_TEST; run make test-postgres"]
 fn postgres_storage_upgrade_rejects_missing_payloads_atomically() {
     for payload in [
         "extracted_offers_data",
@@ -189,7 +189,7 @@ fn postgres_storage_upgrade_rejects_missing_payloads_atomically() {
 }
 
 #[test]
-#[ignore = "requires RETAILER_SOURCING_DATABASE_URL_TEST; run make test-postgres"]
+#[ignore = "requires DATABASE_URL_TEST; run make test-postgres"]
 fn postgres_storage_downgrade_rejects_invalid_sizes_atomically() {
     let db = Database::new();
     let mut conn = db.pool.get().unwrap();
@@ -235,7 +235,7 @@ fn postgres_storage_downgrade_rejects_invalid_sizes_atomically() {
 }
 
 #[test]
-#[ignore = "requires RETAILER_SOURCING_DATABASE_URL_TEST; run make test-postgres"]
+#[ignore = "requires DATABASE_URL_TEST; run make test-postgres"]
 fn postgres_typed_storage_round_trips_unsigned_sizes() {
     use super::db::{Json, Storage};
     #[derive(Debug, QueryableByName)]
@@ -260,7 +260,7 @@ fn postgres_typed_storage_round_trips_unsigned_sizes() {
 }
 
 #[test]
-#[ignore = "requires RETAILER_SOURCING_DATABASE_URL_TEST; run make test-postgres"]
+#[ignore = "requires DATABASE_URL_TEST; run make test-postgres"]
 fn postgres_raw_object_cutover_removes_only_raw_sitemaps_and_guards_rollback() {
     let db = Database::new();
     let mut conn = db.pool.get().unwrap();
@@ -324,7 +324,7 @@ fn postgres_raw_object_cutover_removes_only_raw_sitemaps_and_guards_rollback() {
 }
 
 #[test]
-#[ignore = "requires RETAILER_SOURCING_DATABASE_URL_TEST; run make test-postgres"]
+#[ignore = "requires DATABASE_URL_TEST; run make test-postgres"]
 fn postgres_remaining_objects_cutover_preserves_raw_sitemaps_and_bus_history() {
     let db = Database::new();
     let mut conn = db.pool.get().unwrap();

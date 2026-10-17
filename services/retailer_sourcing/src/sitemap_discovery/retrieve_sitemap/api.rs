@@ -60,7 +60,7 @@ pub struct QueueFailure {
         (status = 202, description = "Retrievals queued", body = RetrievalResponse),
         (status = 400, description = "Empty list, unknown retailer or retailer without sitemaps", body = ErrorBody),
         (status = 500, description = "A retrieval couldn't be queued; lists those queued before it", body = QueueFailure),
-        (status = 503, description = "The command bus isn't running (no RETAILER_SOURCING_DATABASE_URL)", body = ErrorBody),
+        (status = 503, description = "The command bus isn't running (no DATABASE_URL)", body = ErrorBody),
     )
 )]
 pub async fn request_retrievals(
@@ -74,8 +74,7 @@ pub async fn request_retrievals(
     let Some(bus) = bus else {
         return error(
             StatusCode::SERVICE_UNAVAILABLE,
-            "the command bus is not running; start the service with RETAILER_SOURCING_DATABASE_URL"
-                .to_string(),
+            "the command bus is not running; start the service with DATABASE_URL".to_string(),
         );
     };
 

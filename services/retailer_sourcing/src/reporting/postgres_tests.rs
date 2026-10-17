@@ -3,7 +3,7 @@ use crate::platform::test_db::Database;
 use diesel::{connection::SimpleConnection, prelude::*};
 
 #[test]
-#[ignore = "requires RETAILER_SOURCING_DATABASE_URL_TEST; run make test-postgres"]
+#[ignore = "requires DATABASE_URL_TEST; run make test-postgres"]
 fn postgres_report_covers_active_schema_statistics_and_storage() {
     let db = Database::new();
     let other = Database::new();
@@ -85,7 +85,7 @@ fn postgres_report_covers_active_schema_statistics_and_storage() {
 }
 
 #[test]
-#[ignore = "requires RETAILER_SOURCING_DATABASE_URL_TEST; run make test-postgres"]
+#[ignore = "requires DATABASE_URL_TEST; run make test-postgres"]
 fn postgres_reporting_route_returns_typed_contract() {
     use axum::{body::Body, http::Request};
     use http_body_util::BodyExt;

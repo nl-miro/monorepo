@@ -57,7 +57,7 @@ missing, get them first:
 
 - `make export-offer-sources` writes the downloaded offer pages from the
   `retailer_sourcing` database to `<slug>/offer_details/sources/`. It needs
-  `RETAILER_SOURCING_DATABASE_URL`.
+  `DATABASE_URL`.
 - `make dump-sitemap-sources` downloads the fetched sitemap files from a
   running `retailer_sourcing` to `<slug>/sitemaps/sources/<retrieval id>/`.
 

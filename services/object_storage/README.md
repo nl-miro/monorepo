@@ -19,10 +19,9 @@ make .env
 PORT=3003 make serve
 ```
 
-The Makefile reads `.env`; shell values take precedence. `OBJECT_STORAGE_DATABASE_URL` is
-mandatory. Rename `DATABASE_URL` in existing environments to
-`OBJECT_STORAGE_DATABASE_URL`. The Make migration targets pass this setting
-to Diesel CLI as `DATABASE_URL`. Startup checks connectivity, PostgreSQL version, and UTF8 database encoding, then applies
+The Makefile reads `.env`; shell values take precedence. `DATABASE_URL` is
+mandatory and is also used by the Diesel migration targets. Startup checks
+connectivity, PostgreSQL version, and UTF8 database encoding, then applies
 embedded Diesel migrations before opening the HTTP listener. The database must
 be dedicated to this service. `PORT` defaults to 3000 and must be a valid `u16`.
 Ctrl+C and SIGTERM drain in-flight HTTP requests. Logs go to stderr and daily
@@ -43,7 +42,7 @@ Install Diesel CLI with PostgreSQL support if needed:
 cargo install diesel_cli --no-default-features --features postgres --locked
 ```
 
-From this service directory, configure `OBJECT_STORAGE_DATABASE_URL` in `.env` or your shell,
+From this service directory, configure `DATABASE_URL` in `.env` or your shell,
 then run:
 
 ```sh
@@ -52,7 +51,7 @@ make migration-redo  # revert and reapply all migrations (alias: make migrate-re
 ```
 
 Redo **deletes all stored records and data**. Both commands require
-`OBJECT_STORAGE_DATABASE_URL`; service startup also applies pending migrations automatically.
+`DATABASE_URL`; service startup also applies pending migrations automatically.
 
 ## Authentication and routes
 
@@ -164,11 +163,11 @@ as text (for example Base64) before sending them.
 ```sh
 make fmt
 make ci                   # unit/router tests; no database needed
-make test-postgres        # requires OBJECT_STORAGE_DATABASE_URL_TEST; fails if unavailable
+make test-postgres        # requires DATABASE_URL_TEST; fails if unavailable
 cargo test --release --test http  # checks release GraphiQL availability too
 ```
 
-`make .env` configures `OBJECT_STORAGE_DATABASE_URL_TEST` for the existing `object_storing_test`
+`make .env` configures `DATABASE_URL_TEST` for the existing `object_storing_test`
 database. Use a PostgreSQL URL for a dedicated test database, whose role can
 create/drop schemas. Each integration test migrates a random schema and removes
 it afterward; existing tables and records are untouched. Ordinary `make test`

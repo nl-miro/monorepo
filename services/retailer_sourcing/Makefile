@@ -1,11 +1,11 @@
 include ../../make/rust.mk
 
 # Preserve shell/command-line settings, including explicitly empty values.
-ifneq ($(origin RETAILER_SOURCING_DATABASE_URL),undefined)
-retailer_sourcing_database_url := $(value RETAILER_SOURCING_DATABASE_URL)
+ifneq ($(origin DATABASE_URL),undefined)
+retailer_sourcing_database_url := $(value DATABASE_URL)
 endif
-ifneq ($(origin RETAILER_SOURCING_DATABASE_URL_TEST),undefined)
-retailer_sourcing_test_database_url := $(value RETAILER_SOURCING_DATABASE_URL_TEST)
+ifneq ($(origin DATABASE_URL_TEST),undefined)
+retailer_sourcing_test_database_url := $(value DATABASE_URL_TEST)
 endif
 ifneq ($(origin OBJECT_STORAGE_URL),undefined)
 retailer_sourcing_object_storage_url := $(value OBJECT_STORAGE_URL)
@@ -15,7 +15,7 @@ retailer_sourcing_object_storage_token := $(value OBJECT_STORAGE_TOKEN)
 endif
 include $(wildcard .env)
 ifneq ($(origin retailer_sourcing_database_url),undefined)
-RETAILER_SOURCING_DATABASE_URL := $(retailer_sourcing_database_url)
+DATABASE_URL := $(retailer_sourcing_database_url)
 endif
 ifneq ($(origin retailer_sourcing_object_storage_url),undefined)
 OBJECT_STORAGE_URL := $(retailer_sourcing_object_storage_url)
@@ -24,10 +24,10 @@ ifneq ($(origin retailer_sourcing_object_storage_token),undefined)
 OBJECT_STORAGE_TOKEN := $(retailer_sourcing_object_storage_token)
 endif
 ifneq ($(origin retailer_sourcing_test_database_url),undefined)
-RETAILER_SOURCING_DATABASE_URL_TEST := $(retailer_sourcing_test_database_url)
+DATABASE_URL_TEST := $(retailer_sourcing_test_database_url)
 endif
-export RETAILER_SOURCING_DATABASE_URL
-export RETAILER_SOURCING_DATABASE_URL_TEST
+export DATABASE_URL
+export DATABASE_URL_TEST
 export OBJECT_STORAGE_URL
 export OBJECT_STORAGE_TOKEN
 
@@ -36,13 +36,13 @@ export OBJECT_STORAGE_TOKEN
 serve:
 	cargo run
 
-# Applies pending migrations to RETAILER_SOURCING_DATABASE_URL.
+# Applies pending migrations to DATABASE_URL.
 migrate: require-database-url
-	DATABASE_URL="$$RETAILER_SOURCING_DATABASE_URL" diesel migration run
+	diesel migration run
 
-# Reverts and reapplies every migration on RETAILER_SOURCING_DATABASE_URL, which deletes its data.
+# Reverts and reapplies every migration on DATABASE_URL, which deletes its data.
 migrate-redo: require-database-url
-	DATABASE_URL="$$RETAILER_SOURCING_DATABASE_URL" diesel migration redo --all
+	diesel migration redo --all
 
 # Writes every downloaded offer page to DATA_DIR/<retailer>/offer_details/sources.
 DATA_DIR ?= ../../../data
@@ -55,20 +55,20 @@ export-sitemaps: require-database-url
 	cargo run --release --bin export_sitemaps -- $(DATA_DIR)
 
 require-database-url:
-	@test -n "$$RETAILER_SOURCING_DATABASE_URL" || { echo "RETAILER_SOURCING_DATABASE_URL must be set, e.g. in .env (make .env)"; exit 1; }
+	@test -n "$$DATABASE_URL" || { echo "DATABASE_URL must be set, e.g. in .env (make .env)"; exit 1; }
 
 .env:
 	cp .env.example .env
 
 # Tests use isolated schemas; never reset the selected database.
 test-postgres:
-	@test -n "$$RETAILER_SOURCING_DATABASE_URL_TEST" || { echo "RETAILER_SOURCING_DATABASE_URL_TEST is required; use a separate test database"; exit 1; }
+	@test -n "$$DATABASE_URL_TEST" || { echo "DATABASE_URL_TEST is required; use a separate test database"; exit 1; }
 	cargo test --bin retailer_sourcing postgres_tests -- --ignored
 
 # Creates immutable artifacts in the configured object-storage service.
 .PHONY: test-object-storage
 test-object-storage:
-	@test -n "$$RETAILER_SOURCING_DATABASE_URL_TEST" || { echo "RETAILER_SOURCING_DATABASE_URL_TEST is required"; exit 1; }
+	@test -n "$$DATABASE_URL_TEST" || { echo "DATABASE_URL_TEST is required"; exit 1; }
 	@test -n "$$OBJECT_STORAGE_URL" || { echo "OBJECT_STORAGE_URL is required"; exit 1; }
 	@test -n "$$OBJECT_STORAGE_TOKEN" || { echo "OBJECT_STORAGE_TOKEN is required"; exit 1; }
 	cargo test --bin retailer_sourcing live_tests:: -- --ignored

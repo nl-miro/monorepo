@@ -107,7 +107,7 @@ fn parse_port(value: Result<String, VarError>) -> io::Result<u16> {
 }
 
 /// Connects to the database and starts the command and event bus when
-/// `RETAILER_SOURCING_DATABASE_URL` is set, after applying pending migrations. Without it the
+/// `DATABASE_URL` is set, after applying pending migrations. Without it the
 /// service only serves HTTP.
 async fn start_features(database_url: Result<String, VarError>) -> io::Result<AppState> {
     let database_url = match database_url {
@@ -145,7 +145,7 @@ async fn start_features(database_url: Result<String, VarError>) -> io::Result<Ap
 async fn main() -> io::Result<()> {
     let _logs = platform::logging::init();
     let port = parse_port(std::env::var("PORT"))?;
-    let features = start_features(std::env::var("RETAILER_SOURCING_DATABASE_URL")).await?;
+    let features = start_features(std::env::var("DATABASE_URL")).await?;
 
     let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{port}")).await?;
     axum::serve(listener, app(features))
