@@ -10,11 +10,13 @@ use crate::minisforumkr;
 use crate::minisforumru;
 use crate::minisforumuk;
 use crate::minisforumus;
+use std::time::Duration;
+
 use bodul_shared::SitemapConfig;
 use bodul_shared::link::LinkKind;
 use bodul_shared::prelude::{NormalizedData, RetailerCode};
 use html_extractor::io::Architecture;
-use std::time::Duration;
+use retailer_sauce::structuralized::StructuralizedData;
 
 pub fn architecture_for(retailer: RetailerCode) -> Option<Architecture> {
     match retailer {
@@ -44,6 +46,46 @@ pub fn normalize_for(retailer: RetailerCode, json: &str) -> Option<Result<Normal
         RetailerCode::MinisForumRu => Some(minisforumru::prelude::offer_detail_normalize_v1(json)),
         RetailerCode::MinisForumUk => Some(minisforumuk::prelude::offer_detail_normalize_v1(json)),
         RetailerCode::MinisForumUs => Some(minisforumus::prelude::offer_detail_normalize_v1(json)),
+        _ => None,
+    }
+}
+
+/// Only the storefronts with a structuralizer have an arm; every other code is `None`.
+pub fn structuralize_for(
+    retailer: RetailerCode,
+    json: &str,
+) -> Option<Result<StructuralizedData, String>> {
+    match retailer {
+        RetailerCode::MinisForumAu => {
+            Some(minisforumau::prelude::offer_detail_structuralize_v1(json))
+        }
+        RetailerCode::MinisForumEu => {
+            Some(minisforumeu::prelude::offer_detail_structuralize_v1(json))
+        }
+        RetailerCode::MinisForumFr => {
+            Some(minisforumfr::prelude::offer_detail_structuralize_v1(json))
+        }
+        RetailerCode::MinisForumHk => {
+            Some(minisforumhk::prelude::offer_detail_structuralize_v1(json))
+        }
+        RetailerCode::MinisForumJp => {
+            Some(minisforumjp::prelude::offer_detail_structuralize_v1(json))
+        }
+        RetailerCode::MinisForumCa => {
+            Some(minisforumca::prelude::offer_detail_structuralize_v1(json))
+        }
+        RetailerCode::MinisForumKr => {
+            Some(minisforumkr::prelude::offer_detail_structuralize_v1(json))
+        }
+        RetailerCode::MinisForumRu => {
+            Some(minisforumru::prelude::offer_detail_structuralize_v1(json))
+        }
+        RetailerCode::MinisForumUk => {
+            Some(minisforumuk::prelude::offer_detail_structuralize_v1(json))
+        }
+        RetailerCode::MinisForumUs => {
+            Some(minisforumus::prelude::offer_detail_structuralize_v1(json))
+        }
         _ => None,
     }
 }
