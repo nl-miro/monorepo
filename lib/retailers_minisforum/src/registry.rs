@@ -14,6 +14,7 @@ use bodul_shared::SitemapConfig;
 use bodul_shared::link::LinkKind;
 use bodul_shared::prelude::{NormalizedData, RetailerCode};
 use html_extractor::io::Architecture;
+use std::time::Duration;
 
 pub fn architecture_for(retailer: RetailerCode) -> Option<Architecture> {
     match retailer {
@@ -59,6 +60,38 @@ pub fn sitemap_config_for(retailer: &RetailerCode) -> Option<SitemapConfig> {
         RetailerCode::MinisForumRu => Some(minisforumru::prelude::sitemap_config_v1()),
         RetailerCode::MinisForumUk => Some(minisforumuk::prelude::sitemap_config_v1()),
         RetailerCode::MinisForumUs => Some(minisforumus::prelude::sitemap_config_v1()),
+        _ => None,
+    }
+}
+
+pub fn sitemap_pause_for(retailer: RetailerCode) -> Option<Duration> {
+    match retailer {
+        RetailerCode::MinisForumAu => Some(minisforumau::prelude::sitemap_pause_v1()),
+        RetailerCode::MinisForumCa => Some(minisforumca::prelude::sitemap_pause_v1()),
+        RetailerCode::MinisForumEu => Some(minisforumeu::prelude::sitemap_pause_v1()),
+        RetailerCode::MinisForumFr => Some(minisforumfr::prelude::sitemap_pause_v1()),
+        RetailerCode::MinisForumHk => Some(minisforumhk::prelude::sitemap_pause_v1()),
+        RetailerCode::MinisForumJp => Some(minisforumjp::prelude::sitemap_pause_v1()),
+        RetailerCode::MinisForumKr => Some(minisforumkr::prelude::sitemap_pause_v1()),
+        RetailerCode::MinisForumRu => Some(minisforumru::prelude::sitemap_pause_v1()),
+        RetailerCode::MinisForumUk => Some(minisforumuk::prelude::sitemap_pause_v1()),
+        RetailerCode::MinisForumUs => Some(minisforumus::prelude::sitemap_pause_v1()),
+        _ => None,
+    }
+}
+
+pub fn sitemap_greylisted_for(retailer: RetailerCode, url: &str) -> Option<bool> {
+    match retailer {
+        RetailerCode::MinisForumAu => Some(minisforumau::prelude::sitemap_greylisted_v1(url)),
+        RetailerCode::MinisForumCa => Some(minisforumca::prelude::sitemap_greylisted_v1(url)),
+        RetailerCode::MinisForumEu => Some(minisforumeu::prelude::sitemap_greylisted_v1(url)),
+        RetailerCode::MinisForumFr => Some(minisforumfr::prelude::sitemap_greylisted_v1(url)),
+        RetailerCode::MinisForumHk => Some(minisforumhk::prelude::sitemap_greylisted_v1(url)),
+        RetailerCode::MinisForumJp => Some(minisforumjp::prelude::sitemap_greylisted_v1(url)),
+        RetailerCode::MinisForumKr => Some(minisforumkr::prelude::sitemap_greylisted_v1(url)),
+        RetailerCode::MinisForumRu => Some(minisforumru::prelude::sitemap_greylisted_v1(url)),
+        RetailerCode::MinisForumUk => Some(minisforumuk::prelude::sitemap_greylisted_v1(url)),
+        RetailerCode::MinisForumUs => Some(minisforumus::prelude::sitemap_greylisted_v1(url)),
         _ => None,
     }
 }

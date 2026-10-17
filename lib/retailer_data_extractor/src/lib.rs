@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use bodul_shared::link::LinkKind;
 /// Retailer identifier accepted by [`architecture_for`].
 use bodul_shared::prelude::RetailerCode;
@@ -39,6 +41,24 @@ pub fn sitemap_config_for(retailer_code: &RetailerCode) -> Option<SitemapConfig>
         .or_else(|| retailers_ugreen::prelude::sitemap_config_for(retailer_code))
 }
 
+/// Whether `retailer_code`'s crawl downloads the child sitemap at `url`.
+/// Returns `None` for a retailer this crate doesn't know.
+pub fn sitemap_greylisted_for(retailer_code: RetailerCode, url: &str) -> Option<bool> {
+    retailers_anker::prelude::sitemap_greylisted_for(retailer_code, url)
+        .or_else(|| retailers_mi::prelude::sitemap_greylisted_for(retailer_code, url))
+        .or_else(|| retailers_minisforum::prelude::sitemap_greylisted_for(retailer_code, url))
+        .or_else(|| retailers_ugreen::prelude::sitemap_greylisted_for(retailer_code, url))
+}
+
+/// How long `retailer_code`'s crawl pauses between groups of sitemap
+/// downloads. Returns `None` for a retailer this crate doesn't know.
+pub fn sitemap_pause_for(retailer_code: RetailerCode) -> Option<Duration> {
+    retailers_anker::prelude::sitemap_pause_for(retailer_code)
+        .or_else(|| retailers_mi::prelude::sitemap_pause_for(retailer_code))
+        .or_else(|| retailers_minisforum::prelude::sitemap_pause_for(retailer_code))
+        .or_else(|| retailers_ugreen::prelude::sitemap_pause_for(retailer_code))
+}
+
 pub fn classify_link_for(
     retailer_code: RetailerCode,
     url: &str,
@@ -64,10 +84,45 @@ pub fn classify_link_for(
 
 #[cfg(test)]
 mod tests {
-    // Placeholder until the crate has code, so `make test` still builds and
-    // runs it. Replace it with real tests.
+    use super::*;
+
     #[test]
-    fn crate_builds() {
-        assert_eq!(env!("CARGO_PKG_NAME"), "retailer_data_extractor");
+    fn every_retailer_with_sitemaps_downloads_every_child_by_default() {
+        for retailer_code in [
+            RetailerCode::AnkerAu,
+            RetailerCode::MiCom,
+            RetailerCode::MinisForumAu,
+            RetailerCode::UgreenCa,
+        ] {
+            let greylisted = sitemap_greylisted_for(retailer_code, "https://shop.test/sitemap.xml");
+            assert_eq!(greylisted, Some(true), "{retailer_code:?}");
+        }
+    }
+
+    #[test]
+    fn pauses_longer_for_stores_that_rate_limit() {
+        for retailer_code in [
+            RetailerCode::UgreenCom,
+            RetailerCode::UgreenEu,
+            RetailerCode::UgreenNasEu,
+        ] {
+            assert_eq!(
+                sitemap_pause_for(retailer_code),
+                Some(Duration::from_secs(5)),
+                "{retailer_code:?}"
+            );
+        }
+        for retailer_code in [
+            RetailerCode::AnkerAu,
+            RetailerCode::MiCom,
+            RetailerCode::MinisForumAu,
+            RetailerCode::UgreenCa,
+        ] {
+            assert_eq!(
+                sitemap_pause_for(retailer_code),
+                Some(Duration::from_secs(1)),
+                "{retailer_code:?}"
+            );
+        }
     }
 }

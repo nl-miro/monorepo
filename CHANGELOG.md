@@ -27,6 +27,7 @@ Notable changes to this repository. The format follows [Keep a Changelog](https:
 - `Money` and `Currency` in `money`. `Money::parse` and `Money::from_major` are not implemented yet.
 - `sitemap` library: parsing sitemap XML and building a crawl's sitemap tree.
 - `Availability`, `ItemCondition`, validated identifiers and `StructuralizedData` in `retailer_sauce`.
+- Sitemap filtering and pacing per retailer: crawls skip child sitemaps a retailer rejects, such as Shopify metaobject sitemaps, and pause after every three downloads, for five seconds on the Ugreen stores that rate-limit.
 
 ### Fixed
 

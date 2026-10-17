@@ -19,12 +19,22 @@ pub trait Store: Send + Sync + 'static {
 /// Looks up the sitemaps a retailer's tree starts from.
 pub trait RootSitemaps: Send + Sync + 'static {
     fn root_sitemaps(&self, retailer_code: &RetailerCode) -> Option<Vec<String>>;
+
+    /// Whether the crawl downloads the child sitemap at `url`. Every one by
+    /// default.
+    fn sitemap_greylisted(&self, _retailer_code: RetailerCode, _url: &str) -> bool {
+        true
+    }
 }
 
 impl RootSitemaps for Retailers {
     fn root_sitemaps(&self, retailer_code: &RetailerCode) -> Option<Vec<String>> {
         self.sitemap_config(retailer_code)
             .map(|config| config.sitemap_url)
+    }
+
+    fn sitemap_greylisted(&self, retailer_code: RetailerCode, url: &str) -> bool {
+        Retailers::sitemap_greylisted(*self, retailer_code, url)
     }
 }
 
@@ -84,7 +94,8 @@ impl<S: Store, R: RootSitemaps> Handle for Handler<S, R> {
         let raw_documents = self.store.raw_documents(retrieval_id)?;
 
         // A root sitemap that can't be built is left out of the tree.
-        let (document, errors) = build_tree(&root_urls, &raw_documents, |_| true)?;
+        let greylisted = |url: &str| self.retailers.sitemap_greylisted(retailer_code, url);
+        let (document, errors) = build_tree(&root_urls, &raw_documents, greylisted)?;
         for error in &errors {
             tracing::warn!(%retrieval_id, ?retailer_code, "sitemap left out of the tree: {error}");
         }

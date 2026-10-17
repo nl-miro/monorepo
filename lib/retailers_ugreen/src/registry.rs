@@ -25,6 +25,7 @@ use bodul_shared::SitemapConfig;
 use bodul_shared::link::LinkKind;
 use bodul_shared::prelude::{NormalizedData, RetailerCode};
 use html_extractor::io::Architecture;
+use std::time::Duration;
 
 pub fn architecture_for(retailer: RetailerCode) -> Option<Architecture> {
     match retailer {
@@ -103,6 +104,60 @@ pub fn sitemap_config_for(retailer: &RetailerCode) -> Option<SitemapConfig> {
         RetailerCode::UgreenNl => Some(ugreennl::prelude::sitemap_config_v1()),
         RetailerCode::UgreenUk => Some(ugreenuk::prelude::sitemap_config_v1()),
         RetailerCode::UgreenUs => Some(ugreenus::prelude::sitemap_config_v1()),
+        _ => None,
+    }
+}
+
+pub fn sitemap_pause_for(retailer: RetailerCode) -> Option<Duration> {
+    match retailer {
+        RetailerCode::UgreenCa => Some(ugreenca::prelude::sitemap_pause_v1()),
+        RetailerCode::UgreenCom => Some(ugreencom::prelude::sitemap_pause_v1()),
+        RetailerCode::UgreenDe => Some(ugreende::prelude::sitemap_pause_v1()),
+        RetailerCode::UgreenEu => Some(ugreeneu::prelude::sitemap_pause_v1()),
+        RetailerCode::UgreenFr => Some(ugreenfr::prelude::sitemap_pause_v1()),
+        RetailerCode::UgreenIn => Some(ugreenin::prelude::sitemap_pause_v1()),
+        RetailerCode::UgreenJp => Some(ugreenjp::prelude::sitemap_pause_v1()),
+        RetailerCode::UgreenKr => Some(ugreenkr::prelude::sitemap_pause_v1()),
+        RetailerCode::UgreenNas => Some(ugreennas::prelude::sitemap_pause_v1()),
+        RetailerCode::UgreenNasAu => Some(ugreennasau::prelude::sitemap_pause_v1()),
+        RetailerCode::UgreenNasCa => Some(ugreennasca::prelude::sitemap_pause_v1()),
+        RetailerCode::UgreenNasDe => Some(ugreennasde::prelude::sitemap_pause_v1()),
+        RetailerCode::UgreenNasEs => Some(ugreennases::prelude::sitemap_pause_v1()),
+        RetailerCode::UgreenNasEu => Some(ugreennaseu::prelude::sitemap_pause_v1()),
+        RetailerCode::UgreenNasFr => Some(ugreennasfr::prelude::sitemap_pause_v1()),
+        RetailerCode::UgreenNasIt => Some(ugreennasit::prelude::sitemap_pause_v1()),
+        RetailerCode::UgreenNasJp => Some(ugreennasjp::prelude::sitemap_pause_v1()),
+        RetailerCode::UgreenNasUk => Some(ugreennasuk::prelude::sitemap_pause_v1()),
+        RetailerCode::UgreenNl => Some(ugreennl::prelude::sitemap_pause_v1()),
+        RetailerCode::UgreenUk => Some(ugreenuk::prelude::sitemap_pause_v1()),
+        RetailerCode::UgreenUs => Some(ugreenus::prelude::sitemap_pause_v1()),
+        _ => None,
+    }
+}
+
+pub fn sitemap_greylisted_for(retailer: RetailerCode, url: &str) -> Option<bool> {
+    match retailer {
+        RetailerCode::UgreenCa => Some(ugreenca::prelude::sitemap_greylisted_v1(url)),
+        RetailerCode::UgreenCom => Some(ugreencom::prelude::sitemap_greylisted_v1(url)),
+        RetailerCode::UgreenDe => Some(ugreende::prelude::sitemap_greylisted_v1(url)),
+        RetailerCode::UgreenEu => Some(ugreeneu::prelude::sitemap_greylisted_v1(url)),
+        RetailerCode::UgreenFr => Some(ugreenfr::prelude::sitemap_greylisted_v1(url)),
+        RetailerCode::UgreenIn => Some(ugreenin::prelude::sitemap_greylisted_v1(url)),
+        RetailerCode::UgreenJp => Some(ugreenjp::prelude::sitemap_greylisted_v1(url)),
+        RetailerCode::UgreenKr => Some(ugreenkr::prelude::sitemap_greylisted_v1(url)),
+        RetailerCode::UgreenNas => Some(ugreennas::prelude::sitemap_greylisted_v1(url)),
+        RetailerCode::UgreenNasAu => Some(ugreennasau::prelude::sitemap_greylisted_v1(url)),
+        RetailerCode::UgreenNasCa => Some(ugreennasca::prelude::sitemap_greylisted_v1(url)),
+        RetailerCode::UgreenNasDe => Some(ugreennasde::prelude::sitemap_greylisted_v1(url)),
+        RetailerCode::UgreenNasEs => Some(ugreennases::prelude::sitemap_greylisted_v1(url)),
+        RetailerCode::UgreenNasEu => Some(ugreennaseu::prelude::sitemap_greylisted_v1(url)),
+        RetailerCode::UgreenNasFr => Some(ugreennasfr::prelude::sitemap_greylisted_v1(url)),
+        RetailerCode::UgreenNasIt => Some(ugreennasit::prelude::sitemap_greylisted_v1(url)),
+        RetailerCode::UgreenNasJp => Some(ugreennasjp::prelude::sitemap_greylisted_v1(url)),
+        RetailerCode::UgreenNasUk => Some(ugreennasuk::prelude::sitemap_greylisted_v1(url)),
+        RetailerCode::UgreenNl => Some(ugreennl::prelude::sitemap_greylisted_v1(url)),
+        RetailerCode::UgreenUk => Some(ugreenuk::prelude::sitemap_greylisted_v1(url)),
+        RetailerCode::UgreenUs => Some(ugreenus::prelude::sitemap_greylisted_v1(url)),
         _ => None,
     }
 }
