@@ -6,7 +6,8 @@ use utoipa_axum::routes;
 use super::super::Retailers;
 use super::{api, handler, store};
 use crate::platform::Platform;
-use crate::platform::bus::{Bus, BusHandle};
+use crate::platform::bus::Bus;
+use crate::platform::state::AppState;
 
 pub use super::event::SitemapRetrieved;
 
@@ -21,6 +22,6 @@ pub fn register(bus: &mut Bus, platform: &Platform) {
 }
 
 /// The slice's HTTP routes, to nest under `/api`.
-pub fn routes() -> OpenApiRouter<Option<BusHandle>> {
+pub fn routes() -> OpenApiRouter<AppState> {
     OpenApiRouter::new().routes(routes!(api::request_retrievals))
 }
