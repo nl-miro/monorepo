@@ -5,7 +5,7 @@ use bodul_shared::retailer::RetailerCode;
 use super::super::Retailers;
 use super::command::RetrieveSitemap;
 use super::crawl::crawl;
-use super::entity::RetrievedSitemapDocument;
+use super::entity::{RetrievedSitemapDocument, StoredSitemapDocument};
 use super::event::SitemapRetrieved;
 use super::store::StoreError;
 use crate::platform::bus::Handle;
@@ -13,7 +13,10 @@ use crate::platform::http::{self, FetchError};
 
 /// The storage this slice needs.
 pub trait Store: Send + Sync + 'static {
-    fn store_documents(&self, documents: &[RetrievedSitemapDocument]) -> Result<(), StoreError>;
+    fn store_documents(
+        &self,
+        documents: &[RetrievedSitemapDocument],
+    ) -> Result<Vec<StoredSitemapDocument>, StoreError>;
 }
 
 /// Fetches the body of one sitemap file.
@@ -114,7 +117,7 @@ impl<S: Store, F: FetchSitemapBody, R: RootSitemaps> Handle for Handler<S, F, R>
         }
 
         let documents = RetrievedSitemapDocument::from_documents(retrieval_id, documents);
-        self.store.store_documents(&documents)?;
+        let documents = self.store.store_documents(&documents)?;
         tracing::info!(
             %retrieval_id,
             ?retailer_code,
@@ -146,18 +149,29 @@ mod tests {
     #[derive(Default)]
     struct FakeStore {
         documents: Mutex<Vec<String>>,
+        fail: bool,
     }
 
     impl Store for FakeStore {
         fn store_documents(
             &self,
             documents: &[RetrievedSitemapDocument],
-        ) -> Result<(), StoreError> {
+        ) -> Result<Vec<StoredSitemapDocument>, StoreError> {
+            if self.fail {
+                return Err(StoreError::InvalidBodySize);
+            }
             let urls = documents
                 .iter()
                 .map(|document| document.document.url.clone());
             self.documents.lock().unwrap().extend(urls);
-            Ok(())
+            Ok(documents
+                .iter()
+                .cloned()
+                .map(|sitemap| StoredSitemapDocument {
+                    sitemap,
+                    object_storage_id: uuid::Uuid::now_v7(),
+                })
+                .collect())
         }
     }
 
@@ -283,5 +297,17 @@ mod tests {
             RetrieveSitemapError::NoSitemapConfig(RetailerCode::UgreenCa)
         ));
         assert!(handler.store.documents.lock().unwrap().is_empty());
+    }
+    #[test]
+    fn storage_failure_does_not_publish_a_retrieved_event() {
+        let mut handler = handler(
+            Pages(HashMap::from([(ROOT, urlset("https://shop.test/a"))])),
+            Roots(Some(vec![ROOT.into()])),
+        );
+        handler.store.fail = true;
+        assert!(matches!(
+            handler.handle(command()),
+            Err(RetrieveSitemapError::Store(_))
+        ));
     }
 }

@@ -97,9 +97,12 @@ Timestamps in API responses use RFC 3339 with the UTC `Z` suffix.
 Bucket names are case-sensitive strings from a hard-coded allowlist. Arbitrary
 bucket names and dynamic bucket creation are not supported. Confirmed names:
 
-- `sitemap_raw`
-- `sitemap_processed`
-- `sitemap_consolidated`
+- `sitemap_raw` (legacy name, retained)
+- `sitemaps_raw` (raw sitemap bodies from retailer sourcing)
+- `sitemap_processed` (legacy name, retained)
+- `sitemaps_processed`
+- `sitemap_consolidated` (legacy name, retained)
+- `sitemaps_consolidated`
 - `offer_details_raw`
 - `offer_details_extracted`
 - `offer_details_normalized`

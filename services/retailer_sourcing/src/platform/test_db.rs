@@ -91,6 +91,9 @@ mod postgres_tests {
     fn postgres_table_renames_preserve_rows_payloads_and_foreign_keys() {
         let db = Database::new();
         let mut conn = db.pool.get().unwrap();
+        conn.revert_last_migration(MIGRATIONS).unwrap(); // Undo remaining object storage.
+        conn.revert_last_migration(MIGRATIONS).unwrap(); // Undo raw object storage.
+        conn.revert_last_migration(MIGRATIONS).unwrap(); // Undo pipeline storage.
         conn.revert_last_migration(MIGRATIONS).unwrap();
         let tables = [
             (
@@ -165,7 +168,7 @@ mod postgres_tests {
         )).unwrap();
             before.push(snapshot(&mut conn, old, &format!("{old}_data")));
         }
-        conn.run_pending_migrations(MIGRATIONS).unwrap();
+        conn.run_next_migration(MIGRATIONS).unwrap();
         for ((old, new, ..), expected) in tables.iter().zip(&before) {
             assert_eq!(snapshot(&mut conn, new, &format!("{old}_data")), *expected);
             assert_eq!(
@@ -180,7 +183,7 @@ mod postgres_tests {
         for ((old, ..), expected) in tables.iter().zip(&before) {
             assert_eq!(snapshot(&mut conn, old, &format!("{old}_data")), *expected);
         }
-        conn.run_pending_migrations(MIGRATIONS).unwrap();
+        conn.run_next_migration(MIGRATIONS).unwrap();
         for ((old, new, ..), expected) in tables.iter().zip(&before) {
             assert_eq!(snapshot(&mut conn, new, &format!("{old}_data")), *expected);
             conn.batch_execute(&format!("DELETE FROM {new}")).unwrap();

@@ -105,7 +105,7 @@ error classifications and partial data, malformed responses, redirects,
 connection failures, and payloads/metadata above the framework body defaults.
 No PostgreSQL or external network service is needed for these tests.
 
-An opt-in test runs both transports against the real service:
+Opt-in integration tests run both transports against the real service:
 
 ```sh
 OBJECT_STORAGE_URL=http://localhost:3003 \
@@ -114,7 +114,10 @@ make test-live
 ```
 
 It fails clearly when configuration or the service is unavailable. Use a
-disposable database: it creates two immutable artifacts and exercises retries,
-conflicts, wrong-bucket/missing retrievals, and authentication failures. Ordinary
-`make test` leaves this test ignored. For manual API testing, use the
+disposable database: the tests create four immutable artifacts. The dedicated
+round-trip test creates a record through each transport and checks its ID,
+bucket, idempotency key, exact Unicode payload, nested metadata, numeric
+precision, and timestamp consistency across both APIs. The other test exercises
+retries, conflicts, wrong-bucket/missing retrievals, and authentication failures.
+Ordinary `make test` leaves these tests ignored. For manual API testing, use the
 [Bruno collection](../../bruno/object_storage/README.md).

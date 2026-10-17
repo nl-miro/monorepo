@@ -4,14 +4,16 @@ use axum::extract::FromRef;
 
 use super::bus::BusHandle;
 use super::db::DbPool;
+use super::object_storage::ObjectStorage;
 
-/// The routes' shared state. Both are `None` without a database.
+/// The routes' shared state. All are `None` without a database.
 #[derive(Clone, Default)]
 pub struct AppState {
     /// Queues and runs commands and events.
     pub bus: Option<BusHandle>,
     /// Reads what the pipeline stored.
     pub db: Option<DbPool>,
+    pub object_storage: Option<ObjectStorage>,
 }
 
 impl FromRef<AppState> for Option<BusHandle> {

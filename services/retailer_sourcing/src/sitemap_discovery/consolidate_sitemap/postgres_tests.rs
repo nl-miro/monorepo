@@ -1,4 +1,8 @@
-//! Opt-in database tests. Every test owns and removes a unique schema.
+use crate::platform::db::Json;
+use crate::platform::object_storage::{
+    CONSOLIDATED_SITEMAPS_BUCKET, ObjectStorage, ObjectStorageMetadata, PROCESSED_SITEMAPS_BUCKET,
+};
+use crate::platform::test_objects::Server;
 use diesel::connection::SimpleConnection;
 use diesel::prelude::*;
 use diesel::sql_types::{Jsonb, Uuid as SqlUuid};
@@ -30,7 +34,7 @@ fn seed_processed(conn: &mut PgConnection) -> (Uuid, Uuid, Value) {
     let id = Uuid::now_v7();
     let retrieval_id = Uuid::now_v7();
     let document = serde_json::to_value(SitemapDocument::default()).unwrap();
-    diesel::sql_query("INSERT INTO sitemaps_processed (id,retrieval_id,retailer_code,document_size,url_count) VALUES ($1,$2,'ugreenca',0,0)")
+    diesel::sql_query("INSERT INTO sitemaps_processed (id,retrieval_id,retailer_code,storage,url_count) VALUES ($1,$2,'ugreenca',jsonb_build_object('content_size',0),0)")
         .bind::<SqlUuid,_>(id).bind::<SqlUuid,_>(retrieval_id).execute(conn).unwrap();
     diesel::sql_query("INSERT INTO processed_sitemaps_data (id,document) VALUES ($1,$2)")
         .bind::<SqlUuid, _>(id)
@@ -40,103 +44,147 @@ fn seed_processed(conn: &mut PgConnection) -> (Uuid, Uuid, Value) {
     (id, retrieval_id, document)
 }
 
-#[test]
-#[ignore = "requires TEST_DATABASE_URL; run make test-postgres"]
-fn postgres_store_reads_entities_writes_stats_and_rolls_back_failed_payloads() {
-    let db = Database::new();
-    let store = PgStore::new(db.pool.clone());
+fn seed_object_processed(conn: &mut PgConnection, objects: &ObjectStorage) -> (Uuid, Uuid, Value) {
+    let id = Uuid::now_v7();
+    let retrieval_id = Uuid::now_v7();
+    let document = serde_json::to_value(SitemapDocument::default()).unwrap();
+    let body = document.to_string();
+    let object_storage_id = objects
+        .create(PROCESSED_SITEMAPS_BUCKET, id, &body)
+        .unwrap();
+    diesel::sql_query("INSERT INTO sitemaps_processed (id,retrieval_id,retailer_code,storage,url_count) VALUES ($1,$2,'ugreenca',$3,0)")
+        .bind::<SqlUuid,_>(id).bind::<SqlUuid,_>(retrieval_id)
+        .bind::<Jsonb,_>(Json(ObjectStorageMetadata { content_size: body.len() as u64, object_storage_id }))
+        .execute(conn).unwrap();
+    (id, retrieval_id, document)
+}
+
+pub(super) fn verify_round_trip(db: &Database, objects: ObjectStorage) {
+    let store = PgStore::new(db.pool.clone(), objects.clone());
     let mut conn = db.pool.get().unwrap();
-    let (id, retrieval_id, document) = seed_processed(&mut conn);
+    let (id, retrieval_id, document) = seed_object_processed(&mut conn, &objects);
     let processed = store.processed_sitemap(id).unwrap();
-    assert_eq!(processed.id, id);
     assert_eq!(processed.retrieval_id, retrieval_id);
     assert_eq!(serde_json::to_value(&processed.document).unwrap(), document);
-    assert!(matches!(
-        store.processed_sitemap(Uuid::now_v7()),
-        Err(StoreError::Database(diesel::result::Error::NotFound))
-    ));
-
-    // A failure on the second insert must undo the first insert too.
-    conn.batch_execute(
-        "ALTER TABLE consolidated_sitemaps_data ADD CONSTRAINT reject_payload CHECK (false)",
-    )
-    .unwrap();
     let entity = ConsolidatedSitemap::new(
         &processed,
         GroupedLinks {
             product: vec!["https://shop.test/ž".into()],
-            unknown: vec!["https://shop.test/?".into()],
             ..Default::default()
         },
     );
-    assert!(matches!(
-        store.store_consolidated(&entity),
-        Err(StoreError::Database(_))
-    ));
-    assert_eq!(
-        json_query(
-            &mut conn,
-            "SELECT jsonb_build_array((SELECT count(*) FROM sitemaps_consolidated), (SELECT count(*) FROM consolidated_sitemaps_data)) AS value"
-        ),
-        json!([0, 0])
-    );
-    conn.batch_execute("ALTER TABLE consolidated_sitemaps_data DROP CONSTRAINT reject_payload")
-        .unwrap();
-    store.store_consolidated(&entity).unwrap();
+    let stored = store.store_consolidated(&entity).unwrap();
+    assert_eq!(stored.entity.id, entity.id);
     let row = json_query(
         &mut conn,
-        "SELECT to_jsonb(c) || jsonb_build_object('payload',d.content) AS value FROM sitemaps_consolidated c JOIN consolidated_sitemaps_data d USING (id)",
+        "SELECT to_jsonb(c) AS value FROM sitemaps_consolidated c",
     );
-    assert_eq!(row["id"], entity.id.to_string());
     assert_eq!(
         row["references"],
-        json!({
-            "processed_sitemap_id": id,
-            "retrieval_id": retrieval_id,
-            "retailer_code": "ugreenca",
-        })
+        json!({"processed_sitemap_id":id,"retrieval_id":retrieval_id,"retailer_code":"ugreenca"})
     );
-    for name in [
-        "processed_sitemap_id",
-        "retrieval_id",
-        "retailer_code",
-        "content_size",
-    ] {
-        assert!(row.get(name).is_none());
-    }
     assert_eq!(
         row["stats"],
-        json!({"product_count":1,"catalog_count":0,"content_count":0,"not_interested_count":0,"unknown_count":1})
+        json!({"product_count":1,"catalog_count":0,"content_count":0,"not_interested_count":0,"unknown_count":0})
     );
+    let storage: ObjectStorageMetadata = serde_json::from_value(row["storage"].clone()).unwrap();
+    assert_eq!(storage.object_storage_id, stored.object_storage_id);
     assert_eq!(
-        row["payload"],
-        serde_json::to_value(entity.links()).unwrap()
+        objects
+            .get(CONSOLIDATED_SITEMAPS_BUCKET, entity.id, &storage)
+            .unwrap(),
+        serde_json::to_string(entity.links()).unwrap()
     );
+    let duplicate = ConsolidatedSitemap::new(&processed, GroupedLinks::default());
+    assert!(matches!(
+        store.store_consolidated(&duplicate),
+        Err(StoreError::Database(_))
+    ));
+    let exported = json_query(
+        &mut conn,
+        &format!(
+            "SELECT to_jsonb(crawl) AS value FROM ({}) crawl",
+            include_str!("../../bin/export_sitemaps.sql")
+        ),
+    );
+    assert_eq!(exported["id"], id.to_string());
+    assert_eq!(exported["consolidated_id"], entity.id.to_string());
+    assert_eq!(exported["consolidated_storage"], row["storage"]);
     assert_eq!(
-        row["storage"],
-        json!({"content_size": row["payload"].to_string().len()})
+        exported["storage"]["object_storage_id"],
+        processed.object_storage_id.to_string()
     );
-    assert!(row.get("product_count").is_none());
+}
+
+#[test]
+#[ignore = "requires TEST_DATABASE_URL; run make test-postgres"]
+fn postgres_store_round_trip_and_export_query() {
+    let db = Database::new();
+    let server = Server::new();
+    verify_round_trip(&db, server.client());
+}
+
+#[test]
+#[ignore = "requires TEST_DATABASE_URL; run make test-postgres"]
+fn postgres_failed_objects_and_local_inserts() {
+    let db = Database::new();
+    let server = Server::new();
+    let objects = server.client();
+    let store = PgStore::new(db.pool.clone(), objects.clone());
+    let mut conn = db.pool.get().unwrap();
+    let (id, _, _) = seed_object_processed(&mut conn, &objects);
+    let processed = store.processed_sitemap(id).unwrap();
+    let entity = ConsolidatedSitemap::new(&processed, GroupedLinks::default());
+    {
+        let mut data = server.data.lock().unwrap();
+        data.fail_create_at = Some(data.uploads.len() + 1);
+    }
+    assert!(store.store_consolidated(&entity).is_err());
+    server.data.lock().unwrap().fail_create_at = None;
+    conn.batch_execute(
+        "ALTER TABLE sitemaps_consolidated ADD CONSTRAINT reject_write CHECK(false)",
+    )
+    .unwrap();
     assert!(store.store_consolidated(&entity).is_err());
     assert_eq!(
         json_query(
             &mut conn,
-            "SELECT to_jsonb(count(*)) AS value FROM consolidated_sitemaps_data"
+            "SELECT to_jsonb(count(*)) AS value FROM sitemaps_consolidated"
         ),
-        json!(1)
+        json!(0)
     );
-
+    conn.batch_execute("ALTER TABLE sitemaps_consolidated DROP CONSTRAINT reject_write")
+        .unwrap();
+    store.store_consolidated(&entity).unwrap();
+    for (status, body) in [(404, "{}"), (503, "{}"), (200, "malformed")] {
+        server.data.lock().unwrap().get_response = Some((status, body.into()));
+        assert!(store.processed_sitemap(id).is_err());
+    }
+    server.data.lock().unwrap().get_response = None;
     conn.batch_execute("UPDATE sitemaps_processed SET retailer_code='invalid'")
         .unwrap();
     assert!(matches!(
         store.processed_sitemap(id),
         Err(StoreError::InvalidRetailerCode(_))
     ));
-    conn.batch_execute("UPDATE sitemaps_processed SET retailer_code='ugreenca'; UPDATE processed_sitemaps_data SET document='null'::jsonb").unwrap();
     assert!(matches!(
-        store.processed_sitemap(id),
-        Err(StoreError::Serialization(_))
+        store.processed_sitemap(Uuid::now_v7()),
+        Err(StoreError::Database(diesel::result::Error::NotFound))
     ));
+}
+
+fn seed_legacy_consolidated(conn: &mut PgConnection, processed: Uuid, retrieval: Uuid) -> Uuid {
+    let id = Uuid::now_v7();
+    diesel::sql_query("INSERT INTO sitemaps_consolidated (id,stats,\"references\",storage) VALUES ($1,$2,$3,$4)")
+        .bind::<SqlUuid,_>(id)
+        .bind::<Jsonb,_>(json!({"product_count":0,"catalog_count":0,"content_count":0,"not_interested_count":0,"unknown_count":0}))
+        .bind::<Jsonb,_>(json!({"processed_sitemap_id":processed,"retrieval_id":retrieval,"retailer_code":"ugreenca"}))
+        .bind::<Jsonb,_>(json!({"content_size":2})).execute(conn).unwrap();
+    diesel::sql_query("INSERT INTO consolidated_sitemaps_data (id,content) VALUES ($1,'{}')")
+        .bind::<SqlUuid, _>(id)
+        .execute(conn)
+        .unwrap();
+    id
 }
 
 #[test]
@@ -145,6 +193,9 @@ fn postgres_migration_preserves_populated_rows_through_up_down_up() {
     let db = Database::new();
     let mut conn = db.pool.get().unwrap();
     // Test the stats migration independently of the later references/storage migration.
+    conn.revert_last_migration(MIGRATIONS).unwrap(); // Undo remaining object storage.
+    conn.revert_last_migration(MIGRATIONS).unwrap(); // Undo raw object storage.
+    conn.revert_last_migration(MIGRATIONS).unwrap(); // Undo pipeline storage.
     conn.revert_last_migration(MIGRATIONS).unwrap(); // Undo table renames.
     conn.revert_last_migration(MIGRATIONS).unwrap();
     conn.revert_last_migration(MIGRATIONS).unwrap();
@@ -214,16 +265,12 @@ fn postgres_migration_preserves_populated_rows_through_up_down_up() {
 #[ignore = "requires TEST_DATABASE_URL; run make test-postgres"]
 fn postgres_downgrade_rejects_invalid_stats_atomically() {
     let db = Database::new();
-    let store = PgStore::new(db.pool.clone());
     let mut conn = db.pool.get().unwrap();
-    let (id, _, _) = seed_processed(&mut conn);
-    let processed = store.processed_sitemap(id).unwrap();
-    store
-        .store_consolidated(&ConsolidatedSitemap::new(
-            &processed,
-            GroupedLinks::default(),
-        ))
-        .unwrap();
+    conn.revert_last_migration(MIGRATIONS).unwrap(); // Undo remaining object storage.
+    let (id, retrieval, _) = seed_processed(&mut conn);
+    seed_legacy_consolidated(&mut conn, id, retrieval);
+    conn.revert_last_migration(MIGRATIONS).unwrap(); // Undo raw object storage.
+    conn.revert_last_migration(MIGRATIONS).unwrap(); // Undo pipeline storage.
     conn.revert_last_migration(MIGRATIONS).unwrap(); // Undo table renames.
     // The entity was written using the latest schema; revert only references/storage first.
     conn.revert_last_migration(MIGRATIONS).unwrap();
@@ -261,6 +308,9 @@ fn postgres_downgrade_rejects_invalid_stats_atomically() {
 fn postgres_references_storage_migration_preserves_rows_and_restores_constraints() {
     let db = Database::new();
     let mut conn = db.pool.get().unwrap();
+    conn.revert_last_migration(MIGRATIONS).unwrap(); // Undo remaining object storage.
+    conn.revert_last_migration(MIGRATIONS).unwrap(); // Undo raw object storage.
+    conn.revert_last_migration(MIGRATIONS).unwrap(); // Undo pipeline storage.
     conn.revert_last_migration(MIGRATIONS).unwrap(); // Undo table renames.
     conn.revert_last_migration(MIGRATIONS).unwrap();
     for size in [0, i32::MAX] {
@@ -328,51 +378,12 @@ fn postgres_references_storage_migration_preserves_rows_and_restores_constraints
 
 #[test]
 #[ignore = "requires TEST_DATABASE_URL; run make test-postgres"]
-fn postgres_json_references_keep_uniqueness_and_exports_without_parent_cascade() {
+fn postgres_legacy_reference_downgrade_rejects_dangling_parent() {
     let db = Database::new();
-    let store = PgStore::new(db.pool.clone());
     let mut conn = db.pool.get().unwrap();
-    let (id, retrieval_id, document) = seed_processed(&mut conn);
-    let processed = store.processed_sitemap(id).unwrap();
-    let entity = ConsolidatedSitemap::new(
-        &processed,
-        GroupedLinks {
-            product: vec!["https://shop.test/ž".into()],
-            ..Default::default()
-        },
-    );
-    store.store_consolidated(&entity).unwrap();
-    // A different primary key still conflicts on the processed sitemap reference.
-    let duplicate = ConsolidatedSitemap::new(&processed, GroupedLinks::default());
-    let error = store.store_consolidated(&duplicate).unwrap_err();
-    match error {
-        StoreError::Database(diesel::result::Error::DatabaseError(
-            diesel::result::DatabaseErrorKind::UniqueViolation,
-            info,
-        )) => {
-            assert_eq!(
-                info.constraint_name(),
-                Some("consolidated_sitemaps_processed_reference_key")
-            );
-        }
-        other => panic!("expected reference uniqueness error: {other}"),
-    }
-    // Execute the exact query used by the export binary, including its JSONB join.
-    let exported = json_query(
-        &mut conn,
-        &format!(
-            "SELECT to_jsonb(crawl) AS value FROM ({}) crawl",
-            include_str!("../../bin/export_sitemaps.sql")
-        ),
-    );
-    assert_eq!(
-        exported["content"],
-        serde_json::to_value(entity.links()).unwrap()
-    );
-    assert_eq!(exported["document"], document);
-    assert_eq!(exported["retrieval_id"], retrieval_id.to_string());
-    assert_eq!(exported["retailer_code"], "ugreenca");
-    // Parent deletion is independent of the retained consolidated artifact.
+    conn.revert_last_migration(MIGRATIONS).unwrap(); // Undo remaining object storage.
+    let (id, retrieval, _) = seed_processed(&mut conn);
+    seed_legacy_consolidated(&mut conn, id, retrieval);
     diesel::sql_query("DELETE FROM sitemaps_processed WHERE id=$1")
         .bind::<SqlUuid, _>(id)
         .execute(&mut conn)
@@ -380,10 +391,12 @@ fn postgres_json_references_keep_uniqueness_and_exports_without_parent_cascade()
     assert_eq!(
         json_query(
             &mut conn,
-            "SELECT jsonb_build_array((SELECT count(*) FROM sitemaps_consolidated),(SELECT count(*) FROM consolidated_sitemaps_data)) AS value"
+            "SELECT to_jsonb(count(*)) AS value FROM sitemaps_consolidated"
         ),
-        json!([1, 1])
+        json!(1)
     );
+    conn.revert_last_migration(MIGRATIONS).unwrap(); // Undo raw object storage.
+    conn.revert_last_migration(MIGRATIONS).unwrap(); // Undo pipeline storage.
     conn.revert_last_migration(MIGRATIONS).unwrap(); // Undo table renames.
     let before = json_query(&mut conn, SNAPSHOT_LEGACY);
     // Restoring the previous FK cannot silently discard a dangling artifact.
@@ -408,16 +421,12 @@ fn postgres_json_references_keep_uniqueness_and_exports_without_parent_cascade()
 #[ignore = "requires TEST_DATABASE_URL; run make test-postgres"]
 fn postgres_references_storage_downgrade_rejects_missing_or_invalid_values() {
     let db = Database::new();
-    let store = PgStore::new(db.pool.clone());
     let mut conn = db.pool.get().unwrap();
-    let (id, _, _) = seed_processed(&mut conn);
-    let processed = store.processed_sitemap(id).unwrap();
-    store
-        .store_consolidated(&ConsolidatedSitemap::new(
-            &processed,
-            GroupedLinks::default(),
-        ))
-        .unwrap();
+    conn.revert_last_migration(MIGRATIONS).unwrap(); // Undo remaining object storage.
+    let (id, retrieval, _) = seed_processed(&mut conn);
+    seed_legacy_consolidated(&mut conn, id, retrieval);
+    conn.revert_last_migration(MIGRATIONS).unwrap(); // Undo raw object storage.
+    conn.revert_last_migration(MIGRATIONS).unwrap(); // Undo pipeline storage.
     conn.revert_last_migration(MIGRATIONS).unwrap(); // Undo table renames.
     let valid = json_query(
         &mut conn,

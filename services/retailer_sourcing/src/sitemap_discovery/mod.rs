@@ -25,7 +25,6 @@ use std::time::Duration;
 use bodul_shared::SitemapConfig;
 use bodul_shared::link::LinkKind;
 use bodul_shared::retailer::RetailerCode;
-use sitemap::ROOT_SITEMAP_SOURCE;
 
 /// The pause between groups of sitemap downloads for a retailer that doesn't
 /// set its own.

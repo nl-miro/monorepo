@@ -4,11 +4,16 @@ use chrono::{DateTime, Utc};
 use sitemap::{ROOT_SITEMAP_SOURCE, SitemapDocument};
 use uuid::Uuid;
 
-// The sitemap library already owns the domain representation of a fetched file.
-pub(super) use sitemap::RawSitemapDocument;
+/// A raw document loaded through its local and object-storage identities.
+#[derive(Debug, Clone)]
+pub(super) struct RawSitemapDocument {
+    pub id: Uuid,
+    pub object_storage_id: Uuid,
+    pub document: sitemap::RawSitemapDocument,
+}
 
 /// A retrieval's sitemap tree and its domain count.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub(super) struct ProcessedSitemap {
     pub id: Uuid,
     pub retrieval_id: Uuid,

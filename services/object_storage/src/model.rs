@@ -5,6 +5,9 @@ use uuid::{Uuid, Variant, Version};
 
 pub const BUCKETS: &[&str] = &[
     "sitemap_raw",
+    "sitemaps_raw",
+    "sitemaps_processed",
+    "sitemaps_consolidated",
     "sitemap_processed",
     "sitemap_consolidated",
     "offer_details_raw",

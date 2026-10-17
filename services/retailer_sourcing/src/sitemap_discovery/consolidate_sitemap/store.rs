@@ -1,21 +1,24 @@
+mod record;
+
 use bodul_shared::retailer::RetailerCodeConversionError;
 use diesel::prelude::*;
 use diesel::r2d2::PoolError;
 use uuid::Uuid;
 
-use super::super::schema::{
-    consolidated_sitemaps_data, processed_sitemaps_data, sitemaps_consolidated, sitemaps_processed,
-};
+use self::record::{ConsolidatedSitemapPgRecord, ProcessedSitemapPgRecord};
+use super::super::schema::{sitemaps_consolidated, sitemaps_processed};
 use super::entity::{ConsolidatedSitemap, ProcessedSitemap};
 use super::handler::Store;
-use super::record::{
-    ConsolidatedSitemapDataPgRecord, ConsolidatedSitemapPgRecord, ProcessedSitemapDataPgRecord,
-    ProcessedSitemapPgRecord,
-};
 use crate::platform::db::{self, DbPool};
+use crate::platform::object_storage::{
+    self, CONSOLIDATED_SITEMAPS_BUCKET, ObjectStorage, ObjectStorageMetadata,
+    PROCESSED_SITEMAPS_BUCKET, Stored,
+};
 
 #[derive(Debug, thiserror::Error)]
 pub enum StoreError {
+    #[error(transparent)]
+    ObjectStorage(#[from] object_storage::Error),
     #[error("connection pool error: {0}")]
     Connection(#[from] PoolError),
 
@@ -35,44 +38,51 @@ pub enum StoreError {
 /// Postgres storage for this slice.
 pub struct PgStore {
     pool: DbPool,
+    objects: ObjectStorage,
 }
 
 impl PgStore {
-    pub fn new(pool: DbPool) -> Self {
-        Self { pool }
+    pub fn new(pool: DbPool, objects: ObjectStorage) -> Self {
+        Self { pool, objects }
     }
 }
 
 impl Store for PgStore {
     fn processed_sitemap(&self, id: Uuid) -> Result<ProcessedSitemap, StoreError> {
         let mut connection = self.pool.get()?;
-        let (record, document) = sitemaps_processed::table
-            .inner_join(processed_sitemaps_data::table)
-            .filter(sitemaps_processed::id.eq(id))
-            .select((
-                ProcessedSitemapPgRecord::as_select(),
-                ProcessedSitemapDataPgRecord::as_select(),
-            ))
-            .get_result::<(ProcessedSitemapPgRecord, ProcessedSitemapDataPgRecord)>(
-                &mut connection,
-            )?;
-
-        (record, document).try_into()
+        let record = sitemaps_processed::table
+            .find(id)
+            .select(ProcessedSitemapPgRecord::as_select())
+            .get_result::<ProcessedSitemapPgRecord>(&mut connection)?;
+        drop(connection);
+        let body = self
+            .objects
+            .get(PROCESSED_SITEMAPS_BUCKET, id, &record.storage.0)?;
+        record.into_entity(&body)
     }
 
-    fn store_consolidated(&self, consolidated: &ConsolidatedSitemap) -> Result<(), StoreError> {
-        let (record, data): (ConsolidatedSitemapPgRecord, ConsolidatedSitemapDataPgRecord) =
-            consolidated.try_into()?;
-
-        let mut connection = self.pool.get()?;
-        connection.transaction(|connection| {
-            diesel::insert_into(sitemaps_consolidated::table)
-                .values(record)
-                .execute(connection)?;
-            diesel::insert_into(consolidated_sitemaps_data::table)
-                .values(data)
-                .execute(connection)?;
-            Ok(())
+    fn store_consolidated(
+        &self,
+        consolidated: &ConsolidatedSitemap,
+    ) -> Result<Stored<ConsolidatedSitemap>, StoreError> {
+        let body = serde_json::to_string(consolidated.links())?;
+        record::validate(consolidated, &body)?;
+        let object_storage_id =
+            self.objects
+                .create(CONSOLIDATED_SITEMAPS_BUCKET, consolidated.id, &body)?;
+        let record = ConsolidatedSitemapPgRecord::new(
+            consolidated,
+            ObjectStorageMetadata {
+                content_size: body.len() as u64,
+                object_storage_id,
+            },
+        )?;
+        diesel::insert_into(sitemaps_consolidated::table)
+            .values(record)
+            .execute(&mut self.pool.get()?)?;
+        Ok(Stored {
+            entity: consolidated.clone(),
+            object_storage_id,
         })
     }
 }

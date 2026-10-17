@@ -185,3 +185,9 @@ check every service and `make audit` after changing Cargo dependencies.
 async Rust API for creation, retrieval, and health, using either REST or GraphQL.
 The [Bruno collection](../../bruno/object_storage/README.md) includes authenticated
 requests for both APIs, retries, health, OpenAPI, Swagger UI, and GraphiQL.
+
+Retailer sourcing writes all pipeline payloads to buckets matching its table
+names: `sitemaps_raw`, `sitemaps_processed`, `sitemaps_consolidated`, and the four
+`offer_details_*` buckets. Sitemaps use their local row IDs as idempotency keys;
+offer replacements use fresh external IDs while retaining stable local row IDs.
+The legacy singular sitemap buckets remain available.

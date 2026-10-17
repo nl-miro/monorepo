@@ -1,5 +1,9 @@
 //! Postgres connection pool and schema migrations.
 
+pub(crate) use retailer_sourcing::json::Json;
+#[cfg(test)]
+pub(crate) use retailer_sourcing::json::Storage;
+
 use diesel::PgConnection;
 use diesel::r2d2::{ConnectionManager, Pool, PoolError};
 use diesel::result::Error;

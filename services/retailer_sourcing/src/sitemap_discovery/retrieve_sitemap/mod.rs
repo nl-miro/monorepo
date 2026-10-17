@@ -10,6 +10,7 @@ mod entity;
 mod event;
 mod handler;
 #[cfg(test)]
+mod live_tests;
+#[cfg(test)]
 mod postgres_tests;
-mod record;
 mod store;

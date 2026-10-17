@@ -4,6 +4,7 @@ use uuid::Uuid;
 
 #[derive(Debug, Clone, PartialEq)]
 pub(super) struct NormalizedOffer {
+    pub object_storage_id: Uuid,
     pub offer_id: Uuid,
     pub document: Value,
 }

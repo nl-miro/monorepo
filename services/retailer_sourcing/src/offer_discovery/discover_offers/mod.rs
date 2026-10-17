@@ -9,5 +9,4 @@ mod handler;
 #[cfg(test)]
 mod postgres_tests;
 mod reacts_to;
-mod record;
 mod store;

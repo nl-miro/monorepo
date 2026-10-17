@@ -11,7 +11,7 @@ top-level folder is its own Cargo workspace, with its own `Cargo.lock`.
 ├── services/   Backend HTTP services (REST + GraphQL)
 ├── apps/       Web apps that render HTML on the server
 ├── make/       Shared Make targets
-├── bruno/      Bruno collections for calling the services by hand
+├── bruno/      Bruno workspace with collections for calling the services by hand
 └── docs/adr/   Architecture decision records
 ```
 
@@ -76,6 +76,7 @@ Each serves an index page at `/`.
 - libpq (for example `libpq-dev` on Debian/Ubuntu, `libpq` on macOS with Homebrew). The services depend on diesel with the PostgreSQL backend, which links against it.
 - GNU Make.
 - PostgreSQL 16 or later for `object_storage` (a separate UTF8 database), and to run the `retailer_sourcing` pipeline.
+- The `retailer_sourcing` pipeline also requires a running object storage service, configured with `OBJECT_STORAGE_URL` and `OBJECT_STORAGE_TOKEN`; see its [setup](services/retailer_sourcing/README.md).
 - [Diesel CLI](https://diesel.rs/guides/getting-started) with PostgreSQL support, only for `make migrate` and `make migrate-redo`: `cargo install diesel_cli --no-default-features --features postgres --locked`.
 - [cargo-audit](https://crates.io/crates/cargo-audit), only for `make audit`: `cargo install cargo-audit --locked`.
 
@@ -182,16 +183,26 @@ queued commands and events in steps; each run waits for its batch to finish:
 
 Without `DATABASE_URL` these routes return 503.
 
-The [Bruno](https://www.usebruno.com/) collection in `bruno/retailer_sourcing`
-has a request for each route. Open the folder in Bruno and pick the `local`
-environment, which targets the `retailer_sourcing` container from the
-workspace's `compose-apps.yaml` at `http://172.28.100.40:3000`.
+The `bruno/` folder is a [Bruno](https://www.usebruno.com/) workspace that
+lists every collection. Open the `bruno` folder as a workspace in Bruno
+to load them all at once. The workspace's `local` environment
+(`bruno/environments/local.yml`) holds each service's address, with one
+variable per collection:
+
+| Variable                  | Collection          | Address                     |
+| ------------------------- | ------------------- | --------------------------- |
+| `objectStorageBaseUrl`    | `object_storage`    | `http://172.28.100.43:3000` |
+| `retailerSourcingBaseUrl` | `retailer_sourcing` | `http://172.28.100.40:3000` |
+
+Both addresses are containers from the `compose-apps.yaml` file.
+
+The Bruno collection in `bruno/retailer_sourcing` has a request for each route.
 
 The [object storage Bruno collection](bruno/object_storage/README.md) covers
 REST and GraphQL creation/retrieval, cross-API retries, health, and documentation.
-Its `local` environment targets `http://localhost:3003` and includes the public
-development bearer token. Its JavaScript request tests run with Bruno CLI; see
-the collection README for Node.js setup and commands. Rust callers can use
+Its own `local` environment holds the public development bearer token. Its
+JavaScript request tests run with Bruno CLI; see the collection README for
+Node.js setup and commands. Rust callers can use
 [`object_storage_client`](lib/object_storage_client/README.md) from either transport.
 
 ## Security advisories

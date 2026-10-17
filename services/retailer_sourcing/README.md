@@ -28,7 +28,7 @@ POST /api/sitemap-retrievals
 
 | Step | Command              | Handler does                                                                                                                                                                                                    | Event                                                    | Reaction that follows                                                 |
 | ---- | -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- | --------------------------------------------------------------------- |
-| 1    | `RetrieveSitemap`    | Fetches the retailer's root sitemaps and every child sitemap and stores the files in `sitemaps_raw`. A file that can't be fetched or parsed is skipped with a warning. Fails without a sitemap config. | `SitemapRetrieved`                                       | `process_sitemap`: queue `ProcessSitemap`                             |
+| 1    | `RetrieveSitemap`    | Fetches the retailer's root sitemaps and every child sitemap and uploads the files to object storage, with references in `sitemaps_raw`. A file that can't be fetched or parsed is skipped with a warning. Fails without a sitemap config. | `SitemapRetrieved`                                       | `process_sitemap`: queue `ProcessSitemap`                             |
 | 2    | `ProcessSitemap`     | Parses the stored files into one sitemap tree, stores it in `sitemaps_processed`.                                                                                                                               | `SitemapProcessed`                                       | `consolidate_sitemap`: queue `ConsolidateSitemap`                     |
 | 3    | `ConsolidateSitemap` | Sorts every URL of the tree into product, catalog, content, not interested and unknown, using the retailer's link rules; stores the groups in `sitemaps_consolidated`.                                          | `SitemapConsolidated`                                    | `discover_offers`: queue `DiscoverOffers`, unless it found 0 products |
 | 4    | `DiscoverOffers`     | Reads the product URLs and gives each its own `offer_id`. Writes nothing.                                                                                                                                       | `OfferDiscovered`, one per URL                           | `download_offer_page`: queue one `DownloadOfferPage` per offer        |
@@ -43,10 +43,10 @@ still a `todo!()` stub; the bus retries a failed command on a later run. Only
 `ankerau` has every step implemented so far. Each of their tables holds one row
 per offer, replaced when the step runs again.
 
-Each table keeps its payload, the fetched body or the JSON document, in a
-`<table>_data` table keyed by the row's `id`, such as `raw_offers_data`. Rows
-can be read and listed without loading their payloads, and a row and its payload
-are written in one transaction.
+All seven pipeline tables keep metadata in PostgreSQL and payloads in object
+storage. Raw bodies are uploaded unchanged; JSON documents are uploaded as
+compact JSON. Writes upload first, then atomically insert or update the local
+reference. A failed local write can leave an unreferenced immutable object.
 
 Every row a crawl writes in steps 1 to 3 carries its `retrieval_id`. Each step
 logs its outcome (see [Logging](#logging)); `command_entries` and
@@ -79,7 +79,7 @@ migrations/                  Mulac's tables, then each context's tables
 ```
 
 A slice holds `command.rs`, `handler.rs`, `event.rs`, `entity.rs` (domain
-values), `record.rs` (PostgreSQL representations and conversions), `store.rs`
+values), `store/record.rs` (PostgreSQL representations and conversions), `store.rs`
 (its own queries), and `reacts_to.rs` when a reaction starts it. Each context and
 slice exposes only its `prelude` module, with `register()`, any `routes()`, and
 the events others may use. Contexts talk to each other only through events.
@@ -90,14 +90,22 @@ The service needs Postgres for the workflow; without `DATABASE_URL` it serves
 HTTP only and the routes below return `503`. On startup it applies pending
 migrations.
 
+When `DATABASE_URL` is configured, `OBJECT_STORAGE_URL` and
+`OBJECT_STORAGE_TOKEN` are required, including for both export commands.
+Configuration is checked before connecting to PostgreSQL or applying migrations.
+The client uses REST, a 30-second request timeout, and no automatic retries or
+redirects. Start an object storage service that allows all seven pipeline buckets.
+Without `DATABASE_URL`, the HTTP-only mode needs no object storage configuration.
+
 ```sh
-make .env          # once: DATABASE_URL for the retailer_sourcing-db container
+make .env          # once: database and object storage configuration
 make migrate       # optional; startup also migrates
 PORT=3002 make serve
 ```
 
 `make migrate-redo` reverts and reapplies every migration, which deletes the
-data.
+data. With migration 11 applied, reverting requires removing new raw sitemap
+rows first; see the cutover instructions below.
 
 When the service runs in the workspace's `compose-apps.yaml` container, rebuild
 and restart it after code changes, from the workspace folder:
@@ -187,18 +195,21 @@ queries and transactions in isolated schemas; see the database test setup below.
 
 All three sitemap discovery slices and all five offer discovery slices follow
 [ADR 7](../../docs/adr/0007-domain-entities-and-postgres-records.md).
-Each slice's `entity.rs` contains domain types; `record.rs` contains private
+Each slice's `entity.rs` contains domain types; `store/record.rs` contains private
 Diesel types ending in `PgRecord` and their explicit conversions. Conversions
 that parse stored JSON or check integer bounds return errors. `PgStore` takes
 entities when writing and IDs when reading, and returns entities when loading.
+Each `store.rs` declares its private `record` module with `mod record;`.
 Only the store handles PostgreSQL records. Queries remain owned by the slice;
 entities and records are not imported from another slice.
 
 - Retrieval passes a batch of `RetrievedSitemapDocument` entities, each carrying
-  its ID, retrieval ID, timestamp, and the sitemap library's raw document.
-- Processing reads the library's `RawSitemapDocument` domain values and writes a
+  its ID, retrieval ID, timestamp, and the sitemap library's raw document. The
+  store returns `StoredSitemapDocument` entities exposing `object_storage_id`.
+- Processing reads slice-local `RawSitemapDocument` entities exposing the local
+  ID, `object_storage_id`, and the library's raw document, and writes a
   `ProcessedSitemap`. Its URL count is a `usize`; conversion to the stored `i32`
-  happens in `record.rs`. Negative stored raw sizes are rejected on reads.
+  happens in `store/record.rs`. Negative stored raw sizes are rejected on reads.
 - Offer discovery reads a `ConsolidatedSitemap` entity containing product URLs.
 - Downloading writes a `RawOffer` entity containing the offer ID, retailer, URL,
   and downloaded body.
@@ -208,10 +219,12 @@ entities and records are not imported from another slice.
   projections identified by the domain offer ID. JSON documents remain typed
   JSON values until the handler calls a retailer step that expects text.
 
-The database's offer row IDs are persistence identities: upserts read back the
-existing row ID and use it for the payload record. Each main/payload write stays
-in one transaction. This separation changes no database columns or event shapes
-for retrieval, processing, or offer discovery.
+Offer row IDs remain stable across upserts. Each replacement uploads a new
+immutable object with its own external ID, then updates the row's complete
+storage reference. Stores return `Stored<T>` with the entity and
+`object_storage_id`; input entities also expose the loaded object ID. Command
+and event payloads remain unchanged, and writes must succeed before events are
+returned.
 
 `ConsolidatedSitemap` owns five count fields, calculated from its grouped links
 at construction and exposed through read-only accessors. Its PostgreSQL record
@@ -231,7 +244,7 @@ non-null JSONB columns, as recorded in [ADR 8](../../docs/adr/0008-consolidated-
     "retrieval_id": "019a1234-5678-7000-8000-000000000002",
     "retailer_code": "ugreenca"
   },
-  "storage": {"content_size": 123}
+  "storage": {"content_size": 123, "object_storage_id": "019a1234-5678-7000-8000-000000000003"}
 }
 ```
 
@@ -239,14 +252,112 @@ These four fields exist only inside JSONB, with no standalone or generated
 columns. A unique expression index on the processed UUID in `references` keeps
 one consolidated record per processed sitemap. There is no foreign key to the
 processed row: deleting it now leaves the consolidated record and payload
-intact. Deleting the consolidated record still cascades to its payload table.
+intact. Deleting local records does not delete immutable objects.
 Sitemap exports join through the JSONB reference and keep the same output format.
 
-Grouped links remain in the payload table, and entity and event fields retain
-their existing names and types. Counts and content size remain limited to the
+Grouped links live in object storage. Event fields retain their existing names
+and types. Counts and content size remain limited to the
 previous `i32` storage range for downgrade support. In SQL, quote the reserved column name as `"references"`.
 
+### Storage metadata
+
+All seven main `sitemaps_*` and `offer_details_*` tables use typed `storage JSONB`.
+Sitemaps use `ObjectStorageMetadata { content_size: u64, object_storage_id: Uuid }`.
+Offers use `OfferStorageMetadata` with the same fields plus `external_id: Uuid`:
+
+```json
+{"content_size": 123, "object_storage_id": "019a1234-5678-7000-8000-000000000001", "external_id": "019a1234-5678-7000-8000-000000000002"}
+```
+
+`content_size` measures the exact uploaded UTF-8 bytes. The old `body_size` and
+`document_size` columns and all seven payload tables are removed. JSONB uses
+`Json<T>` with required fields and concrete types; unknown fields are rejected.
+Consolidation references and stats retain their typed structures. Existing
+stage-specific signed-integer limits still apply. Retailer-specific payload
+JSON keeps its existing representation.
+
+Buckets match table names: `sitemaps_raw`, `sitemaps_processed`,
+`sitemaps_consolidated`, `offer_details_raw`, `offer_details_extracted`,
+`offer_details_normalized`, and `offer_details_structuralized`. Legacy singular
+sitemap buckets remain available in object storage.
+
+Sitemaps use the local row UUID as the object external ID. Offer writes generate
+a fresh external UUIDv7 each time, preserving the local row ID and `offer_id`.
+Even an unchanged repeated offer write creates a new object. Concurrent writes
+retain the last committed complete reference. HTTP retries of a prepared upload
+use its existing external ID; durable replay across command attempts is not added.
+
+All downstream readers, the development source APIs, and both export commands
+fetch bodies through the client and validate record ID, bucket, external ID,
+and byte length. JSON payloads are then parsed. Database connections are released
+before HTTP. Missing or invalid objects fail the operation; missing local inputs
+retain their previous not-found behavior. Responses and export formats are
+unchanged. Both exports require `OBJECT_STORAGE_URL` and `OBJECT_STORAGE_TOKEN`.
+See [ADR 12](../../docs/adr/0012-pipeline-object-storage.md).
+
+### Raw sitemap objects
+
+Raw sitemap metadata uses `Json<ObjectStorageMetadata>`, with required typed
+`content_size: u64` and `object_storage_id: Uuid` fields:
+
+```json
+{"content_size": 123, "object_storage_id": "019a1234-5678-7000-8000-000000000001"}
+```
+
+Retrieval uploads the exact UTF-8 body through `object_storage_client` to bucket
+`sitemaps_raw`. The preallocated local `sitemaps_raw.id` is the client's
+`idempotency_key` (the object's `external_id`). The returned UUID is stored in
+`storage.object_storage_id` and exposed in retrieval and processing entities.
+After every upload succeeds, all local metadata rows are inserted in one
+PostgreSQL transaction. A failed upload or commit can leave immutable objects
+without local references; there is no distributed transaction or cleanup API.
+Only a successful local commit produces `SitemapRetrieved`. Retrying the same
+IDs is idempotent remotely; a fresh retrieval generates new IDs.
+
+Processing, the development sitemap source API, and sitemap export retrieve
+bodies by object ID and validate the returned ID, bucket, external ID, and byte
+length. They release database connections before HTTP requests. Missing or
+invalid objects fail the operation. The API and export formats are unchanged.
+See [ADR 11](../../docs/adr/0011-raw-sitemap-object-storage.md).
+
 ### Applying the migrations
+
+Migration `2026-10-16-000012_pipeline_object_storage` deletes existing processed
+and consolidated sitemap rows and all four offer-stage rows, then drops their
+six payload tables. It preserves raw sitemap rows, their object references,
+and bus history. There is no backfill or legacy fallback.
+
+Deploy the new object storage bucket allowlist first. Stop sourcing workers,
+apply the migration (or start the new binary, which migrates), restart, and
+initiate fresh retrievals to rebuild the pipeline. Old queued work referencing
+deleted records may fail; the migration does not remove or rewrite bus entries.
+Rollback recreates empty payload tables only when all six affected metadata
+tables are empty. Deleted data cannot be recovered. Revert migration 12 before
+following the older instructions below.
+
+
+Migration `2026-10-15-000011_raw_sitemap_object_storage` is a destructive
+fresh-data cutover: it deletes existing `sitemaps_raw` rows and drops
+`raw_sitemap_documents_data`, without backfilling objects. Processed,
+consolidated, and offer records remain intact. Stop old service instances before
+applying it or starting the new binary, then retrieve fresh sitemaps. Existing
+crawls no longer have source bodies; exporting them requires a fresh retrieval.
+Rollback recreates only the empty payload table and refuses to run while new
+raw rows exist. It cannot recover deleted bodies. Revert migration 11 before
+following the older rollback instructions below.
+
+Migration `2026-10-15-000010_pipeline_storage` preserves the existing raw and
+processed size values and calculates previously unrecorded offer-stage sizes
+from compact stored JSONB, retaining whitespace in strings and PostgreSQL's
+number representation. It preserves IDs, timestamps, relationships, and
+payloads. Missing offer-stage payloads abort the migration transactionally.
+Stop old service instances before applying it with `make migrate` or starting
+the new binary. To roll back, stop the new service and run
+`diesel migration revert` while migration 10 is latest. It restores the previous
+size columns; missing, non-integer, or overflowing JSON sizes cause rollback to
+fail transactionally. The three offer JSON stages lose their new size metadata
+on downgrade, and regain it on upgrade. Revert migration 10 before following
+the older rollback instructions below.
 
 Migration `2026-10-15-000009_rename_pipeline_tables` renames the seven pipeline
 tables to `offer_details_raw`, `offer_details_extracted`,
@@ -281,7 +392,7 @@ migration 8, because rollback restores the original foreign key.
 ```sh
 make fmt
 make ci
-TEST_DATABASE_URL=postgres://retailer_sourcing:retailer_sourcing@172.28.100.10:5432/retailer_sourcing_test make test-postgres
+TEST_DATABASE_URL=postgres://object_storing:object_storing@172.28.100.31:5432/object_storing_test RUST_TEST_THREADS=4 make test-postgres
 ```
 
 The test database must already exist, and its role must be able to create/drop
@@ -290,7 +401,29 @@ on assertion failure; it never resets existing tables. The target fails when
 configuration or connectivity is missing. Ordinary `make test` leaves these
 PostgreSQL tests ignored. Tests cover entity-facing reads and writes in every
 sitemap and offer slice, missing inputs, conversion failures, retrieval ordering,
-Unicode byte sizes, batch rollback, stable upsert IDs, failed insert/update
-rollback, fresh
-migrations, populated upgrade/downgrade/re-upgrade, failed downgrades, the export
+Unicode byte sizes, storage metadata on insert/update, batch rollback, stable
+upsert IDs, failed insert/update rollback, fresh migrations, populated upgrade/downgrade/re-upgrade, failed downgrades, the export
 query, reference uniqueness, and deletion behavior.
+
+### Real object storage integration test
+
+With a running object storage service and the separate test database:
+
+```sh
+TEST_DATABASE_URL=postgres://object_storing:object_storing@172.28.100.31:5432/object_storing_test \
+OBJECT_STORAGE_URL=http://localhost:3108 OBJECT_STORAGE_TOKEN=<token> \
+make test-object-storage
+```
+
+These opt-in tests cover all seven stages, compare input bodies/documents with
+real service output, and check JSONB references, exposed IDs, and stable offer
+row IDs across replacements. Local schemas are removed afterward; immutable
+remote test objects remain. Use a test-backed object storage instance: the
+normal service at `172.28.100.43:3000` uses the development database. A temporary
+instance can run against an isolated schema in `object_storing_test`.
+
+Ordinary PostgreSQL tests use a local HTTP fixture for upload and read failures,
+failed local commits, concurrent offer replacements, migration guarantees, and
+source API responses. Limit test concurrency with `RUST_TEST_THREADS=4` on the
+shared test server. `make ci` also checks exported content and event suppression
+when storage fails.

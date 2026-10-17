@@ -1,3 +1,4 @@
+use crate::platform::object_storage::Stored;
 use bodul_shared::retailer::RetailerCode;
 use serde_json::Value;
 use uuid::Uuid;
@@ -15,7 +16,10 @@ pub trait Store: Send + Sync + 'static {
     fn normalized_offer(&self, offer_id: Uuid) -> Result<Option<NormalizedOffer>, StoreError>;
 
     /// Stores the structuralized document, replacing any stored for the offer before.
-    fn store_structuralized_offer(&self, entity: &StructuralizedOffer) -> Result<(), StoreError>;
+    fn store_structuralized_offer(
+        &self,
+        entity: &StructuralizedOffer,
+    ) -> Result<Stored<StructuralizedOffer>, StoreError>;
 }
 
 /// The retailer step this slice runs.
@@ -81,6 +85,7 @@ impl<S: Store, R: Structuralize> Handle for Handler<S, R> {
             .ok_or(HandlerError::MissingInput(command.offer_id))?;
 
         // A failure fails the command, so the bus retries it later.
+        tracing::debug!(object_storage_id = %input.object_storage_id, "input object loaded");
         let output = self
             .retailers
             .structuralize(command.retailer_code, &input.document.to_string())
@@ -105,12 +110,14 @@ impl<S: Store, R: Structuralize> Handle for Handler<S, R> {
                 source,
             })?;
 
-        self.store
+        let stored = self
+            .store
             .store_structuralized_offer(&StructuralizedOffer {
                 offer_id: input.offer_id,
                 document,
             })?;
         tracing::info!(
+            object_storage_id = %stored.object_storage_id,
             offer_id = %command.offer_id,
             url = %command.url,
             bytes = output.len(),
@@ -136,6 +143,7 @@ mod tests {
 
     #[derive(Default)]
     struct FakeStore {
+        fail: bool,
         input: Option<&'static str>,
         stored: Mutex<Vec<(Uuid, Value)>>,
     }
@@ -152,6 +160,7 @@ mod tests {
     impl Store for FakeStore {
         fn normalized_offer(&self, offer_id: Uuid) -> Result<Option<NormalizedOffer>, StoreError> {
             Ok(self.input.map(|input| NormalizedOffer {
+                object_storage_id: uuid::Uuid::now_v7(),
                 offer_id,
                 document: serde_json::from_str(input).unwrap(),
             }))
@@ -160,12 +169,21 @@ mod tests {
         fn store_structuralized_offer(
             &self,
             entity: &StructuralizedOffer,
-        ) -> Result<(), StoreError> {
+        ) -> Result<Stored<StructuralizedOffer>, StoreError> {
+            if self.fail {
+                return Err(StoreError::ObjectStorage(
+                    crate::platform::object_storage::Error::InvalidRecord,
+                ));
+            }
+
             self.stored
                 .lock()
                 .unwrap()
                 .push((entity.offer_id, entity.document.clone()));
-            Ok(())
+            Ok(Stored {
+                entity: entity.clone(),
+                object_storage_id: uuid::Uuid::now_v7(),
+            })
         }
     }
 
@@ -259,5 +277,13 @@ mod tests {
 
         assert!(events.is_empty());
         assert!(handler.store.stored.lock().unwrap().is_empty());
+    }
+
+    #[test]
+    fn storage_failure_prevents_success_events() {
+        let mut store = FakeStore::with_input();
+        store.fail = true;
+        let handler = Handler::new(store, FakeStep(Some(Some("{}"))));
+        assert!(handler.handle(command()).is_err());
     }
 }

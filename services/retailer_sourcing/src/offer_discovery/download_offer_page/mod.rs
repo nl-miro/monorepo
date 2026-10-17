@@ -9,5 +9,20 @@ mod handler;
 #[cfg(test)]
 mod postgres_tests;
 mod reacts_to;
-mod record;
 mod store;
+
+#[cfg(test)]
+mod live_tests {
+    #[test]
+    #[ignore = "requires TEST_DATABASE_URL, OBJECT_STORAGE_URL and OBJECT_STORAGE_TOKEN; run make test-object-storage"]
+    fn live_round_trip() {
+        let runtime = tokio::runtime::Runtime::new().unwrap();
+        let objects =
+            crate::platform::object_storage::ObjectStorage::from_env(runtime.handle().clone())
+                .unwrap();
+        super::postgres_tests::verify_round_trip(
+            &crate::platform::test_db::Database::new(),
+            objects,
+        );
+    }
+}

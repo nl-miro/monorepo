@@ -127,7 +127,7 @@ async fn round_trip_all_buckets_through_both_apis() {
             .to_uppercase()
             .into();
     }
-    assert_eq!(db.counts(), (7, 7));
+    assert_eq!(db.counts(), (BUCKETS.len() as i64, BUCKETS.len() as i64));
 }
 
 #[tokio::test]

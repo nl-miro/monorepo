@@ -114,10 +114,14 @@ async fn start_features(database_url: Result<String, VarError>) -> io::Result<Ap
         Err(VarError::NotPresent) => return Ok(AppState::default()),
         Err(error) => return Err(io::Error::new(io::ErrorKind::InvalidInput, error)),
     };
-    let platform = tokio::task::spawn_blocking(move || Platform::connect(&database_url))
-        .await
-        .map_err(io::Error::other)?
-        .map_err(io::Error::other)?;
+    let object_storage =
+        platform::object_storage::ObjectStorage::from_env(tokio::runtime::Handle::current())
+            .map_err(io::Error::other)?;
+    let platform =
+        tokio::task::spawn_blocking(move || Platform::connect(&database_url, object_storage))
+            .await
+            .map_err(io::Error::other)?
+            .map_err(io::Error::other)?;
 
     let mut bus = Bus::default();
     sitemap_discovery::prelude::register(&mut bus, &platform);
@@ -127,10 +131,12 @@ async fn start_features(database_url: Result<String, VarError>) -> io::Result<Ap
     reporting::prelude::register(&mut bus, &platform);
 
     let db = platform.db.clone();
+    let object_storage = platform.object_storage.clone();
     let bus = bus.start(platform.db).map_err(io::Error::other)?;
     Ok(AppState {
         bus: Some(bus),
         db: Some(db),
+        object_storage: Some(object_storage),
     })
 }
 

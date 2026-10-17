@@ -7,6 +7,7 @@ use uuid::Uuid;
 /// A processed sitemap as this slice reads it.
 #[derive(Debug)]
 pub(super) struct ProcessedSitemap {
+    pub object_storage_id: Uuid,
     pub id: Uuid,
     pub retrieval_id: Uuid,
     pub retailer_code: RetailerCode,
@@ -71,6 +72,7 @@ mod tests {
     #[test]
     fn counts_all_groups_including_empty_groups() {
         let processed = ProcessedSitemap {
+            object_storage_id: Uuid::now_v7(),
             id: Uuid::now_v7(),
             retrieval_id: Uuid::now_v7(),
             retailer_code: RetailerCode::UgreenCa,

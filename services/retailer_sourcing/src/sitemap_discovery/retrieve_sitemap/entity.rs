@@ -26,3 +26,10 @@ impl RetrievedSitemapDocument {
             .collect()
     }
 }
+
+/// A document whose body upload and local metadata insert both succeeded.
+#[derive(Debug, Clone)]
+pub(super) struct StoredSitemapDocument {
+    pub sitemap: RetrievedSitemapDocument,
+    pub object_storage_id: Uuid,
+}

@@ -1,57 +1,76 @@
+mod record;
+
 use diesel::prelude::*;
 use diesel::r2d2::PoolError;
 
-use super::super::schema::{raw_sitemap_documents_data, sitemaps_raw};
-use super::entity::RetrievedSitemapDocument;
+use self::record::RawSitemapDocumentPgRecord;
+use super::super::schema::sitemaps_raw;
+use super::entity::{RetrievedSitemapDocument, StoredSitemapDocument};
 use super::handler::Store;
-use super::record::{RawSitemapDocumentDataPgRecord, RawSitemapDocumentPgRecord};
 use crate::platform::db::{self, DbPool};
+use crate::platform::object_storage::{self, ObjectStorage, RAW_SITEMAPS_BUCKET};
 
 #[derive(Debug, thiserror::Error)]
 pub enum StoreError {
     #[error("connection pool error: {0}")]
     Connection(#[from] PoolError),
-
     #[error("database error: {}", db::describe(.0))]
     Database(#[from] diesel::result::Error),
-
+    #[error(transparent)]
+    ObjectStorage(#[from] object_storage::Error),
     #[error("raw sitemap body is too large for storage: {0} bytes")]
     BodyTooLarge(usize),
+    #[error("raw sitemap size does not match the body")]
+    InvalidBodySize,
 }
 
-/// Postgres storage for this slice.
 pub struct PgStore {
     pool: DbPool,
+    objects: ObjectStorage,
 }
 
 impl PgStore {
-    pub fn new(pool: DbPool) -> Self {
-        Self { pool }
+    pub fn new(pool: DbPool, objects: ObjectStorage) -> Self {
+        Self { pool, objects }
     }
 }
 
 impl Store for PgStore {
-    fn store_documents(&self, documents: &[RetrievedSitemapDocument]) -> Result<(), StoreError> {
-        let pairs = documents
+    fn store_documents(
+        &self,
+        documents: &[RetrievedSitemapDocument],
+    ) -> Result<Vec<StoredSitemapDocument>, StoreError> {
+        for document in documents {
+            record::validate(document)?;
+        }
+        let stored = documents
             .iter()
-            .map(
-                <(
-                    RawSitemapDocumentPgRecord<'_>,
-                    RawSitemapDocumentDataPgRecord<'_>,
-                )>::try_from,
-            )
-            .collect::<Result<Vec<_>, _>>()?;
-        let (records, data): (Vec<_>, Vec<_>) = pairs.into_iter().unzip();
-
-        let mut connection = self.pool.get()?;
-        connection.transaction(|connection| {
+            .map(|document| {
+                let object_storage_id = self.objects.create(
+                    RAW_SITEMAPS_BUCKET,
+                    document.id,
+                    &document.document.body,
+                )?;
+                Ok(StoredSitemapDocument {
+                    sitemap: document.clone(),
+                    object_storage_id,
+                })
+            })
+            .collect::<Result<Vec<_>, StoreError>>()?;
+        if stored.is_empty() {
+            return Ok(stored);
+        }
+        let records: Vec<_> = stored
+            .iter()
+            .map(RawSitemapDocumentPgRecord::from)
+            .collect();
+        // No connection or transaction is held during the HTTP uploads. An
+        // unsuccessful local commit can leave unreferenced immutable objects.
+        self.pool.get()?.transaction(|connection| {
             diesel::insert_into(sitemaps_raw::table)
                 .values(&records)
-                .execute(connection)?;
-            diesel::insert_into(raw_sitemap_documents_data::table)
-                .values(&data)
-                .execute(connection)?;
-            Ok(())
-        })
+                .execute(connection)
+        })?;
+        Ok(stored)
     }
 }

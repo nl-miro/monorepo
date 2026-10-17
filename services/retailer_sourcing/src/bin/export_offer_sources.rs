@@ -3,8 +3,11 @@
 //!
 //! Pages whose URL the retailer's link classifier disowns are left out. See [`disowns`].
 //!
-//! Usage: `DATABASE_URL=... export_offer_sources <data_dir>`
+//! Requires DATABASE_URL, OBJECT_STORAGE_URL and OBJECT_STORAGE_TOKEN.
+//! Usage: `export_offer_sources <data_dir>`
 
+use retailer_sourcing::json::Json;
+use retailer_sourcing::object_storage::{ObjectStorage, OfferStorageMetadata, RAW_OFFERS_BUCKET};
 use std::collections::HashSet;
 use std::panic;
 use std::path::{Path, PathBuf};
@@ -13,7 +16,7 @@ use std::{env, fs, process};
 use bodul_shared::link::LinkKind;
 use bodul_shared::retailer::RetailerCode;
 use diesel::prelude::*;
-use diesel::sql_types::{Integer, Text, Uuid as SqlUuid};
+use diesel::sql_types::{Integer, Jsonb, Text, Uuid as SqlUuid};
 use percent_encoding::percent_decode_str;
 use reqwest::Url;
 use uuid::Uuid;
@@ -23,23 +26,39 @@ const BATCH_SIZE: i32 = 200;
 
 /// Each page after `$1` (by id) with its retailer code, up to `$2` pages.
 const PAGES_QUERY: &str = "
-    SELECT r.id, r.url, d.body, r.retailer_code
+    SELECT r.id, r.url, r.storage, r.retailer_code
     FROM offer_details_raw r
-    JOIN raw_offers_data d ON d.id = r.id
     WHERE r.id > $1
     ORDER BY r.id
     LIMIT $2";
 
-#[derive(QueryableByName)]
 struct Page {
+    url: String,
+    body: String,
+    retailer_code: String,
+}
+
+#[derive(QueryableByName)]
+struct PageRecord {
     #[diesel(sql_type = SqlUuid)]
     id: Uuid,
     #[diesel(sql_type = Text)]
     url: String,
     #[diesel(sql_type = Text)]
-    body: String,
-    #[diesel(sql_type = Text)]
     retailer_code: String,
+    #[diesel(sql_type = Jsonb)]
+    storage: Json<OfferStorageMetadata>,
+}
+
+fn fetch_page(record: PageRecord, objects: &ObjectStorage) -> Result<Page, String> {
+    let body = objects
+        .get_offer(RAW_OFFERS_BUCKET, &record.storage.0)
+        .map_err(|e| e.to_string())?;
+    Ok(Page {
+        url: record.url,
+        retailer_code: record.retailer_code,
+        body,
+    })
 }
 
 fn main() {
@@ -55,7 +74,8 @@ fn run() -> Result<(), String> {
         .map(PathBuf::from)
         .ok_or("usage: export_offer_sources <data_dir>")?;
     let database_url = env::var("DATABASE_URL").map_err(|_| "DATABASE_URL must be set")?;
-    let mut connection = PgConnection::establish(&database_url).map_err(|e| e.to_string())?;
+    let runtime = tokio::runtime::Runtime::new().map_err(|e| e.to_string())?;
+    let objects = ObjectStorage::from_env(runtime.handle().clone()).map_err(|e| e.to_string())?;
 
     let mut written = 0;
     let mut disowned = 0;
@@ -63,16 +83,19 @@ fn run() -> Result<(), String> {
     let mut unclassifiable = HashSet::new();
     let mut after = Uuid::nil();
     loop {
-        let pages: Vec<Page> = diesel::sql_query(PAGES_QUERY)
+        let mut connection = PgConnection::establish(&database_url).map_err(|e| e.to_string())?;
+        let records: Vec<PageRecord> = diesel::sql_query(PAGES_QUERY)
             .bind::<SqlUuid, _>(after)
             .bind::<Integer, _>(BATCH_SIZE)
             .load(&mut connection)
             .map_err(|e| e.to_string())?;
-        let Some(last) = pages.last() else { break };
+        drop(connection);
+        let Some(last) = records.last() else { break };
         after = last.id;
 
-        for page in &pages {
-            match export_page(&data_dir, page, &mut unclassifiable) {
+        for record in records {
+            let page = fetch_page(record, &objects)?;
+            match export_page(&data_dir, &page, &mut unclassifiable) {
                 Ok(Exported::Written) => written += 1,
                 Ok(Exported::Disowned) => disowned += 1,
                 Err(error) => {
@@ -159,6 +182,10 @@ fn file_name(url: &str) -> Result<String, String> {
 }
 
 #[cfg(test)]
+#[path = "../../tests/support/mod.rs"]
+mod test_objects;
+
+#[cfg(test)]
 mod tests {
     use super::*;
 
@@ -225,5 +252,29 @@ mod tests {
     #[test]
     fn rejects_a_url_without_a_path() {
         assert!(file_name("https://www.anker.com/").is_err());
+    }
+
+    #[test]
+    fn exports_exact_object_body_and_rejects_missing_objects() {
+        let server = test_objects::Server::new();
+        let objects = server.client();
+        let body = "<html>ž 🔎</html>";
+        let storage = objects.create_offer(RAW_OFFERS_BUCKET, body).unwrap();
+        let record = || PageRecord {
+            id: Uuid::now_v7(),
+            url: "https://shop.test/page".into(),
+            retailer_code: "ankerau".into(),
+            storage: Json(storage),
+        };
+        let page = fetch_page(record(), &objects).unwrap();
+        let dir = std::env::temp_dir().join(format!("offer-export-{}", Uuid::now_v7()));
+        write_page(&dir, RetailerCode::AnkerAu, &page).unwrap();
+        assert_eq!(
+            fs::read_to_string(dir.join("ankerau/offer_details/sources/page.html")).unwrap(),
+            body
+        );
+        fs::remove_dir_all(dir).unwrap();
+        server.data.lock().unwrap().get_response = Some((404, "{}".into()));
+        assert!(fetch_page(record(), &objects).is_err());
     }
 }

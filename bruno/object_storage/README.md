@@ -1,10 +1,14 @@
 # Object storage requests
 
-Open this folder as a Bruno collection and select `local`. It targets
-`http://localhost:3003`, matching `PORT=3003 make serve` in
-[`services/object_storage`](../../services/object_storage/README.md).
-All requests inherit the collection's bearer authentication. The local
-environment contains the service's public development token.
+Open the `bruno` workspace in Bruno, then select the workspace's `local`
+environment and this collection's `local` environment. The workspace
+environment sets `objectStorageBaseUrl` to `http://172.28.100.43:3000`, the
+`object_storage` container from the `compose-apps.yaml` file. To call a service
+started with `PORT=3003 make serve` in
+[`services/object_storage`](../../services/object_storage/README.md), override
+the address as shown below.
+All requests inherit the collection's bearer authentication. The collection's
+`local` environment contains the service's public development token.
 
 Run the collection in sequence. REST and GraphQL creation save `recordId` and
 `graphqlRecordId` as runtime variables for later requests. The GraphQL retry
@@ -26,9 +30,9 @@ in Bruno's default safe runtime without external modules.
 ```sh
 npm install -g @usebruno/cli@4.2.1
 cd bruno/object_storage
-bru run --env local
+bru run --env local --global-env local
 # Override the address for a separately started service:
-bru run --env local --env-var baseUrl=http://localhost:3057
+bru run --env local --global-env local --global-env-var objectStorageBaseUrl=http://localhost:3003
 ```
 
 Run against a development or disposable database. A successful first run stores

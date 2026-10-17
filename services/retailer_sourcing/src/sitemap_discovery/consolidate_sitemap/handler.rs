@@ -1,3 +1,4 @@
+use crate::platform::object_storage::Stored;
 use bodul_shared::link::LinkKind;
 use bodul_shared::retailer::RetailerCode;
 use sitemap::{GroupedLinks, SitemapUrl};
@@ -14,7 +15,10 @@ use crate::platform::bus::Handle;
 pub trait Store: Send + Sync + 'static {
     fn processed_sitemap(&self, id: Uuid) -> Result<ProcessedSitemap, StoreError>;
 
-    fn store_consolidated(&self, consolidated: &ConsolidatedSitemap) -> Result<(), StoreError>;
+    fn store_consolidated(
+        &self,
+        consolidated: &ConsolidatedSitemap,
+    ) -> Result<Stored<ConsolidatedSitemap>, StoreError>;
 }
 
 /// Decides what kind of page a URL points to.
@@ -46,14 +50,16 @@ impl<S: Store, C: ClassifyLink> Handle for Handler<S, C> {
 
     fn handle(&self, command: ConsolidateSitemap) -> Result<Vec<SitemapConsolidated>, StoreError> {
         let processed = self.store.processed_sitemap(command.processed_sitemap_id)?;
+        tracing::debug!(object_storage_id = %processed.object_storage_id, "input object loaded");
         let links = GroupedLinks::from_document(&processed.document, |url| {
             self.classifier.classify(processed.retailer_code, url)
         });
         let consolidated = ConsolidatedSitemap::new(&processed, links);
 
-        self.store.store_consolidated(&consolidated)?;
+        let stored = self.store.store_consolidated(&consolidated)?;
 
         tracing::info!(
+            object_storage_id = %stored.object_storage_id,
             retrieval_id = %consolidated.retrieval_id,
             retailer_code = ?consolidated.retailer_code,
             consolidated_sitemap_id = %consolidated.id,
@@ -86,6 +92,7 @@ mod tests {
     use super::*;
 
     struct FakeStore {
+        fail: bool,
         document: SitemapDocument,
         consolidated: Mutex<Vec<ConsolidatedSitemap>>,
     }
@@ -93,6 +100,7 @@ mod tests {
     impl Store for FakeStore {
         fn processed_sitemap(&self, id: Uuid) -> Result<ProcessedSitemap, StoreError> {
             Ok(ProcessedSitemap {
+                object_storage_id: uuid::Uuid::now_v7(),
                 id,
                 retrieval_id: Uuid::nil(),
                 retailer_code: RetailerCode::UgreenCa,
@@ -100,9 +108,21 @@ mod tests {
             })
         }
 
-        fn store_consolidated(&self, consolidated: &ConsolidatedSitemap) -> Result<(), StoreError> {
+        fn store_consolidated(
+            &self,
+            consolidated: &ConsolidatedSitemap,
+        ) -> Result<Stored<ConsolidatedSitemap>, StoreError> {
+            if self.fail {
+                return Err(StoreError::ObjectStorage(
+                    crate::platform::object_storage::Error::InvalidRecord,
+                ));
+            }
+
             self.consolidated.lock().unwrap().push(consolidated.clone());
-            Ok(())
+            Ok(Stored {
+                entity: consolidated.clone(),
+                object_storage_id: uuid::Uuid::now_v7(),
+            })
         }
     }
 
@@ -133,6 +153,7 @@ mod tests {
     #[test]
     fn consolidates_every_url_by_kind() {
         let store = FakeStore {
+            fail: false,
             document: SitemapDocument {
                 urls: vec![
                     url("https://shop.test/products/a"),
@@ -175,6 +196,23 @@ mod tests {
                 .links()
                 .unknown,
             vec!["https://shop.test/pages/about"]
+        );
+    }
+
+    #[test]
+    fn storage_failure_prevents_success_events() {
+        let store = FakeStore {
+            fail: true,
+            document: SitemapDocument::default(),
+            consolidated: Mutex::new(Vec::new()),
+        };
+        let handler = Handler::new(store, ByPath);
+        assert!(
+            handler
+                .handle(ConsolidateSitemap {
+                    processed_sitemap_id: Uuid::now_v7()
+                })
+                .is_err()
         );
     }
 }

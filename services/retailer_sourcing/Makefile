@@ -1,17 +1,35 @@
 include ../../make/rust.mk
 
-# Local settings; a DATABASE_URL already set in the environment wins.
+# Preserve shell/command-line settings, including explicitly empty values.
+ifneq ($(origin DATABASE_URL),undefined)
+retailer_sourcing_database_url := $(value DATABASE_URL)
+endif
 ifneq ($(origin TEST_DATABASE_URL),undefined)
 retailer_sourcing_test_database_url := $(value TEST_DATABASE_URL)
 endif
-ifndef DATABASE_URL
--include .env
+ifneq ($(origin OBJECT_STORAGE_URL),undefined)
+retailer_sourcing_object_storage_url := $(value OBJECT_STORAGE_URL)
+endif
+ifneq ($(origin OBJECT_STORAGE_TOKEN),undefined)
+retailer_sourcing_object_storage_token := $(value OBJECT_STORAGE_TOKEN)
+endif
+include $(wildcard .env)
+ifneq ($(origin retailer_sourcing_database_url),undefined)
+DATABASE_URL := $(retailer_sourcing_database_url)
+endif
+ifneq ($(origin retailer_sourcing_object_storage_url),undefined)
+OBJECT_STORAGE_URL := $(retailer_sourcing_object_storage_url)
+endif
+ifneq ($(origin retailer_sourcing_object_storage_token),undefined)
+OBJECT_STORAGE_TOKEN := $(retailer_sourcing_object_storage_token)
 endif
 ifneq ($(origin retailer_sourcing_test_database_url),undefined)
 TEST_DATABASE_URL := $(retailer_sourcing_test_database_url)
 endif
 export DATABASE_URL
 export TEST_DATABASE_URL
+export OBJECT_STORAGE_URL
+export OBJECT_STORAGE_TOKEN
 
 .PHONY: test-postgres serve migrate migrate-redo export-offer-sources export-sitemaps require-database-url
 
@@ -46,3 +64,11 @@ require-database-url:
 test-postgres:
 	@test -n "$$TEST_DATABASE_URL" || { echo "TEST_DATABASE_URL is required; use a separate test database"; exit 1; }
 	cargo test --bin retailer_sourcing postgres_tests -- --ignored
+
+# Creates immutable artifacts in the configured object-storage service.
+.PHONY: test-object-storage
+test-object-storage:
+	@test -n "$$TEST_DATABASE_URL" || { echo "TEST_DATABASE_URL is required"; exit 1; }
+	@test -n "$$OBJECT_STORAGE_URL" || { echo "OBJECT_STORAGE_URL is required"; exit 1; }
+	@test -n "$$OBJECT_STORAGE_TOKEN" || { echo "OBJECT_STORAGE_TOKEN is required"; exit 1; }
+	cargo test --bin retailer_sourcing live_tests:: -- --ignored

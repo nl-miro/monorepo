@@ -1,11 +1,11 @@
 meta {
-  name: Create or retry record (REST)
+  name: Create record (REST)
   type: http
   seq: 2
 }
 
 post {
-  url: {{baseUrl}}/api/buckets/{{bucket}}/records
+  url: {{objectStorageBaseUrl}}/api/buckets/{{bucket}}/records
   body: json
   auth: inherit
 }

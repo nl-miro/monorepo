@@ -4,11 +4,12 @@ use super::event::OfferPageWasDownloaded;
 use super::store::StoreError;
 use crate::platform::bus::Handle;
 use crate::platform::http::{self, FetchError};
+use crate::platform::object_storage::Stored;
 
 /// The storage this slice needs.
 pub trait Store: Send + Sync + 'static {
     /// Stores the page, replacing any page stored for the offer before.
-    fn store_raw_offer(&self, entity: &RawOffer) -> Result<(), StoreError>;
+    fn store_raw_offer(&self, entity: &RawOffer) -> Result<Stored<RawOffer>, StoreError>;
 }
 
 /// Fetches the body of one offer page.
@@ -66,8 +67,9 @@ impl<S: Store, F: FetchOfferPage> Handle for Handler<S, F> {
             url: command.url.clone(),
             body,
         };
-        self.store.store_raw_offer(&entity)?;
+        let stored = self.store.store_raw_offer(&entity)?;
         tracing::info!(
+            object_storage_id = %stored.object_storage_id,
             offer_id = %command.offer_id,
             url = %command.url,
             bytes = entity.body.len(),
@@ -95,6 +97,7 @@ mod tests {
 
     #[derive(Default)]
     struct FakeStore {
+        fail: bool,
         log: Mutex<Vec<String>>,
     }
 
@@ -106,11 +109,21 @@ mod tests {
     }
 
     impl Store for FakeStore {
-        fn store_raw_offer(&self, entity: &RawOffer) -> Result<(), StoreError> {
+        fn store_raw_offer(&self, entity: &RawOffer) -> Result<Stored<RawOffer>, StoreError> {
+            if self.fail {
+                return Err(StoreError::ObjectStorage(
+                    crate::platform::object_storage::Error::InvalidRecord,
+                ));
+            }
+
             self.log(format!(
                 "stored {:?} {}: {}",
                 entity.retailer_code, entity.url, entity.body
-            ))
+            ))?;
+            Ok(Stored {
+                entity: entity.clone(),
+                object_storage_id: uuid::Uuid::now_v7(),
+            })
         }
     }
 
@@ -179,5 +192,15 @@ mod tests {
             "{error:?}"
         );
         assert!(handler.store.log.lock().unwrap().is_empty());
+    }
+
+    #[test]
+    fn storage_failure_prevents_success_events() {
+        let store = FakeStore {
+            fail: true,
+            ..Default::default()
+        };
+        let handler = Handler::new(store, Page(Some("<html>offer</html>")));
+        assert!(handler.handle(command()).is_err());
     }
 }
