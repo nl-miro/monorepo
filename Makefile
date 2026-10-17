@@ -44,3 +44,7 @@ process-offer-details:
 .PHONY: export-offer-sources
 export-offer-sources:
 	$(MAKE) -C services/retailer_sourcing export-offer-sources DATA_DIR=$(abspath $(DATA_DIR))
+
+.PHONY: export-sitemaps
+export-sitemaps:
+	$(MAKE) -C services/retailer_sourcing export-sitemaps DATA_DIR=$(abspath $(DATA_DIR))

@@ -67,3 +67,7 @@ test-object-storage:
 DATA_DIR ?= ../../../data
 export-offer-sources: require-database-url
 	cargo run --release --bin export_offer_sources -- $(DATA_DIR)
+
+.PHONY: export-sitemaps
+export-sitemaps: require-database-url
+	cargo run --release --bin export_sitemaps -- $(DATA_DIR)

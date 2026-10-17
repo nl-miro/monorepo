@@ -100,11 +100,25 @@ pub(super) fn verify_round_trip(db: &Database, objects: ObjectStorage) {
         store.store_consolidated(&duplicate),
         Err(StoreError::Database(_))
     ));
+    let exported = json_query(
+        &mut conn,
+        &format!(
+            "SELECT to_jsonb(crawl) AS value FROM ({}) crawl",
+            include_str!("../../bin/export_sitemaps.sql")
+        ),
+    );
+    assert_eq!(exported["id"], id.to_string());
+    assert_eq!(exported["consolidated_id"], entity.id.to_string());
+    assert_eq!(exported["consolidated_storage"], row["storage"]);
+    assert_eq!(
+        exported["storage"]["object_storage_id"],
+        processed.object_storage_id.to_string()
+    );
 }
 
 #[test]
 #[ignore = "requires DATABASE_URL_TEST; run make test-postgres"]
-fn postgres_store_round_trip() {
+fn postgres_store_round_trip_and_export_query() {
     let db = Database::new();
     let server = Server::new();
     verify_round_trip(&db, server.client());
