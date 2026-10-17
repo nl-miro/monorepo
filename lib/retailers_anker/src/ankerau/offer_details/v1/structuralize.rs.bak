@@ -1,0 +1,760 @@
+//! Turns normalized data into the product variations the rest of the system consumes: which
+//! facts describe the product as a whole and which belong to one variation.
+
+use super::normalized::{self, AnkerAuNormalizedDocument};
+use crate::shared::{
+    Gtin, IdentifierError, ShopifyHandle, ShopifyProductGid, ShopifyProductVariationGid, Sku,
+};
+use chrono::{DateTime, Utc};
+use money::Money;
+use retailer_sauce::item_condition::ItemCondition;
+use serde::{Deserialize, Serialize};
+use thiserror::Error;
+
+#[derive(Debug, Clone, PartialEq, Error)]
+pub enum StructuralizeError {
+    #[error("option `{}` carries {} values, not the 1 every variant option renders", .0.id, .0.values.len())]
+    InvalidOptionValueCount(normalized::ProductOption),
+
+    #[error(transparent)]
+    Identifier(#[from] IdentifierError),
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize)]
+pub struct AnkerAuDocument {
+    pub variations: Vec<ProductVariation>,
+}
+
+impl AnkerAuDocument {
+    pub fn from_normalized(
+        input: AnkerAuNormalizedDocument,
+    ) -> Result<AnkerAuDocument, StructuralizeError> {
+        let AnkerAuNormalizedDocument {
+            ld_json,
+            product,
+            variants,
+            canonical_url,
+        } = input;
+        let island = ld_json.product;
+
+        let mut variations = vec![];
+
+        let variations_count = variants.len();
+
+        for i in variants {
+            let identifiers = ProductVariationIdentifier::from_normalized(&product, &i)?;
+            let pricing = ProductVariationPricing::from_normalized(
+                &i,
+                &identifiers.shopify_product_variation_gid,
+            )?;
+            // Product-level JSON-LD availability cannot describe variants with different stock.
+            let logistics = ProductVariationLogistics::from_normalized(&i);
+            let url = variation_url(
+                &canonical_url,
+                &identifiers.shopify_product_variation_gid,
+                variations_count,
+            )?;
+
+            let content = Content::from_normalized(&island, &product, &i, url);
+
+            let item_condition = island.offer.item_condition.clone();
+
+            let options = variation_options(i.options)?;
+
+            let item = ProductVariation {
+                identifiers,
+                pricing,
+                item_condition,
+                content,
+                logistics,
+                options,
+            };
+
+            variations.push(item)
+        }
+
+        let res = AnkerAuDocument { variations };
+
+        Ok(res)
+    }
+}
+
+fn variation_options(
+    options: Vec<normalized::ProductOption>,
+) -> Result<Vec<ProductVariationOption>, StructuralizeError> {
+    options
+        .into_iter()
+        .map(ProductVariationOption::from_normalized)
+        .collect()
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize)]
+pub struct ProductVariation {
+    pub identifiers: ProductVariationIdentifier,
+    pub pricing: ProductVariationPricing,
+    pub item_condition: ItemCondition,
+    pub content: Content,
+    pub logistics: ProductVariationLogistics,
+    pub options: Vec<ProductVariationOption>,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize)]
+pub struct ProductVariationIdentifier {
+    pub gtin: Option<Gtin>,
+    pub sku: Sku,
+    pub shopify_product_gid: ShopifyProductGid,
+    pub shopify_product_variation_gid: ShopifyProductVariationGid,
+    pub shopify_handle: ShopifyHandle,
+}
+
+impl ProductVariationIdentifier {
+    fn from_normalized(
+        product: &normalized::ProductRecord,
+        variant: &normalized::Variant,
+    ) -> Result<ProductVariationIdentifier, StructuralizeError> {
+        Ok(ProductVariationIdentifier {
+            gtin: variant.barcode.clone().map(Gtin::try_from).transpose()?,
+            sku: variant.sku.clone().try_into()?,
+            shopify_product_gid: product.id.clone().try_into()?,
+            shopify_product_variation_gid: variant.id.clone().try_into()?,
+            shopify_handle: product.handle.clone().try_into()?,
+        })
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize)]
+pub struct ProductVariationPricing {
+    pub price: Money,
+    pub compare_at_price: Option<Money>,
+
+    /// Includes expired codes and codes targeting another variation as evidence from the page.
+    pub discounts: Vec<Discount>,
+}
+
+impl ProductVariationPricing {
+    fn from_normalized(
+        variant: &normalized::Variant,
+        gid: &ShopifyProductVariationGid,
+    ) -> Result<ProductVariationPricing, StructuralizeError> {
+        let numeric_id = gid.numeric_id()?;
+
+        Ok(ProductVariationPricing {
+            price: variant.price.clone(),
+            compare_at_price: variant.compare_at_price.clone(),
+            discounts: variant
+                .discounts
+                .iter()
+                .map(|discount| Discount::from_normalized(discount, numeric_id))
+                .collect(),
+        })
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize)]
+pub struct Discount {
+    pub code: String,
+    pub kind: String,
+    pub value: DiscountValue,
+    pub price: Money,
+    pub saving: Money,
+    pub starts_at: DateTime<Utc>,
+    pub ends_at: Option<DateTime<Utc>>,
+    /// Checks the target identifier only; does not establish that the code is currently valid.
+    pub applies_to_this_variation: bool,
+    pub amazon_deal: bool,
+}
+
+impl Discount {
+    fn from_normalized(discount: &normalized::Discount, variation_id: &str) -> Discount {
+        Discount {
+            code: discount.code.clone(),
+            kind: discount.kind.clone(),
+            value: DiscountValue::from_normalized(&discount.value),
+            price: discount.price.clone(),
+            saving: discount.saving.clone(),
+            starts_at: discount.starts_at,
+            ends_at: discount.ends_at,
+            applies_to_this_variation: discount.variant_shopify_id.to_string() == variation_id,
+            amazon_deal: discount.amazon_deal,
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize)]
+pub enum DiscountValue {
+    /// Signed percentage points as supplied by the page: `-25.0` means 25% off.
+    Percentage(f64),
+    FixedAmount(Money),
+}
+
+impl DiscountValue {
+    fn from_normalized(value: &normalized::DiscountValue) -> DiscountValue {
+        match value {
+            normalized::DiscountValue::Percentage(rate) => DiscountValue::Percentage(*rate),
+            normalized::DiscountValue::FixedAmount(amount) => {
+                DiscountValue::FixedAmount(amount.clone())
+            }
+        }
+    }
+}
+
+fn variation_url(
+    canonical_url: &str,
+    gid: &ShopifyProductVariationGid,
+    variations: usize,
+) -> Result<String, StructuralizeError> {
+    // The JSON-LD offer URL may retain tracking parameters and a different selected variant.
+    if variations < 2 {
+        return Ok(canonical_url.to_owned());
+    }
+
+    Ok(format!("{}?variant={}", canonical_url, gid.numeric_id()?))
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize)]
+pub struct Content {
+    pub name: String,
+    pub title: String,
+    pub cta: String,
+    pub description: String,
+    pub brand: String,
+    pub image: ProductVariationImage,
+    pub images: Vec<String>,
+    pub url: String,
+    pub published_at: DateTime<Utc>,
+
+    pub key_features: Vec<KeyFeature>,
+
+    pub specifications: Vec<Specification>,
+
+    pub product_type: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize)]
+pub struct KeyFeature {
+    pub title: String,
+    pub body: String,
+}
+
+impl KeyFeature {
+    fn from_normalized(feature: &normalized::KeyFeature) -> KeyFeature {
+        KeyFeature {
+            title: feature.title.clone(),
+            body: feature.body.clone(),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize)]
+pub struct Specification {
+    pub name: String,
+    pub value: String,
+}
+
+impl Specification {
+    fn from_normalized(specification: &normalized::Specification) -> Specification {
+        Specification {
+            name: specification.name.clone(),
+            value: specification.value.clone(),
+        }
+    }
+}
+
+impl Content {
+    fn from_normalized(
+        island: &normalized::ldjson::Product,
+        product: &normalized::ProductRecord,
+        variant: &normalized::Variant,
+        url: String,
+    ) -> Content {
+        Content {
+            name: variant.name.clone(),
+            title: product.title.clone(),
+            cta: island.description.clone(),
+            description: product.description.clone(),
+            brand: island.brand.clone(),
+            image: ProductVariationImage {
+                url: variant.image.url.clone(),
+            },
+            images: island.images.clone(),
+            url,
+            published_at: product.published_at,
+            key_features: product
+                .key_features
+                .iter()
+                .map(KeyFeature::from_normalized)
+                .collect(),
+            specifications: product
+                .specifications
+                .iter()
+                .map(Specification::from_normalized)
+                .collect(),
+            product_type: product.product_type.clone(),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize)]
+pub struct ProductVariationLogistics {
+    pub quantity_available: i64,
+    pub available_for_sale: bool,
+    pub currently_not_in_stock: bool,
+    pub requires_shipping: bool,
+    /// Probably kilograms; the payload states no unit. `None` where the variant is unweighed.
+    pub weight: Option<f64>,
+}
+
+impl ProductVariationLogistics {
+    fn from_normalized(variant: &normalized::Variant) -> ProductVariationLogistics {
+        ProductVariationLogistics {
+            quantity_available: variant.quantity_available,
+            available_for_sale: variant.available_for_sale,
+            currently_not_in_stock: variant.currently_not_in_stock,
+            requires_shipping: variant.requires_shipping,
+            weight: variant.weight,
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct ProductVariationOption {
+    pub id: String,
+    pub name: String,
+    pub display_name: String,
+    pub value: ProductVariationOptionValue,
+}
+
+impl ProductVariationOption {
+    fn from_normalized(
+        option: normalized::ProductOption,
+    ) -> Result<ProductVariationOption, StructuralizeError> {
+        if option.values.len() != 1 {
+            return Err(StructuralizeError::InvalidOptionValueCount(option));
+        }
+
+        let normalized::ProductOption {
+            id,
+            name,
+            display_name,
+            values,
+        } = option;
+
+        let raw_value = values
+            .into_iter()
+            .next()
+            .expect("the option was validated to contain exactly one value");
+        let value = ProductVariationOptionValue::from_normalized(raw_value);
+
+        Ok(ProductVariationOption {
+            id,
+            name,
+            display_name,
+            value,
+        })
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct ProductVariationOptionValue {
+    pub label: String,
+    pub hex_colors: Option<Vec<String>>,
+}
+
+impl ProductVariationOptionValue {
+    fn from_normalized(value: normalized::OptionValue) -> ProductVariationOptionValue {
+        ProductVariationOptionValue {
+            label: value.label,
+            hex_colors: value.hex_colors,
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct ProductVariationImage {
+    pub url: String,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{
+        AnkerAuDocument, AnkerAuNormalizedDocument, ProductVariationOption, StructuralizeError,
+    };
+    use crate::ankerau::offer_details::v1::normalized;
+    use crate::shared::IdentifierError;
+    use html_extractor::serde_json::{self, json};
+
+    fn option(values: Vec<normalized::OptionValue>) -> normalized::ProductOption {
+        normalized::ProductOption {
+            id: "opt-1".to_string(),
+            name: "Color".to_string(),
+            display_name: "color".to_string(),
+            values,
+        }
+    }
+
+    fn value(label: &str, hex_colors: Option<Vec<String>>) -> normalized::OptionValue {
+        normalized::OptionValue {
+            label: label.to_string(),
+            hex_colors,
+        }
+    }
+
+    #[test]
+    fn zero_values_fails_with_the_option_id_and_count() {
+        let error = ProductVariationOption::from_normalized(option(vec![]))
+            .expect_err("an option with no values cannot structuralize");
+
+        assert_eq!(
+            error,
+            StructuralizeError::InvalidOptionValueCount(option(vec![]))
+        );
+        assert_eq!(
+            error.to_string(),
+            "option `opt-1` carries 0 values, not the 1 every variant option renders"
+        );
+    }
+
+    #[test]
+    fn one_value_converts_preserving_label_and_hex_colors() {
+        let variation_option = ProductVariationOption::from_normalized(option(vec![value(
+            "Black",
+            Some(vec!["#000000".to_string(), "#111111".to_string()]),
+        )]))
+        .expect("an option with exactly one value converts");
+
+        assert_eq!(variation_option.id, "opt-1");
+        assert_eq!(variation_option.name, "Color");
+        assert_eq!(variation_option.display_name, "color");
+        assert_eq!(variation_option.value.label, "Black");
+        assert_eq!(
+            variation_option.value.hex_colors,
+            Some(vec!["#000000".to_string(), "#111111".to_string()])
+        );
+    }
+
+    #[test]
+    fn one_value_without_hex_colors_converts() {
+        let variation_option =
+            ProductVariationOption::from_normalized(option(vec![value("20,100mAh", None)]))
+                .expect("an option with exactly one value converts");
+
+        assert_eq!(variation_option.value.label, "20,100mAh");
+        assert_eq!(variation_option.value.hex_colors, None);
+    }
+
+    #[test]
+    fn multiple_values_fails_with_the_option_id_and_count() {
+        let error = ProductVariationOption::from_normalized(option(vec![
+            value("Black", None),
+            value("White", None),
+        ]))
+        .expect_err("an option with more than one value cannot structuralize");
+
+        assert_eq!(
+            error,
+            StructuralizeError::InvalidOptionValueCount(option(vec![
+                value("Black", None),
+                value("White", None),
+            ]))
+        );
+        assert_eq!(
+            error.to_string(),
+            "option `opt-1` carries 2 values, not the 1 every variant option renders"
+        );
+    }
+
+    #[test]
+    fn invalid_option_count_reaches_the_stage_error() {
+        let mut input = normalized_document();
+        input["variants"][0]["options"] = json!([
+            {"id": "opt-1", "name": "Color", "display_name": "color", "values": []}
+        ]);
+
+        let error = crate::ankerau::offer_details::v1::structuralize(&input.to_string())
+            .err()
+            .expect("a variant option without a value fails the stage");
+
+        assert_eq!(
+            error,
+            "option `opt-1` carries 0 values, not the 1 every variant option renders"
+        );
+    }
+
+    #[test]
+    fn an_unusable_identifier_crosses_as_the_identifier_failure() {
+        let mut input = normalized_document();
+        input["variants"][0]["sku"] = json!("");
+
+        let normalized: AnkerAuNormalizedDocument =
+            serde_json::from_value(input).expect("an empty SKU still deserializes");
+
+        let error = AnkerAuDocument::from_normalized(normalized)
+            .expect_err("a variant with no SKU cannot structuralize");
+
+        assert_eq!(
+            error,
+            StructuralizeError::Identifier(IdentifierError::EmptySku)
+        );
+    }
+
+    fn normalized_document() -> serde_json::Value {
+        let price = json!({"amount": 22999, "currency": "AUD"});
+        let variant = |id, sku, quantity, available| {
+            json!({
+                "id": id, "sku": sku, "barcode": null, "name": sku,
+                "price": price, "compare_at_price": null,
+                "quantity_available": quantity, "available_for_sale": available,
+                "currently_not_in_stock": false, "requires_shipping": true, "weight": 2.0,
+                "image": {"url": "https://example.com/image.png", "width": 100, "height": 100},
+                "options": [], "discounts": []
+            })
+        };
+        json!({
+            "ld_json": {"product": {
+                "brand": "Anker", "description": "CTA", "images": [], "sku": "A1",
+                "offer": {
+                    "item_condition": "new", "price": price,
+                    "url": "https://www.anker.com/au/products/test"
+                }
+            }},
+            "canonical_url": "https://www.anker.com/au/products/test",
+            "product": {
+                "id": "gid://shopify/Product/1", "handle": "test", "title": "Test",
+                "description": "Description", "key_features": [],
+                "specifications": [],
+                "published_at": "2026-09-21T00:00:00Z",
+                "price": price, "compare_at_price": null, "available_for_sale": true, "options": []
+            },
+            "variants": [
+                variant("gid://shopify/ProductVariant/1", "A1", 0, false),
+                variant("gid://shopify/ProductVariant/2", "A2", 13, true)
+            ]
+        })
+    }
+
+    #[test]
+    fn mixed_stock_variations_omit_availability_even_for_legacy_input() {
+        let input = normalized_document();
+
+        for legacy in [false, true] {
+            let mut input = input.clone();
+            if legacy {
+                input["ld_json"]["product"]["offer"]["availability"] = json!("sold_out");
+            }
+            let normalized: AnkerAuNormalizedDocument = serde_json::from_value(input.clone())
+                .expect("current and legacy input deserialize");
+            let normalized_json = serde_json::to_value(normalized).unwrap();
+            assert!(
+                normalized_json["ld_json"]["product"]["offer"]
+                    .get("availability")
+                    .is_none()
+            );
+
+            let result =
+                crate::ankerau::offer_details::v1::structuralize(&input.to_string()).unwrap();
+            let output: serde_json::Value =
+                serde_json::from_str(&result.document_json.unwrap()).unwrap();
+            let variations = output["variations"].as_array().unwrap();
+            assert_eq!(variations.len(), 2);
+            for (variation, (quantity, available)) in
+                variations.iter().zip([(0, false), (13, true)])
+            {
+                assert!(variation.get("availability").is_none());
+                assert_eq!(variation["item_condition"], "new");
+                assert_eq!(
+                    variation["logistics"],
+                    json!({
+                        "quantity_available": quantity, "available_for_sale": available,
+                        "currently_not_in_stock": false, "requires_shipping": true, "weight": 2.0
+                    })
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn each_variation_of_a_multi_variant_document_gets_its_own_url() {
+        let output = structuralized(&normalized_document());
+
+        assert_eq!(
+            urls(&output),
+            [
+                "https://www.anker.com/au/products/test?variant=1",
+                "https://www.anker.com/au/products/test?variant=2"
+            ]
+        );
+    }
+
+    #[test]
+    fn a_single_variant_document_gets_the_bare_canonical() {
+        let mut input = normalized_document();
+        input["variants"].as_array_mut().unwrap().truncate(1);
+
+        assert_eq!(
+            urls(&structuralized(&input)),
+            ["https://www.anker.com/au/products/test"]
+        );
+    }
+
+    #[test]
+    fn the_islands_arrival_url_reaches_nothing() {
+        let mut input = normalized_document();
+        input["ld_json"]["product"]["offer"]["url"] = json!(
+            "https://www.anker.com/au/products/test?utm_source=offline&amp;ref=chargers&amp;variant=99"
+        );
+
+        let document = crate::ankerau::offer_details::v1::structuralize(&input.to_string())
+            .unwrap()
+            .document_json
+            .unwrap();
+
+        for leaked in ["&amp;", "utm_source", "ref=chargers", "variant=99"] {
+            assert!(!document.contains(leaked), "{leaked} survived: {document}");
+        }
+    }
+
+    #[test]
+    fn a_variant_id_without_a_numeric_tail_fails_the_document() {
+        let mut input = normalized_document();
+        input["variants"][0]["id"] = json!("gid://shopify/ProductVariant/not-a-number");
+
+        let Err(error) = crate::ankerau::offer_details::v1::structuralize(&input.to_string())
+        else {
+            panic!("a malformed variant id cannot build a URL");
+        };
+
+        assert!(error.contains("does not end in a numeric id"), "{error}");
+    }
+
+    #[test]
+    fn the_product_level_prose_and_table_reach_every_variation() {
+        let mut input = normalized_document();
+        input["product"]["key_features"] = json!([
+            {"title": "220W Total Output", "body": "Keep your work setup powered."}
+        ]);
+        input["product"]["specifications"] = json!([
+            {"name": "Total Capacity", "value": "20,100mAh"}
+        ]);
+
+        let output = structuralized(&input);
+        let variations = output["variations"].as_array().unwrap();
+        assert_eq!(variations.len(), 2);
+
+        for variation in variations {
+            assert_eq!(
+                variation["content"]["key_features"],
+                json!([{"title": "220W Total Output", "body": "Keep your work setup powered."}])
+            );
+            assert_eq!(
+                variation["content"]["specifications"],
+                json!([{"name": "Total Capacity", "value": "20,100mAh"}])
+            );
+        }
+    }
+
+    #[test]
+    fn a_product_rendering_neither_list_carries_two_empty_lists() {
+        let output = structuralized(&normalized_document());
+
+        for variation in output["variations"].as_array().unwrap() {
+            assert_eq!(variation["content"]["key_features"], json!([]));
+            assert_eq!(variation["content"]["specifications"], json!([]));
+        }
+    }
+
+    #[test]
+    fn a_discount_reaches_the_pricing_of_the_variation_that_renders_it() {
+        let mut input = normalized_document();
+        input["variants"][0]["discounts"] = json!([discount(1)]);
+
+        let output = structuralized(&input);
+        let variations = output["variations"].as_array().unwrap();
+
+        assert_eq!(
+            variations[0]["pricing"],
+            json!({
+                "price": {"amount": 22999, "currency": "AUD"},
+                "compare_at_price": null,
+                "discounts": [{
+                    "code": "WSTDAS25PCTOFF",
+                    "kind": "WSTD",
+                    "value": {"Percentage": -25.0},
+                    "price": {"amount": 17250, "currency": "AUD"},
+                    "saving": {"amount": 5749, "currency": "AUD"},
+                    "starts_at": "2025-06-06T08:00:56Z",
+                    "ends_at": null,
+                    "applies_to_this_variation": true,
+                    "amazon_deal": true
+                }]
+            })
+        );
+        assert_eq!(variations[1]["pricing"]["discounts"], json!([]));
+    }
+
+    #[test]
+    fn a_discount_for_another_variant_crosses_and_is_marked_as_such() {
+        let mut input = normalized_document();
+        input["variants"][0]["discounts"] = json!([discount(45066711335215i64)]);
+
+        let output = structuralized(&input);
+        let discounts = &output["variations"][0]["pricing"]["discounts"];
+
+        assert_eq!(discounts.as_array().unwrap().len(), 1, "it is not dropped");
+        assert_eq!(discounts[0]["applies_to_this_variation"], json!(false));
+    }
+
+    #[test]
+    fn two_codes_standing_against_one_variation_both_cross() {
+        let mut input = normalized_document();
+        input["variants"][0]["discounts"] = json!([discount(1), {
+            "code": "WSTDEOFY10Poff", "kind": "WSTD",
+            "value": {"Percentage": -10.0},
+            "price": {"amount": 13496, "currency": "AUD"},
+            "saving": {"amount": 1500, "currency": "AUD"},
+            "starts_at": "2025-06-06T08:00:56Z", "ends_at": null,
+            "variant_shopify_id": 1, "amazon_deal": true
+        }]);
+
+        let output = structuralized(&input);
+        let discounts = output["variations"][0]["pricing"]["discounts"]
+            .as_array()
+            .unwrap()
+            .clone();
+
+        assert_eq!(discounts.len(), 2);
+        assert_eq!(
+            discounts
+                .iter()
+                .map(|d| d["code"].as_str().unwrap())
+                .collect::<Vec<_>>(),
+            ["WSTDAS25PCTOFF", "WSTDEOFY10Poff"]
+        );
+    }
+
+    fn discount(variant_shopify_id: i64) -> serde_json::Value {
+        json!({
+            "code": "WSTDAS25PCTOFF", "kind": "WSTD",
+            "value": {"Percentage": -25.0},
+            "price": {"amount": 17250, "currency": "AUD"},
+            "saving": {"amount": 5749, "currency": "AUD"},
+            "starts_at": "2025-06-06T08:00:56Z", "ends_at": null,
+            "variant_shopify_id": variant_shopify_id, "amazon_deal": true
+        })
+    }
+
+    fn structuralized(input: &serde_json::Value) -> serde_json::Value {
+        let result = crate::ankerau::offer_details::v1::structuralize(&input.to_string())
+            .expect("the document structuralizes");
+
+        serde_json::from_str(&result.document_json.unwrap()).unwrap()
+    }
+
+    fn urls(output: &serde_json::Value) -> Vec<String> {
+        output["variations"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|variation| variation["content"]["url"].as_str().unwrap().to_string())
+            .collect()
+    }
+}

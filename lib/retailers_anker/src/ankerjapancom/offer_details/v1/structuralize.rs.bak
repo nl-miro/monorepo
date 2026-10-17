@@ -1,0 +1,433 @@
+//! Turns normalized data into the product variations the rest of the system consumes: which
+//! facts describe the product as a whole and which belong to one variation.
+//!
+//! The storefront renders the offer twice - as a schema.org island and as Liquid's product record -
+//! and normalization keeps both. This is where they become one variation per variant, each
+//! field taken from whichever rendering states it at the right scope.
+
+use super::normalized::{AnkerJapanComNormalizedDocument, ldjson, record};
+use crate::shared::{
+    Gtin, IdentifierError, ShopifyHandle, ShopifyProductGid, ShopifyProductVariationGid, Sku,
+};
+use chrono::{DateTime, Utc};
+use money::Money;
+use serde::Serialize;
+use thiserror::Error;
+
+#[derive(Debug, Clone, PartialEq, Error)]
+pub enum StructuralizeError {
+    #[error(transparent)]
+    Identifier(#[from] IdentifierError),
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize)]
+pub struct AnkerJapanComDocument {
+    pub variations: Vec<ProductVariation>,
+}
+
+impl AnkerJapanComDocument {
+    pub fn from_normalized(
+        input: AnkerJapanComNormalizedDocument,
+    ) -> Result<AnkerJapanComDocument, StructuralizeError> {
+        let AnkerJapanComNormalizedDocument { ld_json, product } = input;
+        let island = ld_json.product;
+
+        let variations_count = product.variants.len();
+        let mut variations = Vec::with_capacity(variations_count);
+
+        for variant in &product.variants {
+            let identifiers = ProductVariationIdentifier::from_normalized(&product, variant)?;
+            let url = variation_url(
+                &island.url,
+                &identifiers.shopify_product_variation_gid,
+                variations_count,
+            )?;
+
+            variations.push(ProductVariation {
+                identifiers,
+                pricing: ProductVariationPricing::from_normalized(variant),
+                content: Content::from_normalized(&island, &product, variant, url),
+                logistics: ProductVariationLogistics::from_normalized(variant),
+                options: variation_options(variant),
+            });
+        }
+
+        Ok(AnkerJapanComDocument { variations })
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize)]
+pub struct ProductVariation {
+    pub identifiers: ProductVariationIdentifier,
+    pub pricing: ProductVariationPricing,
+    pub content: Content,
+    pub logistics: ProductVariationLogistics,
+    pub options: Vec<ProductVariationOption>,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize)]
+pub struct ProductVariationIdentifier {
+    /// The barcode field verbatim, which is not always a GTIN: some variants carry their handle
+    /// or SKU there.
+    pub gtin: Option<Gtin>,
+    /// `None` where the storefront renders an empty SKU.
+    pub sku: Option<Sku>,
+    pub shopify_product_gid: ShopifyProductGid,
+    pub shopify_product_variation_gid: ShopifyProductVariationGid,
+    pub shopify_handle: ShopifyHandle,
+}
+
+impl ProductVariationIdentifier {
+    fn from_normalized(
+        product: &record::ProductRecord,
+        variant: &record::Variant,
+    ) -> Result<ProductVariationIdentifier, StructuralizeError> {
+        Ok(ProductVariationIdentifier {
+            gtin: variant.barcode.clone().map(Gtin::try_from).transpose()?,
+            sku: variant.sku.clone().map(Sku::try_from).transpose()?,
+            shopify_product_gid: product.id.clone().try_into()?,
+            shopify_product_variation_gid: variant.id.clone().try_into()?,
+            shopify_handle: product.handle.clone().try_into()?,
+        })
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize)]
+pub struct ProductVariationPricing {
+    /// `None` where the storefront does not sell the variant and renders ¥0 instead.
+    pub price: Option<Money>,
+    /// `None` where the variant is not marked down.
+    pub compare_at_price: Option<Money>,
+}
+
+impl ProductVariationPricing {
+    fn from_normalized(variant: &record::Variant) -> ProductVariationPricing {
+        ProductVariationPricing {
+            price: variant.price.clone(),
+            compare_at_price: variant.compare_at_price.clone(),
+        }
+    }
+}
+
+// The island's offer URLs pin `?variant=` even on a product with one variant; the bare product URL
+// is the canonical.
+fn variation_url(
+    product_url: &str,
+    gid: &ShopifyProductVariationGid,
+    variations: usize,
+) -> Result<String, StructuralizeError> {
+    if variations < 2 {
+        return Ok(product_url.to_owned());
+    }
+
+    Ok(format!("{}?variant={}", product_url, gid.numeric_id()?))
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize)]
+pub struct Content {
+    pub name: String,
+    /// The record's: the island's `name` prefixes it with `【公式】` ("official").
+    pub title: String,
+    pub cta: String,
+    pub description: String,
+    pub brand: String,
+    /// `None` where the variant has no image of its own.
+    pub image: Option<ProductVariationImage>,
+    pub images: Vec<String>,
+    pub url: String,
+    pub published_at: DateTime<Utc>,
+    pub product_type: Option<String>,
+}
+
+impl Content {
+    fn from_normalized(
+        island: &ldjson::Product,
+        product: &record::ProductRecord,
+        variant: &record::Variant,
+        url: String,
+    ) -> Content {
+        Content {
+            name: variant.name.clone(),
+            title: product.title.clone(),
+            cta: island.description.clone(),
+            description: product.description.clone(),
+            brand: island.brand.clone(),
+            image: variant
+                .image
+                .clone()
+                .map(|url| ProductVariationImage { url }),
+            images: product.images.clone(),
+            url,
+            published_at: product.published_at,
+            product_type: product.product_type.clone(),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize)]
+pub struct ProductVariationImage {
+    pub url: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize)]
+pub struct ProductVariationLogistics {
+    pub available_for_sale: bool,
+    pub requires_shipping: bool,
+    /// Unit unknown: Liquid documents grams, but the values do not fit the products. `None` where
+    /// the variant is unweighed.
+    pub weight: Option<i64>,
+}
+
+impl ProductVariationLogistics {
+    fn from_normalized(variant: &record::Variant) -> ProductVariationLogistics {
+        ProductVariationLogistics {
+            available_for_sale: variant.available,
+            requires_shipping: variant.requires_shipping,
+            weight: variant.weight,
+        }
+    }
+}
+
+/// Liquid gives an option no id; it is identified by its name.
+#[derive(Debug, Clone, PartialEq, Serialize)]
+pub struct ProductVariationOption {
+    pub name: String,
+    pub value: String,
+}
+
+fn variation_options(variant: &record::Variant) -> Vec<ProductVariationOption> {
+    if let [only] = variant.options.as_slice()
+        && is_shopify_placeholder(only)
+    {
+        return vec![];
+    }
+
+    variant
+        .options
+        .iter()
+        .map(|option| ProductVariationOption {
+            name: option.name.clone(),
+            value: option.value.clone(),
+        })
+        .collect()
+}
+
+// Shopify renders `Title: Default Title` on the sole variant of a product that offers no options;
+// it names no choice, so it does not cross as one.
+fn is_shopify_placeholder(option: &record::VariantOption) -> bool {
+    option.name == "Title" && option.value == "Default Title"
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{AnkerJapanComDocument, StructuralizeError};
+    use crate::ankerjapancom::offer_details::v1::normalized::AnkerJapanComNormalizedDocument;
+    use crate::shared::IdentifierError;
+    use html_extractor::serde_json::{self, Value, json};
+
+    fn yen(amount: i64) -> Value {
+        json!({"amount": amount, "currency": "JPY"})
+    }
+
+    fn variant(id: u64, sku: &str, label: &str, available: bool) -> Value {
+        json!({
+            "id": format!("gid://shopify/ProductVariant/{id}"), "sku": sku,
+            "barcode": "4571411181795", "name": format!("Anker Hub - {label}"),
+            "price": yen(6199), "compare_at_price": null, "available": available,
+            "requires_shipping": true, "weight": null,
+            "image": format!("https://www.ankerjapan.com/cdn/shop/products/{sku}.jpg"),
+            "options": [{"name": "カラー", "value": label}]
+        })
+    }
+
+    fn normalized_document() -> Value {
+        json!({
+            "ld_json": {
+                "product": {
+                    "description": "CTA", "url": "https://www.ankerjapan.com/products/hub",
+                    "brand": "Anker", "currency": "JPY",
+                    "offers": [], "aggregate_rating": null, "reviews": null
+                },
+                "organization": null, "breadcrumb_list": null
+            },
+            "product": {
+                "id": "gid://shopify/Product/1", "handle": "hub", "title": "Anker Hub",
+                "description": "<p>Description</p>",
+                "published_at": "2021-06-07T00:28:57Z", "created_at": "2021-06-07T00:28:57Z",
+                "product_type": "Hub", "tags": [], "options": ["カラー"],
+                "images": ["https://www.ankerjapan.com/cdn/shop/products/one.jpg"],
+                "variants": [
+                    variant(40082645057697, "A1", "ブラック", true),
+                    variant(40082645057698, "A2", "ホワイト", false)
+                ]
+            }
+        })
+    }
+
+    fn document(input: &Value) -> Result<AnkerJapanComDocument, StructuralizeError> {
+        let normalized: AnkerJapanComNormalizedDocument =
+            serde_json::from_value(input.clone()).expect("the normalized fixture deserializes");
+        AnkerJapanComDocument::from_normalized(normalized)
+    }
+
+    fn structuralized(input: &Value) -> Value {
+        serde_json::to_value(document(input).expect("the fixture structuralizes"))
+            .expect("serializes")
+    }
+
+    fn variations(output: &Value) -> &Vec<Value> {
+        output["variations"].as_array().expect("variations")
+    }
+
+    fn single_variant(input: &mut Value) {
+        input["product"]["variants"]
+            .as_array_mut()
+            .expect("variants")
+            .truncate(1);
+    }
+
+    #[test]
+    fn each_variation_of_a_multi_variant_document_gets_its_own_url() {
+        let output = structuralized(&normalized_document());
+        let urls: Vec<_> = variations(&output)
+            .iter()
+            .map(|variation| variation["content"]["url"].clone())
+            .collect();
+
+        assert_eq!(
+            urls,
+            [
+                json!("https://www.ankerjapan.com/products/hub?variant=40082645057697"),
+                json!("https://www.ankerjapan.com/products/hub?variant=40082645057698")
+            ]
+        );
+    }
+
+    #[test]
+    fn a_single_variant_document_gets_the_bare_product_url() {
+        let mut input = normalized_document();
+        single_variant(&mut input);
+
+        let output = structuralized(&input);
+        assert_eq!(
+            variations(&output)[0]["content"]["url"],
+            json!("https://www.ankerjapan.com/products/hub")
+        );
+    }
+
+    #[test]
+    fn the_title_is_the_records_without_the_islands_prefix() {
+        let output = structuralized(&normalized_document());
+        let content = &variations(&output)[0]["content"];
+
+        assert_eq!(content["title"], json!("Anker Hub"));
+        assert_eq!(content["cta"], json!("CTA"));
+        assert_eq!(content["description"], json!("<p>Description</p>"));
+    }
+
+    #[test]
+    fn a_variant_the_storefront_does_not_sell_has_no_price_and_its_siblings_keep_theirs() {
+        let mut input = normalized_document();
+        input["product"]["variants"][1]["price"] = Value::Null;
+
+        let output = structuralized(&input);
+        assert_eq!(variations(&output)[0]["pricing"]["price"], yen(6199));
+        assert_eq!(variations(&output)[1]["pricing"]["price"], Value::Null);
+    }
+
+    #[test]
+    fn a_variant_without_a_sku_still_crosses() {
+        let mut input = normalized_document();
+        input["product"]["variants"][0]["sku"] = Value::Null;
+
+        let output = structuralized(&input);
+        assert_eq!(variations(&output)[0]["identifiers"]["sku"], Value::Null);
+    }
+
+    #[test]
+    fn a_junk_barcode_crosses_as_the_gtin_verbatim() {
+        let mut input = normalized_document();
+        input["product"]["variants"][0]["barcode"] = json!("a1233,");
+
+        let output = structuralized(&input);
+        assert_eq!(
+            variations(&output)[0]["identifiers"]["gtin"],
+            json!("a1233,")
+        );
+    }
+
+    #[test]
+    fn availability_stays_per_variation_in_logistics() {
+        let output = structuralized(&normalized_document());
+        let [first, second] = variations(&output).as_slice() else {
+            panic!("two variations");
+        };
+
+        assert_eq!(first["logistics"]["available_for_sale"], json!(true));
+        assert_eq!(second["logistics"]["available_for_sale"], json!(false));
+        assert!(first.get("availability").is_none());
+    }
+
+    #[test]
+    fn options_cross_by_name_without_an_id() {
+        let output = structuralized(&normalized_document());
+
+        assert_eq!(
+            variations(&output)[1]["options"],
+            json!([{"name": "カラー", "value": "ホワイト"}])
+        );
+    }
+
+    #[test]
+    fn shopifys_default_title_placeholder_is_not_an_option() {
+        let mut input = normalized_document();
+        single_variant(&mut input);
+        input["product"]["options"] = json!(["Title"]);
+        input["product"]["variants"][0]["options"] =
+            json!([{"name": "Title", "value": "Default Title"}]);
+
+        let output = structuralized(&input);
+        assert_eq!(variations(&output)[0]["options"], json!([]));
+    }
+
+    #[test]
+    fn a_title_option_with_a_real_value_is_a_real_option() {
+        let mut input = normalized_document();
+        single_variant(&mut input);
+        input["product"]["options"] = json!(["Title"]);
+        input["product"]["variants"][0]["options"] =
+            json!([{"name": "Title", "value": "ブラック"}]);
+
+        let output = structuralized(&input);
+        assert_eq!(
+            variations(&output)[0]["options"],
+            json!([{"name": "Title", "value": "ブラック"}])
+        );
+    }
+
+    #[test]
+    fn an_unusable_identifier_crosses_as_the_identifier_failure() {
+        let mut input = normalized_document();
+        input["product"]["handle"] = json!("");
+
+        assert_eq!(
+            document(&input),
+            Err(StructuralizeError::Identifier(
+                IdentifierError::EmptyShopifyHandle
+            ))
+        );
+    }
+
+    #[test]
+    fn a_gid_without_a_numeric_tail_fails_a_multi_variant_document() {
+        let mut input = normalized_document();
+        input["product"]["variants"][0]["id"] = json!("gid://shopify/ProductVariant/x");
+
+        assert!(matches!(
+            document(&input),
+            Err(StructuralizeError::Identifier(
+                IdentifierError::VariationGidWithoutNumericId { .. }
+            ))
+        ));
+    }
+}

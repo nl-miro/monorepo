@@ -1848,6 +1848,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "money"
+version = "0.1.0"
+dependencies = [
+ "serde",
+]
+
+[[package]]
 name = "mulac-commanding"
 version = "0.3.0"
 source = "git+https://github.com/nulllabsdev/mulac?tag=0.3.0#87083a895b0fff37182219eda7aab9a58c8615e9"
@@ -2014,6 +2021,41 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "071dfc062690e90b734c0b2273ce72ad0ffa95f0c74596bc250dcfd960262841"
 dependencies = [
  "autocfg",
+]
+
+[[package]]
+name = "object_storage"
+version = "0.1.0"
+dependencies = [
+ "async-graphql",
+ "axum",
+ "chrono",
+ "diesel",
+ "diesel_migrations",
+ "http-body-util",
+ "serde",
+ "serde_json",
+ "shared",
+ "tokio",
+ "tower",
+ "tower-http",
+ "tracing",
+ "tracing-appender",
+ "tracing-subscriber",
+ "utoipa-swagger-ui",
+ "uuid",
+]
+
+[[package]]
+name = "object_storage_client"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "thiserror",
+ "uuid",
 ]
 
 [[package]]
@@ -2503,9 +2545,9 @@ dependencies = [
 
 [[package]]
 name = "quick-xml"
-version = "0.40.1"
+version = "0.42.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2474bd2e5029e7ccb6abb2ba48cf2383a333851dedf495901544281590c7da7f"
+checksum = "41b1177fdf999d2321d3fb46ff47159d9c1fb9ad66a4879f8c50a0b504615e9b"
 dependencies = [
  "memchr",
 ]
@@ -2801,6 +2843,8 @@ dependencies = [
  "rustls",
  "rustls-pki-types",
  "rustls-platform-verifier",
+ "serde",
+ "serde_json",
  "sync_wrapper",
  "tokio",
  "tokio-rustls",
@@ -2819,6 +2863,7 @@ version = "0.1.0"
 dependencies = [
  "bodul_shared",
  "html-extractor",
+ "retailer_sauce",
  "retailers_anker",
  "retailers_mi",
  "retailers_minisforum",
@@ -2832,6 +2877,8 @@ version = "0.1.0"
 dependencies = [
  "bodul_shared",
  "html-extractor",
+ "serde",
+ "thiserror",
 ]
 
 [[package]]
@@ -2848,12 +2895,14 @@ dependencies = [
  "flate2",
  "http-body-util",
  "mulac-kernel",
- "quick-xml 0.40.1",
+ "object_storage_client",
+ "percent-encoding",
  "reqwest",
  "retailer_data_extractor",
  "serde",
  "serde_json",
  "shared",
+ "sitemap",
  "strum",
  "thiserror",
  "tokio",
@@ -2873,9 +2922,12 @@ name = "retailers_anker"
 version = "0.1.0"
 dependencies = [
  "bodul_shared",
+ "chrono",
  "html-extractor",
+ "money",
  "retailer_sauce",
  "serde",
+ "thiserror",
 ]
 
 [[package]]
@@ -2894,8 +2946,10 @@ version = "0.1.0"
 dependencies = [
  "bodul_shared",
  "html-extractor",
+ "money",
  "retailer_sauce",
  "serde",
+ "thiserror",
 ]
 
 [[package]]
@@ -2904,8 +2958,10 @@ version = "0.1.0"
 dependencies = [
  "bodul_shared",
  "html-extractor",
+ "money",
  "retailer_sauce",
  "serde",
+ "thiserror",
 ]
 
 [[package]]
@@ -3352,6 +3408,20 @@ name = "siphasher"
 version = "1.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "33f4fe9184a62d842c9ef383018f3306d8ba224fd9d836f56d7288308847c256"
+
+[[package]]
+name = "sitemap"
+version = "0.1.0"
+dependencies = [
+ "bodul_shared",
+ "chrono",
+ "percent-encoding",
+ "quick-xml 0.42.0",
+ "serde",
+ "strum",
+ "thiserror",
+ "url",
+]
 
 [[package]]
 name = "slab"

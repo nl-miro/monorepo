@@ -24,6 +24,10 @@ requirements, read [README.md](README.md) first.
 - Add the crate to the README.
 - Give a library crate a `README.md` that describes its purpose, like the others in `lib/`.
 
+## Adding or implementing a retailer
+
+- Follow [docs/retailer-integration.md](docs/retailer-integration.md) step by step.
+
 ## Dependencies
 
 - Declare a dependency used by several crates in the same workspace once, under `[workspace.dependencies]`, and use it with `name.workspace = true`.
@@ -33,6 +37,7 @@ requirements, read [README.md](README.md) first.
 ## Services and apps
 
 - New services use poem, poem-openapi and async-graphql, with the standard routes: `/api`, `/api/openapi.json`, `/api/docs`, `/graphql`, and `/graphql/ide` in debug builds only.
+- Object storage intentionally uses axum to compare its development experience with poem; see [ADR 5](docs/adr/0005-axum-for-object-storage.md).
 - Build each server's routes in an `app()` function so tests can call them without opening a port.
 - Every service and app reads its listen port from `PORT` and defaults to 3000.
 - `retailer_sourcing` uses axum. Don't migrate it without a decision recorded in an ADR.
