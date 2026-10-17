@@ -132,3 +132,7 @@ a volume on the log folder to keep them.
 `make ci` runs formatting, clippy and the tests. Handler tests use in-memory
 fakes, so they need no database or network. The store queries are checked by
 running the service against Postgres.
+
+If queuing a sitemap request fails partway through, its HTTP 500 response includes
+`error` and the `retrievals` already queued. These remain queued; retry only
+retailers not listed in the response.
