@@ -40,3 +40,7 @@ consolidate-sitemap-sources:
 # page. Set RETAILERS to process only some, e.g. RETAILERS="ankerau ankervn".
 process-offer-details:
 	$(MAKE) -C lib/retailer_data_extractor process-offer-details DATA_DIR=$(abspath $(DATA_DIR))
+
+.PHONY: export-offer-sources
+export-offer-sources:
+	$(MAKE) -C services/retailer_sourcing export-offer-sources DATA_DIR=$(abspath $(DATA_DIR))

@@ -62,3 +62,8 @@ test-object-storage:
 	@test -n "$$OBJECT_STORAGE_URL" || { echo "OBJECT_STORAGE_URL is required"; exit 1; }
 	@test -n "$$OBJECT_STORAGE_TOKEN" || { echo "OBJECT_STORAGE_TOKEN is required"; exit 1; }
 	cargo test --bin retailer_sourcing live_tests:: -- --ignored
+
+.PHONY: export-offer-sources
+DATA_DIR ?= ../../../data
+export-offer-sources: require-database-url
+	cargo run --release --bin export_offer_sources -- $(DATA_DIR)
