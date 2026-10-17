@@ -14,11 +14,13 @@ use crate::ankernz;
 use crate::ankerpl;
 use crate::ankeruk;
 use crate::ankervn;
+use std::time::Duration;
+
 use bodul_shared::SitemapConfig;
 use bodul_shared::link::LinkKind;
 use bodul_shared::prelude::{NormalizedData, RetailerCode};
 use html_extractor::io::Architecture;
-use std::time::Duration;
+use retailer_sauce::structuralized::StructuralizedData;
 
 pub fn architecture_for(retailer: RetailerCode) -> Option<Architecture> {
     match retailer {
@@ -64,6 +66,37 @@ pub fn normalize_for(retailer: RetailerCode, json: &str) -> Option<Result<Normal
         RetailerCode::AnkerPl => Some(ankerpl::prelude::offer_detail_normalize_v1(json)),
         RetailerCode::AnkerUk => Some(ankeruk::prelude::offer_detail_normalize_v1(json)),
         RetailerCode::AnkerVn => Some(ankervn::prelude::offer_detail_normalize_v1(json)),
+        _ => None,
+    }
+}
+
+/// `ankerkr` runs on Cafe24 and has no data island to read yet, so it hands over no document
+/// rather than failing.
+pub fn structuralize_for(
+    retailer: RetailerCode,
+    json: &str,
+) -> Option<Result<StructuralizedData, String>> {
+    match retailer {
+        RetailerCode::AnkerAu => Some(ankerau::prelude::offer_detail_structuralize_v1(json)),
+        RetailerCode::AnkerCa => Some(ankerca::prelude::offer_detail_structuralize_v1(json)),
+        RetailerCode::AnkerCom => Some(ankercom::prelude::offer_detail_structuralize_v1(json)),
+        RetailerCode::AnkerDe => Some(ankerde::prelude::offer_detail_structuralize_v1(json)),
+        RetailerCode::AnkerEu => Some(ankereu::prelude::offer_detail_structuralize_v1(json)),
+        RetailerCode::AnkerFr => Some(ankerfr::prelude::offer_detail_structuralize_v1(json)),
+        RetailerCode::AnkerItalyCom => {
+            Some(ankeritalycom::prelude::offer_detail_structuralize_v1(json))
+        }
+        RetailerCode::AnkerJapanCom => {
+            Some(ankerjapancom::prelude::offer_detail_structuralize_v1(json))
+        }
+        RetailerCode::AnkerNordicsCom => Some(
+            ankernordicscom::prelude::offer_detail_structuralize_v1(json),
+        ),
+        RetailerCode::AnkerNz => Some(ankernz::prelude::offer_detail_structuralize_v1(json)),
+        RetailerCode::AnkerPl => Some(ankerpl::prelude::offer_detail_structuralize_v1(json)),
+        RetailerCode::AnkerUk => Some(ankeruk::prelude::offer_detail_structuralize_v1(json)),
+        RetailerCode::AnkerVn => Some(ankervn::prelude::offer_detail_structuralize_v1(json)),
+        RetailerCode::AnkerKr => Some(Ok(StructuralizedData::just_document_json(None))),
         _ => None,
     }
 }
