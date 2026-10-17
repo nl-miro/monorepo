@@ -14,7 +14,7 @@ mod store;
 #[cfg(test)]
 mod live_tests {
     #[test]
-    #[ignore = "requires TEST_DATABASE_URL, OBJECT_STORAGE_URL and OBJECT_STORAGE_TOKEN; run make test-object-storage"]
+    #[ignore = "requires RETAILER_SOURCING_DATABASE_URL_TEST, OBJECT_STORAGE_URL and OBJECT_STORAGE_TOKEN; run make test-object-storage"]
     fn live_round_trip() {
         let runtime = tokio::runtime::Runtime::new().unwrap();
         let objects =

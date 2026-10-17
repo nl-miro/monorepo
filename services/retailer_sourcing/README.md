@@ -86,16 +86,20 @@ the events others may use. Contexts talk to each other only through events.
 
 ## Running it
 
-The service needs Postgres for the workflow; without `DATABASE_URL` it serves
+The service needs Postgres for the workflow; without `RETAILER_SOURCING_DATABASE_URL` it serves
 HTTP only and the routes below return `503`. On startup it applies pending
-migrations.
+migrations. Rename `DATABASE_URL` in existing environments to
+`RETAILER_SOURCING_DATABASE_URL`; the service no longer reads the old name.
+Rename the former test setting `TEST_DATABASE_URL` to
+`RETAILER_SOURCING_DATABASE_URL_TEST` as well.
+The Make migration targets pass the new setting to Diesel CLI as `DATABASE_URL`.
 
-When `DATABASE_URL` is configured, `OBJECT_STORAGE_URL` and
+When `RETAILER_SOURCING_DATABASE_URL` is configured, `OBJECT_STORAGE_URL` and
 `OBJECT_STORAGE_TOKEN` are required, including for both export commands.
 Configuration is checked before connecting to PostgreSQL or applying migrations.
 The client uses REST, a 30-second request timeout, and no automatic retries or
 redirects. Start an object storage service that allows all seven pipeline buckets.
-Without `DATABASE_URL`, the HTTP-only mode needs no object storage configuration.
+Without `RETAILER_SOURCING_DATABASE_URL`, the HTTP-only mode needs no object storage configuration.
 
 ```sh
 make .env          # once: database and object storage configuration
@@ -380,7 +384,7 @@ cannot run against the new schema.
 
 For rollback to the previous stats-only layout, stop the new service and, while
 migration 8 is the latest applied migration, run `diesel migration revert` from
-this directory with `DATABASE_URL` configured. Then start the previous binary.
+this directory with `RETAILER_SOURCING_DATABASE_URL` configured. Then start the previous binary.
 Reverting migration 7 as well restores the original count columns. Do not use
 `make migrate-redo` for rollback: that target reverts all migrations and deletes
 stored data. Missing, malformed, or overflowing values cause rollback to fail
@@ -392,7 +396,7 @@ migration 8, because rollback restores the original foreign key.
 ```sh
 make fmt
 make ci
-TEST_DATABASE_URL=postgres://object_storing:object_storing@172.28.100.31:5432/object_storing_test RUST_TEST_THREADS=4 make test-postgres
+RETAILER_SOURCING_DATABASE_URL_TEST=postgres://object_storing:object_storing@172.28.100.31:5432/object_storing_test RUST_TEST_THREADS=4 make test-postgres
 ```
 
 The test database must already exist, and its role must be able to create/drop
@@ -410,7 +414,7 @@ query, reference uniqueness, and deletion behavior.
 With a running object storage service and the separate test database:
 
 ```sh
-TEST_DATABASE_URL=postgres://object_storing:object_storing@172.28.100.31:5432/object_storing_test \
+RETAILER_SOURCING_DATABASE_URL_TEST=postgres://object_storing:object_storing@172.28.100.31:5432/object_storing_test \
 OBJECT_STORAGE_URL=http://localhost:3108 OBJECT_STORAGE_TOKEN=<token> \
 make test-object-storage
 ```

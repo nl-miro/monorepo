@@ -10,7 +10,7 @@ use serde_json::json;
 use uuid::Uuid;
 
 #[test]
-#[ignore = "requires TEST_DATABASE_URL; run make test-postgres"]
+#[ignore = "requires RETAILER_SOURCING_DATABASE_URL_TEST; run make test-postgres"]
 fn postgres_discovery_returns_entities_and_rejects_bad_content() {
     let db = Database::new();
     let server = Server::new();

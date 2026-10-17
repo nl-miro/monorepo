@@ -75,7 +75,7 @@ fn pipeline_configuration_is_checked_before_connecting_or_migrating() {
     let logs = std::env::temp_dir().join(format!("sourcing-startup-{}", Uuid::now_v7()));
     for missing in ["OBJECT_STORAGE_URL", "OBJECT_STORAGE_TOKEN"] {
         let output = std::process::Command::new(env!("CARGO_BIN_EXE_retailer_sourcing"))
-            .env("DATABASE_URL", "not a database URL")
+            .env("RETAILER_SOURCING_DATABASE_URL", "not a database URL")
             .env("OBJECT_STORAGE_URL", "http://127.0.0.1:1")
             .env("OBJECT_STORAGE_TOKEN", "test-token")
             .env_remove(missing)

@@ -71,7 +71,7 @@ pub(super) fn verify_round_trip(db: &Database, objects: ObjectStorage) {
 }
 
 #[test]
-#[ignore = "requires TEST_DATABASE_URL; run make test-postgres"]
+#[ignore = "requires RETAILER_SOURCING_DATABASE_URL_TEST; run make test-postgres"]
 fn postgres_raw_sitemaps_round_trip_through_the_client() {
     let db = Database::new();
     let server = Server::new();
@@ -86,7 +86,7 @@ fn postgres_raw_sitemaps_round_trip_through_the_client() {
 }
 
 #[test]
-#[ignore = "requires TEST_DATABASE_URL; run make test-postgres"]
+#[ignore = "requires RETAILER_SOURCING_DATABASE_URL_TEST; run make test-postgres"]
 fn postgres_raw_sitemap_batch_failures_leave_no_local_rows() {
     let db = Database::new();
     let server = Server::new();

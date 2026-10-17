@@ -22,10 +22,11 @@ struct Database {
 }
 impl Database {
     fn new() -> Self {
-        let url = std::env::var("TEST_DATABASE_URL")
-            .expect("TEST_DATABASE_URL must point to an available PostgreSQL test database");
+        let url = std::env::var("OBJECE_STORAGE_DATABASE_URL_TEST").expect(
+            "OBJECE_STORAGE_DATABASE_URL_TEST must point to an available PostgreSQL test database",
+        );
         let mut connection =
-            PgConnection::establish(&url).expect("TEST_DATABASE_URL is unavailable");
+            PgConnection::establish(&url).expect("OBJECE_STORAGE_DATABASE_URL_TEST is unavailable");
         let schema = format!("object_storage_test_{}", Uuid::new_v4().simple());
         connection
             .batch_execute(&format!("CREATE SCHEMA {schema}"))
@@ -77,7 +78,7 @@ async fn database() -> Database {
 }
 
 #[tokio::test]
-#[ignore = "requires TEST_DATABASE_URL; run make test-postgres"]
+#[ignore = "requires OBJECE_STORAGE_DATABASE_URL_TEST; run make test-postgres"]
 async fn round_trip_all_buckets_through_both_apis() {
     let db = database().await;
     let mut body = input();
@@ -131,7 +132,7 @@ async fn round_trip_all_buckets_through_both_apis() {
 }
 
 #[tokio::test]
-#[ignore = "requires TEST_DATABASE_URL; run make test-postgres"]
+#[ignore = "requires OBJECE_STORAGE_DATABASE_URL_TEST; run make test-postgres"]
 async fn missing_records_wrong_buckets_and_execution_errors() {
     let db = database().await;
     let (_, _, result) =
@@ -165,7 +166,7 @@ async fn missing_records_wrong_buckets_and_execution_errors() {
 }
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
-#[ignore = "requires TEST_DATABASE_URL; run make test-postgres"]
+#[ignore = "requires OBJECE_STORAGE_DATABASE_URL_TEST; run make test-postgres"]
 async fn concurrent_cross_api_retries_never_leave_orphans() {
     let db = database().await;
     for conflict in [false, true] {
@@ -241,7 +242,7 @@ async fn concurrent_cross_api_retries_never_leave_orphans() {
 }
 
 #[tokio::test]
-#[ignore = "requires TEST_DATABASE_URL; run make test-postgres"]
+#[ignore = "requires OBJECE_STORAGE_DATABASE_URL_TEST; run make test-postgres"]
 async fn precise_metadata_equality_and_unsupported_values() {
     let db = database().await;
     let key = Uuid::now_v7();
@@ -331,7 +332,7 @@ async fn precise_metadata_equality_and_unsupported_values() {
 }
 
 #[tokio::test]
-#[ignore = "requires TEST_DATABASE_URL; run make test-postgres"]
+#[ignore = "requires OBJECE_STORAGE_DATABASE_URL_TEST; run make test-postgres"]
 async fn invalid_variables_prevent_all_mutations_and_valid_defaults_work() {
     let db = database().await;
     let body = input();
@@ -377,7 +378,7 @@ async fn invalid_variables_prevent_all_mutations_and_valid_defaults_work() {
 }
 
 #[tokio::test]
-#[ignore = "requires TEST_DATABASE_URL; run make test-postgres"]
+#[ignore = "requires OBJECE_STORAGE_DATABASE_URL_TEST; run make test-postgres"]
 async fn large_bodies_and_transaction_rollback() {
     let db = database().await;
     let mut body = input();
@@ -430,7 +431,7 @@ async fn large_bodies_and_transaction_rollback() {
 }
 
 #[tokio::test]
-#[ignore = "requires TEST_DATABASE_URL; run make test-postgres"]
+#[ignore = "requires OBJECE_STORAGE_DATABASE_URL_TEST; run make test-postgres"]
 async fn database_disconnects_are_temporary_and_recover() {
     let db = database().await;
     db.sql("CREATE FUNCTION disconnect_writer() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN PERFORM pg_terminate_backend(pg_backend_pid()); RETURN NEW; END $$; CREATE TRIGGER disconnect_writer BEFORE INSERT ON records FOR EACH ROW EXECUTE FUNCTION disconnect_writer()");
@@ -462,7 +463,7 @@ async fn database_disconnects_are_temporary_and_recover() {
 }
 
 #[tokio::test]
-#[ignore = "requires TEST_DATABASE_URL; run make test-postgres"]
+#[ignore = "requires OBJECE_STORAGE_DATABASE_URL_TEST; run make test-postgres"]
 async fn every_non_null_json_shape_and_decoded_payloads_round_trip() {
     let db = database().await;
     for metadata in [
@@ -525,7 +526,7 @@ async fn every_non_null_json_shape_and_decoded_payloads_round_trip() {
 }
 
 #[tokio::test]
-#[ignore = "requires TEST_DATABASE_URL; run make test-postgres"]
+#[ignore = "requires OBJECE_STORAGE_DATABASE_URL_TEST; run make test-postgres"]
 async fn startup_refuses_failed_migrations() {
     let db = database().await;
     // Remove only this isolated schema's migration history: replay must fail
@@ -547,7 +548,7 @@ async fn startup_refuses_failed_migrations() {
 }
 
 #[tokio::test]
-#[ignore = "requires TEST_DATABASE_URL; run make test-postgres"]
+#[ignore = "requires OBJECE_STORAGE_DATABASE_URL_TEST; run make test-postgres"]
 async fn reporting_covers_active_schema_estimates_and_storage() {
     let db = database().await;
     let other = database().await;

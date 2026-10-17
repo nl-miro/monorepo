@@ -63,7 +63,7 @@ retailer's sitemaps and sorts the page URLs into products, catalogs and other
 content. Offer discovery then records every product URL as an offer and
 downloads its page. The code is organised as feature slices
 ([ADR 4](docs/adr/0004-feature-slices-for-retailer-sourcing.md)), and the
-pipeline runs only when `DATABASE_URL` is set (see below).
+pipeline runs only when `RETAILER_SOURCING_DATABASE_URL` is set (see below).
 
 ### apps
 
@@ -104,12 +104,13 @@ that crate.
 | `audit`        | `cargo audit`, once per workspace                                                |
 | `doc`          | `cargo doc --no-deps` (lib crates only)                                          |
 | `serve`        | `cargo run` (service and app crates only)                                        |
-| `migrate`      | Apply pending migrations to `DATABASE_URL` (`retailer_sourcing` and `object_storage`)            |
+| `migrate`      | Apply pending migrations using `RETAILER_SOURCING_DATABASE_URL` (retailer sourcing) or `OBJECE_STORAGE__DATABASE_URL` (object storage)            |
 | `migrate-redo` | Revert and reapply every migration, deleting the data (`retailer_sourcing` and `object_storage`) |
 
 `object_storage` and `retailer_sourcing` also provide `make test-postgres`, which
-requires an available `TEST_DATABASE_URL` and tests each case in an isolated
-schema. Retailer sourcing separates domain entities from PostgreSQL records
+uses `OBJECE_STORAGE_DATABASE_URL_TEST` for object storage and
+`RETAILER_SOURCING_DATABASE_URL_TEST` for retailer sourcing, testing each case
+in an isolated schema. Retailer sourcing separates domain entities from PostgreSQL records
 throughout sitemap and offer discovery; see [ADR 7](docs/adr/0007-domain-entities-and-postgres-records.md).
 
 More targets run only from the root, against `DATA_DIR`, which defaults to the
@@ -117,8 +118,8 @@ More targets run only from the root, against `DATA_DIR`, which defaults to the
 
 | Target                        | What it does                                                                                                                                                                                                                                                                                                       |
 | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `export-offer-sources`        | Write every downloaded offer page to `<DATA_DIR>/<retailer>/offer_details/sources` (needs `DATABASE_URL`)                                                                                                                                                                                                          |
-| `export-sitemaps`             | Write each retailer's latest sitemap crawl, its sources, processed tree and consolidated links, to `<DATA_DIR>/<retailer>/sitemap` (needs `DATABASE_URL`)                                                                                                                                                          |
+| `export-offer-sources`        | Write every downloaded offer page to `<DATA_DIR>/<retailer>/offer_details/sources` (needs `RETAILER_SOURCING_DATABASE_URL`)                                                                                                                                                                                                          |
+| `export-sitemaps`             | Write each retailer's latest sitemap crawl, its sources, processed tree and consolidated links, to `<DATA_DIR>/<retailer>/sitemap` (needs `RETAILER_SOURCING_DATABASE_URL`)                                                                                                                                                          |
 | `dump-sitemap-sources`        | Download every fetched sitemap file from `retailer_sourcing`'s `/api/development/sitemaps/sources` to `<DATA_DIR>/<retailer>/sitemaps/sources/<retrieval id>/<url slug>.xml`; set `RETAILER_SOURCING_URL` (default `http://localhost:3000`) and, to override the hardcoded bearer token, `RETAILER_SOURCING_TOKEN` |
 | `dump-offer-details`          | Download the newest fetched page of every offer from `retailer_sourcing`'s `/api/development/offer-details/sources` to `<DATA_DIR>/<retailer>/offer_details/sources/<url path>.html`; set `RETAILER_SOURCING_URL` and `RETAILER_SOURCING_TOKEN` as for `dump-sitemap-sources`                                      |
 | `extract-offer-details`       | Extract each page in `<DATA_DIR>/<retailer>/offer_details/sources` into `offer_details/extracted/<page>.json`; set `RETAILERS` to limit them                                                                                                                                                                       |
@@ -133,8 +134,8 @@ More targets run only from the root, against `DATA_DIR`, which defaults to the
 
 | Target                        | What it does                                                                                                                                                                                                                                                                                                       |
 | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `export-offer-sources`        | Write every downloaded offer page to `<DATA_DIR>/<retailer>/offer_details/sources` (needs `DATABASE_URL`)                                                                                                                                                                                                          |
-| `export-sitemaps`             | Write each retailer's latest sitemap crawl, its sources, processed tree and consolidated links, to `<DATA_DIR>/<retailer>/sitemap` (needs `DATABASE_URL`)                                                                                                                                                          |
+| `export-offer-sources`        | Write every downloaded offer page to `<DATA_DIR>/<retailer>/offer_details/sources` (needs `RETAILER_SOURCING_DATABASE_URL`)                                                                                                                                                                                                          |
+| `export-sitemaps`             | Write each retailer's latest sitemap crawl, its sources, processed tree and consolidated links, to `<DATA_DIR>/<retailer>/sitemap` (needs `RETAILER_SOURCING_DATABASE_URL`)                                                                                                                                                          |
 | `dump-sitemap-sources`        | Download every fetched sitemap file from `retailer_sourcing`'s `/api/development/sitemaps/sources` to `<DATA_DIR>/<retailer>/sitemaps/sources/<retrieval id>/<url slug>.xml`; set `RETAILER_SOURCING_URL` (default `http://localhost:3000`) and, to override the hardcoded bearer token, `RETAILER_SOURCING_TOKEN` |
 | `dump-offer-details`          | Download the newest fetched page of every offer from `retailer_sourcing`'s `/api/development/offer-details/sources` to `<DATA_DIR>/<retailer>/offer_details/sources/<url path>.html`; set `RETAILER_SOURCING_URL` and `RETAILER_SOURCING_TOKEN` as for `dump-sitemap-sources`                                      |
 | `extract-offer-details`       | Extract each page in `<DATA_DIR>/<retailer>/offer_details/sources` into `offer_details/extracted/<page>.json`; set `RETAILERS` to limit them                                                                                                                                                                       |
@@ -157,12 +158,12 @@ curl localhost:3001/api/health
 
 Servers shut down gracefully on Ctrl+C or SIGTERM.
 
-`retailer_sourcing` starts its sitemap discovery workers when `DATABASE_URL`
+`retailer_sourcing` starts its sitemap discovery workers when `RETAILER_SOURCING_DATABASE_URL`
 points at a PostgreSQL database. On startup it applies any pending migrations
-from `services/retailer_sourcing/migrations`. Without `DATABASE_URL` it serves
+from `services/retailer_sourcing/migrations`. Without `RETAILER_SOURCING_DATABASE_URL` it serves
 HTTP only.
 
-Its Makefile reads `DATABASE_URL` from `services/retailer_sourcing/.env`
+Its Makefile reads `RETAILER_SOURCING_DATABASE_URL` from `services/retailer_sourcing/.env`
 (git-ignored) unless it is already set in your shell. `make .env` copies
 `.env.example`, which points at the `retailer_sourcing-db` container from the
 workspace's `compose-infra.yaml`:
@@ -183,7 +184,7 @@ queued commands and events in steps; each run waits for its batch to finish:
 | `POST /api/commands/run`       | `{"limit": 10}`               | Process up to `limit` queued commands                              |
 | `POST /api/events/run`         | `{"limit": 10}`               | Process up to `limit` queued events, which queue the next commands |
 
-Without `DATABASE_URL` these routes return 503.
+Without `RETAILER_SOURCING_DATABASE_URL` these routes return 503.
 
 The `bruno/` folder is a [Bruno](https://www.usebruno.com/) workspace that
 lists every collection. Open the `bruno` folder as a workspace in Bruno

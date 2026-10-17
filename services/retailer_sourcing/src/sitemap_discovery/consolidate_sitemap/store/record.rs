@@ -173,7 +173,7 @@ mod postgres_tests {
     }
 
     #[test]
-    #[ignore = "requires TEST_DATABASE_URL; run make test-postgres"]
+    #[ignore = "requires RETAILER_SOURCING_DATABASE_URL_TEST; run make test-postgres"]
     fn metadata_round_trips_and_rejects_invalid_fields() {
         let db = Database::new();
         let mut conn = db.pool.get().unwrap();

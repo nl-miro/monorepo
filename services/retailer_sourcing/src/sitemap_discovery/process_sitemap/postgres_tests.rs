@@ -15,7 +15,7 @@ use sitemap::SitemapDocument;
 use uuid::Uuid;
 
 #[test]
-#[ignore = "requires TEST_DATABASE_URL; run make test-postgres"]
+#[ignore = "requires RETAILER_SOURCING_DATABASE_URL_TEST; run make test-postgres"]
 fn postgres_processing_reads_entities_and_writes_atomically() {
     let db = Database::new();
     let server = crate::platform::test_objects::Server::new();

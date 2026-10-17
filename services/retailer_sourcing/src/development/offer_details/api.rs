@@ -92,7 +92,7 @@ pub struct ErrorBody {
         (status = 400, description = "Limit out of range", body = ErrorBody),
         (status = 401, description = "Missing or wrong bearer token", body = ErrorBody),
         (status = 500, description = "The sources couldn't be read", body = ErrorBody),
-        (status = 503, description = "No database (no DATABASE_URL)", body = ErrorBody),
+        (status = 503, description = "No database (no RETAILER_SOURCING_DATABASE_URL)", body = ErrorBody),
     )
 )]
 pub async fn list_sources(State(state): State<AppState>, Query(page): Query<Page>) -> Response {
@@ -101,7 +101,7 @@ pub async fn list_sources(State(state): State<AppState>, Query(page): Query<Page
         return error(StatusCode::BAD_REQUEST, message);
     }
     let (Some(db), Some(objects)) = (state.db, state.object_storage) else {
-        let message = "there is no database; start the service with DATABASE_URL";
+        let message = "there is no database; start the service with RETAILER_SOURCING_DATABASE_URL";
         return error(StatusCode::SERVICE_UNAVAILABLE, message.to_string());
     };
 
@@ -158,7 +158,7 @@ mod postgres_tests {
     use tower::ServiceExt;
 
     #[test]
-    #[ignore = "requires TEST_DATABASE_URL; run make test-postgres"]
+    #[ignore = "requires RETAILER_SOURCING_DATABASE_URL_TEST; run make test-postgres"]
     fn source_route_fetches_object_bodies_and_reports_failures() {
         let db = Database::new();
         let server = Server::new();

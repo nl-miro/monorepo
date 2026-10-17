@@ -117,7 +117,7 @@ pub(super) fn verify_round_trip(db: &Database, objects: ObjectStorage) {
 }
 
 #[test]
-#[ignore = "requires TEST_DATABASE_URL; run make test-postgres"]
+#[ignore = "requires RETAILER_SOURCING_DATABASE_URL_TEST; run make test-postgres"]
 fn postgres_store_round_trip_and_export_query() {
     let db = Database::new();
     let server = Server::new();
@@ -125,7 +125,7 @@ fn postgres_store_round_trip_and_export_query() {
 }
 
 #[test]
-#[ignore = "requires TEST_DATABASE_URL; run make test-postgres"]
+#[ignore = "requires RETAILER_SOURCING_DATABASE_URL_TEST; run make test-postgres"]
 fn postgres_failed_objects_and_local_inserts() {
     let db = Database::new();
     let server = Server::new();
@@ -188,7 +188,7 @@ fn seed_legacy_consolidated(conn: &mut PgConnection, processed: Uuid, retrieval:
 }
 
 #[test]
-#[ignore = "requires TEST_DATABASE_URL; run make test-postgres"]
+#[ignore = "requires RETAILER_SOURCING_DATABASE_URL_TEST; run make test-postgres"]
 fn postgres_migration_preserves_populated_rows_through_up_down_up() {
     let db = Database::new();
     let mut conn = db.pool.get().unwrap();
@@ -262,7 +262,7 @@ fn postgres_migration_preserves_populated_rows_through_up_down_up() {
 }
 
 #[test]
-#[ignore = "requires TEST_DATABASE_URL; run make test-postgres"]
+#[ignore = "requires RETAILER_SOURCING_DATABASE_URL_TEST; run make test-postgres"]
 fn postgres_downgrade_rejects_invalid_stats_atomically() {
     let db = Database::new();
     let mut conn = db.pool.get().unwrap();
@@ -304,7 +304,7 @@ fn postgres_downgrade_rejects_invalid_stats_atomically() {
 }
 
 #[test]
-#[ignore = "requires TEST_DATABASE_URL; run make test-postgres"]
+#[ignore = "requires RETAILER_SOURCING_DATABASE_URL_TEST; run make test-postgres"]
 fn postgres_references_storage_migration_preserves_rows_and_restores_constraints() {
     let db = Database::new();
     let mut conn = db.pool.get().unwrap();
@@ -377,7 +377,7 @@ fn postgres_references_storage_migration_preserves_rows_and_restores_constraints
 }
 
 #[test]
-#[ignore = "requires TEST_DATABASE_URL; run make test-postgres"]
+#[ignore = "requires RETAILER_SOURCING_DATABASE_URL_TEST; run make test-postgres"]
 fn postgres_legacy_reference_downgrade_rejects_dangling_parent() {
     let db = Database::new();
     let mut conn = db.pool.get().unwrap();
@@ -418,7 +418,7 @@ fn postgres_legacy_reference_downgrade_rejects_dangling_parent() {
 }
 
 #[test]
-#[ignore = "requires TEST_DATABASE_URL; run make test-postgres"]
+#[ignore = "requires RETAILER_SOURCING_DATABASE_URL_TEST; run make test-postgres"]
 fn postgres_references_storage_downgrade_rejects_missing_or_invalid_values() {
     let db = Database::new();
     let mut conn = db.pool.get().unwrap();

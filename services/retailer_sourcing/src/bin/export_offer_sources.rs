@@ -3,7 +3,7 @@
 //!
 //! Pages whose URL the retailer's link classifier disowns are left out. See [`disowns`].
 //!
-//! Requires DATABASE_URL, OBJECT_STORAGE_URL and OBJECT_STORAGE_TOKEN.
+//! Requires RETAILER_SOURCING_DATABASE_URL, OBJECT_STORAGE_URL and OBJECT_STORAGE_TOKEN.
 //! Usage: `export_offer_sources <data_dir>`
 
 use retailer_sourcing::json::Json;
@@ -73,7 +73,8 @@ fn run() -> Result<(), String> {
         .nth(1)
         .map(PathBuf::from)
         .ok_or("usage: export_offer_sources <data_dir>")?;
-    let database_url = env::var("DATABASE_URL").map_err(|_| "DATABASE_URL must be set")?;
+    let database_url = env::var("RETAILER_SOURCING_DATABASE_URL")
+        .map_err(|_| "RETAILER_SOURCING_DATABASE_URL must be set")?;
     let runtime = tokio::runtime::Runtime::new().map_err(|e| e.to_string())?;
     let objects = ObjectStorage::from_env(runtime.handle().clone()).map_err(|e| e.to_string())?;
 
