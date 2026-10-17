@@ -423,3 +423,14 @@ through object storage. Both require the service bearer token and accept
 `limit` and `offset`. Limits must be 1–100 for sitemaps and 1–1000 for offer pages.
 Missing or invalid credentials return 401; invalid limits return 400; without a
 database the endpoints return 503. OpenAPI documents the bearer scheme.
+
+## Exporting offer pages
+
+`make export-offer-sources` writes every page in `offer_details_raw` to
+`<DATA_DIR>/<retailer>/offer_details/sources/<url path>.html`, the layout of the
+per-retailer data repos. `DATA_DIR` defaults to `../../../data`, the `data`
+folder next to the monorepo. A page's file is named after its decoded URL path
+(`au/products/a1256` becomes `au-products-a1256.html`) and is overwritten on the
+next export.
+
+Both `DATABASE_URL` and the object-storage connection settings are required.

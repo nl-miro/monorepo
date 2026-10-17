@@ -2896,6 +2896,7 @@ dependencies = [
  "http-body-util",
  "mulac-kernel",
  "object_storage_client",
+ "percent-encoding",
  "reqwest",
  "retailer_data_extractor",
  "serde",
