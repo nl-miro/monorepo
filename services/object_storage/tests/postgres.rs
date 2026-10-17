@@ -545,3 +545,68 @@ async fn startup_refuses_failed_migrations() {
         .unwrap();
     assert!(matches!(result, Err("Database migrations failed.")));
 }
+
+#[tokio::test]
+#[ignore = "requires TEST_DATABASE_URL; run make test-postgres"]
+async fn reporting_covers_active_schema_estimates_and_storage() {
+    let db = database().await;
+    let other = database().await;
+    other.sql("CREATE TABLE foreign_schema_marker(id integer)");
+    let mut connection = db.store.0.get().unwrap();
+    connection.batch_execute("CREATE TABLE report_sample(id integer PRIMARY KEY, payload text); ALTER TABLE report_sample ALTER COLUMN payload SET STORAGE EXTERNAL; INSERT INTO report_sample SELECT i, repeat(md5(i::text),1000) FROM generate_series(1,3) i; CREATE VIEW report_view AS SELECT * FROM report_sample; ANALYZE report_sample;").unwrap();
+    // Flush only the test fixture statistics before querying the estimate.
+    connection
+        .batch_execute("SELECT pg_stat_force_next_flush()")
+        .unwrap();
+    drop(connection);
+    let (status, headers, report) = request(
+        &db.app,
+        "GET",
+        "/api/reporting/database-tables",
+        Value::Null,
+    )
+    .await;
+    assert_eq!(status, StatusCode::OK);
+    assert_eq!(headers["cache-control"], "no-store");
+    assert_eq!(report["schema_name"], db.schema.schema);
+    assert_eq!(report["row_count_kind"], "estimated");
+    assert!(chrono::DateTime::parse_from_rfc3339(report["generated_at"].as_str().unwrap()).is_ok());
+    let tables = report["tables"].as_array().unwrap();
+    assert!(
+        tables
+            .windows(2)
+            .all(|w| w[0]["table_name"].as_str() < w[1]["table_name"].as_str())
+    );
+    assert!(
+        tables
+            .iter()
+            .any(|t| t["table_name"] == "__diesel_schema_migrations")
+    );
+    assert!(tables.iter().any(|t| t["table_name"] == "data"));
+    assert!(!tables.iter().any(|t|t["table_name"]=="foreign_schema_marker" || t["table_name"]=="report_view"));
+    let sample = tables
+        .iter()
+        .find(|t| t["table_name"] == "report_sample")
+        .unwrap();
+    assert_eq!(sample["row_count"], 3);
+    assert!(sample["table_bytes"].as_u64().unwrap() > 96000);
+    assert!(sample["index_bytes"].as_u64().unwrap() > 0);
+    for table in tables {
+        assert_eq!(table.as_object().unwrap().len(), 5);
+        assert_eq!(
+            table["total_bytes"].as_u64().unwrap(),
+            table["table_bytes"].as_u64().unwrap() + table["index_bytes"].as_u64().unwrap()
+        );
+    }
+    // Empty the isolated schema only, retaining its connection search path.
+    db.sql("DROP VIEW report_view; DROP TABLE report_sample,records,data,__diesel_schema_migrations CASCADE");
+    let (status, _, report) = request(
+        &db.app,
+        "GET",
+        "/api/reporting/database-tables",
+        Value::Null,
+    )
+    .await;
+    assert_eq!(status, StatusCode::OK);
+    assert_eq!(report["tables"], json!([]));
+}

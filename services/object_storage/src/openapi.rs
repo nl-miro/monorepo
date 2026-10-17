@@ -41,6 +41,31 @@ pub fn document() -> Value {
             "/api/docs/":{"get":{"summary":"Swagger UI page","responses":{"200":{"description":"Swagger UI","content":{"text/html":{"schema":{"type":"string"}}}}}}}
         }
     });
+    document["components"]["schemas"]["TableStats"] = json!({
+        "type":"object", "required":["table_name","row_count","table_bytes","index_bytes","total_bytes"],
+        "properties":{
+            "table_name":{"type":"string"},
+            "row_count":{"type":"integer","minimum":0,"description":"Estimated live rows from PostgreSQL statistics; may lag behind writes."},
+            "table_bytes":{"type":"integer","minimum":0,"description":"Table storage including TOAST and auxiliary storage."},
+            "index_bytes":{"type":"integer","minimum":0},
+            "total_bytes":{"type":"integer","minimum":0}
+        }
+    });
+    document["components"]["schemas"]["DatabaseTables"] = json!({
+        "type":"object", "required":["schema_name","generated_at","row_count_kind","tables"],
+        "properties":{
+            "schema_name":{"type":"string"}, "generated_at":{"type":"string","format":"date-time"},
+            "row_count_kind":{"type":"string","enum":["estimated"]},
+            "tables":{"type":"array","items":{"$ref":"#/components/schemas/TableStats"}}
+        }
+    });
+    document["paths"]["/api/reporting/database-tables"] = json!({"get":{
+        "summary":"Active schema table storage and estimated live rows", "tags":["reporting"],
+        "responses":{
+            "200":{"description":"Database table report","content":{"application/json":{"schema":{"$ref":"#/components/schemas/DatabaseTables"}}}},
+            "500":problem("Unexpected reporting failure"), "503":problem("Database unavailable")
+        }
+    }});
     for path in document["paths"].as_object_mut().unwrap().values_mut() {
         for operation in path.as_object_mut().unwrap().values_mut() {
             let mut auth = problem("Missing or invalid bearer token");

@@ -427,3 +427,38 @@ failed local commits, concurrent offer replacements, migration guarantees, and
 source API responses. Limit test concurrency with `RUST_TEST_THREADS=4` on the
 shared test server. `make ci` also checks exported content and event suppression
 when storage fails.
+
+## Database reporting
+
+`GET /api/reporting/database-tables` requires the existing service bearer token.
+It reports ordinary tables in the connection's active schema (`current_schema()`),
+including migration and bus tables where present; other schemas and views are
+excluded. The typed response has this shape:
+
+```json
+{
+  "schema_name": "public",
+  "generated_at": "2026-10-17T12:00:00Z",
+  "row_count_kind": "estimated",
+  "tables": [
+    {
+      "table_name": "example",
+      "row_count": 120,
+      "table_bytes": 32768,
+      "index_bytes": 16384,
+      "total_bytes": 49152
+    }
+  ]
+}
+```
+
+Tables are returned in name order. Row counts use PostgreSQL's estimated live
+rows and can lag recent writes; reporting performs no row scans or ANALYZE.
+Table bytes include TOAST and auxiliary storage; index bytes cover attached
+indexes. Total bytes equal table plus index bytes. Successful responses use
+`Cache-Control: no-store`. Unavailable databases return 503; unexpected failures
+return 500, without database diagnostics.
+
+The [development dashboard](../../apps/development/README.md) consumes this API
+through private server-side clients. No reporting client is exported by a shared
+library. The route is covered by normal HTTP tests and `make test-postgres`.

@@ -49,7 +49,7 @@ impl Store {
         Ok(Self(pool))
     }
 
-    async fn blocking<T: Send + 'static>(
+    pub(crate) async fn blocking<T: Send + 'static>(
         &self,
         f: impl FnOnce(&mut PgConnection) -> Result<T, Error> + Send + 'static,
     ) -> Result<T, Error> {
@@ -127,7 +127,7 @@ impl Store {
     }
 }
 
-fn database_error(error: DbError) -> Error {
+pub(crate) fn database_error(error: DbError) -> Error {
     match error {
         DbError::NotFound => Error::NotFound,
         DbError::DatabaseError(

@@ -2,6 +2,7 @@ pub mod error;
 pub mod graphql;
 pub mod model;
 mod openapi;
+mod reporting;
 pub mod store;
 
 use axum::{
@@ -99,6 +100,7 @@ pub fn app(store: Store) -> Router {
             post(create).layer(middleware::from_fn(content_type)),
         )
         .route("/api/buckets/{bucket}/records/{id}", get(retrieve))
+        .merge(reporting::routes())
         .with_state(store);
     let graphql = Router::new()
         .route(

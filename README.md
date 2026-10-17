@@ -68,7 +68,9 @@ pipeline runs only when `DATABASE_URL` is set (see below).
 ### apps
 
 `customers` and `development` are poem servers that render HTML on the server.
-Each serves an index page at `/`.
+Each serves an index page at `/`. The [development app](apps/development/README.md)
+also provides `/dashboard`, combining authenticated database table reports from
+retailer sourcing and object storage through private server-side clients.
 
 ## Requirements
 

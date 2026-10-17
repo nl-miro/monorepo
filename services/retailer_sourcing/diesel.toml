@@ -6,24 +6,17 @@
 file = "src/sitemap_discovery/schema.rs"
 filter = { only_tables = [
     "sitemaps_raw",
-    "raw_sitemap_documents_data",
     "sitemaps_processed",
-    "processed_sitemaps_data",
     "sitemaps_consolidated",
-    "consolidated_sitemaps_data",
 ] }
 
 [print_schema.offer_discovery]
 file = "src/offer_discovery/schema.rs"
 filter = { only_tables = [
     "offer_details_raw",
-    "raw_offers_data",
     "offer_details_extracted",
-    "extracted_offers_data",
     "offer_details_normalized",
-    "normalized_offers_data",
     "offer_details_structuralized",
-    "structuralized_offers_data",
 ] }
 
 [migrations_directory]

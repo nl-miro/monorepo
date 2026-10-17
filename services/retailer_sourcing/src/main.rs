@@ -71,6 +71,7 @@ fn app(state: AppState) -> Router {
         .merge(platform::bus_api::routes())
         .merge(sitemap_discovery::prelude::routes())
         .merge(development::prelude::routes())
+        .merge(reporting::prelude::routes())
         .split_for_parts();
     let api = api.with_state(state);
     let schema = Schema::new(Query, EmptyMutation, EmptySubscription);
@@ -272,6 +273,11 @@ mod tests {
             spec["components"]["securitySchemes"]["bearer"]["scheme"],
             "bearer"
         );
+        assert_eq!(
+            spec["paths"]["/reporting/database-tables"]["get"]["security"],
+            json!([{ "bearer": [] }])
+        );
+        assert!(spec["paths"]["/reporting/database-tables"]["get"]["responses"]["200"].is_object());
         assert_eq!(spec["servers"][0]["url"], "/api");
 
         let server = spec["servers"][0]["url"].as_str().unwrap_or("");

@@ -27,6 +27,7 @@ async fn all_routes_authenticate_before_processing() {
     let app = offline();
     for path in [
         "/api/health",
+        "/api/reporting/database-tables",
         "/api/openapi.json",
         "/api/docs",
         "/api/docs/",
@@ -293,4 +294,16 @@ async fn graphql_defaults_and_definition_errors() {
         assert_eq!(response["errors"][0]["extensions"]["code"], code);
         assert!(response.get("data").is_none());
     }
+}
+
+#[tokio::test]
+async fn reporting_unavailable_and_documented() {
+    let app = offline();
+    let (status, headers, body) =
+        request(&app, "GET", "/api/reporting/database-tables", Value::Null).await;
+    assert_eq!(status, StatusCode::SERVICE_UNAVAILABLE);
+    problem(status, &headers, &body);
+    let (_, _, spec) = request(&app, "GET", "/api/openapi.json", Value::Null).await;
+    assert!(spec["paths"]["/api/reporting/database-tables"]["get"]["responses"]["200"].is_object());
+    assert!(spec["components"]["schemas"]["DatabaseTables"].is_object());
 }
