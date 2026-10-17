@@ -5,8 +5,7 @@
 //!
 //! 1. [`discover_offers`] records an offer for every product URL of a
 //!    consolidated sitemap.
-//! 2. [`download_offer_page`] downloads each offer's page, unless it was
-//!    fetched in the last few hours.
+//! 2. [`download_offer_page`] downloads each offer's page.
 //!
 //! This module holds the domain shared by the slices. Other contexts may only
 //! use [`prelude`].
