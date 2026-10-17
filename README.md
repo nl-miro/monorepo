@@ -164,10 +164,33 @@ queued commands and events in steps; each run waits for its batch to finish:
 
 Without `DATABASE_URL` these routes return 503.
 
-The [Bruno](https://www.usebruno.com/) collection in `bruno/retailer_sourcing`
-has a request for each route. Open the folder in Bruno and pick the `local`
-environment, which targets the `retailer_sourcing` container from the
-workspace's `compose-apps.yaml` at `http://172.28.100.40:3000`.
+The `bruno/` folder is a [Bruno](https://www.usebruno.com/) workspace that
+lists every collection. Open the `bruno` folder as a workspace in Bruno
+to load them all at once. The workspace's `local` environment
+(`bruno/environments/local.yml`) holds each service's address, with one
+variable per collection:
+
+| Variable                  | Collection          | Address                     |
+| ------------------------- | ------------------- | --------------------------- |
+| `objectStorageBaseUrl`    | `object_storage`    | `http://172.28.100.43:3000` |
+| `retailerSourcingBaseUrl` | `retailer_sourcing` | `http://172.28.100.40:3000` |
+
+Both addresses are containers from the `compose-apps.yaml` file.
+
+The workspace's `office0-dev` environment
+(`bruno/environments/office0-dev.yml`) uses the office deployment through Caddy:
+
+| Variable | Address |
+| --- | --- |
+| `objectStorageBaseUrl` | `https://object-storage.service-dev.boduli.com` |
+| `retailerSourcingBaseUrl` | `https://retailer-sourcing.dev-service.boduli.com` |
+
+Select `office0-dev` as the workspace environment while on the office network
+or VPN. For object storage, also select the collection's `local` environment
+for its development bearer token and request variables.
+
+The Bruno collection in `bruno/retailer_sourcing` has a request for each route.
+
 
 ## Security advisories
 
