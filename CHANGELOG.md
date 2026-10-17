@@ -27,3 +27,7 @@ Notable changes to this repository. The format follows [Keep a Changelog](https:
 - `Money` and `Currency` in `money`. `Money::parse` and `Money::from_major` are not implemented yet.
 - `sitemap` library: parsing sitemap XML and building a crawl's sitemap tree.
 - `Availability`, `ItemCondition`, validated identifiers and `StructuralizedData` in `retailer_sauce`.
+
+### Fixed
+
+- Anker regional sitemaps no longer accept out-of-region URLs listed by a sitemap they do not recognize.

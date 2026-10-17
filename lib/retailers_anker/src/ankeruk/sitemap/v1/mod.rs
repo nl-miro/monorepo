@@ -15,26 +15,20 @@ pub fn classify_link(url: &str, source: &str, _image_count: usize) -> LinkKind {
 }
 
 pub fn from_location(url: &str, source: &str) -> LinkKind {
-    let matced_by_source = match source {
-        "https://www.anker.com/sitemap-0.xml" => Some(LinkKind::NotInterested),
-        "https://www.anker.com/server-sitemap-index-pages.xml" => Some(LinkKind::NotInterested),
-        "https://www.anker.com/server-sitemap-index-products.xml" => Some(LinkKind::Product),
-        "https://www.anker.com/server-sitemap-index-collections.xml" => Some(LinkKind::Catalog),
-        "https://www.anker.com/server-sitemap-index-blog.xml" => Some(LinkKind::Content),
-        _ => None,
-    };
-
     let path = url.to_lowercase();
 
-    if let Some(y) = matced_by_source {
-        if !path.starts_with("https://www.anker.com/uk/") {
-            return LinkKind::NotInterested;
-        }
-
-        return y;
+    if !path.starts_with("https://www.anker.com/uk/") {
+        return LinkKind::NotInterested;
     }
 
-    anker_from_location(&path)
+    match source {
+        "https://www.anker.com/sitemap-0.xml" => LinkKind::NotInterested,
+        "https://www.anker.com/server-sitemap-index-pages.xml" => LinkKind::NotInterested,
+        "https://www.anker.com/server-sitemap-index-products.xml" => LinkKind::Product,
+        "https://www.anker.com/server-sitemap-index-collections.xml" => LinkKind::Catalog,
+        "https://www.anker.com/server-sitemap-index-blog.xml" => LinkKind::Content,
+        _ => anker_from_location(&path),
+    }
 }
 
 #[cfg(test)]
@@ -140,7 +134,7 @@ mod tests {
         );
         assert_eq!(
             classify_link(
-                "https://www.anker.com/agents.md",
+                "https://www.anker.com/uk/agents.md",
                 "https://www.anker.com/sitemap.xml",
                 0
             ),
