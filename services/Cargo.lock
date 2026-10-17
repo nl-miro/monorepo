@@ -1848,6 +1848,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "money"
+version = "0.1.0"
+dependencies = [
+ "serde",
+]
+
+[[package]]
 name = "mulac-commanding"
 version = "0.3.0"
 source = "git+https://github.com/nulllabsdev/mulac?tag=0.3.0#87083a895b0fff37182219eda7aab9a58c8615e9"
@@ -2842,6 +2849,7 @@ version = "0.1.0"
 dependencies = [
  "bodul_shared",
  "html-extractor",
+ "retailer_sauce",
  "retailers_anker",
  "retailers_mi",
  "retailers_minisforum",
@@ -2898,9 +2906,12 @@ name = "retailers_anker"
 version = "0.1.0"
 dependencies = [
  "bodul_shared",
+ "chrono",
  "html-extractor",
+ "money",
  "retailer_sauce",
  "serde",
+ "thiserror",
 ]
 
 [[package]]
@@ -2919,8 +2930,10 @@ version = "0.1.0"
 dependencies = [
  "bodul_shared",
  "html-extractor",
+ "money",
  "retailer_sauce",
  "serde",
+ "thiserror",
 ]
 
 [[package]]
@@ -2929,8 +2942,10 @@ version = "0.1.0"
 dependencies = [
  "bodul_shared",
  "html-extractor",
+ "money",
  "retailer_sauce",
  "serde",
+ "thiserror",
 ]
 
 [[package]]
