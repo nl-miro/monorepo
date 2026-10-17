@@ -31,8 +31,8 @@ top-level folder is its own Cargo workspace, with its own `Cargo.lock`.
 | `retailers_wip`           | Integration for the WIP retailer                                            |
 | `sitemap`                 | Parsing sitemap XML and building a crawl's sitemap tree                     |
 
-Every crate except `shared` has no code yet, only a placeholder test. Each crate
-has its own README.
+Each crate has its own README. To add a retailer storefront, or finish one,
+follow the [retailer integration playbook](docs/retailer-integration.md).
 
 ### services
 
