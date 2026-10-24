@@ -1,6 +1,7 @@
 # Publish offers outbox messages to customer-facing over HTTP
 
-Status: Planned; implementation pending. Covers TODO item 6.
+Status: Completed. Covers TODO item 6. See the offers README's “HTTP delivery
+to customer-facing” and [ADR 21](../adr/0021-offers-http-outbox-to-customer-facing.md).
 
 ## Goal and completion boundary
 
