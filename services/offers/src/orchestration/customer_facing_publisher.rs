@@ -84,7 +84,10 @@ impl CustomerFacingPublisher {
             }
             _ => return Err(err_event_type()),
         };
-        parsed.map_err(|_| err_payload())
+        parsed.map_err(|_| err_payload())?;
+        let id = payload["id"].as_str().ok_or_else(err_payload)?;
+        uuid::Uuid::parse_str(id).map_err(|_| err_payload())?;
+        Ok(())
     }
 }
 
@@ -469,3 +472,6 @@ mod tests {
 
 #[cfg(test)]
 mod postgres_tests;
+
+#[cfg(test)]
+mod regression_tests;

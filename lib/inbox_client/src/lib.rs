@@ -139,7 +139,11 @@ impl InboxClient {
 
 fn inbox_url(origin: &str) -> Result<Url, ConfigError> {
     let mut url = Url::parse(origin).map_err(|_| ConfigError::InvalidOrigin)?;
-    if origin.trim() != origin
+    let authority = origin
+        .split_once("://")
+        .map(|(_, rest)| rest.strip_suffix('/').unwrap_or(rest));
+    if authority.is_none_or(|value| value.contains(['/', '\\', '@']))
+        || origin.trim() != origin
         || origin.bytes().any(|byte| byte.is_ascii_control())
         || !matches!(url.scheme(), "http" | "https")
         || url.host_str().is_none()

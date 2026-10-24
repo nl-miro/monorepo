@@ -2157,6 +2157,7 @@ version = "0.1.0"
 dependencies = [
  "async-graphql",
  "async-graphql-poem",
+ "axum",
  "bodul_shared",
  "chrono",
  "commanding_api",

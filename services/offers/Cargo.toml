@@ -32,6 +32,7 @@ url.workspace = true
 uuid.workspace = true
 
 [dev-dependencies]
+axum.workspace = true
 commanding_api = { workspace = true, features = ["testing"] }
 eventing_api = { workspace = true, features = ["testing"] }
 inbox_api = { workspace = true, features = ["testing"] }
