@@ -76,6 +76,12 @@ lookups. Both queues run explicitly through the API. Set `DATABASE_URL` to
 enable persistence; see its [setup and walkthrough](services/offers/README.md)
 and [ADR 15](docs/adr/0015-offers-testimony-and-mulac.md).
 
+`customer_facing` accepts durable inbox messages and exposes explicit inbox,
+command, event, and outbox batch runners using local Mulac. It requires its own
+PostgreSQL database; outbox delivery remains unconfigured and offer projection
+handlers are separate work. See its [setup and queue contracts](services/customer_facing/README.md)
+and [ADR 18](docs/adr/0018-customer-facing-mulac-queues.md).
+
 ### apps
 
 `customers` and `development` are poem servers that render HTML on the server.
@@ -89,7 +95,8 @@ storage through private server-side clients.
 - [rustup](https://rustup.rs/). `rust-toolchain.toml` pins Rust 1.98.0 with clippy and rustfmt, and rustup installs it on the first cargo command.
 - libpq (for example `libpq-dev` on Debian/Ubuntu, `libpq` on macOS with Homebrew). The services and `testimony_infra` depend on diesel with the PostgreSQL backend, which links against it.
 - GNU Make.
-- PostgreSQL 16 or later for `object_storage` (a separate UTF8 database), and to run the `retailer_sourcing` pipeline or persisted `offers` imports.
+- PostgreSQL 16 or later for `object_storage`, `offers`, and `customer_facing` (separate UTF8 databases), and to run the `retailer_sourcing` pipeline.
+- A sibling `mulac` checkout beside `monorepo`, required by `offers` and `customer_facing`. Their shared local dependency paths are declared in `services/Cargo.toml`; retailer sourcing retains its Git dependency until its independent upgrade.
 - The `retailer_sourcing` pipeline also requires a running object storage service, configured with `OBJECT_STORAGE_URL` and `OBJECT_STORAGE_TOKEN`; see its [setup](services/retailer_sourcing/README.md).
 - [Diesel CLI](https://diesel.rs/guides/getting-started) with PostgreSQL support, only for `make migrate` and `make migrate-redo`: `cargo install diesel_cli --no-default-features --features postgres --locked`.
 - [cargo-audit](https://crates.io/crates/cargo-audit), only for `make audit`: `cargo install cargo-audit --locked`.
@@ -116,10 +123,10 @@ that crate.
 | `audit`        | `cargo audit`, once per workspace                                                                |
 | `doc`          | `cargo doc --no-deps` (lib crates only)                                                          |
 | `serve`        | `cargo run` (service and app crates only)                                                        |
-| `migrate`      | Apply pending migrations using `DATABASE_URL` (`retailer_sourcing`, `object_storage`, and `offers`)         |
+| `migrate`      | Apply pending migrations using `DATABASE_URL` (`retailer_sourcing`, `object_storage`, `offers`, and `customer_facing`)         |
 | `migrate-redo` | Revert and reapply every migration, deleting the data (`retailer_sourcing`, `object_storage`, and `offers`) |
 
-`object_storage`, `retailer_sourcing`, and `offers` also provide `make test-postgres`,
+`object_storage`, `retailer_sourcing`, `offers`, and `customer_facing` also provide `make test-postgres`,
 which uses `DATABASE_URL_TEST`, testing each case in an
 isolated schema. Retailer sourcing separates domain entities from PostgreSQL
 records throughout sitemap and offer discovery; see [ADR 7](docs/adr/0007-domain-entities-and-postgres-records.md).
@@ -191,8 +198,11 @@ per collection:
 | ------------------------- | ------------------- | --------------------------- |
 | `objectStorageBaseUrl`    | `object_storage`    | `http://172.28.100.43:3000` |
 | `retailerSourcingBaseUrl` | `retailer_sourcing` | `http://172.28.100.40:3000` |
+| `customerFacingBaseUrl` | `customer_facing` | `http://localhost:3003` |
 
-Both addresses are containers from the `compose-apps.yaml` file.
+The object storage and retailer sourcing addresses are containers from
+`compose-apps.yaml`. The customer-facing default points at a local server on
+port 3003; override it for your deployment.
 
 The workspace's `office0-dev` environment (`bruno/environments/office0-dev.yml`)
 uses the office deployment through Caddy:
