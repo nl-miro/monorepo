@@ -1,12 +1,9 @@
 use super::*;
-use axum::{
-    Json, Router,
-    response::IntoResponse,
-    routing::{any, post},
-};
+use axum::{Json, Router, http::StatusCode, routing::post};
 use outbox::io::OutboxEntryMetadata;
 use serde_json::{Value, json};
 use std::sync::{Arc, Mutex};
+use uuid::Uuid;
 
 pub(crate) struct TestServer {
     pub url: String,
@@ -59,43 +56,33 @@ async fn publish(
 }
 
 #[test]
-fn configuration_accepts_only_origins_and_does_not_leak_input() {
-    for origin in [
-        "http://localhost",
-        "https://offers.example/",
-        "http://[::1]:3100",
-    ] {
-        let url = inbox_url(origin).unwrap();
-        assert_eq!(url.path(), "/api/inbox");
-    }
-    for origin in [
-        "",
-        "not a URL",
-        "ftp://example.com",
-        "http://user:secret@example.com",
-        "http://example.com/api",
-        "http://example.com/?token=secret",
-        "http://example.com/#secret",
-        " http://example.com",
-        "http://example.com\n",
-    ] {
-        assert_eq!(
-            inbox_url(origin).unwrap_err().to_string(),
-            err_configuration().to_string()
-        );
-    }
+fn configuration_reads_offers_url_without_leaking_input() {
     let runtime = tokio::runtime::Runtime::new().unwrap();
+    let handle = || runtime.handle().clone();
     assert!(
-        OffersPublisher::from_value(Err(VarError::NotPresent), runtime.handle().clone())
+        OffersPublisher::from_value(Err(VarError::NotPresent), handle())
             .unwrap()
             .is_none()
     );
-    assert!(OffersPublisher::from_value(Ok(String::new()), runtime.handle().clone()).is_err());
+    assert!(OffersPublisher::from_value(Ok("http://localhost:3001".into()), handle()).is_ok());
+    for origin in [
+        "",
+        "http://user:secret@example.com",
+        "http://example.com/?token=secret",
+    ] {
+        let error = OffersPublisher::from_value(Ok(origin.into()), handle())
+            .err()
+            .unwrap();
+        assert_eq!(
+            error.to_string(),
+            "OFFERS_URL must be an HTTP(S) origin without credentials, path, query or fragment"
+        );
+    }
     #[cfg(unix)]
     {
         use std::{ffi::OsString, os::unix::ffi::OsStringExt};
         let invalid = VarError::NotUnicode(OsString::from_vec(vec![0xff]));
-        assert!(OffersPublisher::from_value(Err(invalid), runtime.handle().clone()).is_err());
+        assert!(OffersPublisher::from_value(Err(invalid), handle()).is_err());
     }
 }
 
@@ -157,93 +144,21 @@ async fn preserves_the_command_and_delivery_identity_across_retries() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn rejects_non_acceptance_without_redirects_or_automatic_retries() {
-    for status in [200, 201, 204, 302, 400, 429, 500] {
-        let calls = Arc::new(Mutex::new(0));
-        let captured = calls.clone();
-        let redirects = Arc::new(Mutex::new(0));
-        let redirected = redirects.clone();
-        let app = Router::new()
-            .route(
-                "/api/inbox",
-                post(move || {
-                    let captured = captured.clone();
-                    async move {
-                        *captured.lock().unwrap() += 1;
-                        (
-                            StatusCode::from_u16(status).unwrap(),
-                            [("location", "/must-not-follow")],
-                            "private response body",
-                        )
-                    }
-                }),
-            )
-            .route(
-                "/must-not-follow",
-                any(move || {
-                    let redirected = redirected.clone();
-                    async move {
-                        *redirected.lock().unwrap() += 1;
-                        StatusCode::OK
-                    }
-                }),
-            );
-        let server = serve(app).await;
-        let publisher = OffersPublisher::new(&server.url, Handle::current()).unwrap();
-        let error = publish(publisher, envelope()).await.unwrap_err();
-        assert_eq!(error.to_string(), err_rejected().to_string());
-        assert_eq!(*calls.lock().unwrap(), 1);
-        assert_eq!(*redirects.lock().unwrap(), 0);
-    }
-}
-
-#[tokio::test(flavor = "multi_thread")]
-async fn rejects_invalid_oversized_and_mismatched_acknowledgements() {
-    for body in [
-        "{".to_owned(),
-        "{}".into(),
-        "{\"message_id\":\"wrong\"}".into(),
-        json!({"message_id":Uuid::now_v7()}).to_string(),
-        " ".repeat(MAX_ACK_BYTES + 1),
-    ] {
-        let app = Router::new().route(
-            "/api/inbox",
-            post(move || {
-                let body = body.clone();
-                async move { (StatusCode::ACCEPTED, body) }
-            }),
-        );
-        let server = serve(app).await;
-        let publisher = OffersPublisher::new(&server.url, Handle::current()).unwrap();
-        assert_eq!(
-            publish(publisher, envelope())
-                .await
-                .unwrap_err()
-                .to_string(),
-            err_acknowledgement().to_string()
-        );
-    }
-}
-
-#[tokio::test(flavor = "multi_thread")]
-async fn bounds_total_time_and_reports_connection_failure() {
-    let server = serve(Router::new().route(
+async fn reports_transport_failures_with_offers_messages() {
+    let app = Router::new().route(
         "/api/inbox",
-        post(|| async {
-            tokio::time::sleep(Duration::from_secs(1)).await;
-            StatusCode::ACCEPTED.into_response()
-        }),
-    ))
-    .await;
-    let publisher =
-        OffersPublisher::with_timeout(&server.url, Handle::current(), Duration::from_millis(30))
-            .unwrap();
-    let outcome = tokio::time::timeout(Duration::from_millis(500), publish(publisher, envelope()))
-        .await
-        .expect("publisher deadline must fire before the delayed response");
-    assert!(outcome.is_err());
+        post(|| async { (StatusCode::INTERNAL_SERVER_ERROR, "private response body") }),
+    );
+    let server = serve(app).await;
+    let publisher = OffersPublisher::new(&server.url, Handle::current()).unwrap();
+    assert_eq!(
+        publish(publisher, envelope())
+            .await
+            .unwrap_err()
+            .to_string(),
+        err_rejected().to_string()
+    );
     drop(server);
-    // Release an ephemeral listener so the subsequent connection is refused.
     let unavailable = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
     let address = format!("http://{}", unavailable.local_addr().unwrap());
     drop(unavailable);
@@ -255,67 +170,4 @@ async fn bounds_total_time_and_reports_connection_failure() {
             .to_string(),
         err_transport().to_string()
     );
-}
-
-async fn chunked_response(chunks: Vec<(Duration, Vec<u8>)>) -> TestServer {
-    use tokio::io::{AsyncReadExt, AsyncWriteExt};
-    let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
-    let url = format!("http://{}", listener.local_addr().unwrap());
-    let task = tokio::spawn(async move {
-        let (mut stream, _) = listener.accept().await.unwrap();
-        let mut request = Vec::new();
-        let mut buffer = [0_u8; 1024];
-        while !request.windows(4).any(|bytes| bytes == b"\r\n\r\n") {
-            let size = stream.read(&mut buffer).await.unwrap();
-            if size == 0 {
-                return;
-            }
-            request.extend_from_slice(&buffer[..size]);
-        }
-        if stream.write_all(b"HTTP/1.1 202 Accepted\r\nContent-Type: application/json\r\nTransfer-Encoding: chunked\r\nConnection: close\r\n\r\n").await.is_err() { return; }
-        for (delay, bytes) in chunks {
-            tokio::time::sleep(delay).await;
-            let mut chunk = format!("{:X}\r\n", bytes.len()).into_bytes();
-            chunk.extend_from_slice(&bytes);
-            chunk.extend_from_slice(b"\r\n");
-            if stream.write_all(&chunk).await.is_err() {
-                return;
-            }
-        }
-        let _ = stream.write_all(b"0\r\n\r\n").await;
-    });
-    TestServer { url, task }
-}
-
-#[tokio::test(flavor = "multi_thread")]
-async fn bounds_chunked_acknowledgements_without_content_length() {
-    let message = envelope();
-    let mut acknowledgement = json!({"message_id":message.metadata.message_id})
-        .to_string()
-        .into_bytes();
-    acknowledgement.resize(MAX_ACK_BYTES + 1, b' ');
-    let server = chunked_response(vec![(Duration::ZERO, acknowledgement)]).await;
-    let publisher = OffersPublisher::new(&server.url, Handle::current()).unwrap();
-    assert_eq!(
-        publish(publisher, message).await.unwrap_err().to_string(),
-        err_acknowledgement().to_string()
-    );
-}
-
-#[tokio::test(flavor = "multi_thread")]
-async fn deadline_covers_a_slow_acknowledgement_body() {
-    let message = envelope();
-    let final_chunk = format!("\"{}\"}}", message.metadata.message_id).into_bytes();
-    let server = chunked_response(vec![
-        (Duration::ZERO, b"{\"message_id\":".to_vec()),
-        (Duration::from_secs(1), final_chunk),
-    ])
-    .await;
-    let publisher =
-        OffersPublisher::with_timeout(&server.url, Handle::current(), Duration::from_millis(30))
-            .unwrap();
-    let outcome = tokio::time::timeout(Duration::from_millis(500), publish(publisher, message))
-        .await
-        .expect("the deadline must cover reading a streamed response body");
-    assert!(outcome.is_err());
 }

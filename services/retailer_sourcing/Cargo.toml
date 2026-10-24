@@ -16,6 +16,7 @@ diesel_migrations.workspace = true
 eventing_api.workspace = true
 flate2 = "1"
 inbox_api.workspace = true
+inbox_client.workspace = true
 kernel.workspace = true
 money.workspace = true
 mulac_axum = { path = "../../../mulac/libs/mulac_axum", features = ["commanding", "eventing", "outbox", "utoipa"] }
