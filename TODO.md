@@ -8,8 +8,8 @@ GOAL: create full flow from structuralize (which is last point in `retailer-sour
 [x] For now, `outbox publisher` on `retailer-sourcing` should use `offers` api ({offers}/api/inbox) ([plan](docs/plans/05-retailer-sourcing-http-outbox.md))
 [x] For now, `outbox publisher` on `offers` should use `customer-facing` api ({customer-facing}/api/inbox) ([plan](docs/plans/06-offers-http-outbox.md))
 [x] Create `offers` entity and record on `customer-facing` that has same properites as `read_offers` in `offers` service ([plan](docs/plans/07-customer-facing-offer-projection.md))
-[ ] Add `offers` api (both rest and graphql) to retrieve limited number of offers with offset
-[ ] Set up `customers` app in a way that on homepage shows 30 offers, using nice design and built using only html (no javascript ATM)
+[x] Add `offers` api (both rest and graphql) to retrieve limited number of offers with offset ([plan](docs/plans/08-customer-facing-offers-api.md))
+[x] Set up `customers` app in a way that on homepage shows 30 offers, using nice design and built using only html (no javascript ATM) ([plan](docs/plans/09-customers-offers-homepage.md))
 
 
 

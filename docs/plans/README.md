@@ -15,8 +15,8 @@ Planning an item does not mark its implementation complete.
 | 5 | Publish sourcing outbox to offers | Completed. [Original plan](05-retailer-sourcing-http-outbox.md). |
 | 6 | Publish offers outbox to customer-facing | Completed. [Handoff](06-offers-http-outbox.md). |
 | 7 | Persist customer-facing offers | Completed. Transactional projection and original-message replay protection verified with direct inbox submissions. [Handoff](07-customer-facing-offer-projection.md). |
-| 8 | Paginated REST and GraphQL offers API | Pending. Owned by customer-facing; waits for item 7's model and storage. |
-| 9 | Customers homepage with 30 offers | Pending. Waits for item 8's API. |
+| 8 | Paginated REST and GraphQL offers API | Completed. [API contract and evidence](08-customer-facing-offers-api.md); isolated PostgreSQL and live HTTP checks passed. |
+| 9 | Customers homepage with 30 offers | Completed. [Homepage plan and evidence](09-customers-offers-homepage.md); 30/1 pagination, projected updates and desktop/mobile previews verified. |
 
 Items 4, 6, and 7 can be implemented and verified independently. Item 4 needs
 no customer-facing work. Item 6 completes at durable inbox acceptance and does
