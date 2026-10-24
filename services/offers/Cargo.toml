@@ -19,7 +19,7 @@ outbox = { path = "../../../mulac/libs/outbox", package = "mulac-outbox", featur
 outbox_api = { path = "../../../mulac/libs/outbox_api" }
 #kernel.workspace = true
 kernel = { path = "../../../mulac/kernel", package = "mulac-kernel" }
-money = { path = "../../lib/money" }
+money.workspace = true
 #mulac_poem = { git = "https://github.com/nulllabsdev/mulac", package = "mulac_poem", tag = "0.3.0" }
 mulac_poem = { path = "../../../mulac/libs/mulac_poem", features = ["commanding", "eventing", "outbox"] }
 poem.workspace = true
@@ -31,7 +31,7 @@ testimony = { path = "../../lib/testimony" }
 testimony_infra = { path = "../../lib/testimony_infra" }
 thiserror.workspace = true
 tokio.workspace = true
-url = "2"
+url.workspace = true
 uuid.workspace = true
 
 [dev-dependencies]
