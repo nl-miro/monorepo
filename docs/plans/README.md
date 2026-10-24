@@ -1,58 +1,72 @@
 # TODO implementation plans
 
-These plans cover the unchecked items in [TODO.md](../../TODO.md). They describe
-implementation work; no checklist item has been implemented or marked complete.
-Item numbers below refer to the current order of that checklist.
+Item numbers follow [TODO.md](../../TODO.md). Status markers mean:
+`[ ]` pending, `[.]` planned with implementation pending, and `[x]` completed.
+Planning an item does not mark its implementation complete.
 
-The final selection awaits clarification of “not dependent”: an implementation
-can sometimes be built and tested against an existing contract before the whole
-pipeline can run. The four drafts linked below cover work with no prerequisite
-code changes from another TODO item. Product choices inside a draft remain
-explicitly pending where indicated.
+## Current round and dependencies
 
-## Dependency assessment
-
-| Item | Work | Prerequisites and current plan |
+| Item | Work | Status and prerequisites |
 | --- | --- | --- |
-| 1 | Upgrade retailer sourcing to local Mulac | No TODO prerequisite. [Plan](01-retailer-sourcing-local-mulac.md). |
-| 2 | Set up customer-facing queues and health | No TODO prerequisite. Health already exists; database startup and runner scope await interpretation. [Plan](02-customer-facing-queue-runners.md). |
-| 3 | Processing for export | Existing structuralization events and bus interfaces suffice; item 1 is coordination, not a prerequisite. Export shape and legacy handling await interpretation. [Draft plan](03-processing-for-export.md). |
-| 4 | Record export events in the sourcing outbox | Needs item 3's export event and payload contract. |
-| 5 | Publish sourcing outbox messages to offers | Publisher implementation can use seeded rows and the existing offers inbox. Item 4 supplies real pipeline messages. Local Mulac dependency edits overlap item 1. [Provisional plan](05-retailer-sourcing-http-outbox.md); final inclusion awaits the dependency interpretation. |
-| 6 | Publish offers outbox messages to customer facing | Existing publisher interface and outbox support implementation against an HTTP test receiver. Live delivery needs item 2; applying events needs item 7. The inbox event mapping must be agreed. Inclusion awaits the dependency interpretation. |
-| 7 | Customer-facing offer entity and record | Entity, record, migration and database mappings can be implemented independently. Receiving and persisting events, as required by the TODO note, additionally needs item 2 and a matching inbox event contract. Inclusion awaits the intended completion boundary. |
-| 8 | Paginated REST and GraphQL offers API | If owned by customer facing, needs item 7's model and storage. If owned by offers, its read model already exists. Service ownership awaits interpretation. |
-| 9 | Customers homepage showing 30 offers | Needs item 8's retrieval contract and service; a fixture-only design would not complete the checklist item. |
+| 1 | Upgrade sourcing to local Mulac | Completed. [Original plan](01-retailer-sourcing-local-mulac.md). |
+| 2 | Customer-facing queues and health | Completed. [Original plan](02-customer-facing-queue-runners.md). |
+| 3 | Processing for export | Completed. [Original plan](03-processing-for-export.md). |
+| 4 | Record export messages in sourcing outbox | Planned, ready. Export snapshots and queues exist. [Handoff](04-offer-export-outbox-listener.md). |
+| 5 | Publish sourcing outbox to offers | Completed. [Original plan](05-retailer-sourcing-http-outbox.md). |
+| 6 | Publish offers outbox to customer-facing | Planned, ready. Offers produces events and customer-facing accepts inbox messages. [Handoff](06-offers-http-outbox.md). |
+| 7 | Persist customer-facing offers | Planned, ready. Queue infrastructure and upstream event/model contracts exist. [Handoff](07-customer-facing-offer-projection.md). |
+| 8 | Paginated REST and GraphQL offers API | Pending. Owned by customer-facing; waits for item 7's model and storage. |
+| 9 | Customers homepage with 30 offers | Pending. Waits for item 8's API. |
 
-The source for this assessment is the current implementation, including
-[sourcing's bus](../../services/retailer_sourcing/src/platform/bus.rs),
-[its structuralization stage](../../services/retailer_sourcing/src/offer_discovery/structuralize_offer/handler.rs),
-[offers' inbox routes](../../services/offers/src/orchestration/inbox_api.rs),
-[its outbox subscriber](../../services/offers/src/subscribers/customer_facing.rs),
-and the [customer-facing server](../../services/customer_facing/src/main.rs).
-Older offers documentation also describes planned behavior that is not active.
+Items 4, 6, and 7 can be implemented and verified independently. Item 4 needs
+no customer-facing work. Item 6 completes at durable inbox acceptance and does
+not require item 7. Item 7 can consume directly submitted contract fixtures
+without item 6. A combined walkthrough follows once the pieces are available.
 
-## Coordination across plans
+The new handoffs specify requirements, current contracts, scope boundaries,
+failure expectations, and acceptance evidence. Implementation design and code
+organization are left to the implementing tool. Source links provide evidence
+of existing behavior, not prescribed edit locations.
 
-The services share one Cargo workspace. Centralize reused local Mulac
-dependencies and coordinate manifest/lockfile changes so items 1 and 2 remain
-independently implementable. Neither plan should assume the other has landed.
-Record the sibling Mulac revision used for implementation and validation.
+Plans 1, 2, 3, and 5 are historical planning documents; some wording predates
+their implementation. For implemented behavior, consult current code, service
+READMEs, and accepted ADRs rather than treating old provisional statements as
+outstanding decisions.
 
-Both temporary HTTP publishers depart from
-[ADR 16](../adr/0016-offers-rabbitmq-outbox.md), as the TODO explicitly allows.
-Their implementation should add a new ADR describing the temporary transport,
-durable acceptance, retries, duplicate handling and eventual broker migration.
-Do not edit the accepted ADR to erase the earlier decision.
+## Agreed cross-service boundaries
 
-Offers currently places event type in outbox metadata and uses
-`customer_facing` as its routing key. Mulac's inbox turns routing keys into
-command types and does not automatically preserve event type. Plans for items
-6 and 7 must specify the same event wrapper or routing translation; accepting an
-HTTP inbox message alone does not persist a customer-facing offer.
+Items 6 and 7 contain the same shared message contract. HTTP inbox routing keys
+are the exact event types `OfferCreated`, `OfferTitleChanged`, and
+`OfferPriceChangedEvent`. Raw event payloads and stable message UUIDs are
+preserved. Mulac converts inbox messages to commands; a newly generated command
+UUID is distinct from the original message identity.
 
-Each completed implementation must follow the repository checks: formatting
-before CI, dependency audits when Cargo dependencies or lockfiles change,
-relevant PostgreSQL tests, and live health/page checks for changed services or
-apps. The plan documents distinguish those future checks from the work of
-writing the plans.
+HTTP replaces offers' active RabbitMQ delivery during this phase. Missing HTTP
+configuration leaves publication unavailable; no fallback or dual publication
+is requested. [ADR 20](../adr/0020-temporary-http-outbox-delivery.md) covers only
+sourcing-to-offers. Item 6 requires a new ADR for the offers-to-customer-facing
+change to [ADR 16](../adr/0016-offers-rabbitmq-outbox.md).
+
+Customer-facing must tolerate duplicate replay without regressing already
+applied state. Distinct updates apply in processing order; the current events
+carry no offer revision. Source-order guarantees and stale-update protection
+are outside this round. Updates arriving before creation fail visibly and
+follow normal retries rather than creating partial offers.
+
+## Environment and verification
+
+The new plans were grounded at monorepo revision
+`5315da8f36e50be3d70d0da7f873f34262992a6c` and sibling Mulac revision
+`9474319fff2237d81828a23d97df5d2f97741858`. Local Cargo path dependencies
+use the checked-out files, so implementers must record the actual revision
+they validate and recheck contracts when either checkout changes.
+
+The services share a Cargo workspace. Coordinate shared dependency and lockfile
+changes while keeping each item's acceptance independently verifiable.
+Follow applicable `AGENTS.md` instructions, formatting before CI, relevant
+isolated PostgreSQL tests, and live service health checks. Audit only when Cargo
+dependencies or lockfiles change. Never claim a skipped integration check passed.
+
+Each handoff describes its own completion evidence and operational boundaries.
+No background queue workers, downstream runner invocation, historical backfill,
+or operational database resets are included in this round.
