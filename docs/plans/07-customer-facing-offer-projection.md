@@ -1,6 +1,24 @@
 # Persist customer-facing offers from incoming events
 
-Status: Planned; implementation pending. Covers TODO item 7.
+Status: Implemented and verified on 2026-10-24. Covers TODO item 7.
+
+Implementation: [projection](../../services/customer_facing/src/offer_projection.rs),
+[PostgreSQL acceptance tests](../../services/customer_facing/src/postgres_tests/projection.rs),
+[manual operation and recovery](../../services/customer_facing/README.md), and
+[ADR 22](../adr/0022-customer-facing-offer-projection.md).
+
+Verification: services formatting and CI passed; all 12 customer-facing
+PostgreSQL tests passed using isolated schemas in `customer_facing_test`.
+Startup with `PORT=3103 make serve` against `customer_facing_dev` and live REST
+and GraphQL health, OpenAPI, Swagger UI, queue validation, and unconfigured
+outbox checks passed. Mulac remains at the inspected revision below.
+
+Dependency audit ran and reported eight existing vulnerabilities: rustls
+0.23.45 (RUSTSEC-2026-0346, -0347, -0348, -0349), rustls-webpki 0.103.15
+(RUSTSEC-2026-0382), and zip 8.6.0 (RUSTSEC-2026-0367, -0368, -0369).
+These versions already occur in repository HEAD; this implementation introduces
+no new advisory. Existing warnings also cover fxhash, kuchiki, unsafe-libyaml,
+rand, tokio, and yanked num-modular. Dependency remediation is separate work.
 
 ## Goal and completion boundary
 

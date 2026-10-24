@@ -14,7 +14,7 @@ Planning an item does not mark its implementation complete.
 | 4 | Record export messages in sourcing outbox | Completed. [Handoff](04-offer-export-outbox-listener.md). |
 | 5 | Publish sourcing outbox to offers | Completed. [Original plan](05-retailer-sourcing-http-outbox.md). |
 | 6 | Publish offers outbox to customer-facing | Completed. [Handoff](06-offers-http-outbox.md). |
-| 7 | Persist customer-facing offers | Planned, ready. Queue infrastructure and upstream event/model contracts exist. [Handoff](07-customer-facing-offer-projection.md). |
+| 7 | Persist customer-facing offers | Completed. Transactional projection and original-message replay protection verified with direct inbox submissions. [Handoff](07-customer-facing-offer-projection.md). |
 | 8 | Paginated REST and GraphQL offers API | Pending. Owned by customer-facing; waits for item 7's model and storage. |
 | 9 | Customers homepage with 30 offers | Pending. Waits for item 8's API. |
 
