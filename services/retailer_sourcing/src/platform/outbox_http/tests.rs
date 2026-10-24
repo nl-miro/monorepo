@@ -8,7 +8,7 @@ use outbox_api::io::testing;
 use serde_json::{Value, json};
 use tower::ServiceExt;
 
-pub(super) async fn run(state: AppState, body: Value) -> (StatusCode, Value) {
+pub(crate) async fn run(state: AppState, body: Value) -> (StatusCode, Value) {
     let request = Request::post("/api/outbox/run")
         .header("content-type", "application/json")
         .body(Body::from(body.to_string()))

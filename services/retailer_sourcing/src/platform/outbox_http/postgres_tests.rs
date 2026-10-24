@@ -33,7 +33,7 @@ fn snapshot(db: &Database) -> Value {
     )
 }
 
-fn state(db: &Database, url: &str) -> AppState {
+pub(crate) fn state(db: &Database, url: &str) -> AppState {
     let publisher = OffersPublisher::new(url, tokio::runtime::Handle::current()).unwrap();
     let service = OutboxService::from_postgres(db.pool.clone(), Arc::new(publisher));
     AppState {
@@ -42,7 +42,7 @@ fn state(db: &Database, url: &str) -> AppState {
     }
 }
 
-async fn inbox(db: &Database) -> crate::platform::offers_publisher::tests::TestServer {
+pub(crate) async fn inbox(db: &Database) -> crate::platform::offers_publisher::tests::TestServer {
     let adapter = InboxAdapter::new(InboxService::from_postgres(db.pool.clone()));
     let app = Router::new()
         .route(

@@ -31,6 +31,6 @@ async fn run_outbox(
 }
 
 #[cfg(test)]
-mod postgres_tests;
+pub(crate) mod postgres_tests;
 #[cfg(test)]
-mod tests;
+pub(crate) mod tests;
