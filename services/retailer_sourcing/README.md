@@ -107,6 +107,56 @@ timeout, and no automatic retries or redirects. Start an object storage service
 that allows the seven existing pipeline buckets and `offer_export`. Without
 `DATABASE_URL`, the HTTP-only mode needs no object storage configuration.
 
+### HTTP outbox delivery
+
+Set `OFFERS_URL` to an HTTP(S) origin, for example `http://127.0.0.1:3001`,
+without credentials, a path, query or fragment. An unset value disables
+delivery. An explicitly empty or invalid value fails startup. Configuration is
+validated even in HTTP-only mode, but no connection to offers is made at startup.
+Shell and Make command-line values override `.env`.
+
+`POST /api/outbox/run` accepts `{"limit":1}` through `{"limit":1000}` and waits
+for one batch. Missing database or destination configuration returns `503`
+without reserving rows; invalid requests return `400` first. The endpoint uses
+Mulac's shared schemas, JSON content-type validation, and sanitized task errors.
+Full success returns `{"processed":N,"errors":[]}`; item/storage failures use
+`200` with null `processed` and error messages. Successful items remain committed.
+
+The publisher posts each outbox payload as a JSON object to `/api/inbox` with
+`routing_key: "ImportOfferDetails"`. Outbox metadata must contain destination
+`routing_key: "offers"`, a stable `message_id`, and the remaining Mulac event
+metadata fields. The import payload contains `retailer_code` in enum form
+(for example `AnkerAu`), `title`, `price: {amount,currency}`, and the exact `url`.
+Each variation needs its own stable delivery ID. Payload conversion belongs to
+the export subscriber; no subscriber or production outbox writer is added here.
+There is no legacy application-generated outbox format to migrate. Manually
+seeded rows must supply complete valid metadata before running delivery.
+
+Only `202` with the same message UUID confirms durable acceptance. Requests and
+acknowledgements share a ten-second deadline and acknowledgement bodies are
+limited to 64 KiB. There are no redirects, client retries, automatic queue runs,
+or RabbitMQ fallback. Failures follow Mulac's six-attempt retry schedule.
+Source event ID/type/causation remain in the local outbox; the current inbox
+HTTP contract carries only message ID, correlation ID and source. An absent
+source defaults to `retailer_sourcing`.
+
+A lost response or failed completion write may resend the same message. Offers
+deduplicates by message ID and retains the first payload; never reuse an ID for
+different content. A failed completion can leave a reserved row for operator
+recovery after fixing the underlying error. There is no background reservation
+sweeper. Inbox acceptance does not mean that the offer was imported: explicitly
+run offers' inbox, commands and events afterward. See
+[ADR 20](../../docs/adr/0020-temporary-http-outbox-delivery.md).
+
+`make ci` covers HTTP contract/error behavior and `make test-postgres` covers
+real PostgreSQL outbox completion, partial batches, retries, repeated inbox
+delivery and failed local completion using isolated schemas. The latter starts
+a local Mulac inbox HTTP receiver backed by a separate schema. For an operational
+walkthrough, start offers against a separate test database, seed sourcing's
+outbox with a valid import and metadata, run `/api/outbox/run`, then advance
+offers' queues and inspect its projection. The Bruno **Run outbox** request
+exercises the sender route.
+
 ```sh
 make .env          # once: database and object storage configuration
 make migrate       # optional; startup also migrates
