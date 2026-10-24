@@ -1,6 +1,7 @@
 # Record completed offer exports in the sourcing outbox
 
-Status: Planned; implementation pending. Covers TODO item 4.
+Status: Completed. Covers TODO item 4. See the sourcing README's
+“Recording export messages” for the implemented behavior.
 
 ## Goal and completion boundary
 

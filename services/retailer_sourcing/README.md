@@ -37,7 +37,7 @@ POST /api/sitemap-retrievals
 | 6    | `ExtractOfferPage`   | Extracts the offer's page from `offer_details_raw` into JSON with the retailer's architecture and stores it in `offer_details_extracted`.                                                                                                  | `OfferPageWasExtracted`                                  | `normalize_offer`: queue `NormalizeOffer`                             |
 | 7    | `NormalizeOffer`     | Normalizes the extracted JSON with the retailer's normalizer and stores it in `offer_details_normalized`. When the retailer produces no document for the page, stores nothing.                                                             | `OfferWasNormalized`; none when there is no document     | `structuralize_offer`: queue `StructuralizeOffer`                     |
 | 8    | `StructuralizeOffer` | Structuralizes the normalized document with the retailer's structuralizer and stores it in `offer_details_structuralized`. When the retailer produces no document, stores nothing.                                                         | `OfferWasStructuralized`; none when there is no document | `processing_for_export`: queue `ProcessOfferForExport`                                                              |
-| 9 | `ProcessOfferForExport` | Prepares a pinned immutable export of priced variations, recording missing-price exclusions. | `OfferExportWasPrepared` | none yet |
+| 9 | `ProcessOfferForExport` | Prepares a pinned immutable export of priced variations, recording missing-price exclusions. | `OfferExportWasPrepared` | `record_export_messages` listener: records one outbox message per entry |
 
 Steps 6 to 8 fail the command when the input row is missing, when the retailer
 has no such step, or when the step fails, including a retailer whose step is
@@ -75,14 +75,18 @@ src/
     normalize_offer/         step 7
     structuralize_offer/     step 8
     processing_for_export/   step 9
+  offer_delivery/            context: completed exports → outbox messages
+    record_export_messages/  listener on OfferExportWasPrepared
 migrations/                  Mulac's tables, then each context's tables
 ```
 
 A slice holds `command.rs`, `handler.rs`, `event.rs`, `entity.rs` (domain
 values), `store/record.rs` (PostgreSQL representations and conversions),
-`store.rs` (its own queries), and `reacts_to.rs` when a reaction starts it. Each
-context and slice exposes only its `prelude` module, with `register()`, any
-`routes()`, and the events others may use. Contexts talk to each other only
+`store.rs` (its own queries), and `reacts_to.rs` when a reaction starts it. A
+slice that consumes an event with its envelope metadata and writes state itself,
+rather than queueing a command, has a `listener.rs` registered with
+`Bus::listen`. Each context and slice exposes only its `prelude` module, with
+`register()`, any `routes()`, and the events others may use. Contexts talk to each other only
 through events.
 
 ## Running it
@@ -127,8 +131,8 @@ The publisher posts each outbox payload as a JSON object to `/api/inbox` with
 `routing_key: "offers"`, a stable `message_id`, and the remaining Mulac event
 metadata fields. The import payload contains `retailer_code` in enum form
 (for example `AnkerAu`), `title`, `price: {amount,currency}`, and the exact `url`.
-Each variation needs its own stable delivery ID. Payload conversion belongs to
-the export subscriber; no subscriber or production outbox writer is added here.
+Each variation needs its own stable delivery ID. The `record_export_messages`
+listener writes these rows; see [Recording export messages](#recording-export-messages).
 There is no legacy application-generated outbox format to migrate. Manually
 seeded rows must supply complete valid metadata before running delivery.
 
@@ -201,7 +205,8 @@ One retailer from start to finish takes alternating runs:
 6. `events/run`, then `commands/run` until it reports `"processed": 0`: downloads the offer pages.
 7. `events/run`, then `commands/run`, three more times: extracts, normalizes and structuralizes the offers.
 8. `events/run`, then `commands/run`: prepares immutable `offer_export` snapshots.
-9. `events/run`: dispatches `OfferExportWasPrepared`; no outbox listener is registered yet.
+9. `events/run`: dispatches `OfferExportWasPrepared`, which records one outbox message per exported variation.
+10. `outbox/run` (needs `OFFERS_URL`): delivers the recorded messages to offers' inbox.
 
 Run responses look like `{"processed": 3, "errors": []}`. When something fails,
 `processed` is `null` and `errors` lists the failures; failed commands are
@@ -641,8 +646,8 @@ as their idempotency key. Deploy the object-storage allowlist first.
 `offer_discovery::prelude::ExportStore::load` reads a completed domain snapshot
 and validates its object reference. Repeated events may reference the same
 export; downstream delivery must use the stable per-entry UUIDs to deduplicate.
-No outbox rows or HTTP requests to offers are produced by this stage. Rollback
-removes local export metadata and leaves already uploaded objects.
+This stage produces no outbox rows or HTTP requests to offers itself.
+Rollback removes local export metadata and leaves already uploaded objects.
 
 `make ci` covers fixture conversion and guards. `make test-postgres` covers
 source replacement, concurrent preparation, crash recovery, additive migration
@@ -650,3 +655,86 @@ behavior and separate HTTP queue batches. `make test-object-storage` also
 checks the new bucket against a running object-storage service. Offers' unit
 tests deserialize the same checked-in import fixture through its real command.
 See [ADR 19](../../docs/adr/0019-immutable-offer-export-preparation.md).
+
+## Recording export messages
+
+`offer_delivery::record_export_messages` listens to `OfferExportWasPrepared`.
+It loads the completed snapshot the event names through `ExportStore::load`.
+It never uses the latest structuralized document or a pending preparation.
+The listener checks that the snapshot and event agree on export UUID, source
+and schema version `1`. It then records one row in `outbox_entries` per
+export entry, all in one transaction:
+
+| Column / metadata | Value |
+| --- | --- |
+| `id`, `meta.message_id` | The entry's stable UUID |
+| `payload` | The entry's `ImportOfferDetails` payload, unwrapped |
+| `meta.routing_key` | `offers` |
+| `meta.event_type` | `OfferExportWasPrepared` |
+| `meta.event_id`, `correlation_id`, `causation_id`, `source` | The event envelope's values |
+| `meta.content_type` | `application/json` |
+| `status` | `0` (received) |
+
+Exclusions produce no messages. An empty or wholly excluded export succeeds
+with none. Recording reads PostgreSQL and object storage only. It works while
+offers is offline or `OFFERS_URL` is unset, and it never runs the outbox.
+
+Recording is idempotent. Inserts use `ON CONFLICT (id) DO NOTHING`, so a
+duplicate, concurrent or replayed notification never changes an existing row.
+That holds even with a new envelope UUID: the first metadata, status,
+attempts, reservation and completion are kept, and completed rows are not
+resent. A retry after a partial failure adds only the missing entries.
+Reusing an entry UUID with a different payload, destination or event type
+fails the event and rolls back the whole export's rows. An event without
+envelope metadata also fails.
+
+These failures fail the event visibly and follow Mulac's event retry
+schedule:
+- a missing or still-pending export
+- an object-storage error
+- a malformed or inconsistent snapshot
+- an unsupported schema
+- a source mismatch
+
+They appear in `/api/events/run` `errors`, with `status = 4` (failed, retry
+scheduled with backoff) and incremented `attempts` in `event_entries`. At the
+sixth failed attempt the event becomes dead (`status = 7`). Fix the cause, then
+set `status = 0, attempts = 0, scheduled_at = now()` on it and run events again.
+
+Observe recorded messages and their delivery state with:
+
+```sql
+SELECT id, status, attempts, last_error, meta->>'event_id' AS event_id
+FROM outbox_entries
+WHERE meta->>'event_type' = 'OfferExportWasPrepared'
+ORDER BY received_at;
+```
+
+Status `0` is received, `2` reserved, `4` failed (retry scheduled), `5`
+completed (offers' inbox returned `202`) and `7` dead (six attempts used). A
+dead or failed row needs the underlying error fixed. It can then be
+rescheduled by setting `status = 0, attempts = 0, scheduled_at = now()`. Rows
+left `reserved` by an interrupted run have no automatic sweeper. After
+confirming no run is in progress, release them with
+`status = 0, reservation_id = NULL, reserved_at = NULL`. Never reset an
+operational database to recover.
+
+There is no automatic historical backfill. Events marked done before this
+listener existed are not delivered again. To record an older export,
+explicitly queue a new `OfferExportWasPrepared` event for it, or rerun its
+export from a fresh structuralization. The stable entry UUIDs keep this safe.
+
+`make ci` covers the listener's mapping and failure handling with fakes.
+`make test-postgres` covers these against real PostgreSQL:
+- the queue path with exact metadata
+- zero, mixed and excluded entries
+- a fresh-envelope replay
+- concurrent notifications
+- partial recording then retry, next to a delivered row
+- conflicting identities
+- a delayed event after newer source data
+- retryable failures
+- delivery of recorded rows to a local Mulac inbox
+
+That inbox test shows HTTP acceptance only. Offers' import still needs its
+own inbox, command and event runs.
