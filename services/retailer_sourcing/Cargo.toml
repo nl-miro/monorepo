@@ -10,12 +10,14 @@ async-graphql-axum = "7.2.1"
 axum.workspace = true
 bodul_shared.workspace = true
 chrono.workspace = true
+commanding_api.workspace = true
 diesel.workspace = true
 diesel_migrations.workspace = true
+eventing_api.workspace = true
 flate2 = "1"
 inbox_api.workspace = true
 kernel.workspace = true
-mulac_axum = { path = "../../../mulac/libs/mulac_axum", features = ["outbox", "utoipa"] }
+mulac_axum = { path = "../../../mulac/libs/mulac_axum", features = ["commanding", "eventing", "outbox", "utoipa"] }
 object_storage_client = { path = "../../lib/object_storage_client" }
 outbox.workspace = true
 outbox_api.workspace = true
@@ -39,6 +41,8 @@ utoipa-swagger-ui.workspace = true
 uuid.workspace = true
 
 [dev-dependencies]
+commanding_api = { workspace = true, features = ["testing"] }
+eventing_api = { workspace = true, features = ["testing"] }
 http-body-util.workspace = true
 outbox_api = { workspace = true, features = ["testing"] }
 tower.workspace = true
