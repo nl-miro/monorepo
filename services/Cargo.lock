@@ -2580,6 +2580,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "mulac_axum"
+version = "0.3.0"
+dependencies = [
+ "axum",
+ "inbox_api",
+ "outbox_api",
+ "serde_json",
+ "utoipa",
+]
+
+[[package]]
 name = "mulac_diesel"
 version = "0.3.0"
 dependencies = [
@@ -3766,8 +3777,12 @@ dependencies = [
  "diesel_migrations",
  "flate2",
  "http-body-util",
+ "inbox_api",
  "mulac-kernel 0.3.0 (git+https://github.com/nulllabsdev/mulac?tag=0.3.0)",
+ "mulac-outbox 0.3.0",
+ "mulac_axum",
  "object_storage_client",
+ "outbox_api",
  "percent-encoding",
  "reqwest",
  "retailer_data_extractor",

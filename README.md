@@ -89,6 +89,9 @@ storage through private server-side clients.
 - [rustup](https://rustup.rs/). `rust-toolchain.toml` pins Rust 1.98.0 with clippy and rustfmt, and rustup installs it on the first cargo command.
 - libpq (for example `libpq-dev` on Debian/Ubuntu, `libpq` on macOS with Homebrew). The services and `testimony_infra` depend on diesel with the PostgreSQL backend, which links against it.
 - GNU Make.
+- A sibling `mulac` checkout for offers and retailer sourcing's HTTP outbox
+  adapters. This phase is tested with revision
+  `9474319fff2237d81828a23d97df5d2f97741858`; keep `mulac/` beside `monorepo/`.
 - PostgreSQL 16 or later for `object_storage` (a separate UTF8 database), and to run the `retailer_sourcing` pipeline or persisted `offers` imports.
 - The `retailer_sourcing` pipeline also requires a running object storage service, configured with `OBJECT_STORAGE_URL` and `OBJECT_STORAGE_TOKEN`; see its [setup](services/retailer_sourcing/README.md).
 - [Diesel CLI](https://diesel.rs/guides/getting-started) with PostgreSQL support, only for `make migrate` and `make migrate-redo`: `cargo install diesel_cli --no-default-features --features postgres --locked`.
@@ -180,6 +183,12 @@ queued commands and events in steps; each run waits for its batch to finish:
 | `POST /api/events/run`         | `{"limit": 10}`               | Process up to `limit` queued events, which queue the next commands |
 
 Without `DATABASE_URL` these routes return 503.
+
+Retailer sourcing also exposes `POST /api/outbox/run` with the same batch body.
+Set `OFFERS_URL` to the offers origin to enable temporary HTTP delivery to its
+durable inbox. The export listener that creates those messages is separate work;
+see the [delivery contract](services/retailer_sourcing/README.md#http-outbox-delivery)
+and [ADR 20](docs/adr/0020-temporary-http-outbox-delivery.md).
 
 The `bruno/` folder is a [Bruno](https://www.usebruno.com/) workspace that lists
 every collection. Open the `bruno` folder as a workspace in Bruno to load them

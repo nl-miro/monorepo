@@ -19,6 +19,7 @@ const MAX_LIMIT: usize = 1000;
 #[derive(Deserialize, ToSchema)]
 pub struct RunRequest {
     /// How many queued items to process, from 1 to 1000.
+    #[schema(minimum = 1, maximum = 1000)]
     limit: usize,
 }
 
