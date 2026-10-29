@@ -7,6 +7,14 @@ clarification extends item 22. Status markers follow the
 
 ## Current round and dependencies
 
+[Plan 35: Region market codes](35-region-market-codes.md) and
+[plan 36: Customer-facing content storage and weighted search](36-customer-facing-content-search.md)
+are planned. Plan 35 introduces canonical EU region codes with historical-format
+compatibility. Plan 36 moves the selected language and per-language URLs into
+content, drops four scalar columns, and searches only selected-language title
+and description with 5:1 weighting. They can proceed independently; coordinate
+customer-facing migrations and client compatibility. Implementation has not started.
+
 [Plan 34: Inbox and outbox statistics](34-inbox-outbox-statistics.md) is implemented
 for all three dashboard services, extending the existing UTC-day reports and
 colored boxes to all four queues. PostgreSQL and live checks remain blocked

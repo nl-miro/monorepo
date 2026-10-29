@@ -3,8 +3,8 @@ GOAL: create full flow from structuralize to show on web
 
 [~] Count of commands and events by status are not taking on ONLY records scheduled for today — all three dashboard services, UTC ([plan](docs/plans/33-today-entry-status-counts.md))
 [x] Support inbox and outbox statistics, like for commands and events ([plan](docs/plans/34-inbox-outbox-statistics.md))
-
-
+[>] Lets refactor target market for region, it should be `{"code": "eu","kind": "region"}` instead of `{"kind": "region", "label": "European Union"}` ([plan](docs/plans/35-region-market-codes.md))
+[>] Refactor offers in customer_facing by dropping title, description, language and url columns. Store the selection alongside localized content entries, each with title, description and url. Fuzzy search uses only the selected language, with title having 5x the weight of description ([plan](docs/plans/36-customer-facing-content-search.md))
 
 Status follows the [TODO workflow](AGENTS.md#todo-workflow):
 
