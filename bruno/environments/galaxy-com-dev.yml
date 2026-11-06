@@ -1,0 +1,10 @@
+name: galaxy-com-dev
+variables:
+  - name: objectStorageBaseUrl
+    value: https://object-storage.service.dev.boduli.com
+  - name: retailerSourcingBaseUrl
+    value: https://retailer-sourcing.service.dev.boduli.com
+  - name: offersBaseUrl
+    value: https://offers.service.dev.boduli.com
+  - name: customerFacingBaseUrl
+    value: https://customer-facing.service.dev.boduli.com
