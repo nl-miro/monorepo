@@ -43,7 +43,16 @@ impl Client {
     /// by gzip magic bytes, so it works regardless of the URL suffix or a
     /// mislabelled `Content-Type`.
     pub fn get(&self, url: &str) -> Result<String, FetchError> {
-        let client = reqwest::blocking::Client::builder()
+        self.get_with_builder(url, reqwest::blocking::Client::builder(), "default")
+    }
+
+    fn get_with_builder(
+        &self,
+        url: &str,
+        builder: reqwest::blocking::ClientBuilder,
+        route: &str,
+    ) -> Result<String, FetchError> {
+        let client = builder
             .user_agent(USER_AGENT)
             .build()
             .map_err(|error| FetchError {
@@ -59,7 +68,7 @@ impl Client {
             .and_then(|response| response.bytes());
         let elapsed_ms = start.elapsed().as_millis() as u64;
         let status = if fetched.is_ok() { "ok" } else { "error" };
-        tracing::info!(target: TIMING_TARGET, kind = "fetch", url, elapsed_ms, status);
+        tracing::info!(target: TIMING_TARGET, kind = "fetch", route, url, elapsed_ms, status);
 
         let bytes = fetched.map_err(|error| FetchError {
             message: error.to_string(),
@@ -108,5 +117,89 @@ mod tests {
     fn passes_plain_body_through() {
         let xml = "<urlset></urlset>";
         assert_eq!(decode_body(xml.as_bytes()).unwrap(), xml);
+    }
+}
+
+/// Process-wide offer routing, shared by cloned handlers.
+#[derive(Clone, Default)]
+pub struct OfferClient {
+    proxies: std::sync::Arc<Vec<reqwest::Proxy>>,
+    cursor: std::sync::Arc<std::sync::atomic::AtomicUsize>,
+}
+
+impl OfferClient {
+    pub fn from_value(value: &str) -> Result<Self, std::io::Error> {
+        let invalid = || {
+            std::io::Error::new(
+                std::io::ErrorKind::InvalidInput,
+                "invalid OFFER_DOWNLOAD_PROXIES entry",
+            )
+        };
+        let mut proxies = Vec::new();
+        if !value.trim().is_empty() {
+            for entry in value.split(',') {
+                let url = url::Url::parse(entry.trim()).map_err(|_| invalid())?;
+                if !matches!(url.scheme(), "http" | "https") || url.host_str().is_none() {
+                    return Err(invalid());
+                }
+                proxies.push(reqwest::Proxy::all(url.as_str()).map_err(|_| invalid())?);
+            }
+        }
+        Ok(Self {
+            proxies: std::sync::Arc::new(proxies),
+            ..Self::default()
+        })
+    }
+
+    fn next_route(&self) -> usize {
+        self.cursor
+            .fetch_update(
+                std::sync::atomic::Ordering::Relaxed,
+                std::sync::atomic::Ordering::Relaxed,
+                |current| Some((current + 1) % (self.proxies.len() + 1)),
+            )
+            .unwrap()
+    }
+
+    pub fn get(&self, url: &str) -> Result<String, FetchError> {
+        let index = self.next_route();
+        let mut builder = reqwest::blocking::Client::builder().no_proxy();
+        let route = if index == 0 {
+            "direct".to_owned()
+        } else {
+            builder = builder.proxy(self.proxies[index - 1].clone());
+            format!("proxy_{index}")
+        };
+        Client.get_with_builder(url, builder, &route)
+    }
+}
+
+#[cfg(test)]
+mod routing_tests {
+    use super::*;
+    #[test]
+    fn rotation_is_shared_and_supports_multiple_proxies() {
+        for count in 0..=2 {
+            let value = vec!["http://127.0.0.1:8888"; count].join(",");
+            let client = OfferClient::from_value(&value).unwrap();
+            let clone = client.clone();
+            for i in 0..12 {
+                assert_eq!(
+                    if i % 2 == 0 {
+                        client.next_route()
+                    } else {
+                        clone.next_route()
+                    },
+                    i % (count + 1)
+                );
+            }
+        }
+    }
+    #[test]
+    fn configuration_validation() {
+        assert!(OfferClient::from_value(" ").is_ok());
+        for value in ["bad", "socks5://localhost:8888", "http://localhost:8888,"] {
+            assert!(OfferClient::from_value(value).is_err());
+        }
     }
 }
