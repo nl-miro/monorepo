@@ -59,3 +59,5 @@ Decision, Consequences) and give it the next number.
 - [ADR 43: Mulac 0.5 integration](0043-mulac-0-5-integration.md)
 
 - [44: Offer download proxies](0044-offer-download-proxies.md)
+
+- [45: Hardcoded offer proxies](0045-hardcoded-offer-proxies.md)

@@ -894,10 +894,9 @@ projection writers during the regional-code migrations (ADR 40). Source exports
 now write v9, Offers creation v10 and localization changes v2; old immutable
 versions retain their original readers and encodings.
 
-Offer downloads rotate through direct access and each URL in
-`OFFER_DOWNLOAD_PROXIES` (comma-separated HTTP(S) proxy URLs, optionally
-containing credentials). Unset or blank selects direct-only. Restart to change
-the list. Rotation is shared across workers within one process and starts direct.
-Offer routing ignores ambient proxy settings. Failed attempts use normal queue
-retries; proxies are not automatically removed. The six-second delay remains.
-Sitemaps keep their existing routing. Timing logs identify routes by index.
+Offer downloads rotate through direct access and the hardcoded `OFFER_PROXIES`
+list in `src/platform/http.rs`, initially `http://10.1.0.102:8888`.
+Append URLs to this list and rebuild/restart to add proxies. Rotation is shared
+across workers within one process and starts direct. Failed attempts use normal
+queue retries. The six-second delay and sitemap routing remain unchanged.
+See ADR 45.

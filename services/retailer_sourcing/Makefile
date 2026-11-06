@@ -19,14 +19,7 @@ endif
 ifneq ($(origin COMMAND_WORKERS),undefined)
 retailer_sourcing_command_workers := $(value COMMAND_WORKERS)
 endif
-ifneq ($(origin OFFER_DOWNLOAD_PROXIES),undefined)
-retailer_sourcing_proxies := $(value OFFER_DOWNLOAD_PROXIES)
-endif
 include $(wildcard .env)
-ifneq ($(origin retailer_sourcing_proxies),undefined)
-OFFER_DOWNLOAD_PROXIES := $(retailer_sourcing_proxies)
-endif
-export OFFER_DOWNLOAD_PROXIES
 ifneq ($(origin retailer_sourcing_command_workers),undefined)
 COMMAND_WORKERS := $(retailer_sourcing_command_workers)
 endif

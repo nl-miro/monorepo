@@ -127,18 +127,24 @@ pub struct OfferClient {
     cursor: std::sync::Arc<std::sync::atomic::AtomicUsize>,
 }
 
+const OFFER_PROXIES: &[&str] = &["http://10.1.0.102:8888"];
+
 impl OfferClient {
-    pub fn from_value(value: &str) -> Result<Self, std::io::Error> {
+    pub fn configured() -> Result<Self, std::io::Error> {
+        Self::from_urls(OFFER_PROXIES)
+    }
+
+    fn from_urls(urls: &[&str]) -> Result<Self, std::io::Error> {
         let invalid = || {
             std::io::Error::new(
                 std::io::ErrorKind::InvalidInput,
-                "invalid OFFER_DOWNLOAD_PROXIES entry",
+                "invalid hardcoded offer proxy URL",
             )
         };
         let mut proxies = Vec::new();
-        if !value.trim().is_empty() {
-            for entry in value.split(',') {
-                let url = url::Url::parse(entry.trim()).map_err(|_| invalid())?;
+        {
+            for entry in urls {
+                let url = url::Url::parse(entry).map_err(|_| invalid())?;
                 if !matches!(url.scheme(), "http" | "https") || url.host_str().is_none() {
                     return Err(invalid());
                 }
@@ -180,8 +186,8 @@ mod routing_tests {
     #[test]
     fn rotation_is_shared_and_supports_multiple_proxies() {
         for count in 0..=2 {
-            let value = vec!["http://127.0.0.1:8888"; count].join(",");
-            let client = OfferClient::from_value(&value).unwrap();
+            let value = vec!["http://127.0.0.1:8888"; count];
+            let client = OfferClient::from_urls(&value).unwrap();
             let clone = client.clone();
             for i in 0..12 {
                 assert_eq!(
@@ -197,9 +203,9 @@ mod routing_tests {
     }
     #[test]
     fn configuration_validation() {
-        assert!(OfferClient::from_value(" ").is_ok());
-        for value in ["bad", "socks5://localhost:8888", "http://localhost:8888,"] {
-            assert!(OfferClient::from_value(value).is_err());
+        assert!(OfferClient::from_urls(&[]).is_ok());
+        for value in ["bad", "socks5://localhost:8888", ""] {
+            assert!(OfferClient::from_urls(&[value]).is_err());
         }
     }
 }
