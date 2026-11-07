@@ -1,6 +1,7 @@
 
-GOAL:
+GOAL: extract more information from anker retailer
 
+[ ] run valueless on ankerca
 
 
 Status follows the [TODO workflow](AGENTS.md#todo-workflow):
