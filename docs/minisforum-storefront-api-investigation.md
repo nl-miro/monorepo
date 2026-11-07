@@ -17,18 +17,18 @@ Content-Type: application/json
 
 Currencies are those of the default sampled response, not all supported market currencies.
 
-| Retailer | Live storefront | Shopify API host | Default currency |
-| --- | --- | --- | --- |
-| `minisforumau` | au.minisforum.com | `j94nqi-71.myshopify.com` | AUD |
-| `minisforumca` | ca.minisforum.com | `seaminisforum.myshopify.com` | CAD |
-| `minisforumeu` | minisforumpc.eu | `minisforum-eu.myshopify.com` | EUR |
-| `minisforumfr` | minisforumpc.fr | `minisforum-fr.myshopify.com` | EUR |
-| `minisforumhk` | minisforum.hk | `minisforumcn.myshopify.com` | HKD |
-| `minisforumjp` | www.minisforum.jp | `minisforum-jp.myshopify.com` | JPY |
-| `minisforumkr` | www.minisforum.kr | `minisforumkr.myshopify.com` | KRW |
-| `minisforumru` | minisforum.ru | `store-minisforum-ru.myshopify.com` | USD |
-| `minisforumuk` | www.minisforum.uk | `minisforum-uk.myshopify.com` | GBP |
-| `minisforumus` | store.minisforum.com | `minisforum.myshopify.com` | USD |
+| Retailer       | Live storefront      | Shopify API host                    | Default currency |
+| -------------- | -------------------- | ----------------------------------- | ---------------- |
+| `minisforumau` | au.minisforum.com    | `j94nqi-71.myshopify.com`           | AUD              |
+| `minisforumca` | ca.minisforum.com    | `seaminisforum.myshopify.com`       | CAD              |
+| `minisforumeu` | minisforumpc.eu      | `minisforum-eu.myshopify.com`       | EUR              |
+| `minisforumfr` | minisforumpc.fr      | `minisforum-fr.myshopify.com`       | EUR              |
+| `minisforumhk` | minisforum.hk        | `minisforumcn.myshopify.com`        | HKD              |
+| `minisforumjp` | www.minisforum.jp    | `minisforum-jp.myshopify.com`       | JPY              |
+| `minisforumkr` | www.minisforum.kr    | `minisforumkr.myshopify.com`        | KRW              |
+| `minisforumru` | minisforum.ru        | `store-minisforum-ru.myshopify.com` | USD              |
+| `minisforumuk` | www.minisforum.uk    | `minisforum-uk.myshopify.com`       | GBP              |
+| `minisforumus` | store.minisforum.com | `minisforum.myshopify.com`          | USD              |
 
 ## JSON alternatives
 

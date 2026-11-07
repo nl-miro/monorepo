@@ -26,22 +26,22 @@ Content-Type: application/json
 published in Anker's browser JavaScript, not a private or Admin API credential.
 Currency describes the sampled response, not every supported market.
 
-| Retailer | Storefront | Shopify API host | Access tested | Sample currency |
-| --- | --- | --- | --- | --- |
-| `ankerau` | `www.anker.com/au` | `oneanker-au.myshopify.com` | No token | AUD |
-| `ankerca` | `www.anker.com/ca` | `anker-canada.myshopify.com` | No token | CAD |
-| `ankercom` | `www.anker.com` | `ankerus.myshopify.com` | No token | USD |
-| `ankerde` | `www.anker.com/de` | `oneanker-de.myshopify.com` | No token | EUR |
-| `ankereu` | `www.anker.com/eu-en` | `ankereu.myshopify.com` | No token | EUR |
-| `ankerfr` | `www.anker.com/fr` | `ankerfra.myshopify.com` | No token | EUR |
-| `ankeritalycom` | `www.ankeritaly.com` | `anker-italy.myshopify.com` | No token | EUR |
-| `ankerjapancom` | `www.ankerjapan.com` | `anker-japan-official-site.myshopify.com` | No token | JPY |
-| `ankernordicscom` | `www.ankernordics.com` | `ankerneu.myshopify.com` | No token | SEK |
-| `ankernz` | `www.anker.com/nz` | `ankernz.myshopify.com` | Public token | USD |
-| `ankerpl` | `www.anker.com/eu-pl` | `ankereu.myshopify.com` | No token, Polish context | PLN |
-| `ankeruk` | `www.anker.com/uk` | `oneanker-uk.myshopify.com` | No token | GBP |
-| `ankervn` | `www.anker.com/vn` | `ankervnm.myshopify.com` | Public token | VND |
-| `ankerkr` | `ankerkorea.co.kr` | Not Shopify; see Cafe24 below | Rejected without allowed client ID | Not verified |
+| Retailer          | Storefront             | Shopify API host                          | Access tested                      | Sample currency |
+| ----------------- | ---------------------- | ----------------------------------------- | ---------------------------------- | --------------- |
+| `ankerau`         | `www.anker.com/au`     | `oneanker-au.myshopify.com`               | No token                           | AUD             |
+| `ankerca`         | `www.anker.com/ca`     | `anker-canada.myshopify.com`              | No token                           | CAD             |
+| `ankercom`        | `www.anker.com`        | `ankerus.myshopify.com`                   | No token                           | USD             |
+| `ankerde`         | `www.anker.com/de`     | `oneanker-de.myshopify.com`               | No token                           | EUR             |
+| `ankereu`         | `www.anker.com/eu-en`  | `ankereu.myshopify.com`                   | No token                           | EUR             |
+| `ankerfr`         | `www.anker.com/fr`     | `ankerfra.myshopify.com`                  | No token                           | EUR             |
+| `ankeritalycom`   | `www.ankeritaly.com`   | `anker-italy.myshopify.com`               | No token                           | EUR             |
+| `ankerjapancom`   | `www.ankerjapan.com`   | `anker-japan-official-site.myshopify.com` | No token                           | JPY             |
+| `ankernordicscom` | `www.ankernordics.com` | `ankerneu.myshopify.com`                  | No token                           | SEK             |
+| `ankernz`         | `www.anker.com/nz`     | `ankernz.myshopify.com`                   | Public token                       | USD             |
+| `ankerpl`         | `www.anker.com/eu-pl`  | `ankereu.myshopify.com`                   | No token, Polish context           | PLN             |
+| `ankeruk`         | `www.anker.com/uk`     | `oneanker-uk.myshopify.com`               | No token                           | GBP             |
+| `ankervn`         | `www.anker.com/vn`     | `ankervnm.myshopify.com`                  | Public token                       | VND             |
+| `ankerkr`         | `ankerkorea.co.kr`     | Not Shopify; see Cafe24 below             | Rejected without allowed client ID | Not verified    |
 
 ## Product fields and reproducible query
 

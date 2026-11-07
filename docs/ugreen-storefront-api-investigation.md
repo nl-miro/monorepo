@@ -17,29 +17,29 @@ Content-Type: application/json
 
 Currencies are those of the default sampled response, not all supported market currencies.
 
-| Retailer | Live storefront | Shopify API host | Default currency |
-| --- | --- | --- | --- |
-| `ugreenca` | ca.ugreen.com | `ugreen-ca.myshopify.com` | CAD |
-| `ugreencom` | www.ugreen.com | `ugreen-brandsite.myshopify.com` | HKD |
-| `ugreende` | de.ugreen.com | `ugreen-de.myshopify.com` | EUR |
-| `ugreeneu` | eu.ugreen.com | `ugreen-eu.myshopify.com` | EUR |
-| `ugreenfr` | fr.ugreen.com | `ugreen-fr.myshopify.com` | EUR |
-| `ugreenin` | ugreenindia.com | `990f9c-b7.myshopify.com` | INR |
-| `ugreenjp` | ugreen.jp | `ugreen-jp.myshopify.com` | JPY |
-| `ugreenkr` | kr.ugreen.com | `ugreen-kr.myshopify.com` | KRW |
-| `ugreennas` | ai.ugreen.com | `ugreen-nas.myshopify.com` | USD |
-| `ugreennasau` | ai-au.ugreen.com | `nas-ugreen-au.myshopify.com` | AUD |
-| `ugreennasca` | ai-ca.ugreen.com | `ugreen-nas-ca.myshopify.com` | CAD |
-| `ugreennasde` | ai-de.ugreen.com | `ugreen-de-nas.myshopify.com` | EUR |
-| `ugreennases` | ai-es.ugreen.com | `ugreen-nas-es.myshopify.com` | EUR |
-| `ugreennaseu` | ai-eu.ugreen.com | `ugreen-nas-eu.myshopify.com` | EUR |
-| `ugreennasfr` | ai-fr.ugreen.com | `nas-ugreen-fr.myshopify.com` | EUR |
-| `ugreennasit` | ai-it.ugreen.com | `ugreen-nas-it.myshopify.com` | EUR |
-| `ugreennasjp` | store.ugreen.jp | `ugreen-nas-jp.myshopify.com` | JPY |
-| `ugreennasuk` | ai-uk.ugreen.com | `ugreen-nas-uk.myshopify.com` | GBP |
-| `ugreennl` | nl.ugreen.com | `ugreen-nl.myshopify.com` | EUR |
-| `ugreenuk` | uk.ugreen.com | `ugreen-uk.myshopify.com` | GBP |
-| `ugreenus` | us.ugreen.com | `ugreenmall.myshopify.com` | USD |
+| Retailer      | Live storefront  | Shopify API host                 | Default currency |
+| ------------- | ---------------- | -------------------------------- | ---------------- |
+| `ugreenca`    | ca.ugreen.com    | `ugreen-ca.myshopify.com`        | CAD              |
+| `ugreencom`   | www.ugreen.com   | `ugreen-brandsite.myshopify.com` | HKD              |
+| `ugreende`    | de.ugreen.com    | `ugreen-de.myshopify.com`        | EUR              |
+| `ugreeneu`    | eu.ugreen.com    | `ugreen-eu.myshopify.com`        | EUR              |
+| `ugreenfr`    | fr.ugreen.com    | `ugreen-fr.myshopify.com`        | EUR              |
+| `ugreenin`    | ugreenindia.com  | `990f9c-b7.myshopify.com`        | INR              |
+| `ugreenjp`    | ugreen.jp        | `ugreen-jp.myshopify.com`        | JPY              |
+| `ugreenkr`    | kr.ugreen.com    | `ugreen-kr.myshopify.com`        | KRW              |
+| `ugreennas`   | ai.ugreen.com    | `ugreen-nas.myshopify.com`       | USD              |
+| `ugreennasau` | ai-au.ugreen.com | `nas-ugreen-au.myshopify.com`    | AUD              |
+| `ugreennasca` | ai-ca.ugreen.com | `ugreen-nas-ca.myshopify.com`    | CAD              |
+| `ugreennasde` | ai-de.ugreen.com | `ugreen-de-nas.myshopify.com`    | EUR              |
+| `ugreennases` | ai-es.ugreen.com | `ugreen-nas-es.myshopify.com`    | EUR              |
+| `ugreennaseu` | ai-eu.ugreen.com | `ugreen-nas-eu.myshopify.com`    | EUR              |
+| `ugreennasfr` | ai-fr.ugreen.com | `nas-ugreen-fr.myshopify.com`    | EUR              |
+| `ugreennasit` | ai-it.ugreen.com | `ugreen-nas-it.myshopify.com`    | EUR              |
+| `ugreennasjp` | store.ugreen.jp  | `ugreen-nas-jp.myshopify.com`    | JPY              |
+| `ugreennasuk` | ai-uk.ugreen.com | `ugreen-nas-uk.myshopify.com`    | GBP              |
+| `ugreennl`    | nl.ugreen.com    | `ugreen-nl.myshopify.com`        | EUR              |
+| `ugreenuk`    | uk.ugreen.com    | `ugreen-uk.myshopify.com`        | GBP              |
+| `ugreenus`    | us.ugreen.com    | `ugreenmall.myshopify.com`       | USD              |
 
 ## JSON alternatives
 
@@ -76,9 +76,9 @@ The query requests product and variant IDs, handles, titles, descriptions, image
 - **Global-site prices require explicit context.** Default GraphQL returned HKD. `GET https://www.ugreen.com/cart.js` returned USD, and GraphQL with `@inContext(country: US)` returned USD for the same sampled GraphQL handle `usa-65585` (USD 1301.00). Do not compare default GraphQL prices with storefront/Ajax prices without aligning the market.
 - **All ten NAS storefronts redirect to new origins.** The live destinations are recorded below. Keep retailer codes stable and validate product URL redirects separately.
 
-| Retailer | Configured origin | Observed live origin |
-| --- | --- | --- |
-| `ugreennas` | https://nas.ugreen.com | https://ai.ugreen.com |
+| Retailer      | Configured origin         | Observed live origin     |
+| ------------- | ------------------------- | ------------------------ |
+| `ugreennas`   | https://nas.ugreen.com    | https://ai.ugreen.com    |
 | `ugreennasau` | https://nas-au.ugreen.com | https://ai-au.ugreen.com |
 | `ugreennasca` | https://nas-ca.ugreen.com | https://ai-ca.ugreen.com |
 | `ugreennasde` | https://nas-de.ugreen.com | https://ai-de.ugreen.com |
@@ -86,7 +86,7 @@ The query requests product and variant IDs, handles, titles, descriptions, image
 | `ugreennaseu` | https://nas-eu.ugreen.com | https://ai-eu.ugreen.com |
 | `ugreennasfr` | https://nas-fr.ugreen.com | https://ai-fr.ugreen.com |
 | `ugreennasit` | https://nas-it.ugreen.com | https://ai-it.ugreen.com |
-| `ugreennasjp` | https://nas.ugreen.jp | https://store.ugreen.jp |
+| `ugreennasjp` | https://nas.ugreen.jp     | https://store.ugreen.jp  |
 | `ugreennasuk` | https://nas-uk.ugreen.com | https://ai-uk.ugreen.com |
 
 - **India redirects** from `www.ugreenindia.com` to `ugreenindia.com`, backed by `990f9c-b7.myshopify.com`.
