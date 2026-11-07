@@ -1,6 +1,7 @@
 
 GOAL: extract more information from anker retailer
 
+[ ] run valueless on ankerau
 [ ] run valueless on ankerca
 
 
