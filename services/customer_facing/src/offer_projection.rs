@@ -15,7 +15,7 @@ use kernel::{
     NewEventEnvelope,
     prelude::{
         CommandConsumer, CommandDispatcher, DbPool, DieselPgCommandRepository,
-        DieselPgEventRepository, EventGateway, EventRecorder,
+        DieselPgEventRepository, EventGateway,
     },
 };
 use money::Money;
@@ -482,9 +482,7 @@ impl ErasedCommandHandler for Projection {
 
 pub fn consumer(pool: DbPool) -> Arc<CommandConsumer<DieselPgCommandRepository>> {
     let storage = Arc::new(DieselPgCommandRepository::new(pool.clone()));
-    let events = EventGateway::two_phased(Arc::new(EventRecorder::new(Arc::new(
-        DieselPgEventRepository::new(pool.clone()),
-    ))));
+    let events = EventGateway::two_phased(Arc::new(DieselPgEventRepository::new(pool.clone())));
 
     Arc::new(CommandConsumer::new(
         storage,

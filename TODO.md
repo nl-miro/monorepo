@@ -106,3 +106,5 @@ BACKLOG: leave this alone
 - Refactor how offer duplication is handled: use gtin or sku per retailer?
 - Refactor commanding by introducing priority column, first command starts with priority 100 and every after it does -1 on current priority. If we reach 10, we stop with -1 and use last one. That way we fast track first batch to finish point. When reserving commands, it should also order by priority asc
 - Drop descripton column on `customer_facing`'s 'offer' table
+
+- [x] Fix customer-facing imports and queue tests for the current Mulac API. Formatting and CI pass (44 tests; 45 database tests ignored). Live startup requires DATABASE_URL.
