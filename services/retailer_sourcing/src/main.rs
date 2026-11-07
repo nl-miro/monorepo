@@ -158,7 +158,7 @@ async fn start_features(database_url: Result<String, VarError>) -> io::Result<Ap
 
     let db = platform.db.clone();
     let outbox = publisher.map(|publisher| {
-        let service = ::outbox::prelude::OutboxService::from_postgres(
+        let service = ::outbox::prelude::AsyncOutboxService::from_postgres(
             db.clone(),
             std::sync::Arc::new(publisher),
         );

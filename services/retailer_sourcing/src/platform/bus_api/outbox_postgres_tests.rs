@@ -6,9 +6,9 @@ use crate::platform::{
     },
     test_db::{Database, json_query},
 };
-use ::inbox::prelude::InboxService;
+use ::inbox::prelude::AsyncInboxService;
 use ::inbox::prelude::axum::{InboxAdapter, SubmitInbox};
-use ::outbox::prelude::OutboxService;
+use ::outbox::prelude::AsyncOutboxService;
 use axum::response::IntoResponse;
 use axum::{Router, extract::State, routing::post};
 use diesel::{RunQueryDsl, connection::SimpleConnection, sql_types};
@@ -35,7 +35,7 @@ fn snapshot(db: &Database) -> Value {
 
 pub(crate) fn state(db: &Database, url: &str) -> AppState {
     let publisher = OffersPublisher::new(url, tokio::runtime::Handle::current()).unwrap();
-    let service = OutboxService::from_postgres(db.pool.clone(), Arc::new(publisher));
+    let service = AsyncOutboxService::from_postgres(db.pool.clone(), Arc::new(publisher));
     AppState {
         outbox: Some(OutboxAdapter::new(service)),
         ..Default::default()
@@ -43,7 +43,7 @@ pub(crate) fn state(db: &Database, url: &str) -> AppState {
 }
 
 pub(crate) async fn inbox(db: &Database) -> crate::platform::offers_publisher::tests::TestServer {
-    let adapter = InboxAdapter::new(InboxService::from_postgres(db.pool.clone()));
+    let adapter = InboxAdapter::new(AsyncInboxService::from_postgres(db.pool.clone()));
     let app = Router::new()
         .route(
             "/api/inbox",
@@ -184,7 +184,7 @@ async fn lost_completion_can_redeliver_without_duplicate_inbox_rows() {
 async fn a_lost_acceptance_response_retries_the_same_inbox_message() {
     let db = Database::new();
     let receiver = Database::new();
-    let adapter = InboxAdapter::new(InboxService::from_postgres(receiver.pool.clone()));
+    let adapter = InboxAdapter::new(AsyncInboxService::from_postgres(receiver.pool.clone()));
     let first = Arc::new(AtomicBool::new(true));
     let app = Router::new().route(
         "/api/inbox",

@@ -1021,7 +1021,7 @@ async fn outbox_delivery_completes_only_confirmed_items_and_retries_failures() {
     let publisher = Arc::new(Publisher(AtomicBool::new(false)));
     let (kernel, mut state) = crate::start_mulac(pool.clone()).unwrap();
     state.outbox = ::outbox::prelude::poem::OutboxAdapter::new(
-        ::outbox::prelude::OutboxService::from_postgres(pool.clone(), publisher.clone()),
+        ::outbox::prelude::AsyncOutboxService::from_postgres(pool.clone(), publisher.clone()),
     );
     let client = TestClient::new(crate::app_with_reporting_token(state, "test".into()));
     use kernel::EventSubscriberPort;

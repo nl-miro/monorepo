@@ -108,3 +108,5 @@ BACKLOG: leave this alone
 - Drop descripton column on `customer_facing`'s 'offer' table
 
 - [x] Fix customer-facing imports and queue tests for the current Mulac API. Formatting and CI pass (44 tests; 45 database tests ignored). Live startup requires DATABASE_URL.
+
+- [x] Fix all workspace compilation errors against the current Mulac API. Root make check passes; formatting and CI pass for Offers (104 tests) and retailer sourcing (168 tests). Sourcing live health returns ok; Offers live startup requires DATABASE_URL. Database tests remain ignored.

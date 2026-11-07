@@ -45,13 +45,13 @@ use crate::read_offers_identifiers::{
     repository::PostgresRetailerOfferIdentifiersRepository,
 };
 use crate::reporting::{DEFAULT_REPORTING_TOKEN, ReportingApi};
-use ::commanding::prelude::CommandingService;
+use ::commanding::prelude::AsyncCommandingService;
 use ::commanding::prelude::poem::CommandingAdapter;
-use ::eventing::prelude::EventingService;
+use ::eventing::prelude::AsyncEventingService;
 use ::eventing::prelude::poem::EventingAdapter;
-use ::inbox::prelude::InboxService;
+use ::inbox::prelude::AsyncInboxService;
 use ::inbox::prelude::poem::InboxAdapter;
-use ::outbox::prelude::OutboxService;
+use ::outbox::prelude::AsyncOutboxService;
 use ::outbox::prelude::poem::OutboxAdapter;
 
 use crate::subscribers::customer_facing::CustomerFacingSubscriber;
@@ -72,7 +72,7 @@ async fn main() -> io::Result<()> {
     // Boot the in-process kernel and register all command handlers and event subscribers.
     let (kernel, mut state) = start_mulac(pool.clone()).map_err(err_kernel_could_not_start)?;
     if let Some(publisher) = publisher {
-        state.outbox = OutboxAdapter::new(OutboxService::from_postgres(
+        state.outbox = OutboxAdapter::new(AsyncOutboxService::from_postgres(
             pool.clone(),
             Arc::new(publisher),
         ));
@@ -221,10 +221,10 @@ pub fn start_mulac(pool: DbPool) -> Result<(Arc<PersistentKernelHandle>, AppStat
         )
         .start_persistent(pool.clone(), 1)?;
 
-    let inbox = InboxAdapter::new(InboxService::from_postgres(pool.clone()));
-    let commanding = CommandingAdapter::new(CommandingService::new(kernel.command_consumer()));
+    let inbox = InboxAdapter::new(AsyncInboxService::from_postgres(pool.clone()));
+    let commanding = CommandingAdapter::new(AsyncCommandingService::new(kernel.command_consumer()));
     // The kernel's consumer dispatches to the subscribers registered above.
-    let events = EventingAdapter::new(EventingService::new(kernel.event_consumer()));
+    let events = EventingAdapter::new(AsyncEventingService::new(kernel.event_consumer()));
     Ok((
         Arc::new(kernel),
         AppState {
@@ -347,6 +347,33 @@ fn shutdown_signal() -> io::Result<impl Future<Output = ()> + Send + 'static> {
 
 #[cfg(test)]
 mod tests {
+    pub(crate) fn assert_error_id(error: &str) {
+        let id = uuid::Uuid::parse_str(error).expect("error response must contain only a UUID");
+        assert_eq!(id.get_version_num(), 7);
+    }
+
+    pub(crate) fn assert_batch_errors(body: &serde_json::Value, count: usize) {
+        assert!(body["processed"].is_null(), "{body}");
+        let errors = body["errors"].as_array().expect("batch errors array");
+        assert_eq!(errors.len(), count, "{body}");
+        let mut ids = std::collections::HashSet::new();
+        for error in errors {
+            let error = error.as_str().expect("error ID string");
+            assert_error_id(error);
+            assert!(ids.insert(error), "each failure must have its own ID");
+        }
+    }
+
+    pub(crate) async fn assert_error_response(response: poem::test::TestResponse) {
+        let body = response.0.into_body().into_string().await.unwrap();
+        assert_error_id(&body);
+    }
+
+    pub(crate) async fn assert_batch_response(response: poem::test::TestResponse, count: usize) {
+        let body = response.json().await.value().deserialize();
+        assert_batch_errors(&body, count);
+    }
+
     use std::{env::VarError, io::ErrorKind};
 
     use poem::{http::StatusCode, test::TestClient};
@@ -535,9 +562,7 @@ mod tests {
             .send()
             .await;
         response.assert_status(StatusCode::INTERNAL_SERVER_ERROR);
-        response
-            .assert_text("inbox message could not be stored")
-            .await;
+        assert_error_response(response).await;
     }
 
     #[test]

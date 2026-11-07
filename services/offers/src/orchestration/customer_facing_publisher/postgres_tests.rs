@@ -6,9 +6,9 @@ use std::sync::{
     atomic::{AtomicBool, Ordering},
 };
 
-use ::inbox::prelude::InboxService;
+use ::inbox::prelude::AsyncInboxService;
 use ::inbox::prelude::poem::InboxAdapter;
-use ::outbox::prelude::OutboxService;
+use ::outbox::prelude::AsyncOutboxService;
 use ::outbox::prelude::poem::OutboxAdapter;
 use diesel::{RunQueryDsl, connection::SimpleConnection};
 use poem::{Endpoint, EndpointExt, IntoResponse, Route, http::StatusCode, test::TestClient};
@@ -37,7 +37,7 @@ fn rows(pool: &DbPool, table: &str) -> Value {
 
 /// A Mulac inbox over its own schema, as customer-facing serves it.
 fn inbox_endpoint(pool: &DbPool) -> impl Endpoint + 'static {
-    let adapter = InboxAdapter::new(InboxService::from_postgres(pool.clone()));
+    let adapter = InboxAdapter::new(AsyncInboxService::from_postgres(pool.clone()));
     let api = OpenApiService::new(InboxApi::new(adapter), "Receiver", "1").server("/api");
     Route::new().nest("/api", api)
 }
@@ -60,7 +60,7 @@ fn sender(url: &str) -> Sender {
     let (schema, pool) = inbox_test_database();
     let (kernel, mut state) = crate::start_mulac(pool.clone()).unwrap();
     let publisher = CustomerFacingPublisher::new(url, Handle::current()).unwrap();
-    state.outbox = OutboxAdapter::new(OutboxService::from_postgres(
+    state.outbox = OutboxAdapter::new(AsyncOutboxService::from_postgres(
         pool.clone(),
         Arc::new(publisher),
     ));
