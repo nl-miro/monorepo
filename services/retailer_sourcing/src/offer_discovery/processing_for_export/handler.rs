@@ -5,11 +5,7 @@ use super::store::StoreError;
 use crate::platform::bus::Handle;
 
 pub(super) trait Store: Send + Sync + 'static {
-    fn prepare(
-        &self,
-        source: ExportSource,
-        schema_version: u32,
-    ) -> Result<PreparedExport, StoreError>;
+    fn prepare(&self, source: ExportSource) -> Result<PreparedExport, StoreError>;
     fn complete(&self, prepared: PreparedExport) -> Result<OfferExport, StoreError>;
 }
 
@@ -54,7 +50,7 @@ impl<S: Store> Handle for Handler<S> {
             url: command.url,
             storage,
         };
-        let prepared = self.store.prepare(source, command.schema_version)?;
+        let prepared = self.store.prepare(source)?;
         let snapshot = self.store.complete(prepared)?;
         tracing::info!(
             export_id = %snapshot.id,
@@ -65,7 +61,6 @@ impl<S: Store> Handle for Handler<S> {
         );
         Ok(vec![OfferExportWasPrepared {
             export_id: snapshot.id,
-            schema_version: snapshot.schema_version,
             source: snapshot.source,
         }])
     }
@@ -86,15 +81,11 @@ mod tests {
     }
 
     impl Store for FakeStore {
-        fn prepare(
-            &self,
-            source: ExportSource,
-            schema_version: u32,
-        ) -> Result<PreparedExport, StoreError> {
+        fn prepare(&self, source: ExportSource) -> Result<PreparedExport, StoreError> {
             if self.fail_prepare {
                 return Err(StoreError::Incomplete);
             }
-            let snapshot = convert(source, ANKER, schema_version)?;
+            let snapshot = convert(source, ANKER)?;
             Ok(PreparedExport {
                 body: serde_json::to_string(&snapshot)?,
                 snapshot,
@@ -112,13 +103,29 @@ mod tests {
     fn command() -> ProcessOfferForExport {
         let source = source();
         ProcessOfferForExport {
-            scraped_at: None,
-            schema_version: 2,
+            scraped_at: source.storage.scraped_at,
             offer_id: source.offer_id,
             consolidated_sitemap_id: source.consolidated_sitemap_id,
             retailer_code: source.retailer_code,
             url: source.url,
             storage: Some(source.storage),
+        }
+    }
+
+    #[test]
+    fn export_messages_have_no_schema_version() {
+        let command = command();
+        let snapshot = convert(source(), ANKER).unwrap();
+        let event = OfferExportWasPrepared {
+            export_id: snapshot.id,
+            source: snapshot.source.clone(),
+        };
+        for value in [
+            serde_json::to_value(command).unwrap(),
+            serde_json::to_value(snapshot).unwrap(),
+            serde_json::to_value(event).unwrap(),
+        ] {
+            assert!(value.get("schema_version").is_none());
         }
     }
 
@@ -160,28 +167,15 @@ mod tests {
     fn legacy_event_decodes_but_requires_fresh_structuralization() {
         let mut json = serde_json::to_value(command()).unwrap();
         json.as_object_mut().unwrap().remove("storage");
-        let legacy: OfferWasStructuralized = serde_json::from_value(json).unwrap();
-        assert!(legacy.storage.is_none());
-        let command = super::super::reacts_to::on(&legacy).unwrap();
+        let defaulted: OfferWasStructuralized = serde_json::from_value(json).unwrap();
+        assert!(defaulted.storage.is_none());
+        let command = super::super::reacts_to::on(&defaulted).unwrap();
         let handler = Handler::new(FakeStore {
             fail_prepare: true,
             fail_complete: true,
         });
         let error = handler.handle(command).unwrap_err();
-        assert!(matches!(error, HandlerError::UnpinnedSource(id) if id == legacy.offer_id));
+        assert!(matches!(error, HandlerError::UnpinnedSource(id) if id == defaulted.offer_id));
         assert!(error.to_string().contains("fresh structuralization"));
-    }
-
-    #[test]
-    fn queued_commands_without_a_version_stay_v1_and_new_commands_select_v9() {
-        let mut value = serde_json::to_value(command()).unwrap();
-        value.as_object_mut().unwrap().remove("schema_version");
-        let legacy: ProcessOfferForExport = serde_json::from_value(value.clone()).unwrap();
-        assert_eq!(legacy.schema_version, 1);
-        let source: OfferWasStructuralized = serde_json::from_value(value).unwrap();
-        assert_eq!(
-            super::super::reacts_to::on(&source).unwrap().schema_version,
-            9
-        );
     }
 }

@@ -1,7 +1,7 @@
 {
   "variations": [
     {
-      "title":"USB hub",
+      "localization":{"target_market":{"kind":"country","code":"CA"},"language":"en"}, "title":"USB hub",
       "identifiers":{"sku":"HUB-1"},
       "price":{"amount":2500,"currency":"CAD"},
       "compare_at_price":{"amount":3500,"currency":"CAD"},
@@ -10,7 +10,7 @@
       "images":[]
     },
     {
-      "title":"USB hub",
+      "localization":{"target_market":{"kind":"country","code":"CA"},"language":"en"}, "title":"USB hub",
       "identifiers":{"sku":"HUB-2"},
       "price":null,
       "compare_at_price":null,

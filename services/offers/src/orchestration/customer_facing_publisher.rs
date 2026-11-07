@@ -4,16 +4,16 @@
 
 use std::{env, io};
 
-use inbox::prelude::SubmitInboxRequest;
+use ::inbox::prelude::SubmitInboxRequest;
 use inbox_client::{ConfigError, InboxClient, SubmitError};
 use outbox::prelude::{OutboundMessageEnvelope, OutboxError, OutboxPublisherPort};
 use serde_json::Value;
 use tokio::runtime::Handle;
 
 use crate::offers::event::{
-    OFFER_CREATED_EVENT, OFFER_IMAGE_ADDED_EVENT, OFFER_PRICE_CHANGED_EVENT,
-    OFFER_TITLE_CHANGED_EVENT, OfferCreatedEvent, OfferImageAddedEvent, OfferPriceChangedEvent,
-    OfferTitleChangedEvent,
+    HistoricalOfferCreatedEvent, HistoricalOfferPriceChangedEvent, OFFER_CREATED_EVENT,
+    OFFER_IMAGE_ADDED_EVENT, OFFER_PRICE_CHANGED_EVENT, OFFER_TITLE_CHANGED_EVENT,
+    OfferImageAddedEvent, OfferTitleChangedEvent,
 };
 
 /// The outbox destination `CustomerFacingSubscriber` records.
@@ -92,9 +92,9 @@ impl CustomerFacingPublisher {
                     .map_err(<serde_json::Error as serde::de::Error>::custom)
             }),
             crate::offers::event::OFFER_ITEM_CONDITION_CHANGED_EVENT => {
-                serde_json::from_value::<crate::offers::event::OfferItemConditionChangedEvent>(
-                    payload.clone(),
-                )
+                serde_json::from_value::<
+                    crate::offers::event::HistoricalOfferItemConditionChangedEvent,
+                >(payload.clone())
                 .and_then(|event| {
                     event
                         .item_condition
@@ -104,7 +104,7 @@ impl CustomerFacingPublisher {
                 })
             }
             crate::offers::event::OFFER_AVAILABILITY_CHANGED_EVENT => serde_json::from_value::<
-                crate::offers::event::OfferAvailabilityChangedEvent,
+                crate::offers::event::HistoricalOfferAvailabilityChangedEvent,
             >(payload.clone())
             .and_then(|event| {
                 event
@@ -145,17 +145,20 @@ impl CustomerFacingPublisher {
                     }
                 })
             }
-            OFFER_CREATED_EVENT => serde_json::from_value::<OfferCreatedEvent>(payload.clone())
-                .and_then(|event| {
-                    event
-                        .guard()
-                        .map_err(<serde_json::Error as serde::de::Error>::custom)
-                }),
+            OFFER_CREATED_EVENT => serde_json::from_value::<HistoricalOfferCreatedEvent>(
+                payload.clone(),
+            )
+            .and_then(|event| {
+                event
+                    .guard()
+                    .map_err(<serde_json::Error as serde::de::Error>::custom)
+            }),
             OFFER_TITLE_CHANGED_EVENT => {
                 serde_json::from_value::<OfferTitleChangedEvent>(payload.clone()).map(drop)
             }
             OFFER_PRICE_CHANGED_EVENT => {
-                serde_json::from_value::<OfferPriceChangedEvent>(payload.clone()).map(drop)
+                serde_json::from_value::<HistoricalOfferPriceChangedEvent>(payload.clone())
+                    .map(drop)
             }
             _ => return Err(err_event_type()),
         };

@@ -66,7 +66,7 @@ The command, event and outbox runner APIs are grouped in
 
 Mulac owns `/api/commands/run` behavior. `CommandingApi` only declares the route
 and delegates to `commanding::prelude::poem::CommandingAdapter`
-(feature `poem`). The `commanding` crate validates the limit
+(feature `poem`). The shared `mulac-commanding` crate validates the limit
 and runs one batch through the kernel's command consumer, so commands executed
 over HTTP still record their events without dispatching them. A failed command
 is reported by a UUID error ID and is retried with backoff
@@ -74,7 +74,7 @@ up to six attempts. Exhausted commands remain failed and require operator recove
 
 Mulac also owns `/api/events/run` behavior. `EventingApi` only declares the route
 and delegates to `eventing::prelude::poem::EventingAdapter`
-(feature `poem`). The `eventing` crate validates the limit and
+(feature `poem`). The shared `mulac-eventing` crate validates the limit and
 dispatches one batch through the kernel's event consumer. The projectors and
 the `customer_facing` subscriber stay registered with the kernel in
 `start_mulac`, so the route dispatches to exactly the subscribers registered
@@ -85,7 +85,7 @@ are counted.
 
 Mulac also owns `/api/outbox/run` behavior. `OutboxApi` only declares the route
 and delegates to `outbox::prelude::poem::OutboxAdapter`
-(feature `poem`). The `outbox` crate validates the limit and
+(feature `poem`). The shared `mulac-outbox` crate validates the limit and
 publishes one batch through an outbox consumer that
 `AsyncOutboxService::from_postgres` builds from the pool and
 `CustomerFacingPublisher` (`src/orchestration/customer_facing_publisher.rs`).
@@ -119,9 +119,9 @@ the queue run routes, and does not start processing or read from a broker.
 
 Mulac owns both inbox routes' behavior. `src/orchestration/inbox_api.rs` only
 declares `POST /inbox` and `POST /inbox/run` and delegates to
-`inbox::prelude::poem::InboxAdapter`. The `inbox` crate validates
-requests and runs storage and processing; `AsyncInboxService::from_postgres` builds
-a shared repository and a consumer that only queues commands. Every queue route,
+`inbox::prelude::poem::InboxAdapter`. The shared `mulac-inbox` crate validates
+requests and runs storage and processing; `InboxService::from_postgres` builds
+the recorder and a consumer that only queues commands. Every queue route,
 including `/commands/run` and `/events/run` through `CommandingAdapter` and
 `EventingAdapter`, uses the adapter's
 `RunRequest` and `RunResponse` types, so the OpenAPI schema names are
@@ -228,15 +228,22 @@ for queue in inbox commands events; do
 done
 ```
 
-`POST /api/tmp-import` accepts:
+`POST /api/tmp-import` accepts the new aggregate-shaped command contract. Flat legacy import payloads are rejected. Identifiers, content, and price use the same types as aggregate creation; market, language, and creation time are required. Missing-market and missing-language policy remains tracked in TODO.md. The sourcing exporter must be migrated before resuming deliveries with its previous payload format.
+
+A complete request:
 
 ```json
 {
-  "retailer_code": "ankerau",
-  "title": "USB charger",
-  "price_amount": 1999,
-  "currency": "AUD",
-  "url": "https://example.com/charger"
+  "retailer_code": "AnkerAu",
+  "url": "https://example.com/charger",
+  "identifiers": {"gtin": null, "sku": "A1", "shopify_product_gid": null, "shopify_product_variant_gid": null},
+  "target_market": {"kind": "country", "code": "AU"},
+  "language": "en",
+  "content": {"title": "Charger", "description": "USB charger", "images": []},
+  "price": {"current": {"amount": 1999, "currency": "AUD"}, "previous": null, "scraped_at": "2026-11-01T12:00:00Z"},
+  "availability": null,
+  "item_condition": null,
+  "created_at": "2026-11-01T12:00:00Z"
 }
 ```
 
@@ -249,8 +256,7 @@ queues the command and `/api/commands/run` executes it through
 input returns `400`; inbox storage failures return `500` with `inbox message
 could not be stored`. The generated offer UUID is new for every import:
 identity deduplication, update commands, and receipts are not wired yet.
-Stored records use `OfferCreated.v2` (also reading legacy `OfferCreated.v1`), `OfferTitleChanged.v1`,
-and `OfferPriceChanged.v1`. Existing records in earlier formats are not migrated.
+Stored aggregate history uses `OfferCreatedNextGeneration.v1` and the current individual change events. The retired creation, grouped fact, identifier, localization, price, and scrape event variants and persisted tags are no longer supported. Existing history containing those tags requires migration before loading. Legacy DTOs remain in projection and delivery code.
 
 Other active routes are `/api/health`, `/api/openapi.json`, `/api/docs/`, and
 GraphQL health at `/graphql`, with `/graphql/ide` in debug builds. `make ci`
@@ -303,12 +309,95 @@ Update events carry no sequence, so updates apply in consumer delivery order.
 The PostgreSQL contract tests run with
 `make test-postgres`; in-memory contracts run with `make ci`.
 
+## Next-generation target markets
+
+The next-generation state and creation event use `TargetMarket`:
+`Country { code: CountryCode }` or `Region { code: RegionCode }`. Country codes
+come from the `everyday` crate; region codes use the shared `RegionCode` enum.
+JSON uses `{"kind":"country","code":"HR"}` or
+`{"kind":"region","code":"eu"}`. Legacy region labels are rejected.
+
+## Next-generation offer updates
+
+`RetailerOfferAggregate::update` currently processes GTIN, SKU,
+Shopify product GID and Shopify product variant GID. For each field, `None` to
+`Some` emits an added event, different `Some` values emit a changed event, and
+`Some` to `None` emits a removed event. Equal values emit nothing. Values are
+compared and preserved exactly, including empty strings and whitespace.
+
+The twelve `Offer…Added`, `Offer…Changed` and
+`Offer…Removed` events have separate `.v1` storage records.
+Added events carry the new value; changed events also carry `previous_<field>`;
+removed events carry `removed_<field>`. Each includes the offer ID and
+`updated_at`. Events are ordered by GTIN, SKU, product GID, then variant GID,
+with consecutive sequences. An update with changes replaces the identifiers
+and advances `updated_at`; repeated identical identifiers emit no identifier events.
+
+Target market changes emit `OfferTargetMarketChanged` after identifier events,
+carrying `previous_target_market`, `target_market`, the offer ID and `updated_at`.
+Its storage record is `OfferTargetMarketChanged.v1`. Updates replace the stored
+market; an unchanged market emits no event. Country-to-country and
+country/region transitions use the same comparison.
+
+Language changes emit `OfferLanguageChanged` after target market events,
+carrying `previous_language`, `language`, the offer ID and `updated_at`.
+Its storage record is `OfferLanguageChanged.v1`. The comparison preserves exact
+strings without validation or normalization. An unchanged language emits no
+event; a changed value replaces the stored language.
+
+Title changes use `OfferTitleChanged`; description changes use
+`OfferDescriptionChanged.v1` with the previous and new descriptions. Exact text
+and markup are preserved, including empty strings. These follow language events.
+
+Image updates append URLs absent from the current list, then remove URLs missing
+from the incoming list. `OfferImageAdded` retains its existing payload and records
+the append position before removals. `OfferImageRemoved.v1` carries the image URL
+and `updated_at`; it removes all occurrences of that URL. Comparisons use exact
+strings without URL filtering. Surviving images retain their order and existing
+duplicates; new URLs are appended once in incoming order. Reordering incoming
+URLs alone emits no image events.
+
+Each update emits one pricing event after the image events. Pricing compares the
+incoming observation with `price.last`, checking `scraped_at` first:
+
+- An older scrape emits `OfferHistoricPriceAdded.v1`, appends the incoming
+  observation to history and leaves `last` unchanged.
+- An equal or newer scrape with a different `current` or `previous` value emits
+  `OfferPriceChangedNextGeneration.v1`. Comparisons include amounts, currencies
+  and the presence of a previous price.
+- Otherwise, it emits `OfferPriceConfirmed.v1`, including when the entire
+  observation is identical.
+
+Changed and confirmed observations replace `last` and append the previous `last`
+to history. History retains processing order without sorting or deduplication.
+Each event includes the offer ID and `updated_at`. Changed and confirmed events
+carry `price` with `current`, `previous` and `scraped_at`; changed events also
+carry `previous_price`. Historic events carry the observation in `historic_price`.
+The existing legacy price-change event keeps its original payload and record.
+
+Availability and item condition each emit added (`None` to `Some`), changed
+(different `Some` values), or removed (`Some` to `None`) events. Equal values emit
+no event for that field. Availability events follow pricing, then item-condition
+events. The corresponding state fields are replaced with the incoming values.
+Added events carry the new value; changed events carry both `previous_<field>`
+and the new value; removed events carry `removed_<field>`. Each includes the
+offer ID and `updated_at`, has a `new` constructor, and uses a separate `.v1`
+storage record. Changed variants are `OfferAvailabilityChanged`
+and `OfferItemConditionChanged`; the legacy changed events retain
+their existing payloads. Added and removed variants use `OfferAvailability…`
+and `OfferItemCondition…` without a generation suffix. Comparisons preserve
+`Other` strings exactly.
+
+The next-generation aggregate is not yet connected to active import processing.
+
 ## Requirements and startup
 
 Use the repository's pinned Rust toolchain, GNU Make, libpq, and PostgreSQL 16
-or later. Cargo also needs the configured `null-labs-hq` registry and the pinned
-Mulac Git dependency (`0.3.0`). No separate Testimony process, object storage, or retailer sourcing process is
-required. A reachable customer-facing service is needed only when running
+or later. Cargo also needs the configured `null-labs-hq` registry for other packages
+and a sibling Mulac checkout at `../mulac` relative to the monorepo root. See
+[ADR 45](../../docs/adr/0045-local-mulac-path-dependencies.md) for the baseline
+revision. No separate Testimony process, object storage, or retailer sourcing
+process is required. A reachable customer-facing service is needed only when running
 outbox delivery.
 
 ```sh
@@ -566,7 +655,7 @@ them. New creation history uses `OfferCreated.v5` with v1–v4 readers retained.
 Localization-only and identifier-only changes have their own domain events.
 
 Offers preserves each Testimony revision in Mulac event and outbox metadata;
-legacy metadata can omit it. Published Mulac 0.5.0 provides the optional-sequence
+legacy metadata can omit it. The local Mulac baseline provides the optional-sequence
 API. This does not change HTTP inbox metadata or add
 source-order guarantees. See the [verification walkthrough](../../docs/offer-facts-walkthrough.md)
 and ADRs [27](../../docs/adr/0027-offer-revision-metadata.md),
@@ -678,3 +767,5 @@ not reinterpreted. Deploy compatible readers before new producers and pause
 projection writers during the regional-code migrations (ADR 40). Source exports
 now write v9, Offers creation v10 and localization changes v2; old immutable
 versions retain their original readers and encodings.
+
+Active Rust types and enum variants no longer carry the `NextGeneration` suffix. Historical projection and delivery DTOs use a `Historical` prefix where needed to avoid name collisions. Persisted event tags and routing identifiers retain their existing `NextGeneration` spelling so this naming cleanup does not change stored history or delivery contracts.

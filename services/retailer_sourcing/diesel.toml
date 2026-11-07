@@ -17,6 +17,7 @@ filter = { only_tables = [
     "offer_details_extracted",
     "offer_details_normalized",
     "offer_details_structuralized",
+    "offer_export",
 ] }
 
 [migrations_directory]

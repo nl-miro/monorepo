@@ -1,13 +1,13 @@
 # Export conversion fixtures
 
-Small synthetic examples preserve the structuralized document shapes emitted by
-Anker AU, Ugreen CA and Minisforum US. They cover variant URLs, unrelated fields,
-optional prices and unavailable stock without relying on downloaded retailer data.
+Small synthetic structuralized documents for Anker AU, Ugreen CA and Minisforum
+US cover variant URLs, optional prices and unavailable stock.
 
-`import_payload.json` is the expected first Anker export payload. Sourcing checks
-its serialized result against this fixture; offers deserializes the same fixture
-through its actual `ImportOfferDetailsCommand`. Run both services' `make ci` checks
-when changing this contract.
+All import fixtures use the current unversioned export format:
 
-`import_payload_v2.json` adds the first Anker variation's image array. Both
-fixtures are consumed by offers and sourcing tests. The v1 fixture stays unchanged.
+- `import_payload.json`: the exact first Anker export, with images and optional facts.
+- `import_with_identifiers.json`: all five identifiers, with exact source values.
+- `import_with_facts.json`: comparison price, availability, item condition and description.
+
+Tests compare serialized exports directly with these fixtures. Run
+`make -C services/retailer_sourcing ci` when changing this contract.

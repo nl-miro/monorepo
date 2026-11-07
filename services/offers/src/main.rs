@@ -45,14 +45,14 @@ use crate::read_offers_identifiers::{
     repository::PostgresRetailerOfferIdentifiersRepository,
 };
 use crate::reporting::{DEFAULT_REPORTING_TOKEN, ReportingApi};
-use commanding::prelude::AsyncCommandingService;
-use commanding::prelude::poem::CommandingAdapter;
-use eventing::prelude::AsyncEventingService;
-use eventing::prelude::poem::EventingAdapter;
-use inbox::prelude::AsyncInboxService;
-use inbox::prelude::poem::InboxAdapter;
-use outbox::prelude::AsyncOutboxService;
-use outbox::prelude::poem::OutboxAdapter;
+use ::commanding::prelude::CommandingService;
+use ::commanding::prelude::poem::CommandingAdapter;
+use ::eventing::prelude::EventingService;
+use ::eventing::prelude::poem::EventingAdapter;
+use ::inbox::prelude::InboxService;
+use ::inbox::prelude::poem::InboxAdapter;
+use ::outbox::prelude::OutboxService;
+use ::outbox::prelude::poem::OutboxAdapter;
 
 use crate::subscribers::customer_facing::CustomerFacingSubscriber;
 
@@ -63,12 +63,6 @@ use std::time::Duration;
 
 #[tokio::main]
 async fn main() -> io::Result<()> {
-    tracing_subscriber::fmt()
-        .with_env_filter(
-            tracing_subscriber::EnvFilter::try_from_default_env().unwrap_or_else(|_| "warn".into()),
-        )
-        .with_writer(std::io::stderr)
-        .init();
     let port = parse_port(env::var("PORT"))?;
     // Checked before connecting; customer-facing may be down at startup.
     let publisher = CustomerFacingPublisher::from_env(tokio::runtime::Handle::current())?;
@@ -78,7 +72,7 @@ async fn main() -> io::Result<()> {
     // Boot the in-process kernel and register all command handlers and event subscribers.
     let (kernel, mut state) = start_mulac(pool.clone()).map_err(err_kernel_could_not_start)?;
     if let Some(publisher) = publisher {
-        state.outbox = OutboxAdapter::new(AsyncOutboxService::from_postgres(
+        state.outbox = OutboxAdapter::new(OutboxService::from_postgres(
             pool.clone(),
             Arc::new(publisher),
         ));
@@ -227,10 +221,10 @@ pub fn start_mulac(pool: DbPool) -> Result<(Arc<PersistentKernelHandle>, AppStat
         )
         .start_persistent(pool.clone(), 1)?;
 
-    let inbox = InboxAdapter::new(AsyncInboxService::from_postgres(pool.clone()));
-    let commanding = CommandingAdapter::new(AsyncCommandingService::new(kernel.command_consumer()));
+    let inbox = InboxAdapter::new(InboxService::from_postgres(pool.clone()));
+    let commanding = CommandingAdapter::new(CommandingService::new(kernel.command_consumer()));
     // The kernel's consumer dispatches to the subscribers registered above.
-    let events = EventingAdapter::new(AsyncEventingService::new(kernel.event_consumer()));
+    let events = EventingAdapter::new(EventingService::new(kernel.event_consumer()));
     Ok((
         Arc::new(kernel),
         AppState {
@@ -353,33 +347,6 @@ fn shutdown_signal() -> io::Result<impl Future<Output = ()> + Send + 'static> {
 
 #[cfg(test)]
 mod tests {
-    pub(crate) fn assert_error_id(error: &str) {
-        let id = uuid::Uuid::parse_str(error).expect("error response must contain only a UUID");
-        assert_eq!(id.get_version_num(), 7);
-    }
-
-    pub(crate) fn assert_batch_errors(body: &serde_json::Value, count: usize) {
-        assert!(body["processed"].is_null(), "{body}");
-        let errors = body["errors"].as_array().expect("batch errors array");
-        assert_eq!(errors.len(), count, "{body}");
-        let mut ids = std::collections::HashSet::new();
-        for error in errors {
-            let error = error.as_str().expect("error ID string");
-            assert_error_id(error);
-            assert!(ids.insert(error), "each failure must have its own ID");
-        }
-    }
-
-    pub(crate) async fn assert_error_response(response: poem::test::TestResponse) {
-        let body = response.0.into_body().into_string().await.unwrap();
-        assert_error_id(&body);
-    }
-
-    pub(crate) async fn assert_batch_response(response: poem::test::TestResponse, count: usize) {
-        let body = response.json().await.value().deserialize();
-        assert_batch_errors(&body, count);
-    }
-
     use std::{env::VarError, io::ErrorKind};
 
     use poem::{http::StatusCode, test::TestClient};
@@ -559,10 +526,18 @@ mod tests {
     async fn tmp_import_reports_unavailable_storage() {
         let response = TestClient::new(app(test_pool()))
             .post("/api/tmp-import")
-            .body_json(&json!({"retailer_code":"ankerau", "title":"Charger", "price_amount":1999, "currency":"AUD", "url":"https://example.com/charger"}))
-            .send().await;
+            .body_json(
+                &serde_json::from_str::<Value>(include_str!(
+                    "../tests/fixtures/import_offer_details.json"
+                ))
+                .unwrap(),
+            )
+            .send()
+            .await;
         response.assert_status(StatusCode::INTERNAL_SERVER_ERROR);
-        crate::tests::assert_error_response(response).await;
+        response
+            .assert_text("inbox message could not be stored")
+            .await;
     }
 
     #[test]

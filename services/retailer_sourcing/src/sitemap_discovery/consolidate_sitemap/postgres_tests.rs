@@ -1,6 +1,7 @@
 use crate::platform::db::Json;
 use crate::platform::object_storage::{
-    CONSOLIDATED_SITEMAPS_BUCKET, ObjectStorage, ObjectStorageMetadata, PROCESSED_SITEMAPS_BUCKET,
+    CONSOLIDATED_SITEMAPS_BUCKET, ObjectStorageMetadata, ObjectStorageRepository,
+    PROCESSED_SITEMAPS_BUCKET,
 };
 use crate::platform::test_objects::Server;
 use diesel::connection::SimpleConnection;
@@ -44,7 +45,10 @@ fn seed_processed(conn: &mut PgConnection) -> (Uuid, Uuid, Value) {
     (id, retrieval_id, document)
 }
 
-fn seed_object_processed(conn: &mut PgConnection, objects: &ObjectStorage) -> (Uuid, Uuid, Value) {
+fn seed_object_processed(
+    conn: &mut PgConnection,
+    objects: &ObjectStorageRepository,
+) -> (Uuid, Uuid, Value) {
     let id = Uuid::now_v7();
     let retrieval_id = Uuid::now_v7();
     let document = serde_json::to_value(SitemapDocument::default()).unwrap();
@@ -59,7 +63,7 @@ fn seed_object_processed(conn: &mut PgConnection, objects: &ObjectStorage) -> (U
     (id, retrieval_id, document)
 }
 
-pub(super) fn verify_round_trip(db: &Database, objects: ObjectStorage) {
+pub(super) fn verify_round_trip(db: &Database, objects: ObjectStorageRepository) {
     let store = PgStore::new(db.pool.clone(), objects.clone());
     let mut conn = db.pool.get().unwrap();
     let (id, retrieval_id, document) = seed_object_processed(&mut conn, &objects);

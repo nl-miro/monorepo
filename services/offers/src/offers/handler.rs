@@ -3,8 +3,6 @@ use crate::offers::command::ImportOfferDetailsCommand;
 use crate::offers::event::{RetailerOfferEvent, SequencedOfferEvent};
 use crate::offers::retailer_offer_id::RetailerOfferId;
 use crate::read_offers_identifiers::entity::RetailerOfferIdentifiers;
-use bodul_shared::prelude::RetailerCode;
-use money::Money;
 use testimony::prelude::{
     EventPublisher, EventSourcedRepository, EventStore, NoOpEventPublisher, RepositoryError,
 };
@@ -32,36 +30,11 @@ where
         }
     }
 
-    pub fn create_offer(
-        &self,
-        command: ImportOfferDetailsCommand,
-    ) -> Result<Vec<RetailerOfferEvent>, RepositoryError> {
-        self.process_offer(command)
-            .map(|events| events.into_iter().map(|event| event.event).collect())
-    }
-
     fn process_offer(
         &self,
         command: ImportOfferDetailsCommand,
     ) -> Result<Vec<SequencedOfferEvent>, RepositoryError> {
-        let observation = super::command::OfferObservation {
-            was_price: command.was_price,
-            availability: command.availability,
-            item_condition: command.item_condition,
-            content: command.content,
-            identifiers: retailer_sauce::identifier::ProductIdentifiers {
-                gtin: command.gtin,
-                sku: command.sku,
-                external_identifiers: command.external_identifiers,
-            },
-            scraped_at: command.scraped_at,
-            localization: command
-                .localization
-                .map(|value| value.for_write())
-                .transpose()
-                .map_err(err_update)?,
-        };
-        observation.guard().map_err(err_update)?;
+        command.guard().map_err(err_update)?;
         let exists = self
             .identifiers_repository
             .find(command.retailer_code, &command.url)
@@ -70,46 +43,31 @@ where
         if let Some(read_row) = exists {
             let id = read_row.id;
 
-            self.update_offer(
-                id,
-                command.title,
-                command.price,
-                command.images,
-                observation,
-            )
+            self.update_offer(id, command)
         } else {
-            self.create_offer_event(
-                command.retailer_code,
-                command.title,
-                command.price,
-                command.url,
-                command.images,
-                observation,
-            )
+            self.create_offer(command)
         }
     }
 
-    fn create_offer_event(
+    fn create_offer(
         &self,
-        retailer_code: RetailerCode,
-        title: String,
-        price: Money,
-        url: String,
-        images: Vec<String>,
-        observation: super::command::OfferObservation,
+        command: ImportOfferDetailsCommand,
     ) -> Result<Vec<SequencedOfferEvent>, RepositoryError> {
         let id = RetailerOfferId::new(Uuid::now_v7().to_string());
 
-        let mut aggregate = RetailerOfferAggregate::create_with_observation(
+        let mut aggregate = RetailerOfferAggregate::create(
             id,
-            retailer_code,
-            title,
-            price,
-            url,
-            images,
-            observation,
-        )
-        .map_err(err_update)?;
+            command.retailer_code,
+            command.url,
+            command.identifiers,
+            command.target_market,
+            command.language,
+            command.content,
+            command.price,
+            command.availability,
+            command.item_condition,
+            command.created_at,
+        );
         let events = aggregate
             .uncommitted_events
             .iter()
@@ -127,18 +85,24 @@ where
     fn update_offer(
         &self,
         id: RetailerOfferId,
-        title: String,
-        price: Money,
-        images: Vec<String>,
-        observation: super::command::OfferObservation,
+        command: ImportOfferDetailsCommand,
     ) -> Result<Vec<SequencedOfferEvent>, RepositoryError> {
         let mut aggregate = self
             .repository
             .load(id.clone())?
             .ok_or_else(|| err_update(format!("offer {id} not found")))?;
-        aggregate
-            .update_with_observation(title, price, images, observation)
-            .map_err(err_update)?;
+
+        aggregate.update(
+            command.identifiers,
+            command.target_market,
+            command.language,
+            command.content,
+            command.price,
+            command.availability,
+            command.item_condition,
+            command.created_at,
+        );
+
         let events = aggregate
             .uncommitted_events
             .iter()
@@ -147,6 +111,7 @@ where
                 sequence: envelope.sequence(),
             })
             .collect();
+
         self.repository.save(&mut aggregate)?;
 
         Ok(events)

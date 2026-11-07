@@ -13,18 +13,20 @@ use super::handler::Store;
 use super::store::PgStore;
 use crate::platform::db::Json;
 use crate::platform::object_storage::{
-    OFFER_EXPORT_BUCKET, ObjectStorage, STRUCTURALIZED_OFFERS_BUCKET,
+    OFFER_EXPORT_BUCKET, ObjectStorageRepository, STRUCTURALIZED_OFFERS_BUCKET,
 };
 use crate::platform::test_db::{Database, json_query};
 use crate::platform::test_objects::Server;
 
 const MIGRATIONS: EmbeddedMigrations = embed_migrations!("migrations");
 
-fn stored_source(objects: &ObjectStorage) -> ExportSource {
+fn stored_source(objects: &ObjectStorageRepository) -> ExportSource {
     let mut source = source();
+    let scraped_at = source.storage.scraped_at;
     source.storage = objects
         .create_offer(STRUCTURALIZED_OFFERS_BUCKET, ANKER)
         .unwrap();
+    source.storage.scraped_at = scraped_at;
     source
 }
 
@@ -35,10 +37,10 @@ fn rows(db: &Database) -> serde_json::Value {
     )
 }
 
-pub(super) fn verify_round_trip(db: &Database, objects: ObjectStorage) {
+pub(super) fn verify_round_trip(db: &Database, objects: ObjectStorageRepository) {
     let source = stored_source(&objects);
     let store = PgStore::new(db.pool.clone(), objects);
-    let prepared = store.prepare(source.clone(), 1).unwrap();
+    let prepared = store.prepare(source.clone()).unwrap();
     let id = prepared.snapshot.id;
     let snapshot = prepared.snapshot.clone();
     assert!(store.load(id).unwrap().is_none());
@@ -47,7 +49,7 @@ pub(super) fn verify_round_trip(db: &Database, objects: ObjectStorage) {
     assert_eq!(completed, snapshot);
     assert_eq!(store.load(id).unwrap(), Some(completed.clone()));
     assert_eq!(
-        store.complete(store.prepare(source, 1).unwrap()).unwrap(),
+        store.complete(store.prepare(source).unwrap()).unwrap(),
         completed
     );
     assert!(store.load(Uuid::now_v7()).unwrap().is_none());
@@ -77,10 +79,15 @@ fn postgres_export_round_trip_and_repeat_keep_snapshot_and_entry_ids() {
 #[ignore = "requires DATABASE_URL_TEST; run make test-postgres"]
 fn postgres_upload_then_failed_completion_recovers_exact_bytes_after_restart() {
     let db = Database::new();
+    let columns = json_query(
+        &mut db.pool.get().unwrap(),
+        "SELECT to_jsonb(count(*)) AS value FROM information_schema.columns WHERE table_schema = current_schema() AND table_name = 'offer_export' AND column_name = 'schema_version'",
+    );
+    assert_eq!(columns, json!(0));
     let server = Server::new();
     let source = stored_source(&server.client());
     let store = PgStore::new(db.pool.clone(), server.client());
-    let prepared = store.prepare(source.clone(), 1).unwrap();
+    let prepared = store.prepare(source.clone()).unwrap();
     let expected = prepared.snapshot.clone();
     let pending = rows(&db);
     db.pool.get().unwrap().batch_execute(
@@ -95,7 +102,7 @@ fn postgres_upload_then_failed_completion_recovers_exact_bytes_after_restart() {
         .unwrap();
     drop(store);
     let restarted = PgStore::new(db.pool.clone(), server.client());
-    let retry = restarted.prepare(source, 1).unwrap();
+    let retry = restarted.prepare(source).unwrap();
     assert_eq!(retry.snapshot, expected);
     assert_eq!(restarted.complete(retry).unwrap(), expected);
     let data = server.data.lock().unwrap();
@@ -122,9 +129,10 @@ fn postgres_source_replacement_and_concurrent_preparation_do_not_change_pinned_e
     let server = Server::new();
     let objects = server.client();
     let source = stored_source(&objects);
-    let replacement = objects
+    let mut replacement = objects
         .create_offer(STRUCTURALIZED_OFFERS_BUCKET, r#"{"variations":[]}"#)
         .unwrap();
+    replacement.scraped_at = source.storage.scraped_at;
     diesel::sql_query(
         "INSERT INTO offer_details_structuralized (id,offer_id,storage) VALUES ($1,$2,$3)",
     )
@@ -148,7 +156,7 @@ fn postgres_source_replacement_and_concurrent_preparation_do_not_change_pinned_e
                 let store = PgStore::new(db.pool.clone(), objects.clone());
                 scope.spawn(move || {
                     barrier.wait();
-                    let prepared = store.prepare(source, 1).unwrap();
+                    let prepared = store.prepare(source).unwrap();
                     prepared_barrier.wait();
                     store.complete(prepared).unwrap()
                 })
@@ -176,9 +184,7 @@ fn postgres_source_replacement_and_concurrent_preparation_do_not_change_pinned_e
     let mut new_source = source;
     new_source.storage = replacement;
     let store = PgStore::new(db.pool.clone(), objects);
-    let newer = store
-        .complete(store.prepare(new_source, 1).unwrap())
-        .unwrap();
+    let newer = store.complete(store.prepare(new_source).unwrap()).unwrap();
     assert_ne!(newer.id, completed[0].id);
     assert!(newer.entries.is_empty());
     assert_eq!(rows(&db).as_array().unwrap().len(), 2);
@@ -193,9 +199,9 @@ fn postgres_failures_preserve_preparation_and_reject_bad_sources() {
     let source = stored_source(&server.client());
     let mut invalid = source.clone();
     invalid.storage.content_size += 1;
-    assert!(store.prepare(invalid, 1).is_err());
+    assert!(store.prepare(invalid).is_err());
     assert_eq!(rows(&db), json!([]));
-    let prepared = store.prepare(source.clone(), 1).unwrap();
+    let prepared = store.prepare(source.clone()).unwrap();
     let pending = rows(&db);
     {
         let mut data = server.data.lock().unwrap();
@@ -207,10 +213,10 @@ fn postgres_failures_preserve_preparation_and_reject_bad_sources() {
     let mut conflicting = source.clone();
     conflicting.url.push_str("?other");
     assert!(matches!(
-        store.prepare(conflicting, 1),
+        store.prepare(conflicting),
         Err(super::store::StoreError::SourceConflict)
     ));
-    let complete = store.complete(store.prepare(source, 1).unwrap()).unwrap();
+    let complete = store.complete(store.prepare(source).unwrap()).unwrap();
     server.data.lock().unwrap().get_response = Some((404, "{}".into()));
     assert!(store.load(complete.id).is_err());
 }
@@ -236,8 +242,8 @@ fn postgres_export_migration_is_additive_and_reversible() {
     assert_eq!(snapshot(&mut connection), before);
     let error = connection
         .batch_execute(
-            "INSERT INTO offer_export(id,offer_id,source_object_id,schema_version,source,stats)
-         VALUES(gen_random_uuid(),gen_random_uuid(),gen_random_uuid(),1,'{}','{}')",
+            "INSERT INTO offer_export(id,offer_id,source_object_id,source,stats)
+         VALUES(gen_random_uuid(),gen_random_uuid(),gen_random_uuid(),'{}','{}')",
         )
         .unwrap_err();
     assert!(matches!(
@@ -283,7 +289,7 @@ fn postgres_manual_queue_batches_prepare_export_without_downstream_services() {
         object_storage: server.client(),
     };
     let event = OfferWasStructuralized {
-        scraped_at: None,
+        scraped_at: source.storage.scraped_at,
         offer_id: source.offer_id,
         consolidated_sitemap_id: source.consolidated_sitemap_id,
         retailer_code: source.retailer_code,
@@ -339,42 +345,31 @@ fn postgres_manual_queue_batches_prepare_export_without_downstream_services() {
 
 #[test]
 #[ignore = "requires DATABASE_URL_TEST; run make test-postgres"]
-fn versions_coexist_without_rewriting_pending_or_completed_v1() {
+fn retries_preserve_bytes_and_reject_corrupt_metadata() {
     let db = Database::new();
     let server = Server::new();
     let source = stored_source(&server.client());
     let store = PgStore::new(db.pool.clone(), server.client());
-    let old = store.prepare(source.clone(), 1).unwrap();
-    let old_body = old.body.clone();
-    let old_snapshot = old.snapshot.clone();
-    let new = store.prepare(source.clone(), 2).unwrap();
-    assert_ne!(old_snapshot.id, new.snapshot.id);
-    assert_ne!(old_snapshot.entries[0].id, new.snapshot.entries[0].id);
+    let prepared = store.prepare(source.clone()).unwrap();
+    let body = prepared.body.clone();
+    let snapshot = prepared.snapshot.clone();
     assert_eq!(
-        new.snapshot.entries[0].payload.images,
-        Some(vec!["https://example.com/a.png".into()])
+        snapshot.entries[0].payload.images,
+        vec!["https://example.com/a.png".to_string()]
     );
-    assert_eq!(store.prepare(source.clone(), 1).unwrap().body, old_body);
-    let new = store.complete(new).unwrap();
-    assert_eq!(store.complete(old).unwrap(), old_snapshot);
-    let retry = store.prepare(source.clone(), 1).unwrap();
-    assert_eq!(retry.body, old_body);
-    assert_eq!(retry.snapshot, old_snapshot);
-    assert!(
-        serde_json::to_value(&retry.snapshot.entries[0].payload)
-            .unwrap()
-            .get("images")
-            .is_none()
-    );
-    assert_eq!(store.load(new.id).unwrap(), Some(new));
-    assert!(store.prepare(source, 99).is_err());
-    diesel::sql_query("UPDATE offer_export SET schema_version = 3 WHERE id = $1")
-        .bind::<SqlUuid, _>(old_snapshot.id)
-        .execute(&mut db.pool.get().unwrap())
-        .unwrap();
-    assert!(store.load(old_snapshot.id).is_err());
+    assert_eq!(store.prepare(source.clone()).unwrap().body, body);
+    assert_eq!(store.complete(prepared).unwrap(), snapshot);
+    assert_eq!(store.prepare(source.clone()).unwrap().body, body);
+    assert_eq!(store.load(snapshot.id).unwrap(), Some(snapshot.clone()));
+    diesel::sql_query(
+        "UPDATE offer_export SET stats = '{\"entries\":999,\"exclusions\":0}' WHERE id = $1",
+    )
+    .bind::<SqlUuid, _>(snapshot.id)
+    .execute(&mut db.pool.get().unwrap())
+    .unwrap();
+    assert!(store.load(snapshot.id).is_err());
 }
 
-pub(super) fn verify_current_facts_round_trip(db: &Database, objects: ObjectStorage) {
+pub(super) fn verify_current_facts_round_trip(db: &Database, objects: ObjectStorageRepository) {
     facts::verify_current_round_trip(db, objects);
 }

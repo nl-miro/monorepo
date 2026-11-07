@@ -96,9 +96,10 @@ through events.
 
 ## Running it
 
-The services workspace resolves Mulac 0.5.0 from the `null-labs-hq` registry
-configured in the repository. No sibling checkout is needed. The committed
-lockfile records package checksums. See [ADR 42](../../docs/adr/0042-published-mulac-crates.md).
+The services workspace resolves Mulac through path dependencies to a sibling
+checkout at `../mulac` relative to the monorepo root. Keep its `kernel` and `libs`
+folders available for builds. See [ADR 45](../../docs/adr/0045-local-mulac-path-dependencies.md)
+for the baseline revision and CI setup.
 
 The service needs Postgres for the workflow; without `DATABASE_URL` it serves
 HTTP only and the routes below return `503`. On startup it applies pending
@@ -656,7 +657,7 @@ No latest-snapshot fallback is performed.
 
 Each priced variation becomes an `ImportOfferDetails`-compatible payload with
 retailer code, title, exact variant URL and integer minor-unit price/currency.
-Schema v2 also carries filtered variation images; see the version contract below.
+Each payload carries filtered variation images.
 Missing prices are recorded under `exclusions` with the variation index, URL
 and `missing_price` reason. Unavailable stock is included when priced. Blank
 titles, malformed money, negative prices, invalid HTTP(S) URLs and repeated
@@ -664,7 +665,7 @@ exact variation URLs fail preparation rather than producing ambiguous exports.
 Empty or wholly excluded documents produce a completed export with no entries.
 
 Migration `2026-10-24-000013_offer_export` adds only the export table. Its unique
-key is `(offer_id, source_object_id, schema_version)`. A preparation persists
+key is `(offer_id, source_object_id)`. A preparation persists
 stable snapshot and entry UUIDs, typed source/stats metadata, and the exact
 pending body before upload. `status = 'prepared'` rows retain `prepared_body`
 when upload or completion fails. The next command attempt resumes those same
@@ -690,10 +691,18 @@ See [ADR 19](../../docs/adr/0019-immutable-offer-export-preparation.md).
 ## Recording export messages
 
 `offer_delivery::record_export_messages` listens to `OfferExportWasPrepared`.
-It loads the completed snapshot the event names through `ExportStore::load`.
+Its listener receives separate `OfferExportRepository` and `OutboxRepository` traits.
+`PgOfferExportRepository` looks up completed metadata in PostgreSQL's
+`offer_export` table and fetches the immutable body through the object-storage
+client. `PgOutboxRepository` holds a
+database pool and records the whole message batch through the existing outbox
+recording function. Export loading happens before and outside the outbox
+transaction; event acknowledgement remains separate from recording.
+
+The listener loads the completed snapshot the event names through `OfferExportRepository::load`.
 It never uses the latest structuralized document or a pending preparation.
 The listener checks that the snapshot and event agree on export UUID, source
-and schema version `1`. It then records one row in `outbox_entries` per
+and validates the payload. It then records one row in `outbox_entries` per
 export entry, all in one transaction:
 
 | Column / metadata                                           | Value                                               |
@@ -772,13 +781,11 @@ export from a fresh structuralization. The stable entry UUIDs keep this safe.
 That inbox test shows HTTP acceptance only. Offers' import still needs its
 own inbox, command and event runs.
 
-## Offer images and export versions
+## Offer images
 
-New export commands explicitly use `schema_version: 2`; already queued commands
-without it retain v1. V1 snapshots and their outgoing messages omit `images`.
-V2 includes an ordered `images` array, including `[]`. Both versions may coexist
-for the same source, and pending bytes, snapshot IDs and entry message IDs are
-never rewritten during retries. Unknown or inconsistent versions fail visibly.
+Exports include an ordered images array, including an empty array when no valid
+images are present. Preparation is unique per offer and source object.
+Retries preserve the exact bytes and stable snapshot and entry IDs.
 
 Images preserve exact source strings and order. Invalid absolute HTTP(S) URLs
 are skipped; URLs with credentials, padding, control characters or more than
@@ -801,7 +808,7 @@ queue retry procedure. This change does not reset queue statuses.
 ## Scrape time
 
 The successful download instant travels with immutable artifact references through
-v3 and newer exports to `OfferCreated` and `OfferScrapedAtUpdated`. Old imports/events retain
+exports to `OfferCreated` and `OfferScrapedAtUpdated`. Old imports/events retain
 unknown time. Newer times advance the aggregate and both projections even when
 content is unchanged; absent, equal and older times never erase or regress it.
 Customer-facing returns nullable `scraped_at` (REST) and `scrapedAt` (GraphQL),
@@ -810,16 +817,12 @@ for provenance, compatibility and deployment order.
 
 ## Localization, identifiers and revisions
 
-New sourcing exports use schema v5: v3 added scrape time, v4 added a localization
-observation, and v5 adds GTIN, SKU and the three Shopify identifiers. Prepared
-v1–v4 snapshots keep their original payload shapes and IDs. Missing localization
-means no observation; an explicit object replaces both facts, including unknowns.
-Missing/null identifiers retain known values; supplied fields enrich or correct
-them. New creation history uses `OfferCreated.v5` with v1–v4 readers retained.
-Localization-only and identifier-only changes have their own domain events.
+Sourcing exports include scrape time, required target market and language, and
+a grouped identifiers object. The format is unversioned.
+
 
 Offers preserves each Testimony revision in Mulac event and outbox metadata;
-legacy metadata can omit it. Published Mulac 0.5.0 provides the optional-sequence
+legacy metadata can omit it. The local Mulac baseline provides the optional-sequence
 API. This does not change HTTP inbox metadata or add
 source-order guarantees. See the [verification walkthrough](../../docs/offer-facts-walkthrough.md)
 and ADRs [27](../../docs/adr/0027-offer-revision-metadata.md),
@@ -828,11 +831,9 @@ and ADRs [27](../../docs/adr/0027-offer-revision-metadata.md),
 
 ### Comparison price, availability, condition and descriptions
 
-New export commands select schema v9. Readers and immutable preparation support
-v1–v9: v6 adds same-variant `was_price`, v7 adds `availability` and
-`item_condition`, v8 adds `content: {description}`, and v9 uses canonical regional codes. Old pinned commands keep
-their requested version and serialization; retries do not regenerate completed
-snapshots or delivery identities.
+Exports use one unversioned format, with images, scrape time, identifiers,
+comparison price, availability, item condition, content and regional market codes.
+Retries preserve completed snapshots and delivery identities.
 
 Each implemented structuralizer emits these fields. Facts are source-backed:
 a purchase flag is `available`/`unavailable`, and explicit inventory evidence is
@@ -841,13 +842,9 @@ is never assumed new. Only a higher comparison price in the payable currency
 is carried; current-price selection stays unchanged. Description carries the
 existing normalized primary product description, with exact text and markup.
 
-Legacy artifacts omitting fields produce omitted observations. Explicit null
-pricing/status and `{description:null}` survive conversion as clears. Reject
-malformed facts before saving a prepared export. Keep titles and images flat,
-and exclude variants lacking a payable price as before. Deploy downstream
-readers and migrations before enabling the v9 writer. See
-[ADRs 34–36](../../docs/adr/README.md) and the
-[verification record](../../docs/plans/24-27-offer-facts-verification.md).
+Missing or null optional facts become null output values. Malformed facts are
+rejected before saving a prepared export. Content contains the title and optional
+description; images remain a root array. Variants lacking a payable price are excluded.
 
 Command and event counts from `/api/reporting/entry-statuses` include only entries
 whose current `scheduled_at` falls within today in UTC (midnight inclusive, next
@@ -887,12 +884,18 @@ Set `DATABASE_URL_TEST` as for `make test-postgres`.
 ### Regional market codes
 
 European Union target markets now use `{"kind":"region","code":"eu"}`.
-Historical labels remain readable; exact `European Union` labels canonicalize
-at current read/write boundaries. Countries and other historical labels are
-not reinterpreted. Deploy compatible readers before new producers and pause
-projection writers during the regional-code migrations (ADR 40). Source exports
-now write v9, Offers creation v10 and localization changes v2; old immutable
-versions retain their original readers and encodings.
+Region labels are rejected; target markets use country or region codes.
+Source exports have no schema-version field.
+
+Export payloads require `scraped_at`. Export preparation rejects a source without scrape time, and every entry retains that exact source timestamp. `target_market` and `language` are required root fields; there is no `localization` wrapper. Export preparation rejects priced variations without either field.
+
+`OfferImport.identifiers` is a required `RetailerIdentifiersNextGeneration` object holding optional `gtin`, `sku`, `shopify_product_gid`, `shopify_product_variation_gid`, and `shopify_handle` fields. `was_price`, `availability`, and `item_condition` are optional values: omitted and null input both become `None`, serialized as null. Export conversion retains these values directly from the structuralized source.
+
+Export content uses the local `ContentNextGeneration` type: `{"title":"USB charger","description":null}`. `OfferImport.content` is required; the title lives inside this object, and description is optional. Conversion preserves source description text exactly, including empty strings.
+
+`OfferImport.images` is a required array, including `[]` when no images remain.
+Missing, null and malformed arrays are rejected when reading export payloads.
+Structuralized sources with omitted images still convert to an empty array.
 
 Offer downloads rotate through direct access and the hardcoded `OFFER_PROXIES`
 list in `src/platform/http.rs`, initially `http://10.1.0.102:8888`.

@@ -1,11 +1,12 @@
+pub(crate) use super::repository::{
+    OfferExportRepository, OfferExportRepositoryError, PgOfferExportRepository,
+};
 use super::{handler, reacts_to, store};
 use crate::platform::{Platform, bus::Bus};
 
-pub use super::{
-    entity::OfferExport,
-    event::OfferExportWasPrepared,
-    store::{PgStore, StoreError},
-};
+#[cfg(test)]
+pub use super::entity::OfferExport;
+pub use super::event::OfferExportWasPrepared;
 
 pub fn register(bus: &mut Bus, platform: &Platform) {
     let store = store::PgStore::new(platform.db.clone(), platform.object_storage.clone());
@@ -18,46 +19,48 @@ pub fn register(bus: &mut Bus, platform: &Platform) {
 pub(crate) mod testing {
     pub(crate) use super::super::conversion::tests::{ANKER, source};
     pub use super::super::entity::{
-        ExclusionReason, ExportEntry, ExportExclusion, ExportSource, OfferImport,
+        ContentNextGeneration, ExclusionReason, ExportEntry, ExportExclusion, ExportSource,
+        OfferImport,
     };
     use super::super::handler::Store;
+    use super::super::store::PgStore;
     pub(crate) use super::super::test_facts::{
         assert_payloads as assert_fact_payloads, document as fact_document,
     };
-    use super::{OfferExport, OfferExportWasPrepared, PgStore};
+    use super::{OfferExport, OfferExportWasPrepared};
     use crate::platform::db::DbPool;
-    use crate::platform::object_storage::{ObjectStorage, STRUCTURALIZED_OFFERS_BUCKET};
+    use crate::platform::object_storage::{ObjectStorageRepository, STRUCTURALIZED_OFFERS_BUCKET};
 
     /// A source whose structuralized `document` is in object storage.
-    pub fn stored_source(objects: &ObjectStorage, document: &str) -> ExportSource {
+    pub fn stored_source(objects: &ObjectStorageRepository, document: &str) -> ExportSource {
         let mut source = source();
+        let scraped_at = source.storage.scraped_at;
         source.storage = objects
             .create_offer(STRUCTURALIZED_OFFERS_BUCKET, document)
             .unwrap();
+        source.storage.scraped_at = scraped_at;
+
         source
     }
 
     /// Prepares and completes the export of `source`.
-    pub fn completed(db: &DbPool, objects: ObjectStorage, source: ExportSource) -> OfferExport {
-        completed_version(db, objects, source, 1)
-    }
-
-    pub fn completed_version(
+    pub fn completed(
         db: &DbPool,
-        objects: ObjectStorage,
+        objects: ObjectStorageRepository,
         source: ExportSource,
-        version: u32,
     ) -> OfferExport {
         let store = PgStore::new(db.clone(), objects);
-        store
-            .complete(store.prepare(source, version).unwrap())
-            .unwrap()
+        store.complete(store.prepare(source).unwrap()).unwrap()
     }
 
     /// Prepares the export of `source` without completing it.
-    pub fn pending(db: &DbPool, objects: ObjectStorage, source: ExportSource) -> OfferExport {
+    pub fn pending(
+        db: &DbPool,
+        objects: ObjectStorageRepository,
+        source: ExportSource,
+    ) -> OfferExport {
         PgStore::new(db.clone(), objects)
-            .prepare(source, 1)
+            .prepare(source)
             .unwrap()
             .snapshot
     }
@@ -65,7 +68,6 @@ pub(crate) mod testing {
     pub fn event(export: &OfferExport) -> OfferExportWasPrepared {
         OfferExportWasPrepared {
             export_id: export.id,
-            schema_version: export.schema_version,
             source: export.source.clone(),
         }
     }

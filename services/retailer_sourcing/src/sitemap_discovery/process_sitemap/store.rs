@@ -10,8 +10,8 @@ use super::entity::{ProcessedSitemap, RawSitemapDocument};
 use super::handler::Store;
 use crate::platform::db::{self, DbPool};
 use crate::platform::object_storage::{
-    self, ObjectStorage, ObjectStorageMetadata, PROCESSED_SITEMAPS_BUCKET, RAW_SITEMAPS_BUCKET,
-    Stored,
+    self, ObjectStorageMetadata, ObjectStorageRepository, PROCESSED_SITEMAPS_BUCKET,
+    RAW_SITEMAPS_BUCKET, Stored,
 };
 
 #[derive(Debug, thiserror::Error)]
@@ -42,11 +42,11 @@ pub enum StoreError {
 /// Postgres storage for this slice.
 pub struct PgStore {
     pool: DbPool,
-    objects: ObjectStorage,
+    objects: ObjectStorageRepository,
 }
 
 impl PgStore {
-    pub fn new(pool: DbPool, objects: ObjectStorage) -> Self {
+    pub fn new(pool: DbPool, objects: ObjectStorageRepository) -> Self {
         Self { pool, objects }
     }
 }

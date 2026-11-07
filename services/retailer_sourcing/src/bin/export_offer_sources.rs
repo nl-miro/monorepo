@@ -7,7 +7,9 @@
 //! Usage: `export_offer_sources <data_dir>`
 
 use retailer_sourcing::json::Json;
-use retailer_sourcing::object_storage::{ObjectStorage, OfferStorageMetadata, RAW_OFFERS_BUCKET};
+use retailer_sourcing::object_storage::{
+    ObjectStorageRepository, OfferStorageMetadata, RAW_OFFERS_BUCKET,
+};
 use std::collections::HashSet;
 use std::panic;
 use std::path::{Path, PathBuf};
@@ -50,7 +52,7 @@ struct PageRecord {
     storage: Json<OfferStorageMetadata>,
 }
 
-fn fetch_page(record: PageRecord, objects: &ObjectStorage) -> Result<Page, String> {
+fn fetch_page(record: PageRecord, objects: &ObjectStorageRepository) -> Result<Page, String> {
     let body = objects
         .get_offer(RAW_OFFERS_BUCKET, &record.storage.0)
         .map_err(|e| e.to_string())?;
@@ -75,7 +77,8 @@ fn run() -> Result<(), String> {
         .ok_or("usage: export_offer_sources <data_dir>")?;
     let database_url = env::var("DATABASE_URL").map_err(|_| "DATABASE_URL must be set")?;
     let runtime = tokio::runtime::Runtime::new().map_err(|e| e.to_string())?;
-    let objects = ObjectStorage::from_env(runtime.handle().clone()).map_err(|e| e.to_string())?;
+    let objects =
+        ObjectStorageRepository::from_env(runtime.handle().clone()).map_err(|e| e.to_string())?;
 
     let mut written = 0;
     let mut disowned = 0;

@@ -43,7 +43,7 @@ pub trait RetailerOfferRepository: Send + Sync {
     fn update_identifiers(
         &self,
         id: &crate::offers::retailer_offer_id::RetailerOfferId,
-        identifiers: &retailer_sauce::identifier::ProductIdentifiers,
+        identifiers: &retailer_sauce::identifier::OfferIdentifiers,
     ) -> Result<(), RetailerOfferRepositoryError>;
     fn update_localization(
         &self,

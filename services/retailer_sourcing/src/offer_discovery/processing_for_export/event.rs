@@ -8,7 +8,6 @@ use crate::platform::bus::Event;
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct OfferExportWasPrepared {
     pub export_id: Uuid,
-    pub schema_version: u32,
     pub source: ExportSource,
 }
 

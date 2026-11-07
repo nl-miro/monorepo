@@ -6,6 +6,7 @@ mod event;
 mod handler;
 pub mod prelude;
 mod reacts_to;
+mod repository;
 mod store;
 
 #[cfg(test)]

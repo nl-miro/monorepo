@@ -5,17 +5,17 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct Entry {
-    #[serde(deserialize_with = "retailer_sauce::observation::required_nullable")]
+    #[serde(deserialize_with = "retailer_sauce::json::required_nullable")]
     pub language: Option<String>,
     pub title: String,
-    #[serde(deserialize_with = "retailer_sauce::observation::required_nullable")]
+    #[serde(deserialize_with = "retailer_sauce::json::required_nullable")]
     pub description: Option<String>,
     pub url: String,
 }
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct StoredContent {
-    #[serde(deserialize_with = "retailer_sauce::observation::required_nullable")]
+    #[serde(deserialize_with = "retailer_sauce::json::required_nullable")]
     pub selected_language: Option<String>,
     pub entries: Vec<Entry>,
 }

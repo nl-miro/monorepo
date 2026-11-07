@@ -2,5 +2,3 @@
 pub(crate) mod bus;
 pub(crate) mod records;
 pub(crate) mod repository;
-
-pub(crate) mod identifiers_repository;

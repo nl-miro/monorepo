@@ -11,10 +11,10 @@ use std::fmt::Display;
 use std::sync::Arc;
 use std::time::Instant;
 
-use commanding::prelude::AsyncCommandingService;
-use commanding::prelude::axum::CommandingAdapter;
-use eventing::prelude::AsyncEventingService;
-use eventing::prelude::axum::EventingAdapter;
+use ::commanding::prelude::CommandingService;
+use ::commanding::prelude::axum::CommandingAdapter;
+use ::eventing::prelude::EventingService;
+use ::eventing::prelude::axum::EventingAdapter;
 use kernel::prelude::{CommandGateway, NewCommand, NewCommandEnvelope, NewCommandMetadata};
 use kernel::{
     ApplicationEvent, CommandError, CommandHandlerPort, EventError, EventSubscriberPort,
@@ -138,10 +138,8 @@ impl Bus {
             dispatcher: Dispatcher {
                 gateway: handle.state().command_gateway(),
             },
-            commands: CommandingAdapter::new(AsyncCommandingService::new(
-                handle.command_consumer(),
-            )),
-            events: EventingAdapter::new(AsyncEventingService::new(handle.event_consumer())),
+            commands: CommandingAdapter::new(CommandingService::new(handle.command_consumer())),
+            events: EventingAdapter::new(EventingService::new(handle.event_consumer())),
             kernel: Arc::new(handle),
         })
     }

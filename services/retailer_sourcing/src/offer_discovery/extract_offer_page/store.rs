@@ -6,7 +6,7 @@ use super::entity::{ExtractedOffer, RawOffer};
 use super::handler::Store;
 use crate::platform::db::{self, DbPool};
 use crate::platform::object_storage::{
-    self, EXTRACTED_OFFERS_BUCKET, ObjectStorage, RAW_OFFERS_BUCKET,
+    self, EXTRACTED_OFFERS_BUCKET, ObjectStorageRepository, RAW_OFFERS_BUCKET,
 };
 use diesel::prelude::*;
 use diesel::r2d2::PoolError;
@@ -26,10 +26,10 @@ pub enum StoreError {
 
 pub struct PgStore {
     pool: DbPool,
-    objects: ObjectStorage,
+    objects: ObjectStorageRepository,
 }
 impl PgStore {
-    pub fn new(pool: DbPool, objects: ObjectStorage) -> Self {
+    pub fn new(pool: DbPool, objects: ObjectStorageRepository) -> Self {
         Self { pool, objects }
     }
 }

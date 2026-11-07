@@ -1,11 +1,11 @@
 //! What the HTTP routes share.
 
+use ::outbox::prelude::axum::OutboxAdapter;
 use axum::extract::FromRef;
-use outbox::prelude::axum::OutboxAdapter;
 
 use super::bus::BusHandle;
 use super::db::DbPool;
-use super::object_storage::ObjectStorage;
+use super::object_storage::ObjectStorageRepository;
 
 /// The routes' shared state. All are `None` without a database.
 #[derive(Clone, Default)]
@@ -14,7 +14,7 @@ pub struct AppState {
     pub bus: Option<BusHandle>,
     /// Reads what the pipeline stored.
     pub db: Option<DbPool>,
-    pub object_storage: Option<ObjectStorage>,
+    pub object_storage: Option<ObjectStorageRepository>,
     /// Manual delivery to offers; absent when persistence or OFFERS_URL is unset.
     pub outbox: Option<OutboxAdapter>,
 }

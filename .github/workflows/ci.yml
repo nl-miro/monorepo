@@ -22,6 +22,13 @@ jobs:
         with:
           path: monorepo
           persist-credentials: false
+      - name: Check out local Mulac dependency
+        uses: actions/checkout@v4
+        with:
+          repository: nl-miro/mulac
+          ref: 0fd7d17a96aebec8d1e494e678d0b32597ed9dc9
+          path: mulac
+          persist-credentials: false
       - name: Install prerequisites
         run: |
           sudo apt-get update
@@ -56,6 +63,13 @@ jobs:
       - uses: actions/checkout@v4
         with:
           path: monorepo
+          persist-credentials: false
+      - name: Check out local Mulac dependency
+        uses: actions/checkout@v4
+        with:
+          repository: nl-miro/mulac
+          ref: 0fd7d17a96aebec8d1e494e678d0b32597ed9dc9
+          path: mulac
           persist-credentials: false
       - name: Install prerequisites
         run: |
@@ -101,6 +115,13 @@ jobs:
       - uses: actions/checkout@v4
         with:
           path: monorepo
+          persist-credentials: false
+      - name: Check out local Mulac dependency
+        uses: actions/checkout@v4
+        with:
+          repository: nl-miro/mulac
+          ref: 0fd7d17a96aebec8d1e494e678d0b32597ed9dc9
+          path: mulac
           persist-credentials: false
       - name: Install prerequisites
         run: |

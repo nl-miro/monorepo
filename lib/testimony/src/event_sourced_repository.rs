@@ -9,6 +9,8 @@ use crate::event_store::EventStore;
 /// Error type for EventSourcedRepository operations.
 #[derive(Debug, Clone)]
 pub enum RepositoryError {
+    /// Aggregate history could not be replayed.
+    History(std::sync::Arc<dyn std::error::Error + Send + Sync>),
     /// Event store operation failed.
     EventStore(EventStoreError),
     /// Event publishing failed (after events were persisted).
@@ -18,13 +20,22 @@ pub enum RepositoryError {
 impl std::fmt::Display for RepositoryError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
+            RepositoryError::History(e) => write!(f, "History error: {e}"),
             RepositoryError::EventStore(e) => write!(f, "Event store error: {}", e),
             RepositoryError::Publisher(e) => write!(f, "Publisher error: {}", e),
         }
     }
 }
 
-impl std::error::Error for RepositoryError {}
+impl std::error::Error for RepositoryError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            Self::History(error) => Some(error.as_ref()),
+            Self::EventStore(error) => Some(error),
+            Self::Publisher(error) => Some(error),
+        }
+    }
+}
 
 impl From<EventStoreError> for RepositoryError {
     fn from(e: EventStoreError) -> Self {
@@ -101,7 +112,7 @@ where
     /// # Returns
     /// - `Ok(Some(aggregate))` - The reconstructed aggregate with no uncommitted events
     /// - `Ok(None)` - If no events exist for this aggregate ID
-    /// - `Err(RepositoryError)` - If the store operation fails
+    /// - `Err(RepositoryError)` - If the store operation or history replay fails
     pub fn load(&self, id: A::Id) -> Result<Option<A>, RepositoryError> {
         let mut events = self.event_store.load(id.clone())?;
 
@@ -113,7 +124,9 @@ where
         events.sort_by_key(|e| e.sequence());
 
         // Reconstruct aggregate from its complete event history
-        Ok(Some(A::from_history(id, events)))
+        A::from_history(id, events)
+            .map(Some)
+            .map_err(|error| RepositoryError::History(std::sync::Arc::new(error)))
     }
 
     /// Saves an aggregate to the event store and publishes the events.
@@ -153,5 +166,90 @@ where
         aggregate.mark_events_committed();
 
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::event_envelope::EventEnvelope;
+    use std::error::Error;
+
+    #[derive(Clone, Debug)]
+    struct Event;
+    impl HasAggregateId for Event {
+        fn aggregate_id(&self) -> String {
+            "id".into()
+        }
+    }
+    #[derive(Debug)]
+    struct HistoryError;
+    impl std::fmt::Display for HistoryError {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            f.write_str("invalid sequence")
+        }
+    }
+    impl Error for HistoryError {}
+    #[derive(Debug)]
+    struct TestAggregate(Vec<EventEnvelope<Event>>);
+    impl Aggregate for TestAggregate {
+        type Event = Event;
+        type Id = String;
+        type HistoryError = HistoryError;
+        fn from_history(
+            _: String,
+            events: Vec<EventEnvelope<Event>>,
+        ) -> Result<Self, HistoryError> {
+            for (index, envelope) in events.iter().enumerate() {
+                if envelope.sequence() != index as u64 + 1 {
+                    return Err(HistoryError);
+                }
+            }
+            Ok(Self(events))
+        }
+        fn uncommitted_events(&self) -> &[EventEnvelope<Event>] {
+            &[]
+        }
+        fn mark_events_committed(&mut self) {}
+    }
+    struct Store(Vec<EventEnvelope<Event>>);
+    impl EventStore<String, Event> for Store {
+        fn load(&self, _: String) -> Result<Vec<EventEnvelope<Event>>, EventStoreError> {
+            Ok(self.0.clone())
+        }
+        fn append(&self, _: Vec<EventEnvelope<Event>>) -> Result<(), EventStoreError> {
+            Ok(())
+        }
+    }
+    fn repository(sequences: &[u64]) -> EventSourcedRepository<TestAggregate, Store> {
+        EventSourcedRepository::new(Store(
+            sequences
+                .iter()
+                .map(|s| EventEnvelope::new(Event, *s))
+                .collect(),
+        ))
+    }
+    #[test]
+    fn load_preserves_absence_and_sorts_before_replay() {
+        assert!(repository(&[]).load("id".into()).unwrap().is_none());
+        let aggregate = repository(&[3, 1, 2]).load("id".into()).unwrap().unwrap();
+        assert_eq!(
+            aggregate
+                .0
+                .iter()
+                .map(EventEnvelope::sequence)
+                .collect::<Vec<_>>(),
+            vec![1, 2, 3]
+        );
+        assert!(aggregate.uncommitted_events().is_empty());
+    }
+    #[test]
+    fn load_preserves_history_error_source_and_clone() {
+        let error = repository(&[1, 3]).load("id".into()).unwrap_err();
+        assert!(matches!(error, RepositoryError::History(_)));
+        assert!(error.source().unwrap().is::<HistoryError>());
+        let clone = error.clone();
+        assert!(clone.source().unwrap().is::<HistoryError>());
+        assert_eq!(clone.to_string(), "History error: invalid sequence");
     }
 }

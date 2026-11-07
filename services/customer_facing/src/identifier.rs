@@ -5,12 +5,12 @@ use diesel::{
     serialize::{self, Output, ToSql},
     sql_types::Jsonb,
 };
-use retailer_sauce::identifier::ExternalIdentifiers;
+use retailer_sauce::identifier::OfferIdentifiers;
 use serde_json::Value;
 
 #[derive(Debug, Clone, PartialEq, diesel::AsExpression, diesel::FromSqlRow)]
 #[diesel(sql_type = Jsonb)]
-pub struct Identifier(pub ExternalIdentifiers);
+pub struct Identifier(pub OfferIdentifiers);
 
 impl Identifier {
     fn decode(value: Value) -> deserialize::Result<Self> {
@@ -28,7 +28,11 @@ impl Identifier {
 
     fn encode(&self) -> Result<Value, Box<dyn std::error::Error + Send + Sync>> {
         self.0.guard()?;
-        Ok(serde_json::to_value(&self.0)?)
+        Ok(serde_json::json!({
+            "shopify_product_gid": self.0.shopify_product_gid,
+            "shopify_product_variation_gid": self.0.shopify_product_variation_gid,
+            "shopify_handle": self.0.shopify_handle,
+        }))
     }
 }
 
@@ -101,11 +105,11 @@ mod tests {
         extra["gtin"] = json!("001");
         assert!(Identifier::decode(extra).is_err());
         assert_eq!(
-            serde_json::from_value::<ExternalIdentifiers>(json!({})).unwrap(),
-            ExternalIdentifiers::default()
+            serde_json::from_value::<OfferIdentifiers>(json!({})).unwrap(),
+            OfferIdentifiers::default()
         );
         for value in ["", "a\0b"] {
-            let invalid = Identifier(ExternalIdentifiers {
+            let invalid = Identifier(OfferIdentifiers {
                 shopify_handle: Some(ShopifyHandle {
                     value: value.into(),
                 }),

@@ -1,93 +1,78 @@
-use crate::offers::event::OfferIdentifiersChangedEvent;
+use crate::offers::event::*;
 use serde::{Deserialize, Serialize};
 use testimony::prelude::HasAggregateId;
 
-use crate::offers::event::{
-    OfferCreatedEvent, OfferImageAddedEvent, OfferLocalizationChangedEvent, OfferPriceChangedEvent,
-    OfferScrapedAtUpdatedEvent, OfferTitleChangedEvent, RetailerOfferEvent,
-};
-
 #[derive(Serialize, Deserialize)]
 #[serde(tag = "type", content = "data")]
+#[allow(clippy::large_enum_variant)]
 pub enum OfferEventRecord {
-    #[serde(rename = "OfferContentsChanged.v1")]
-    ContentsChanged(crate::offers::event::OfferContentsChangedEvent),
-    #[serde(rename = "OfferContentChanged.v1")]
-    ContentChanged(crate::offers::event::OfferContentChangedEvent),
-    #[serde(rename = "OfferItemConditionChanged.v1")]
-    ItemConditionChanged(crate::offers::event::OfferItemConditionChangedEvent),
-    #[serde(rename = "OfferAvailabilityChanged.v1")]
-    AvailabilityChanged(crate::offers::event::OfferAvailabilityChangedEvent),
-    #[serde(rename = "OfferPricingChanged.v1")]
-    PricingChanged(crate::offers::event::OfferPricingChangedEvent),
-    #[serde(
-        rename = "OfferCreated.v8",
-        alias = "OfferCreated.v7",
-        alias = "OfferCreated.v6",
-        alias = "OfferCreated.v5",
-        alias = "OfferCreated.v4",
-        alias = "OfferCreated.v3",
-        alias = "OfferCreated.v1",
-        alias = "OfferCreated.v2"
-    )]
-    LegacyCreated(Box<crate::offers::event::LegacyOfferCreatedEvent>),
-    #[serde(rename = "OfferCreated.v9")]
-    LegacyRegionCreated(
-        #[serde(deserialize_with = "crate::offers::event::current_creation")]
-        Box<OfferCreatedEvent>,
-    ),
-    #[serde(rename = "OfferCreated.v10")]
-    Created(
-        #[serde(deserialize_with = "crate::offers::event::current_creation")]
-        Box<OfferCreatedEvent>,
-    ),
-    #[serde(rename = "OfferIdentifiersChanged.v1")]
-    IdentifiersChanged(OfferIdentifiersChangedEvent),
-    #[serde(rename = "OfferLocalizationChanged.v1")]
-    LegacyLocalizationChanged(OfferLocalizationChangedEvent),
-    #[serde(rename = "OfferLocalizationChanged.v2")]
-    LocalizationChanged(OfferLocalizationChangedEvent),
+    #[serde(rename = "OfferAvailabilityChangedNextGeneration.v1")]
+    AvailabilityChanged(OfferAvailabilityChangedEvent),
+    #[serde(rename = "OfferItemConditionChangedNextGeneration.v1")]
+    ItemConditionChanged(OfferItemConditionChangedEvent),
+    #[serde(rename = "OfferPriceChangedNextGeneration.v1")]
+    PriceChanged(OfferPriceChangedEvent),
+    #[serde(rename = "OfferPriceConfirmed.v1")]
+    PriceConfirmed(OfferPriceConfirmedEvent),
+    #[serde(rename = "OfferHistoricPriceAdded.v1")]
+    HistoricPriceAdded(OfferHistoricPriceAddedEvent),
+    #[serde(rename = "OfferDescriptionChanged.v1")]
+    DescriptionChanged(OfferDescriptionChangedEvent),
+    #[serde(rename = "OfferImageRemoved.v1")]
+    ImageRemoved(OfferImageRemovedEvent),
+    #[serde(rename = "OfferLanguageChanged.v1")]
+    LanguageChanged(OfferLanguageChangedEvent),
+    #[serde(rename = "OfferTargetMarketChanged.v1")]
+    TargetMarketChanged(OfferTargetMarketChangedEvent),
+    #[serde(rename = "OfferGtinChanged.v1")]
+    GtinChanged(OfferGtinChangedEvent),
+    #[serde(rename = "OfferSkuChanged.v1")]
+    SkuChanged(OfferSkuChangedEvent),
+    #[serde(rename = "OfferShopifyProductGidChanged.v1")]
+    ShopifyProductGidChanged(OfferShopifyProductGidChangedEvent),
+    #[serde(rename = "OfferShopifyProductVariantGidChanged.v1")]
+    ShopifyProductVariantGidChanged(OfferShopifyProductVariantGidChangedEvent),
+    #[serde(rename = "OfferCreatedNextGeneration.v1")]
+    Created(OfferCreatedEvent),
     #[serde(rename = "OfferImageAdded.v1")]
     ImageAdded(OfferImageAddedEvent),
     #[serde(rename = "OfferTitleChanged.v1")]
     TitleChanged(OfferTitleChangedEvent),
-    #[serde(rename = "OfferPriceChanged.v1")]
-    PriceChanged(OfferPriceChangedEvent),
-    #[serde(rename = "OfferScrapedAtUpdated.v1")]
-    ScrapedAtUpdated(OfferScrapedAtUpdatedEvent),
 }
 
 impl From<&RetailerOfferEvent> for OfferEventRecord {
     fn from(event: &RetailerOfferEvent) -> Self {
         match event {
-            RetailerOfferEvent::OfferIdentifiersChanged(event) => {
-                Self::IdentifiersChanged(event.clone())
-            }
-            RetailerOfferEvent::OfferLocalizationChanged(event) => {
-                let mut event = event.clone();
-                event.localization = event.localization.canonicalized();
-                Self::LocalizationChanged(event)
-            }
-            RetailerOfferEvent::OfferScrapedAtUpdated(event) => {
-                Self::ScrapedAtUpdated(event.clone())
-            }
-            RetailerOfferEvent::OfferImageAdded(event) => Self::ImageAdded(event.clone()),
-            RetailerOfferEvent::OfferPricingChanged(event) => Self::PricingChanged(event.clone()),
             RetailerOfferEvent::OfferAvailabilityChanged(event) => {
                 Self::AvailabilityChanged(event.clone())
             }
             RetailerOfferEvent::OfferItemConditionChanged(event) => {
                 Self::ItemConditionChanged(event.clone())
             }
-            RetailerOfferEvent::OfferContentChanged(event) => Self::ContentChanged(event.clone()),
-            RetailerOfferEvent::OfferContentsChanged(event) => Self::ContentsChanged(event.clone()),
-            RetailerOfferEvent::OfferCreated(event) => {
-                let mut event = event.clone();
-                event.localization = event.localization.clone().canonicalized();
-                Self::Created(event)
-            }
-            RetailerOfferEvent::OfferTitleChanged(event) => Self::TitleChanged(event.clone()),
             RetailerOfferEvent::OfferPriceChanged(event) => Self::PriceChanged(event.clone()),
+            RetailerOfferEvent::OfferPriceConfirmed(event) => Self::PriceConfirmed(event.clone()),
+            RetailerOfferEvent::OfferHistoricPriceAdded(event) => {
+                Self::HistoricPriceAdded(event.clone())
+            }
+            RetailerOfferEvent::OfferDescriptionChanged(event) => {
+                Self::DescriptionChanged(event.clone())
+            }
+            RetailerOfferEvent::OfferImageRemoved(event) => Self::ImageRemoved(event.clone()),
+            RetailerOfferEvent::OfferLanguageChanged(event) => Self::LanguageChanged(event.clone()),
+            RetailerOfferEvent::OfferTargetMarketChanged(event) => {
+                Self::TargetMarketChanged(event.clone())
+            }
+            RetailerOfferEvent::OfferGtinChanged(event) => Self::GtinChanged(event.clone()),
+            RetailerOfferEvent::OfferSkuChanged(event) => Self::SkuChanged(event.clone()),
+            RetailerOfferEvent::OfferShopifyProductGidChanged(event) => {
+                Self::ShopifyProductGidChanged(event.clone())
+            }
+            RetailerOfferEvent::OfferShopifyProductVariantGidChanged(event) => {
+                Self::ShopifyProductVariantGidChanged(event.clone())
+            }
+            RetailerOfferEvent::OfferCreated(event) => Self::Created(event.clone()),
+            RetailerOfferEvent::OfferImageAdded(event) => Self::ImageAdded(event.clone()),
+            RetailerOfferEvent::OfferTitleChanged(event) => Self::TitleChanged(event.clone()),
         }
     }
 }
@@ -95,22 +80,26 @@ impl From<&RetailerOfferEvent> for OfferEventRecord {
 impl From<OfferEventRecord> for RetailerOfferEvent {
     fn from(record: OfferEventRecord) -> Self {
         match record {
-            OfferEventRecord::IdentifiersChanged(event) => Self::OfferIdentifiersChanged(event),
-            OfferEventRecord::LegacyLocalizationChanged(event)
-            | OfferEventRecord::LocalizationChanged(event) => Self::OfferLocalizationChanged(event),
-            OfferEventRecord::ScrapedAtUpdated(event) => Self::OfferScrapedAtUpdated(event),
-            OfferEventRecord::ImageAdded(event) => Self::OfferImageAdded(event),
-            OfferEventRecord::PricingChanged(event) => Self::OfferPricingChanged(event),
             OfferEventRecord::AvailabilityChanged(event) => Self::OfferAvailabilityChanged(event),
             OfferEventRecord::ItemConditionChanged(event) => Self::OfferItemConditionChanged(event),
-            OfferEventRecord::ContentChanged(event) => Self::OfferContentChanged(event),
-            OfferEventRecord::LegacyRegionCreated(event) | OfferEventRecord::Created(event) => {
-                Self::OfferCreated(event)
-            }
-            OfferEventRecord::LegacyCreated(event) => Self::OfferCreated(Box::new((*event).into())),
-            OfferEventRecord::ContentsChanged(event) => Self::OfferContentsChanged(event),
-            OfferEventRecord::TitleChanged(event) => Self::OfferTitleChanged(event),
             OfferEventRecord::PriceChanged(event) => Self::OfferPriceChanged(event),
+            OfferEventRecord::PriceConfirmed(event) => Self::OfferPriceConfirmed(event),
+            OfferEventRecord::HistoricPriceAdded(event) => Self::OfferHistoricPriceAdded(event),
+            OfferEventRecord::DescriptionChanged(event) => Self::OfferDescriptionChanged(event),
+            OfferEventRecord::ImageRemoved(event) => Self::OfferImageRemoved(event),
+            OfferEventRecord::LanguageChanged(event) => Self::OfferLanguageChanged(event),
+            OfferEventRecord::TargetMarketChanged(event) => Self::OfferTargetMarketChanged(event),
+            OfferEventRecord::GtinChanged(event) => Self::OfferGtinChanged(event),
+            OfferEventRecord::SkuChanged(event) => Self::OfferSkuChanged(event),
+            OfferEventRecord::ShopifyProductGidChanged(event) => {
+                Self::OfferShopifyProductGidChanged(event)
+            }
+            OfferEventRecord::ShopifyProductVariantGidChanged(event) => {
+                Self::OfferShopifyProductVariantGidChanged(event)
+            }
+            OfferEventRecord::Created(event) => Self::OfferCreated(event),
+            OfferEventRecord::ImageAdded(event) => Self::OfferImageAdded(event),
+            OfferEventRecord::TitleChanged(event) => Self::OfferTitleChanged(event),
         }
     }
 }
@@ -118,63 +107,53 @@ impl From<OfferEventRecord> for RetailerOfferEvent {
 impl HasAggregateId for OfferEventRecord {
     fn aggregate_id(&self) -> String {
         match self {
-            Self::IdentifiersChanged(event) => event.id.to_string(),
-            Self::LegacyLocalizationChanged(event) | Self::LocalizationChanged(event) => {
-                event.id.to_string()
-            }
-            Self::ScrapedAtUpdated(event) => event.id.to_string(),
-            Self::ImageAdded(event) => event.id.to_string(),
-            Self::PricingChanged(event) => event.id.to_string(),
             Self::AvailabilityChanged(event) => event.id.to_string(),
             Self::ItemConditionChanged(event) => event.id.to_string(),
-            Self::ContentChanged(event) => event.id.to_string(),
-            Self::LegacyRegionCreated(event) | Self::Created(event) => event.id.to_string(),
-            Self::LegacyCreated(event) => event.id.to_string(),
-            Self::ContentsChanged(event) => event.id.to_string(),
-            Self::TitleChanged(event) => event.id.to_string(),
             Self::PriceChanged(event) => event.id.to_string(),
+            Self::PriceConfirmed(event) => event.id.to_string(),
+            Self::HistoricPriceAdded(event) => event.id.to_string(),
+            Self::DescriptionChanged(event) => event.id.to_string(),
+            Self::ImageRemoved(event) => event.id.to_string(),
+            Self::LanguageChanged(event) => event.id.to_string(),
+            Self::TargetMarketChanged(event) => event.id.to_string(),
+            Self::GtinChanged(event) => event.id.to_string(),
+            Self::SkuChanged(event) => event.id.to_string(),
+            Self::ShopifyProductGidChanged(event) => event.id.to_string(),
+            Self::ShopifyProductVariantGidChanged(event) => event.id.to_string(),
+            Self::Created(event) => event.id.to_string(),
+            Self::ImageAdded(event) => event.id.to_string(),
+            Self::TitleChanged(event) => event.id.to_string(),
         }
     }
 }
 
 #[cfg(test)]
-mod regional_versions {
+mod tests {
     use super::*;
-    use serde_json::json;
 
     #[test]
-    fn historical_region_records_keep_their_encoding_and_new_records_are_versioned() {
-        let localization =
-            json!({"target_market":{"kind":"region","label":"European Union"},"language":"en"});
-        let change = json!({"type":"OfferLocalizationChanged.v1","data":{"id":"example","localization":localization}});
-        let old: OfferEventRecord = serde_json::from_value(change.clone()).unwrap();
-        assert_eq!(serde_json::to_value(&old).unwrap(), change);
-        let mut event: RetailerOfferEvent = old.into();
-        if let RetailerOfferEvent::OfferLocalizationChanged(value) = &mut event {
-            value.localization = value.localization.clone().canonicalized();
+    fn retired_record_tags_are_rejected() {
+        for tag in [
+            "OfferCreated.v10",
+            "OfferCreated.v1",
+            "OfferPricingChanged.v1",
+            "OfferAvailabilityChanged.v1",
+            "OfferItemConditionChanged.v1",
+            "OfferContentChanged.v1",
+            "OfferContentsChanged.v1",
+            "OfferIdentifiersChanged.v1",
+            "OfferLocalizationChanged.v2",
+            "OfferPriceChanged.v1",
+            "OfferScrapedAtUpdated.v1",
+        ] {
+            let payload = serde_json::json!({"type":tag,"data":{}});
+            let error = serde_json::from_value::<OfferEventRecord>(payload)
+                .err()
+                .unwrap();
+            assert!(
+                error.to_string().contains("unknown variant"),
+                "{tag}: {error}"
+            );
         }
-        let new = serde_json::to_value(OfferEventRecord::from(&event)).unwrap();
-        assert_eq!(new["type"], "OfferLocalizationChanged.v2");
-        assert_eq!(
-            new["data"]["localization"]["target_market"],
-            json!({"kind":"region","code":"eu"})
-        );
-        let created = json!({"type":"OfferCreated.v9","data":{
-            "id":"example","retailer_code":"AnkerAu","title":"Charger","url":"https://example.com/a",
-            "price":{"amount":100,"currency":"AUD"},"created_at":"2026-10-29T00:00:00Z",
-            "localization":localization,"content":[{"language":"en","title":"Charger","description":null}]
-        }});
-        let old: OfferEventRecord = serde_json::from_value(created).unwrap();
-        let old_json = serde_json::to_value(&old).unwrap();
-        assert_eq!(old_json["type"], "OfferCreated.v9");
-        assert_eq!(
-            old_json["data"]["localization"]["target_market"]["label"],
-            "European Union"
-        );
-        let event: RetailerOfferEvent = old.into();
-        assert_eq!(
-            serde_json::to_value(OfferEventRecord::from(&event)).unwrap()["type"],
-            "OfferCreated.v10"
-        );
     }
 }

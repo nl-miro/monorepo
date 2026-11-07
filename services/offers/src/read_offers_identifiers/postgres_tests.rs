@@ -5,12 +5,10 @@ use diesel::{
 };
 use diesel_migrations::MigrationHarness;
 use poem::{http::StatusCode, test::TestClient};
-use retailer_sauce::identifier::ProductIdentifiers;
+use retailer_sauce::identifier::OfferIdentifiers;
 use serde_json::{Value, json};
 use testimony_infra::prelude::DbPool;
 use uuid::Uuid;
-
-mod queued_work;
 
 use super::{
     entity::RetailerOfferIdentifiers,
@@ -186,17 +184,17 @@ fn identity_repositories_preserve_exact_values_replace_nulls_and_keep_url_matchi
     let (_schema, pool) = inbox_test_database();
     let writer = PostgresRetailerOfferIdentifiersRepository::new(pool.clone());
     let lookup =
-        crate::infra::identifiers_repository::PostgresRetailerOfferIdentifiersRepository::new(
+        crate::read_offers_identifiers::repository::PostgresRetailerOfferIdentifiersRepository::new(
             pool.clone(),
         );
-    let identifiers: ProductIdentifiers = serde_json::from_value(json!({"gtin":"0012345678905","sku":" Sku ","external_identifiers":{"shopify_product_gid":"001","shopify_product_variation_gid":"002","shopify_handle":" Ž \\\" "}})).unwrap();
+    let identifiers: OfferIdentifiers = serde_json::from_value(json!({"gtin":"0012345678905","sku":" Sku ","shopify_product_gid":"001","shopify_product_variation_gid":"002","shopify_handle":" Ž \\\" "})).unwrap();
     let entity = RetailerOfferIdentifiers {
         identifiers: identifiers.clone(),
         id: RetailerOfferId::new(Uuid::new_v4().to_string()),
         retailer_code: bodul_shared::retailer::RetailerCode::AnkerAu,
         url: "https://example.com/Charger?q=Red#details".into(),
     };
-    writer.insert(&entity).unwrap();
+    RetailerOfferIdentifiersRepository::insert(&writer, &entity).unwrap();
     assert_eq!(
         lookup.find(entity.retailer_code, &entity.url).unwrap(),
         Some(entity.clone())
@@ -212,7 +210,7 @@ fn identity_repositories_preserve_exact_values_replace_nulls_and_keep_url_matchi
         url: "https://example.com/other".into(),
         ..entity.clone()
     };
-    writer.insert(&other).unwrap(); // Product identifiers are not unique identity keys.
+    RetailerOfferIdentifiersRepository::insert(&writer, &other).unwrap(); // Product identifiers are not unique identity keys.
     let mut invalid = identifiers;
     invalid.gtin.as_mut().unwrap().value.clear();
     assert!(writer.update_identifiers(&entity.id, &invalid).is_err());
@@ -220,7 +218,7 @@ fn identity_repositories_preserve_exact_values_replace_nulls_and_keep_url_matchi
         lookup.find(entity.retailer_code, &entity.url).unwrap(),
         Some(entity.clone())
     );
-    let replacement: ProductIdentifiers =
+    let replacement: OfferIdentifiers =
         serde_json::from_value(json!({"sku":"replacement"})).unwrap();
     for _ in 0..2 {
         writer.update_identifiers(&entity.id, &replacement).unwrap();
@@ -234,7 +232,7 @@ fn identity_repositories_preserve_exact_values_replace_nulls_and_keep_url_matchi
         replacement
     );
     writer
-        .update_identifiers(&entity.id, &ProductIdentifiers::default())
+        .update_identifiers(&entity.id, &OfferIdentifiers::default())
         .unwrap();
     assert_eq!(
         lookup
@@ -242,7 +240,7 @@ fn identity_repositories_preserve_exact_values_replace_nulls_and_keep_url_matchi
             .unwrap()
             .unwrap()
             .identifiers,
-        ProductIdentifiers::default()
+        OfferIdentifiers::default()
     );
     assert!(
         writer
@@ -269,7 +267,7 @@ async fn registered_identity_projector_tracks_creation_and_identifier_only_impor
     let (_schema, pool) = inbox_test_database();
     let (kernel, state) = crate::start_mulac(pool.clone()).unwrap();
     let client = TestClient::new(crate::app_with_reporting_token(state, "test".into()));
-    let mut payload = json!({"retailer_code":"AnkerAu","title":"Charger","price":{"amount":1999,"currency":"AUD"},"url":"https://example.com/Charger","gtin":"0012345678905","sku":"original","external_identifiers":{"shopify_product_gid":"001","shopify_product_variation_gid":"002","shopify_handle":"handle"}});
+    let mut payload = json!({"retailer_code":"AnkerAu","title":"Charger","price":{"amount":1999,"currency":"AUD"},"url":"https://example.com/Charger","gtin":"0012345678905","sku":"original","shopify_product_gid":"001","shopify_product_variation_gid":"002","shopify_handle":"handle"});
     for sku in ["original", "updated"] {
         payload["sku"] = json!(sku);
         client.post("/api/inbox").body_json(&json!({"message_id":Uuid::new_v4(),"source":"test","routing_key":"ImportOfferDetails","payload":payload})).send().await.assert_status(StatusCode::ACCEPTED);

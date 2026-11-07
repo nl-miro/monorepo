@@ -1,13 +1,15 @@
 //! Explicit queue batches. Mulac owns validation, blocking work, and retries.
 
-use commanding::prelude::AsyncCommandingService;
-use commanding::prelude::poem::{CommandingAdapter, RunRequest, RunResponse};
-use eventing::prelude::AsyncEventingService;
-use eventing::prelude::poem::EventingAdapter;
-use inbox::prelude::AsyncInboxService;
-use inbox::prelude::poem::{InboxAdapter, InboxSubmission, SubmitInboxRequest};
+use ::commanding::prelude::CommandingService;
+use ::commanding::prelude::poem::CommandingAdapter;
+use ::eventing::prelude::EventingService;
+use ::eventing::prelude::poem::EventingAdapter;
+use ::inbox::prelude::InboxService;
+use ::inbox::prelude::poem::{
+    InboxAdapter, InboxSubmission, RunRequest, RunResponse, SubmitInboxRequest,
+};
+use ::outbox::prelude::poem::OutboxAdapter;
 use kernel::{KernelConfig, KernelError, PersistentKernelHandle, prelude::DbPool};
-use outbox::prelude::poem::OutboxAdapter;
 use poem::Result;
 use poem_openapi::{OpenApi, payload::Json};
 
@@ -26,11 +28,9 @@ impl AppState {
         Self {
             reporting: crate::reporting::Reporting::postgres(pool.clone()),
             offers: crate::offer_read::Offers::postgres(pool.clone()),
-            inbox: InboxAdapter::new(AsyncInboxService::from_postgres(pool)),
-            commands: CommandingAdapter::new(AsyncCommandingService::new(
-                kernel.command_consumer(),
-            )),
-            events: EventingAdapter::new(AsyncEventingService::new(kernel.event_consumer())),
+            inbox: InboxAdapter::new(InboxService::from_postgres(pool)),
+            commands: CommandingAdapter::new(CommandingService::new(kernel.command_consumer())),
+            events: EventingAdapter::new(EventingService::new(kernel.event_consumer())),
             outbox: OutboxAdapter::unconfigured(),
         }
     }
@@ -41,7 +41,7 @@ pub fn start_mulac(pool: DbPool) -> Result<(PersistentKernelHandle, AppState), K
     let mut state = AppState::from_kernel(pool.clone(), &kernel);
     // The typed kernel handler wrapper omits incoming metadata. Assemble the
     // same Mulac consumer with an envelope handler to retain the inbox identity.
-    state.commands = CommandingAdapter::new(AsyncCommandingService::new(
+    state.commands = CommandingAdapter::new(CommandingService::new(
         crate::offer_projection::consumer(pool),
     ));
     Ok((kernel, state))

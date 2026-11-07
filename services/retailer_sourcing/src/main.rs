@@ -136,9 +136,10 @@ async fn start_features(database_url: Result<String, VarError>) -> io::Result<Ap
         Err(VarError::NotPresent) => return Ok(AppState::default()),
         Err(error) => return Err(io::Error::new(io::ErrorKind::InvalidInput, error)),
     };
-    let object_storage =
-        platform::object_storage::ObjectStorage::from_env(tokio::runtime::Handle::current())
-            .map_err(io::Error::other)?;
+    let object_storage = platform::object_storage::ObjectStorageRepository::from_env(
+        tokio::runtime::Handle::current(),
+    )
+    .map_err(io::Error::other)?;
     let offer_http = platform::http::OfferClient::configured()?;
     let platform = tokio::task::spawn_blocking(move || {
         Platform::connect(&database_url, object_storage, offer_http)
@@ -157,11 +158,11 @@ async fn start_features(database_url: Result<String, VarError>) -> io::Result<Ap
 
     let db = platform.db.clone();
     let outbox = publisher.map(|publisher| {
-        let service = outbox::prelude::AsyncOutboxService::from_postgres(
+        let service = ::outbox::prelude::OutboxService::from_postgres(
             db.clone(),
             std::sync::Arc::new(publisher),
         );
-        outbox::prelude::axum::OutboxAdapter::new(service)
+        ::outbox::prelude::axum::OutboxAdapter::new(service)
     });
     let object_storage = platform.object_storage.clone();
     let bus = bus.start(platform.db).map_err(io::Error::other)?;

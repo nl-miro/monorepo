@@ -11,7 +11,9 @@ use utoipa::{IntoParams, ToSchema};
 use uuid::Uuid;
 
 use crate::platform::db::{DbPool, Json as DbJson};
-use crate::platform::object_storage::{ObjectStorage, ObjectStorageMetadata, RAW_SITEMAPS_BUCKET};
+use crate::platform::object_storage::{
+    ObjectStorageMetadata, ObjectStorageRepository, RAW_SITEMAPS_BUCKET,
+};
 use crate::platform::state::AppState;
 
 /// The most sources one page may hold. Each carries a whole sitemap file.
@@ -120,7 +122,11 @@ pub async fn list_sources(State(state): State<AppState>, Query(page): Query<Page
     }
 }
 
-fn load_sources(db: &DbPool, objects: &ObjectStorage, page: &Page) -> Result<Vec<Source>, String> {
+fn load_sources(
+    db: &DbPool,
+    objects: &ObjectStorageRepository,
+    page: &Page,
+) -> Result<Vec<Source>, String> {
     let mut connection = db.get().map_err(|error| error.to_string())?;
     let records = diesel::sql_query(SOURCES_QUERY)
         .bind::<BigInt, _>(i64::from(page.limit))

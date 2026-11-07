@@ -12,6 +12,7 @@ commanding = { workspace = true, features = ["poem"] }
 diesel.workspace = true
 diesel_migrations.workspace = true
 eventing = { workspace = true, features = ["poem"] }
+everyday = { path = "../../lib/everyday" }
 inbox = { workspace = true, features = ["poem"] }
 inbox_client.workspace = true
 kernel.workspace = true

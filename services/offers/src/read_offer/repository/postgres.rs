@@ -107,16 +107,16 @@ impl RetailerOfferRepository for PostgresRetailerOfferRepository {
     fn update_identifiers(
         &self,
         id: &crate::offers::retailer_offer_id::RetailerOfferId,
-        identifiers: &retailer_sauce::identifier::ProductIdentifiers,
+        identifiers: &retailer_sauce::identifier::OfferIdentifiers,
     ) -> Result<(), RetailerOfferRepositoryError> {
         identifiers.guard().map_err(super::err_update)?;
         let id = uuid::Uuid::parse_str(id.value()).map_err(super::err_update)?;
         let count = diesel::sql_query("UPDATE read_offers SET gtin=$2, sku=$3, shopify_product_gid=$4, shopify_product_variation_gid=$5, shopify_handle=$6 WHERE id=$1").bind::<SqlUuid, _>(id)
         .bind::<diesel::sql_types::Nullable<Text>, _>(identifiers.gtin.as_ref().map(|value| &value.value))
             .bind::<diesel::sql_types::Nullable<Text>, _>(identifiers.sku.as_ref().map(|value| &value.value))
-            .bind::<diesel::sql_types::Nullable<Text>, _>(identifiers.external_identifiers.shopify_product_gid.as_ref().map(|value| &value.value))
-            .bind::<diesel::sql_types::Nullable<Text>, _>(identifiers.external_identifiers.shopify_product_variation_gid.as_ref().map(|value| &value.value))
-            .bind::<diesel::sql_types::Nullable<Text>, _>(identifiers.external_identifiers.shopify_handle.as_ref().map(|value| &value.value))
+            .bind::<diesel::sql_types::Nullable<Text>, _>(identifiers.shopify_product_gid.as_ref().map(|value| &value.value))
+            .bind::<diesel::sql_types::Nullable<Text>, _>(identifiers.shopify_product_variation_gid.as_ref().map(|value| &value.value))
+            .bind::<diesel::sql_types::Nullable<Text>, _>(identifiers.shopify_handle.as_ref().map(|value| &value.value))
             .execute(&mut self.pool.get().map_err(super::err_update)?).map_err(super::err_update)?;
         require_updated_offer(count)
     }
@@ -199,7 +199,7 @@ impl RetailerOfferRepository for PostgresRetailerOfferRepository {
             .localization
             .target_market
             .as_ref()
-            .map(|market| serde_json::to_value(market.canonicalized()))
+            .map(serde_json::to_value)
             .transpose()
             .map_err(err_insert)?;
         let availability = entity
@@ -241,9 +241,9 @@ impl RetailerOfferRepository for PostgresRetailerOfferRepository {
                 .bind::<diesel::sql_types::Nullable<Text>, _>(&entity.localization.language)
                 .bind::<diesel::sql_types::Nullable<Text>, _>(entity.identifiers.gtin.as_ref().map(|value| &value.value))
                 .bind::<diesel::sql_types::Nullable<Text>, _>(entity.identifiers.sku.as_ref().map(|value| &value.value))
-                .bind::<diesel::sql_types::Nullable<Text>, _>(entity.identifiers.external_identifiers.shopify_product_gid.as_ref().map(|value| &value.value))
-                .bind::<diesel::sql_types::Nullable<Text>, _>(entity.identifiers.external_identifiers.shopify_product_variation_gid.as_ref().map(|value| &value.value))
-                .bind::<diesel::sql_types::Nullable<Text>, _>(entity.identifiers.external_identifiers.shopify_handle.as_ref().map(|value| &value.value))
+                .bind::<diesel::sql_types::Nullable<Text>, _>(entity.identifiers.shopify_product_gid.as_ref().map(|value| &value.value))
+                .bind::<diesel::sql_types::Nullable<Text>, _>(entity.identifiers.shopify_product_variation_gid.as_ref().map(|value| &value.value))
+                .bind::<diesel::sql_types::Nullable<Text>, _>(entity.identifiers.shopify_handle.as_ref().map(|value| &value.value))
                 .bind::<diesel::sql_types::Nullable<diesel::sql_types::BigInt>,_>(entity.facts.was_price.as_ref().map(|v|v.amount()))
                 .bind::<diesel::sql_types::Nullable<Text>,_>(entity.facts.was_price.as_ref().map(|v|v.currency().as_str()))
                 .bind::<diesel::sql_types::Nullable<diesel::sql_types::Jsonb>,_>(&availability)
@@ -343,7 +343,7 @@ impl PostgresRetailerOfferRepository {
                 let market = localization
                     .target_market
                     .as_ref()
-                    .map(|market| serde_json::to_value(market.canonicalized()))
+                    .map(serde_json::to_value)
                     .transpose()
                     .map_err(super::err_update)?;
                 diesel::sql_query("UPDATE read_offers SET target_market=$2 WHERE id=$1")

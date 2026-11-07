@@ -1,7 +1,13 @@
-use super::{listener, store};
-use crate::platform::{Platform, bus::Bus};
+use super::listener::Listener;
+use super::outbox_repository::PgOutboxRepository;
+use crate::offer_discovery::prelude::PgOfferExportRepository;
+use crate::platform::Platform;
+use crate::platform::bus::Bus;
 
 pub fn register(bus: &mut Bus, platform: &Platform) {
-    let store = store::PgStore::new(platform.db.clone(), platform.object_storage.clone());
-    bus.listen(listener::Listener::new(store));
+    let exports =
+        PgOfferExportRepository::new(platform.db.clone(), platform.object_storage.clone());
+    let outbox = PgOutboxRepository::new(platform.db.clone());
+
+    bus.listen(Listener::new(exports, outbox));
 }

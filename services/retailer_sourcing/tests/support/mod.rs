@@ -6,7 +6,7 @@ use axum::{
     response::{IntoResponse, Response},
     routing::{get, post},
 };
-use retailer_sourcing::object_storage::ObjectStorage;
+use retailer_sourcing::object_storage::ObjectStorageRepository;
 use serde_json::{Value, json};
 use std::{
     collections::HashMap,
@@ -48,8 +48,8 @@ impl Server {
         });
         Self { runtime, url, data }
     }
-    pub fn client(&self) -> ObjectStorage {
-        ObjectStorage::new(&self.url, TOKEN, self.runtime.handle().clone()).unwrap()
+    pub fn client(&self) -> ObjectStorageRepository {
+        ObjectStorageRepository::new(&self.url, TOKEN, self.runtime.handle().clone()).unwrap()
     }
 }
 fn authorized(headers: &HeaderMap) -> bool {

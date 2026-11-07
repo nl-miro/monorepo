@@ -17,6 +17,45 @@ pub fn deserialize_f64<'de, D: Deserializer<'de>>(deserializer: D) -> Result<f64
         .ok_or_else(|| D::Error::custom("expected a finite JSON number representable as f64"))
 }
 
+/// Unlike an ordinary Option field, use of this decoder requires the JSON key.
+pub fn required_nullable<'de, D, T>(deserializer: D) -> Result<Option<T>, D::Error>
+where
+    D: Deserializer<'de>,
+    T: Deserialize<'de>,
+{
+    Option::deserialize(deserializer)
+}
+
+/// JSON structs in the public fact contract must be objects, not Serde sequences.
+pub fn object<'de, D, T>(deserializer: D) -> Result<T, D::Error>
+where
+    D: Deserializer<'de>,
+    T: serde::de::DeserializeOwned,
+{
+    let value = html_extractor::serde_json::Value::deserialize(deserializer)?;
+    if !value.is_object() {
+        return Err(serde::de::Error::custom("expected a JSON object"));
+    }
+    html_extractor::serde_json::from_value(value).map_err(serde::de::Error::custom)
+}
+
+pub fn nullable_object<'de, D, T>(deserializer: D) -> Result<Option<T>, D::Error>
+where
+    D: Deserializer<'de>,
+    T: serde::de::DeserializeOwned,
+{
+    let value = html_extractor::serde_json::Value::deserialize(deserializer)?;
+    if value.is_null() {
+        return Ok(None);
+    }
+    if !value.is_object() {
+        return Err(serde::de::Error::custom("expected a JSON object or null"));
+    }
+    html_extractor::serde_json::from_value(value)
+        .map(Some)
+        .map_err(serde::de::Error::custom)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

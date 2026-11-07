@@ -1,0 +1,866 @@
+"id","retailer_code","url","title","price_amount","currency","created_at","scraped_at","target_market","language","gtin","sku","shopify_product_gid","shopify_product_variation_gid","shopify_handle","was_price_amount","was_price_currency","availability","item_condition","description","content"
+"01a18955-5472-7767-9c8d-81c43a5c8703","minisforumhk","https://minisforum.hk/products/ms-a2?variant=45379678470322","MINISFORUM MS-A2","659900","HKD","2026-10-29 20:23:53.20237+00","2026-10-26 14:56:29.716267+00","{""code"": ""HK"", ""kind"": ""country""}","zh",,"BS-MFMSA2","gid://shopify/Product/8484115447986","gid://shopify/ProductVariant/45379678470322","ms-a2","699900","HKD","""out_of_stock""",,"產品簡介
+Minisforum MS-A2 係迷你工作站，可揀 AMD Ryzen™ 7 7745HX 或 Ryzen™ 9 9955HX，雙通道 DDR5（最高約 96GB），多個 M.2／U.2 儲存位，並有 PCIe 4.0 x16 擴充槽。
+網絡有 2 個 10G SFP+ 同 2 個 2.5G RJ45（合共四網口），適合辦公室、虛擬化、輕量 home server 同需要多網口分流嘅進階場景。香港行貨，3 年保養。香港官方有售，庫存以產品頁顯示為準。
+
+
+AMD Ryzen™ 7 7745HX | Ryzen™ 9 9955HX
+PCIE4.0 ×16 插槽 
+DDR5 Slots *2 (Max Support 96GB）
+M.2 2280 SSD 插槽*3 (最大15TB｜U.2 介面）
+10Gbps SFP+ LAN ×2｜2.5Gbps RJ45 LAN ×2
+Wi-Fi 6E | BT 5.2
+Windows 11Pro
+三年保用
+
+常見問題
+
+問：MS-A2 用咩處理器同記憶體？
+答：可揀 AMD Ryzen™ 7 7745HX（8 核 16 線程）或 Ryzen™ 9 9955HX（16 核 32 線程，最高約 5.4GHz），內顯 Radeon™ 610M。記憶體係雙通道 DDR5 SODIMM（兩條插槽，最高約 96GB）；儲存有多個 M.2／U.2 位。可揀準系統或系統機。
+問：有冇多網口？適唔適合做 server／工作站？
+答：有四個有線網口：2 個 10G SFP+ 加 2 個 2.5G RJ45，另有 Wi-Fi 6E。多網口加 PCIe 4.0 x16，適合虛擬化、輕量 home server、辦公室常開機，或者需要有線分流／聚合嘅進階場景。
+問：儲存同擴充點樣？
+答：有多個 M.2 2280／22110 位（其一可作 U.2，最高容量以配件規格為準），另有 PCIe 4.0 x16 插槽方便裝兼容擴充卡。機身約 196 × 189 × 48mm。
+問：同 MS-01 有咩分別？
+答：兩者都係多網口迷你工作站；MS-01 用 Intel Core™ H 系列，MS-A2 用 AMD HX 系列並有 PCIe x16。實際網絡同儲存配置以各產品頁為準。
+問：係咪香港行貨？保養幾耐？
+答：係香港行貨，由香港出貨。保養期 3 年（由購買日起計）。詳情請參閱保養與退貨條款。
+問：點睇庫存／有冇貨？
+答：香港官方有售，庫存以產品頁顯示為準。下單前請睇產品頁顯示。","[{""title"": ""MINISFORUM MS-A2"", ""language"": ""zh"", ""description"": ""產品簡介\nMinisforum MS-A2 係迷你工作站，可揀 AMD Ryzen™ 7 7745HX 或 Ryzen™ 9 9955HX，雙通道 DDR5（最高約 96GB），多個 M.2／U.2 儲存位，並有 PCIe 4.0 x16 擴充槽。\n網絡有 2 個 10G SFP+ 同 2 個 2.5G RJ45（合共四網口），適合辦公室、虛擬化、輕量 home server 同需要多網口分流嘅進階場景。香港行貨，3 年保養。香港官方有售，庫存以產品頁顯示為準。\n\n\nAMD Ryzen™ 7 7745HX | Ryzen™ 9 9955HX\nPCIE4.0 ×16 插槽 \nDDR5 Slots *2 (Max Support 96GB）\nM.2 2280 SSD 插槽*3 (最大15TB｜U.2 介面）\n10Gbps SFP+ LAN ×2｜2.5Gbps RJ45 LAN ×2\nWi-Fi 6E | BT 5.2\nWindows 11Pro\n三年保用\n\n常見問題\n\n問：MS-A2 用咩處理器同記憶體？\n答：可揀 AMD Ryzen™ 7 7745HX（8 核 16 線程）或 Ryzen™ 9 9955HX（16 核 32 線程，最高約 5.4GHz），內顯 Radeon™ 610M。記憶體係雙通道 DDR5 SODIMM（兩條插槽，最高約 96GB）；儲存有多個 M.2／U.2 位。可揀準系統或系統機。\n問：有冇多網口？適唔適合做 server／工作站？\n答：有四個有線網口：2 個 10G SFP+ 加 2 個 2.5G RJ45，另有 Wi-Fi 6E。多網口加 PCIe 4.0 x16，適合虛擬化、輕量 home server、辦公室常開機，或者需要有線分流／聚合嘅進階場景。\n問：儲存同擴充點樣？\n答：有多個 M.2 2280／22110 位（其一可作 U.2，最高容量以配件規格為準），另有 PCIe 4.0 x16 插槽方便裝兼容擴充卡。機身約 196 × 189 × 48mm。\n問：同 MS-01 有咩分別？\n答：兩者都係多網口迷你工作站；MS-01 用 Intel Core™ H 系列，MS-A2 用 AMD HX 系列並有 PCIe x16。實際網絡同儲存配置以各產品頁為準。\n問：係咪香港行貨？保養幾耐？\n答：係香港行貨，由香港出貨。保養期 3 年（由購買日起計）。詳情請參閱保養與退貨條款。\n問：點睇庫存／有冇貨？\n答：香港官方有售，庫存以產品頁顯示為準。下單前請睇產品頁顯示。""}]"
+"01a18955-547e-700d-a62e-87583adef299","minisforumhk","https://minisforum.hk/products/ms-a2?variant=45379678503090","MINISFORUM MS-A2","1099900","HKD","2026-10-29 20:23:53.21481+00","2026-10-26 14:56:29.716267+00","{""code"": ""HK"", ""kind"": ""country""}","zh",,"CS-MFMSA2A","gid://shopify/Product/8484115447986","gid://shopify/ProductVariant/45379678503090","ms-a2","1299900","HKD","""in_stock""",,"產品簡介
+Minisforum MS-A2 係迷你工作站，可揀 AMD Ryzen™ 7 7745HX 或 Ryzen™ 9 9955HX，雙通道 DDR5（最高約 96GB），多個 M.2／U.2 儲存位，並有 PCIe 4.0 x16 擴充槽。
+網絡有 2 個 10G SFP+ 同 2 個 2.5G RJ45（合共四網口），適合辦公室、虛擬化、輕量 home server 同需要多網口分流嘅進階場景。香港行貨，3 年保養。香港官方有售，庫存以產品頁顯示為準。
+
+
+AMD Ryzen™ 7 7745HX | Ryzen™ 9 9955HX
+PCIE4.0 ×16 插槽 
+DDR5 Slots *2 (Max Support 96GB）
+M.2 2280 SSD 插槽*3 (最大15TB｜U.2 介面）
+10Gbps SFP+ LAN ×2｜2.5Gbps RJ45 LAN ×2
+Wi-Fi 6E | BT 5.2
+Windows 11Pro
+三年保用
+
+常見問題
+
+問：MS-A2 用咩處理器同記憶體？
+答：可揀 AMD Ryzen™ 7 7745HX（8 核 16 線程）或 Ryzen™ 9 9955HX（16 核 32 線程，最高約 5.4GHz），內顯 Radeon™ 610M。記憶體係雙通道 DDR5 SODIMM（兩條插槽，最高約 96GB）；儲存有多個 M.2／U.2 位。可揀準系統或系統機。
+問：有冇多網口？適唔適合做 server／工作站？
+答：有四個有線網口：2 個 10G SFP+ 加 2 個 2.5G RJ45，另有 Wi-Fi 6E。多網口加 PCIe 4.0 x16，適合虛擬化、輕量 home server、辦公室常開機，或者需要有線分流／聚合嘅進階場景。
+問：儲存同擴充點樣？
+答：有多個 M.2 2280／22110 位（其一可作 U.2，最高容量以配件規格為準），另有 PCIe 4.0 x16 插槽方便裝兼容擴充卡。機身約 196 × 189 × 48mm。
+問：同 MS-01 有咩分別？
+答：兩者都係多網口迷你工作站；MS-01 用 Intel Core™ H 系列，MS-A2 用 AMD HX 系列並有 PCIe x16。實際網絡同儲存配置以各產品頁為準。
+問：係咪香港行貨？保養幾耐？
+答：係香港行貨，由香港出貨。保養期 3 年（由購買日起計）。詳情請參閱保養與退貨條款。
+問：點睇庫存／有冇貨？
+答：香港官方有售，庫存以產品頁顯示為準。下單前請睇產品頁顯示。","[{""title"": ""MINISFORUM MS-A2"", ""language"": ""zh"", ""description"": ""產品簡介\nMinisforum MS-A2 係迷你工作站，可揀 AMD Ryzen™ 7 7745HX 或 Ryzen™ 9 9955HX，雙通道 DDR5（最高約 96GB），多個 M.2／U.2 儲存位，並有 PCIe 4.0 x16 擴充槽。\n網絡有 2 個 10G SFP+ 同 2 個 2.5G RJ45（合共四網口），適合辦公室、虛擬化、輕量 home server 同需要多網口分流嘅進階場景。香港行貨，3 年保養。香港官方有售，庫存以產品頁顯示為準。\n\n\nAMD Ryzen™ 7 7745HX | Ryzen™ 9 9955HX\nPCIE4.0 ×16 插槽 \nDDR5 Slots *2 (Max Support 96GB）\nM.2 2280 SSD 插槽*3 (最大15TB｜U.2 介面）\n10Gbps SFP+ LAN ×2｜2.5Gbps RJ45 LAN ×2\nWi-Fi 6E | BT 5.2\nWindows 11Pro\n三年保用\n\n常見問題\n\n問：MS-A2 用咩處理器同記憶體？\n答：可揀 AMD Ryzen™ 7 7745HX（8 核 16 線程）或 Ryzen™ 9 9955HX（16 核 32 線程，最高約 5.4GHz），內顯 Radeon™ 610M。記憶體係雙通道 DDR5 SODIMM（兩條插槽，最高約 96GB）；儲存有多個 M.2／U.2 位。可揀準系統或系統機。\n問：有冇多網口？適唔適合做 server／工作站？\n答：有四個有線網口：2 個 10G SFP+ 加 2 個 2.5G RJ45，另有 Wi-Fi 6E。多網口加 PCIe 4.0 x16，適合虛擬化、輕量 home server、辦公室常開機，或者需要有線分流／聚合嘅進階場景。\n問：儲存同擴充點樣？\n答：有多個 M.2 2280／22110 位（其一可作 U.2，最高容量以配件規格為準），另有 PCIe 4.0 x16 插槽方便裝兼容擴充卡。機身約 196 × 189 × 48mm。\n問：同 MS-01 有咩分別？\n答：兩者都係多網口迷你工作站；MS-01 用 Intel Core™ H 系列，MS-A2 用 AMD HX 系列並有 PCIe x16。實際網絡同儲存配置以各產品頁為準。\n問：係咪香港行貨？保養幾耐？\n答：係香港行貨，由香港出貨。保養期 3 年（由購買日起計）。詳情請參閱保養與退貨條款。\n問：點睇庫存／有冇貨？\n答：香港官方有售，庫存以產品頁顯示為準。下單前請睇產品頁顯示。""}]"
+"01a18955-56a6-7104-a6fa-4c6ae3186a89","minisforumhk","https://minisforum.hk/products/ms-a2?variant=47324361556146","MINISFORUM MS-A2","849900","HKD","2026-10-29 20:23:53.766846+00","2026-10-26 14:56:29.716267+00","{""code"": ""HK"", ""kind"": ""country""}","zh",,"CS-MFMSA77","gid://shopify/Product/8484115447986","gid://shopify/ProductVariant/47324361556146","ms-a2","949900","HKD","""in_stock""",,"產品簡介
+Minisforum MS-A2 係迷你工作站，可揀 AMD Ryzen™ 7 7745HX 或 Ryzen™ 9 9955HX，雙通道 DDR5（最高約 96GB），多個 M.2／U.2 儲存位，並有 PCIe 4.0 x16 擴充槽。
+網絡有 2 個 10G SFP+ 同 2 個 2.5G RJ45（合共四網口），適合辦公室、虛擬化、輕量 home server 同需要多網口分流嘅進階場景。香港行貨，3 年保養。香港官方有售，庫存以產品頁顯示為準。
+
+
+AMD Ryzen™ 7 7745HX | Ryzen™ 9 9955HX
+PCIE4.0 ×16 插槽 
+DDR5 Slots *2 (Max Support 96GB）
+M.2 2280 SSD 插槽*3 (最大15TB｜U.2 介面）
+10Gbps SFP+ LAN ×2｜2.5Gbps RJ45 LAN ×2
+Wi-Fi 6E | BT 5.2
+Windows 11Pro
+三年保用
+
+常見問題
+
+問：MS-A2 用咩處理器同記憶體？
+答：可揀 AMD Ryzen™ 7 7745HX（8 核 16 線程）或 Ryzen™ 9 9955HX（16 核 32 線程，最高約 5.4GHz），內顯 Radeon™ 610M。記憶體係雙通道 DDR5 SODIMM（兩條插槽，最高約 96GB）；儲存有多個 M.2／U.2 位。可揀準系統或系統機。
+問：有冇多網口？適唔適合做 server／工作站？
+答：有四個有線網口：2 個 10G SFP+ 加 2 個 2.5G RJ45，另有 Wi-Fi 6E。多網口加 PCIe 4.0 x16，適合虛擬化、輕量 home server、辦公室常開機，或者需要有線分流／聚合嘅進階場景。
+問：儲存同擴充點樣？
+答：有多個 M.2 2280／22110 位（其一可作 U.2，最高容量以配件規格為準），另有 PCIe 4.0 x16 插槽方便裝兼容擴充卡。機身約 196 × 189 × 48mm。
+問：同 MS-01 有咩分別？
+答：兩者都係多網口迷你工作站；MS-01 用 Intel Core™ H 系列，MS-A2 用 AMD HX 系列並有 PCIe x16。實際網絡同儲存配置以各產品頁為準。
+問：係咪香港行貨？保養幾耐？
+答：係香港行貨，由香港出貨。保養期 3 年（由購買日起計）。詳情請參閱保養與退貨條款。
+問：點睇庫存／有冇貨？
+答：香港官方有售，庫存以產品頁顯示為準。下單前請睇產品頁顯示。","[{""title"": ""MINISFORUM MS-A2"", ""language"": ""zh"", ""description"": ""產品簡介\nMinisforum MS-A2 係迷你工作站，可揀 AMD Ryzen™ 7 7745HX 或 Ryzen™ 9 9955HX，雙通道 DDR5（最高約 96GB），多個 M.2／U.2 儲存位，並有 PCIe 4.0 x16 擴充槽。\n網絡有 2 個 10G SFP+ 同 2 個 2.5G RJ45（合共四網口），適合辦公室、虛擬化、輕量 home server 同需要多網口分流嘅進階場景。香港行貨，3 年保養。香港官方有售，庫存以產品頁顯示為準。\n\n\nAMD Ryzen™ 7 7745HX | Ryzen™ 9 9955HX\nPCIE4.0 ×16 插槽 \nDDR5 Slots *2 (Max Support 96GB）\nM.2 2280 SSD 插槽*3 (最大15TB｜U.2 介面）\n10Gbps SFP+ LAN ×2｜2.5Gbps RJ45 LAN ×2\nWi-Fi 6E | BT 5.2\nWindows 11Pro\n三年保用\n\n常見問題\n\n問：MS-A2 用咩處理器同記憶體？\n答：可揀 AMD Ryzen™ 7 7745HX（8 核 16 線程）或 Ryzen™ 9 9955HX（16 核 32 線程，最高約 5.4GHz），內顯 Radeon™ 610M。記憶體係雙通道 DDR5 SODIMM（兩條插槽，最高約 96GB）；儲存有多個 M.2／U.2 位。可揀準系統或系統機。\n問：有冇多網口？適唔適合做 server／工作站？\n答：有四個有線網口：2 個 10G SFP+ 加 2 個 2.5G RJ45，另有 Wi-Fi 6E。多網口加 PCIe 4.0 x16，適合虛擬化、輕量 home server、辦公室常開機，或者需要有線分流／聚合嘅進階場景。\n問：儲存同擴充點樣？\n答：有多個 M.2 2280／22110 位（其一可作 U.2，最高容量以配件規格為準），另有 PCIe 4.0 x16 插槽方便裝兼容擴充卡。機身約 196 × 189 × 48mm。\n問：同 MS-01 有咩分別？\n答：兩者都係多網口迷你工作站；MS-01 用 Intel Core™ H 系列，MS-A2 用 AMD HX 系列並有 PCIe x16。實際網絡同儲存配置以各產品頁為準。\n問：係咪香港行貨？保養幾耐？\n答：係香港行貨，由香港出貨。保養期 3 年（由購買日起計）。詳情請參閱保養與退貨條款。\n問：點睇庫存／有冇貨？\n答：香港官方有售，庫存以產品頁顯示為準。下單前請睇產品頁顯示。""}]"
+"01a18955-58b2-732a-8898-88b6a49df275","minisforumhk","https://minisforum.hk/products/ms-03?variant=48049666064562","MINISFORUM MS-03 WORKSTATION","749900","HKD","2026-10-29 20:23:54.290457+00","2026-10-26 15:35:54.044677+00","{""code"": ""HK"", ""kind"": ""country""}","zh",,"BS-MMS039","gid://shopify/Product/9012946501810","gid://shopify/ProductVariant/48049666064562","ms-03",,,"""in_stock""",,"Intel® Core™ Ultra 9 Processor 386H (16 Cores/16 Threads)/ Intel® Graphics (Graphics Frequency 2.50 GHz)/DDR5 SODIMM Slot x 2M.2 2280 PCIe 4.0 SSDLan Port x 4 (2*10Gbps, 2*2.5Gbps)Pre-installed: Windows 11 Pro","[{""title"": ""MINISFORUM MS-03 WORKSTATION"", ""language"": ""zh"", ""description"": ""Intel® Core™ Ultra 9 Processor 386H (16 Cores/16 Threads)/ Intel® Graphics (Graphics Frequency 2.50 GHz)/DDR5 SODIMM Slot x 2M.2 2280 PCIe 4.0 SSDLan Port x 4 (2*10Gbps, 2*2.5Gbps)Pre-installed: Windows 11 Pro""}]"
+"01a18955-58b9-754a-b9d1-5cedf6c508d5","minisforumhk","https://minisforum.hk/products/ms-03?variant=48049666097330","MINISFORUM MS-03 WORKSTATION","1249900","HKD","2026-10-29 20:23:54.297953+00","2026-10-26 15:35:54.044677+00","{""code"": ""HK"", ""kind"": ""country""}","zh",,"CS-MMS039A","gid://shopify/Product/9012946501810","gid://shopify/ProductVariant/48049666097330","ms-03",,,"""out_of_stock""",,"Intel® Core™ Ultra 9 Processor 386H (16 Cores/16 Threads)/ Intel® Graphics (Graphics Frequency 2.50 GHz)/DDR5 SODIMM Slot x 2M.2 2280 PCIe 4.0 SSDLan Port x 4 (2*10Gbps, 2*2.5Gbps)Pre-installed: Windows 11 Pro","[{""title"": ""MINISFORUM MS-03 WORKSTATION"", ""language"": ""zh"", ""description"": ""Intel® Core™ Ultra 9 Processor 386H (16 Cores/16 Threads)/ Intel® Graphics (Graphics Frequency 2.50 GHz)/DDR5 SODIMM Slot x 2M.2 2280 PCIe 4.0 SSDLan Port x 4 (2*10Gbps, 2*2.5Gbps)Pre-installed: Windows 11 Pro""}]"
+"01a18955-58cd-740a-b8cc-ec53ad7a6ee4","minisforumhk","https://minisforum.hk/products/ms-03?variant=48049666130098","MINISFORUM MS-03 WORKSTATION","1549900","HKD","2026-10-29 20:23:54.317877+00","2026-10-26 15:35:54.044677+00","{""code"": ""HK"", ""kind"": ""country""}","zh",,"CS-MMS039B","gid://shopify/Product/9012946501810","gid://shopify/ProductVariant/48049666130098","ms-03",,,"""out_of_stock""",,"Intel® Core™ Ultra 9 Processor 386H (16 Cores/16 Threads)/ Intel® Graphics (Graphics Frequency 2.50 GHz)/DDR5 SODIMM Slot x 2M.2 2280 PCIe 4.0 SSDLan Port x 4 (2*10Gbps, 2*2.5Gbps)Pre-installed: Windows 11 Pro","[{""title"": ""MINISFORUM MS-03 WORKSTATION"", ""language"": ""zh"", ""description"": ""Intel® Core™ Ultra 9 Processor 386H (16 Cores/16 Threads)/ Intel® Graphics (Graphics Frequency 2.50 GHz)/DDR5 SODIMM Slot x 2M.2 2280 PCIe 4.0 SSDLan Port x 4 (2*10Gbps, 2*2.5Gbps)Pre-installed: Windows 11 Pro""}]"
+"01a18955-6740-7177-93b0-f317787bbf76","minisforumhk","https://minisforum.hk/products/minisforum-deg1","DEG1  顯卡拓展塢","79900","HKD","2026-10-29 20:23:58.016915+00","2026-10-26 14:58:23.862944+00","{""code"": ""HK"", ""kind"": ""country""}","zh",,"DK-MOCULDK","gid://shopify/Product/8142101381298","gid://shopify/ProductVariant/44305372250290","minisforum-deg1",,,"""out_of_stock""",,,"[{""title"": ""DEG1  顯卡拓展塢"", ""language"": ""zh"", ""description"": null}]"
+"01a18955-6904-768f-9767-8788c9575f13","minisforumhk","https://minisforum.hk/products/minisforum-um890-pro?variant=44475574845618","Minisforum UM890 Pro","459900","HKD","2026-10-29 20:23:58.468342+00","2026-10-26 15:02:36.479549+00","{""code"": ""HK"", ""kind"": ""country""}","zh",,"BS-MUM890","gid://shopify/Product/8217333989554","gid://shopify/ProductVariant/44475574845618","minisforum-um890-pro","489900","HKD","""out_of_stock""",,,"[{""title"": ""Minisforum UM890 Pro"", ""language"": ""zh"", ""description"": null}]"
+"01a18955-69ad-765f-ace8-a56de7368b88","minisforumhk","https://minisforum.hk/products/minisforum-nab5r?variant=47587319414962","Minisforum NAB5R","549900","HKD","2026-10-29 20:23:58.637518+00","2026-10-26 14:57:59.243512+00","{""code"": ""HK"", ""kind"": ""country""}","zh",,"CS-MNAB5","gid://shopify/Product/8910575730866","gid://shopify/ProductVariant/47587319414962","minisforum-nab5r",,,"""in_stock""",,"Minisforum NAB5R     Intel® Core™ i5-13500H ProcessorIntel® Iris® Xe Graphics (Up to 1.45 GHz)DDR4 3200MHz RAMM.2 2280 SSD Slot *12.5-inch SATA HDD Slot *1","[{""title"": ""Minisforum NAB5R"", ""language"": ""zh"", ""description"": ""Minisforum NAB5R     Intel® Core™ i5-13500H ProcessorIntel® Iris® Xe Graphics (Up to 1.45 GHz)DDR4 3200MHz RAMM.2 2280 SSD Slot *12.5-inch SATA HDD Slot *1""}]"
+"01a18955-69c7-74f3-be4f-b07fc9ae648c","minisforumhk","https://minisforum.hk/products/minisforum-nab5r?variant=47587319447730","Minisforum NAB5R","699900","HKD","2026-10-29 20:23:58.663468+00","2026-10-26 14:57:59.243512+00","{""code"": ""HK"", ""kind"": ""country""}","zh",,"CS-MNAB5A","gid://shopify/Product/8910575730866","gid://shopify/ProductVariant/47587319447730","minisforum-nab5r",,,"""in_stock""",,"Minisforum NAB5R     Intel® Core™ i5-13500H ProcessorIntel® Iris® Xe Graphics (Up to 1.45 GHz)DDR4 3200MHz RAMM.2 2280 SSD Slot *12.5-inch SATA HDD Slot *1","[{""title"": ""Minisforum NAB5R"", ""language"": ""zh"", ""description"": ""Minisforum NAB5R     Intel® Core™ i5-13500H ProcessorIntel® Iris® Xe Graphics (Up to 1.45 GHz)DDR4 3200MHz RAMM.2 2280 SSD Slot *12.5-inch SATA HDD Slot *1""}]"
+"01a18955-6a4b-713d-bb9f-ebffec182806","minisforumhk","https://minisforum.hk/products/minisforum-nab5r?variant=48049707843762","Minisforum NAB5R","799900","HKD","2026-10-29 20:23:58.79534+00","2026-10-26 14:57:59.243512+00","{""code"": ""HK"", ""kind"": ""country""}","zh",,"CS-MNAB5B","gid://shopify/Product/8910575730866","gid://shopify/ProductVariant/48049707843762","minisforum-nab5r",,,"""in_stock""",,"Minisforum NAB5R     Intel® Core™ i5-13500H ProcessorIntel® Iris® Xe Graphics (Up to 1.45 GHz)DDR4 3200MHz RAMM.2 2280 SSD Slot *12.5-inch SATA HDD Slot *1","[{""title"": ""Minisforum NAB5R"", ""language"": ""zh"", ""description"": ""Minisforum NAB5R     Intel® Core™ i5-13500H ProcessorIntel® Iris® Xe Graphics (Up to 1.45 GHz)DDR4 3200MHz RAMM.2 2280 SSD Slot *12.5-inch SATA HDD Slot *1""}]"
+"01a18955-6abd-71ff-a893-e87ee8c615f2","minisforumhk","https://minisforum.hk/products/minisforum-um890-pro?variant=47979003314354","Minisforum UM890 Pro","699900","HKD","2026-10-29 20:23:58.909797+00","2026-10-26 15:02:36.479549+00","{""code"": ""HK"", ""kind"": ""country""}","zh",,"CS-MUM89","gid://shopify/Product/8217333989554","gid://shopify/ProductVariant/47979003314354","minisforum-um890-pro","799900","HKD","""in_stock""",,,"[{""title"": ""Minisforum UM890 Pro"", ""language"": ""zh"", ""description"": null}]"
+"01a18955-6e0a-771e-9961-79cf179ca923","minisforumhk","https://minisforum.hk/products/minisforum-t5-max","【預購｜11月中下旬到貨】Minisforum T5 Max","1199900","HKD","2026-10-29 20:23:59.754208+00","2026-10-26 15:00:34.992204+00","{""code"": ""HK"", ""kind"": ""country""}","zh",,"CS-MT5MAX","gid://shopify/Product/15437606715570","gid://shopify/ProductVariant/67785640444082","minisforum-t5-max","1399900","HKD","""in_stock""",,"產品簡介
+Minisforum T5 Max 係迷你工作站，搭載 AMD Ryzen™ AI Max+ 388（8 核 16 線程，內顯 Radeon™ 8060S），板載 48GB LPDDR5x，預載 1TB PCIe 4.0 SSD。
+現正接受預購，預計 2026 年 11 月中下旬到貨。
+有 1 個 2.5G 網口、Wi-Fi 7、雙 USB4、HDMI 2.1 同 DP 2.1，適合本地 AI、內容創作同需要強內顯嘅進階場景，唔係入門文書機。香港行貨，3 年保養。
+
+MINISFORUM T5 Max 迷你工作站
+搭載 AMD Ryzen™ AI Max+ 388 同 Radeon 8060S 內顯，配 48GB LPDDR5x 6400MHz 記憶體，啱做 AI、創作同打機。香港行貨，3 年保養。現正接受預購，預計 2026 年 11 月中下旬到貨。
+
+
+
+型號
+T5 Max（CS-MT5MAX）
+
+
+處理器
+AMD Ryzen™ AI Max+ 388（8 核心 / 16 線程，L2 8MB，L3 32MB，基本時脈 3.6GHz，最高 5GHz）
+
+
+顯示晶片
+AMD Radeon 8060S Graphics（2900MHz）
+
+
+記憶體
+48GB LPDDR5x 6400MHz
+
+
+儲存
+1TB M.2 2280 PCIe 4.0 SSD x1（2 x M.2 2280 PCIe 4.0 插槽）
+
+
+儲存擴充
+1 x M.2 2280 NVMe SSD
+
+
+作業系統
+Windows 11 Pro
+
+
+HDMI
+HDMI 2.1 x1（8K@60）
+
+
+DisplayPort
+DP 2.1 x1
+
+
+USB Type-C
+USB4 ×2（8K@60Hz）、USB 3.2 Gen2 ×1、USB-C（只限數據）×1
+
+
+USB Type-A
+USB 3.1 Gen2 x2、USB 3.2 Gen2 x2、USB 2.0 x4
+
+
+音效
+3.5mm Combo Jack x1、Mic in x2、Line out x1、Line in x1
+
+
+網絡
+2.5GbE LAN x1
+
+
+無線
+M.2 2230 WiFi（Wi-Fi 7、Bluetooth 5.4）
+
+
+尺寸
+230 × 93 × 288mm
+
+
+保養
+3 年
+
+
+
+*產品最終規格以官方實貨為準。
+常見問題
+
+問：而家係咪預購？幾時到貨？
+答：係，現正接受預購。預計 2026 年 11 月中下旬到貨；實際到貨／出貨以訂單確認同店方通知為準。
+問：T5 Max 用咩處理器同記憶體？
+答：用 AMD Ryzen™ AI Max+ 388（8 核 16 線程，最高約 5.0GHz），內顯 Radeon™ 8060S。記憶體係板載 48GB LPDDR5x 6400MHz（唔係一般 SODIMM）；儲存有 2 個 M.2 2280 PCIe 4.0 插槽，預載 1TB。預裝 Windows 11 Pro。
+問：適唔適合做 AI／創作工作站？
+答：適合本地 AI、影片／圖像創作、多工同需要強內顯嘅進階用途。機身約 230 × 93 × 288mm，有 2.5G 有線網口、Wi-Fi 7、雙 USB4、HDMI 2.1 同 DP 2.1。
+問：同 MS-S1 Max／N5 MAX 有咩分別？
+答：T5 Max 係 AI Max+ 388 迷你工作站定位；MS-S1 Max 用更高階 AI Max+ 395／PRO 495 同更大板載記憶體；N5 MAX 係雙 10G AI NAS／家用伺服器。三者都唔係入門文書機，實際規格以各產品頁為準。
+問：記憶體可唔可以自行升級？
+答：LPDDR5x 係板載統一記憶體，一般唔可以像 SODIMM 咁自行加插。容量以產品頁預載規格為準。
+問：係咪香港行貨？保養幾耐？
+答：係香港行貨，由香港出貨。保養期 3 年（由購買日起計）。詳情請參閱保養與退貨條款。","[{""title"": ""【預購｜11月中下旬到貨】Minisforum T5 Max"", ""language"": ""zh"", ""description"": ""產品簡介\nMinisforum T5 Max 係迷你工作站，搭載 AMD Ryzen™ AI Max+ 388（8 核 16 線程，內顯 Radeon™ 8060S），板載 48GB LPDDR5x，預載 1TB PCIe 4.0 SSD。\n現正接受預購，預計 2026 年 11 月中下旬到貨。\n有 1 個 2.5G 網口、Wi-Fi 7、雙 USB4、HDMI 2.1 同 DP 2.1，適合本地 AI、內容創作同需要強內顯嘅進階場景，唔係入門文書機。香港行貨，3 年保養。\n\nMINISFORUM T5 Max 迷你工作站\n搭載 AMD Ryzen™ AI Max+ 388 同 Radeon 8060S 內顯，配 48GB LPDDR5x 6400MHz 記憶體，啱做 AI、創作同打機。香港行貨，3 年保養。現正接受預購，預計 2026 年 11 月中下旬到貨。\n\n\n\n型號\nT5 Max（CS-MT5MAX）\n\n\n處理器\nAMD Ryzen™ AI Max+ 388（8 核心 / 16 線程，L2 8MB，L3 32MB，基本時脈 3.6GHz，最高 5GHz）\n\n\n顯示晶片\nAMD Radeon 8060S Graphics（2900MHz）\n\n\n記憶體\n48GB LPDDR5x 6400MHz\n\n\n儲存\n1TB M.2 2280 PCIe 4.0 SSD x1（2 x M.2 2280 PCIe 4.0 插槽）\n\n\n儲存擴充\n1 x M.2 2280 NVMe SSD\n\n\n作業系統\nWindows 11 Pro\n\n\nHDMI\nHDMI 2.1 x1（8K@60）\n\n\nDisplayPort\nDP 2.1 x1\n\n\nUSB Type-C\nUSB4 ×2（8K@60Hz）、USB 3.2 Gen2 ×1、USB-C（只限數據）×1\n\n\nUSB Type-A\nUSB 3.1 Gen2 x2、USB 3.2 Gen2 x2、USB 2.0 x4\n\n\n音效\n3.5mm Combo Jack x1、Mic in x2、Line out x1、Line in x1\n\n\n網絡\n2.5GbE LAN x1\n\n\n無線\nM.2 2230 WiFi（Wi-Fi 7、Bluetooth 5.4）\n\n\n尺寸\n230 × 93 × 288mm\n\n\n保養\n3 年\n\n\n\n*產品最終規格以官方實貨為準。\n常見問題\n\n問：而家係咪預購？幾時到貨？\n答：係，現正接受預購。預計 2026 年 11 月中下旬到貨；實際到貨／出貨以訂單確認同店方通知為準。\n問：T5 Max 用咩處理器同記憶體？\n答：用 AMD Ryzen™ AI Max+ 388（8 核 16 線程，最高約 5.0GHz），內顯 Radeon™ 8060S。記憶體係板載 48GB LPDDR5x 6400MHz（唔係一般 SODIMM）；儲存有 2 個 M.2 2280 PCIe 4.0 插槽，預載 1TB。預裝 Windows 11 Pro。\n問：適唔適合做 AI／創作工作站？\n答：適合本地 AI、影片／圖像創作、多工同需要強內顯嘅進階用途。機身約 230 × 93 × 288mm，有 2.5G 有線網口、Wi-Fi 7、雙 USB4、HDMI 2.1 同 DP 2.1。\n問：同 MS-S1 Max／N5 MAX 有咩分別？\n答：T5 Max 係 AI Max+ 388 迷你工作站定位；MS-S1 Max 用更高階 AI Max+ 395／PRO 495 同更大板載記憶體；N5 MAX 係雙 10G AI NAS／家用伺服器。三者都唔係入門文書機，實際規格以各產品頁為準。\n問：記憶體可唔可以自行升級？\n答：LPDDR5x 係板載統一記憶體，一般唔可以像 SODIMM 咁自行加插。容量以產品頁預載規格為準。\n問：係咪香港行貨？保養幾耐？\n答：係香港行貨，由香港出貨。保養期 3 年（由購買日起計）。詳情請參閱保養與退貨條款。""}]"
+"01a18955-742a-74d5-a97c-0e639b94f102","minisforumhk","https://minisforum.hk/products/minisforum-um890-pro?variant=45234383782066","Minisforum UM890 Pro","849900","HKD","2026-10-29 20:24:01.322219+00","2026-10-26 15:02:36.479549+00","{""code"": ""HK"", ""kind"": ""country""}","zh",,"CS-MUM890P","gid://shopify/Product/8217333989554","gid://shopify/ProductVariant/45234383782066","minisforum-um890-pro","949900","HKD","""in_stock""",,,"[{""title"": ""Minisforum UM890 Pro"", ""language"": ""zh"", ""description"": null}]"
+"01a18955-743a-7454-9ee8-2aa3f357ee38","minisforumhk","https://minisforum.hk/products/minisforum-um890-pro?variant=45234385944754","Minisforum UM890 Pro","1099900","HKD","2026-10-29 20:24:01.338446+00","2026-10-26 15:02:36.479549+00","{""code"": ""HK"", ""kind"": ""country""}","zh",,"CS-MUM89AP","gid://shopify/Product/8217333989554","gid://shopify/ProductVariant/45234385944754","minisforum-um890-pro","1299900","HKD","""out_of_stock""",,,"[{""title"": ""Minisforum UM890 Pro"", ""language"": ""zh"", ""description"": null}]"
+"01a18955-7d2b-7587-8c81-def667ae15d8","minisforumhk","https://minisforum.hk/products/minisforum-nab9s","Minisforum NAB9S","779900","HKD","2026-10-29 20:24:03.627456+00","2026-10-26 15:35:47.365458+00","{""code"": ""HK"", ""kind"": ""country""}","zh",,"CS-MNAB93A","gid://shopify/Product/8936404418738","gid://shopify/ProductVariant/48015789031602","minisforum-nab9s",,,"""in_stock""",,,"[{""title"": ""Minisforum NAB9S"", ""language"": ""zh"", ""description"": null}]"
+"01a18955-7dc4-7111-8f58-c6f1df5a10f4","minisforumhk","https://minisforum.hk/products/n5-pro-370-255?variant=45572798021810","MINISFORUM N5 Pro AI NAS","449900","HKD","2026-10-29 20:24:03.7801+00","2026-10-26 15:35:54.738748+00","{""code"": ""HK"", ""kind"": ""country""}","zh",,"BS-MN5255","gid://shopify/Product/8522048471218","gid://shopify/ProductVariant/45572798021810","n5-pro-370-255","499900","HKD","""in_stock""",,"這款高效能迷你伺服器搭載 AMD Ryzen™ AI 9 HX Pro 370 或 Ryzen™ 7 255 處理器，最高 12 核心 24 執行緒，支援高達 96GB ECC 記憶體。內建 5 個 3.5/2.5 吋硬碟槽，單碟最高 22TB，總容量可達 110TB，並支援多組 NVMe SSD 擴充。配備 10Gbps 與 5Gbps 網路埠、PCIe 4.0 x16 擴充槽，提供 HDMI 2.0 4K 輸出及多組 USB4 Type-C 端口，兼容 Windows 11 與 Linux 系統，滿足專業用戶對高速運算與儲存的極致需求。","[{""title"": ""MINISFORUM N5 Pro AI NAS"", ""language"": ""zh"", ""description"": ""這款高效能迷你伺服器搭載 AMD Ryzen™ AI 9 HX Pro 370 或 Ryzen™ 7 255 處理器，最高 12 核心 24 執行緒，支援高達 96GB ECC 記憶體。內建 5 個 3.5/2.5 吋硬碟槽，單碟最高 22TB，總容量可達 110TB，並支援多組 NVMe SSD 擴充。配備 10Gbps 與 5Gbps 網路埠、PCIe 4.0 x16 擴充槽，提供 HDMI 2.0 4K 輸出及多組 USB4 Type-C 端口，兼容 Windows 11 與 Linux 系統，滿足專業用戶對高速運算與儲存的極致需求。""}]"
+"01a18955-7dd1-7694-b37f-3731a49312e5","minisforumhk","https://minisforum.hk/products/n5-pro-370-255?variant=45572798054578","MINISFORUM N5 Pro AI NAS","649900","HKD","2026-10-29 20:24:03.793268+00","2026-10-26 15:35:54.738748+00","{""code"": ""HK"", ""kind"": ""country""}","zh",,"CS-MN5255","gid://shopify/Product/8522048471218","gid://shopify/ProductVariant/45572798054578","n5-pro-370-255","729900","HKD","""in_stock""",,"這款高效能迷你伺服器搭載 AMD Ryzen™ AI 9 HX Pro 370 或 Ryzen™ 7 255 處理器，最高 12 核心 24 執行緒，支援高達 96GB ECC 記憶體。內建 5 個 3.5/2.5 吋硬碟槽，單碟最高 22TB，總容量可達 110TB，並支援多組 NVMe SSD 擴充。配備 10Gbps 與 5Gbps 網路埠、PCIe 4.0 x16 擴充槽，提供 HDMI 2.0 4K 輸出及多組 USB4 Type-C 端口，兼容 Windows 11 與 Linux 系統，滿足專業用戶對高速運算與儲存的極致需求。","[{""title"": ""MINISFORUM N5 Pro AI NAS"", ""language"": ""zh"", ""description"": ""這款高效能迷你伺服器搭載 AMD Ryzen™ AI 9 HX Pro 370 或 Ryzen™ 7 255 處理器，最高 12 核心 24 執行緒，支援高達 96GB ECC 記憶體。內建 5 個 3.5/2.5 吋硬碟槽，單碟最高 22TB，總容量可達 110TB，並支援多組 NVMe SSD 擴充。配備 10Gbps 與 5Gbps 網路埠、PCIe 4.0 x16 擴充槽，提供 HDMI 2.0 4K 輸出及多組 USB4 Type-C 端口，兼容 Windows 11 與 Linux 系統，滿足專業用戶對高速運算與儲存的極致需求。""}]"
+"01a18955-7de5-726a-b228-07d476a8f9d0","minisforumhk","https://minisforum.hk/products/n5-pro-370-255?variant=47979020288178","MINISFORUM N5 Pro AI NAS","749900","HKD","2026-10-29 20:24:03.813295+00","2026-10-26 15:35:54.738748+00","{""code"": ""HK"", ""kind"": ""country""}","zh",,"BS-MN5PRO","gid://shopify/Product/8522048471218","gid://shopify/ProductVariant/47979020288178","n5-pro-370-255","799900","HKD","""in_stock""",,"這款高效能迷你伺服器搭載 AMD Ryzen™ AI 9 HX Pro 370 或 Ryzen™ 7 255 處理器，最高 12 核心 24 執行緒，支援高達 96GB ECC 記憶體。內建 5 個 3.5/2.5 吋硬碟槽，單碟最高 22TB，總容量可達 110TB，並支援多組 NVMe SSD 擴充。配備 10Gbps 與 5Gbps 網路埠、PCIe 4.0 x16 擴充槽，提供 HDMI 2.0 4K 輸出及多組 USB4 Type-C 端口，兼容 Windows 11 與 Linux 系統，滿足專業用戶對高速運算與儲存的極致需求。","[{""title"": ""MINISFORUM N5 Pro AI NAS"", ""language"": ""zh"", ""description"": ""這款高效能迷你伺服器搭載 AMD Ryzen™ AI 9 HX Pro 370 或 Ryzen™ 7 255 處理器，最高 12 核心 24 執行緒，支援高達 96GB ECC 記憶體。內建 5 個 3.5/2.5 吋硬碟槽，單碟最高 22TB，總容量可達 110TB，並支援多組 NVMe SSD 擴充。配備 10Gbps 與 5Gbps 網路埠、PCIe 4.0 x16 擴充槽，提供 HDMI 2.0 4K 輸出及多組 USB4 Type-C 端口，兼容 Windows 11 與 Linux 系統，滿足專業用戶對高速運算與儲存的極致需求。""}]"
+"01a18955-7df3-7747-845a-29b4c7a6a24b","minisforumhk","https://minisforum.hk/products/n5-pro-370-255?variant=45572797989042","MINISFORUM N5 Pro AI NAS","949900","HKD","2026-10-29 20:24:03.827791+00","2026-10-26 15:35:54.738748+00","{""code"": ""HK"", ""kind"": ""country""}","zh",,"CS-MN5PROA","gid://shopify/Product/8522048471218","gid://shopify/ProductVariant/45572797989042","n5-pro-370-255","1029900","HKD","""out_of_stock""",,"這款高效能迷你伺服器搭載 AMD Ryzen™ AI 9 HX Pro 370 或 Ryzen™ 7 255 處理器，最高 12 核心 24 執行緒，支援高達 96GB ECC 記憶體。內建 5 個 3.5/2.5 吋硬碟槽，單碟最高 22TB，總容量可達 110TB，並支援多組 NVMe SSD 擴充。配備 10Gbps 與 5Gbps 網路埠、PCIe 4.0 x16 擴充槽，提供 HDMI 2.0 4K 輸出及多組 USB4 Type-C 端口，兼容 Windows 11 與 Linux 系統，滿足專業用戶對高速運算與儲存的極致需求。","[{""title"": ""MINISFORUM N5 Pro AI NAS"", ""language"": ""zh"", ""description"": ""這款高效能迷你伺服器搭載 AMD Ryzen™ AI 9 HX Pro 370 或 Ryzen™ 7 255 處理器，最高 12 核心 24 執行緒，支援高達 96GB ECC 記憶體。內建 5 個 3.5/2.5 吋硬碟槽，單碟最高 22TB，總容量可達 110TB，並支援多組 NVMe SSD 擴充。配備 10Gbps 與 5Gbps 網路埠、PCIe 4.0 x16 擴充槽，提供 HDMI 2.0 4K 輸出及多組 USB4 Type-C 端口，兼容 Windows 11 與 Linux 系統，滿足專業用戶對高速運算與儲存的極致需求。""}]"
+"01a18955-81b3-77eb-988a-ba7656d45fba","minisforumhk","https://minisforum.hk/products/minisforum-um750l-slim-%E8%BF%B7%E4%BD%A0%E9%9B%BB%E8%85%A6-r5-7545u-16-32-gb-1t-w11p-cs-mfum75-cs-mfum75a-2%E5%B9%B4%E4%BF%9D%E9%A4%8A?variant=45525642543282","UM750L","449900","HKD","2026-10-29 20:24:04.787775+00","2026-10-26 15:00:43.074769+00","{""code"": ""HK"", ""kind"": ""country""}","zh",,"CS-MFUM75","gid://shopify/Product/8513958936754","gid://shopify/ProductVariant/45525642543282","minisforum-um750l-slim-%E8%BF%B7%E4%BD%A0%E9%9B%BB%E8%85%A6-r5-7545u-16-32-gb-1t-w11p-cs-mfum75-cs-mfum75a-2%E5%B9%B4%E4%BF%9D%E9%A4%8A","549900","HKD","""out_of_stock""",,"產品簡介
+Minisforum UM750L 係輕薄迷你電腦，搭載 AMD Ryzen™ 5 7545U（6 核 12 線程），內顯 Radeon™ 740M，板載 LPDDR5 記憶體（可揀 16GB 或 32GB 款式），有 M.2 PCIe 4.0 SSD。
+內建 1 個 2.5G 網口、Wi-Fi 6E、HDMI 2.1、DP 同 USB4，機身約 130 × 126.5 × 50mm，適合辦公室文書、家用桌面同輕量多螢幕辦公。香港行貨，3 年保養。香港官方有售，庫存以產品頁顯示為準。
+
+AMD Ryzen™ 5 7545UAMD Radeon™ 740M16 / 32 GB LPDDR5 RAM (on-board)1 TB M.2 2280 PCIe 4.0 x4 NVMe SSDWi-Fi 6E, BlueTooth 5.3, 2.5 Gb/s RJ45HDMI 2.1, DP 1.4, USB4Windows 11 Pro130*126.5*50.4 mm0.67 kg
+常見問題
+
+問：UM750L 用咩處理器同記憶體？
+答：用 AMD Ryzen™ 5 7545U（6 核 12 線程，最高約 4.9GHz），內顯 Radeon™ 740M。記憶體係板載 LPDDR5（唔係一般 SODIMM），可揀 16GB 或 32GB 款式；儲存有 M.2 2280 PCIe 4.0 SSD（另有擴充位，以產品頁為準）。預裝 Windows 11 Pro。
+問：適唔適合辦公室文書？
+答：適合瀏覽、文書、視像會議同輕量多螢幕辦公。有 2.5G 有線網口、Wi-Fi 6E、HDMI 2.1、DP 1.4 同 USB4。
+問：同 UM760 Slim／UM780L Slim 有咩分別？
+答：UM750L 用 R5 7545U 同板載 LPDDR5，定位更偏輕薄入門辦公；UM760 Slim 用 R5 7640HS 同可換 DDR5；UM780L Slim 用 R7-7840HS。實際規格以各產品頁為準。
+問：記憶體可唔可以自行升級？
+答：LPDDR5 係板載，一般唔可以像 SODIMM 咁自行加插。如需更大容量，請揀對應預載款式。
+問：係咪香港行貨？保養幾耐？
+答：係香港行貨，由香港出貨。保養期 3 年（由購買日起計）。詳情請參閱保養與退貨條款。
+問：點睇庫存／有冇貨？
+答：香港官方有售，庫存以產品頁顯示為準。下單前請睇產品頁顯示。","[{""title"": ""UM750L"", ""language"": ""zh"", ""description"": ""產品簡介\nMinisforum UM750L 係輕薄迷你電腦，搭載 AMD Ryzen™ 5 7545U（6 核 12 線程），內顯 Radeon™ 740M，板載 LPDDR5 記憶體（可揀 16GB 或 32GB 款式），有 M.2 PCIe 4.0 SSD。\n內建 1 個 2.5G 網口、Wi-Fi 6E、HDMI 2.1、DP 同 USB4，機身約 130 × 126.5 × 50mm，適合辦公室文書、家用桌面同輕量多螢幕辦公。香港行貨，3 年保養。香港官方有售，庫存以產品頁顯示為準。\n\nAMD Ryzen™ 5 7545UAMD Radeon™ 740M16 / 32 GB LPDDR5 RAM (on-board)1 TB M.2 2280 PCIe 4.0 x4 NVMe SSDWi-Fi 6E, BlueTooth 5.3, 2.5 Gb/s RJ45HDMI 2.1, DP 1.4, USB4Windows 11 Pro130*126.5*50.4 mm0.67 kg\n常見問題\n\n問：UM750L 用咩處理器同記憶體？\n答：用 AMD Ryzen™ 5 7545U（6 核 12 線程，最高約 4.9GHz），內顯 Radeon™ 740M。記憶體係板載 LPDDR5（唔係一般 SODIMM），可揀 16GB 或 32GB 款式；儲存有 M.2 2280 PCIe 4.0 SSD（另有擴充位，以產品頁為準）。預裝 Windows 11 Pro。\n問：適唔適合辦公室文書？\n答：適合瀏覽、文書、視像會議同輕量多螢幕辦公。有 2.5G 有線網口、Wi-Fi 6E、HDMI 2.1、DP 1.4 同 USB4。\n問：同 UM760 Slim／UM780L Slim 有咩分別？\n答：UM750L 用 R5 7545U 同板載 LPDDR5，定位更偏輕薄入門辦公；UM760 Slim 用 R5 7640HS 同可換 DDR5；UM780L Slim 用 R7-7840HS。實際規格以各產品頁為準。\n問：記憶體可唔可以自行升級？\n答：LPDDR5 係板載，一般唔可以像 SODIMM 咁自行加插。如需更大容量，請揀對應預載款式。\n問：係咪香港行貨？保養幾耐？\n答：係香港行貨，由香港出貨。保養期 3 年（由購買日起計）。詳情請參閱保養與退貨條款。\n問：點睇庫存／有冇貨？\n答：香港官方有售，庫存以產品頁顯示為準。下單前請睇產品頁顯示。""}]"
+"01a18955-81c7-7496-af3b-7a28752c19e9","minisforumhk","https://minisforum.hk/products/minisforum-um750l-slim-%E8%BF%B7%E4%BD%A0%E9%9B%BB%E8%85%A6-r5-7545u-16-32-gb-1t-w11p-cs-mfum75-cs-mfum75a-2%E5%B9%B4%E4%BF%9D%E9%A4%8A?variant=46976125305010","UM750L","649900","HKD","2026-10-29 20:24:04.807429+00","2026-10-26 15:00:43.074769+00","{""code"": ""HK"", ""kind"": ""country""}","zh",,"CS-MFUM75A","gid://shopify/Product/8513958936754","gid://shopify/ProductVariant/46976125305010","minisforum-um750l-slim-%E8%BF%B7%E4%BD%A0%E9%9B%BB%E8%85%A6-r5-7545u-16-32-gb-1t-w11p-cs-mfum75-cs-mfum75a-2%E5%B9%B4%E4%BF%9D%E9%A4%8A","749900","HKD","""in_stock""",,"產品簡介
+Minisforum UM750L 係輕薄迷你電腦，搭載 AMD Ryzen™ 5 7545U（6 核 12 線程），內顯 Radeon™ 740M，板載 LPDDR5 記憶體（可揀 16GB 或 32GB 款式），有 M.2 PCIe 4.0 SSD。
+內建 1 個 2.5G 網口、Wi-Fi 6E、HDMI 2.1、DP 同 USB4，機身約 130 × 126.5 × 50mm，適合辦公室文書、家用桌面同輕量多螢幕辦公。香港行貨，3 年保養。香港官方有售，庫存以產品頁顯示為準。
+
+AMD Ryzen™ 5 7545UAMD Radeon™ 740M16 / 32 GB LPDDR5 RAM (on-board)1 TB M.2 2280 PCIe 4.0 x4 NVMe SSDWi-Fi 6E, BlueTooth 5.3, 2.5 Gb/s RJ45HDMI 2.1, DP 1.4, USB4Windows 11 Pro130*126.5*50.4 mm0.67 kg
+常見問題
+
+問：UM750L 用咩處理器同記憶體？
+答：用 AMD Ryzen™ 5 7545U（6 核 12 線程，最高約 4.9GHz），內顯 Radeon™ 740M。記憶體係板載 LPDDR5（唔係一般 SODIMM），可揀 16GB 或 32GB 款式；儲存有 M.2 2280 PCIe 4.0 SSD（另有擴充位，以產品頁為準）。預裝 Windows 11 Pro。
+問：適唔適合辦公室文書？
+答：適合瀏覽、文書、視像會議同輕量多螢幕辦公。有 2.5G 有線網口、Wi-Fi 6E、HDMI 2.1、DP 1.4 同 USB4。
+問：同 UM760 Slim／UM780L Slim 有咩分別？
+答：UM750L 用 R5 7545U 同板載 LPDDR5，定位更偏輕薄入門辦公；UM760 Slim 用 R5 7640HS 同可換 DDR5；UM780L Slim 用 R7-7840HS。實際規格以各產品頁為準。
+問：記憶體可唔可以自行升級？
+答：LPDDR5 係板載，一般唔可以像 SODIMM 咁自行加插。如需更大容量，請揀對應預載款式。
+問：係咪香港行貨？保養幾耐？
+答：係香港行貨，由香港出貨。保養期 3 年（由購買日起計）。詳情請參閱保養與退貨條款。
+問：點睇庫存／有冇貨？
+答：香港官方有售，庫存以產品頁顯示為準。下單前請睇產品頁顯示。","[{""title"": ""UM750L"", ""language"": ""zh"", ""description"": ""產品簡介\nMinisforum UM750L 係輕薄迷你電腦，搭載 AMD Ryzen™ 5 7545U（6 核 12 線程），內顯 Radeon™ 740M，板載 LPDDR5 記憶體（可揀 16GB 或 32GB 款式），有 M.2 PCIe 4.0 SSD。\n內建 1 個 2.5G 網口、Wi-Fi 6E、HDMI 2.1、DP 同 USB4，機身約 130 × 126.5 × 50mm，適合辦公室文書、家用桌面同輕量多螢幕辦公。香港行貨，3 年保養。香港官方有售，庫存以產品頁顯示為準。\n\nAMD Ryzen™ 5 7545UAMD Radeon™ 740M16 / 32 GB LPDDR5 RAM (on-board)1 TB M.2 2280 PCIe 4.0 x4 NVMe SSDWi-Fi 6E, BlueTooth 5.3, 2.5 Gb/s RJ45HDMI 2.1, DP 1.4, USB4Windows 11 Pro130*126.5*50.4 mm0.67 kg\n常見問題\n\n問：UM750L 用咩處理器同記憶體？\n答：用 AMD Ryzen™ 5 7545U（6 核 12 線程，最高約 4.9GHz），內顯 Radeon™ 740M。記憶體係板載 LPDDR5（唔係一般 SODIMM），可揀 16GB 或 32GB 款式；儲存有 M.2 2280 PCIe 4.0 SSD（另有擴充位，以產品頁為準）。預裝 Windows 11 Pro。\n問：適唔適合辦公室文書？\n答：適合瀏覽、文書、視像會議同輕量多螢幕辦公。有 2.5G 有線網口、Wi-Fi 6E、HDMI 2.1、DP 1.4 同 USB4。\n問：同 UM760 Slim／UM780L Slim 有咩分別？\n答：UM750L 用 R5 7545U 同板載 LPDDR5，定位更偏輕薄入門辦公；UM760 Slim 用 R5 7640HS 同可換 DDR5；UM780L Slim 用 R7-7840HS。實際規格以各產品頁為準。\n問：記憶體可唔可以自行升級？\n答：LPDDR5 係板載，一般唔可以像 SODIMM 咁自行加插。如需更大容量，請揀對應預載款式。\n問：係咪香港行貨？保養幾耐？\n答：係香港行貨，由香港出貨。保養期 3 年（由購買日起計）。詳情請參閱保養與退貨條款。\n問：點睇庫存／有冇貨？\n答：香港官方有售，庫存以產品頁顯示為準。下單前請睇產品頁顯示。""}]"
+"01a18955-8271-7526-9edb-ac44427bc8b1","minisforumhk","https://minisforum.hk/products/n5-max?variant=48027533934770","MINISFORUM N5 MAX AI NAS","2299900","HKD","2026-10-29 20:24:04.977514+00","2026-10-26 15:03:44.205559+00","{""code"": ""HK"", ""kind"": ""country""}","zh",,"CS-MN5MAX","gid://shopify/Product/9006553694386","gid://shopify/ProductVariant/48027533934770","n5-max","2399900","HKD","""in_stock""",,"AMD Ryzen™ AI Max+ 395,16C/32T
+Up to 126 TOPS Local AI Performance
+5-Bay HDD + 5-Bay SSD | Up To 200TB
+Dual 10GbE LAN | MinisCloud OS Pre-installed
+One-click Docker Installation | 2× USB4 v2 Ports
+
+3-year warranty","[{""title"": ""MINISFORUM N5 MAX AI NAS"", ""language"": ""zh"", ""description"": ""AMD Ryzen™ AI Max+ 395,16C/32T\nUp to 126 TOPS Local AI Performance\n5-Bay HDD + 5-Bay SSD | Up To 200TB\nDual 10GbE LAN | MinisCloud OS Pre-installed\nOne-click Docker Installation | 2× USB4 v2 Ports\n\n3-year warranty""}]"
+"01a18955-8282-7230-b669-dde6b75c92c3","minisforumhk","https://minisforum.hk/products/n5-max?variant=67687614480562","MINISFORUM N5 MAX AI NAS","2999900","HKD","2026-10-29 20:24:04.994552+00","2026-10-26 15:03:44.205559+00","{""code"": ""HK"", ""kind"": ""country""}","zh",,"CS-MN5MAXD","gid://shopify/Product/9006553694386","gid://shopify/ProductVariant/67687614480562","n5-max","3199900","HKD","""in_stock""",,"AMD Ryzen™ AI Max+ 395,16C/32T
+Up to 126 TOPS Local AI Performance
+5-Bay HDD + 5-Bay SSD | Up To 200TB
+Dual 10GbE LAN | MinisCloud OS Pre-installed
+One-click Docker Installation | 2× USB4 v2 Ports
+
+3-year warranty","[{""title"": ""MINISFORUM N5 MAX AI NAS"", ""language"": ""zh"", ""description"": ""AMD Ryzen™ AI Max+ 395,16C/32T\nUp to 126 TOPS Local AI Performance\n5-Bay HDD + 5-Bay SSD | Up To 200TB\nDual 10GbE LAN | MinisCloud OS Pre-installed\nOne-click Docker Installation | 2× USB4 v2 Ports\n\n3-year warranty""}]"
+"01a18955-8290-75fa-aa39-a76b02929a0d","minisforumhk","https://minisforum.hk/products/minisforum-ms-s1-max?variant=46559370805426","MS-S1 Max","3299900","HKD","2026-10-29 20:24:05.008698+00","2026-10-26 14:55:16.740006+00","{""code"": ""HK"", ""kind"": ""country""}","zh",,"CS-MMSS1MD","gid://shopify/Product/8611751919794","gid://shopify/ProductVariant/46559370805426","minisforum-ms-s1-max","3499900","HKD","""in_stock""",,"產品簡介
+Minisforum MS-S1 Max 係迷你工作站，可揀 AMD Ryzen™ AI Max+ 395（內顯 Radeon™ 8060S）或 AI Max+ PRO 495（內顯 Radeon™ 8065S），板載大容量 LPDDR5x 統一記憶體，多個 M.2 PCIe 4.0 儲存位。
+內建雙 10G RJ45 網口、Wi-Fi 7，適合本地 AI、創作、高效能辦公同需要高速有線網絡嘅場景。香港行貨，3 年保養。香港官方有售，庫存以產品頁顯示為準。
+
+MINISFORUM MS-S1 Max MINI WORKSTATION
+
+CPU： (new) AMD Ryzen™ AI Max+ PRO 495             /OR/ AMD Ryzen™ AI Max+ 395
+GPU：P495 — Radeon 8065S；395 — Radeon 8060S
+RAM：LPDDR5x Unified Memory
+SSD：PCIe 4.0 x16 Expansion
+Dual Fans, 320W PSU
+
+常見問題
+
+問：MS-S1 Max 有邊幾款處理器可以揀？
+答：可以揀 AMD Ryzen™ AI Max+ 395（16 核 32 線程，最高約 5.1GHz，內顯 Radeon™ 8060S）或 AI Max+ PRO 495（16 核 32 線程，最高約 5.2GHz，內顯 Radeon™ 8065S）。記憶體係板載 LPDDR5x 統一記憶體（唔係 SODIMM）；儲存支援多個 M.2 2280 PCIe 4.0 插槽。
+問：有冇雙網口？網絡係咩規格？
+答：有雙 10G RJ45 有線網口，另配 Wi-Fi 7 同藍牙 5.4，適合需要高速有線連線、分流或者聚合嘅場景。
+問：適唔適合本地 AI 或者創作工作站？
+答：適合。機身約 210 × 185 × 68mm，有雙風扇同較高功耗設計，配合大容量統一記憶體同強內顯，啱本地 AI、創作同高效能多工；預裝 Windows 11 Pro。
+問：記憶體可唔可以自行加條升級？
+答：MS-S1 Max 用板載 LPDDR5x 統一記憶體，唔係一般 SODIMM 插槽，記憶體容量唔可以自行加條升級；儲存方面仍可使用多個 M.2 位擴充。
+問：係咪香港行貨？保養幾耐？
+答：係香港行貨，由香港出貨。保養期 3 年（由購買日起計）。詳情請參閱保養與退貨條款。
+問：點睇庫存／有冇貨？
+答：香港官方有售，庫存以產品頁顯示為準。下單前請睇產品頁顯示。","[{""title"": ""MS-S1 Max"", ""language"": ""zh"", ""description"": ""產品簡介\nMinisforum MS-S1 Max 係迷你工作站，可揀 AMD Ryzen™ AI Max+ 395（內顯 Radeon™ 8060S）或 AI Max+ PRO 495（內顯 Radeon™ 8065S），板載大容量 LPDDR5x 統一記憶體，多個 M.2 PCIe 4.0 儲存位。\n內建雙 10G RJ45 網口、Wi-Fi 7，適合本地 AI、創作、高效能辦公同需要高速有線網絡嘅場景。香港行貨，3 年保養。香港官方有售，庫存以產品頁顯示為準。\n\nMINISFORUM MS-S1 Max MINI WORKSTATION\n\nCPU： (new) AMD Ryzen™ AI Max+ PRO 495             /OR/ AMD Ryzen™ AI Max+ 395\nGPU：P495 — Radeon 8065S；395 — Radeon 8060S\nRAM：LPDDR5x Unified Memory\nSSD：PCIe 4.0 x16 Expansion\nDual Fans, 320W PSU\n\n常見問題\n\n問：MS-S1 Max 有邊幾款處理器可以揀？\n答：可以揀 AMD Ryzen™ AI Max+ 395（16 核 32 線程，最高約 5.1GHz，內顯 Radeon™ 8060S）或 AI Max+ PRO 495（16 核 32 線程，最高約 5.2GHz，內顯 Radeon™ 8065S）。記憶體係板載 LPDDR5x 統一記憶體（唔係 SODIMM）；儲存支援多個 M.2 2280 PCIe 4.0 插槽。\n問：有冇雙網口？網絡係咩規格？\n答：有雙 10G RJ45 有線網口，另配 Wi-Fi 7 同藍牙 5.4，適合需要高速有線連線、分流或者聚合嘅場景。\n問：適唔適合本地 AI 或者創作工作站？\n答：適合。機身約 210 × 185 × 68mm，有雙風扇同較高功耗設計，配合大容量統一記憶體同強內顯，啱本地 AI、創作同高效能多工；預裝 Windows 11 Pro。\n問：記憶體可唔可以自行加條升級？\n答：MS-S1 Max 用板載 LPDDR5x 統一記憶體，唔係一般 SODIMM 插槽，記憶體容量唔可以自行加條升級；儲存方面仍可使用多個 M.2 位擴充。\n問：係咪香港行貨？保養幾耐？\n答：係香港行貨，由香港出貨。保養期 3 年（由購買日起計）。詳情請參閱保養與退貨條款。\n問：點睇庫存／有冇貨？\n答：香港官方有售，庫存以產品頁顯示為準。下單前請睇產品頁顯示。""}]"
+"01a18955-8298-72d0-8b78-f64e23d0e71d","minisforumhk","https://minisforum.hk/products/minisforum-ms-s1-max?variant=67586234319026","MS-S1 Max","5499900","HKD","2026-10-29 20:24:05.016992+00","2026-10-26 14:55:16.740006+00","{""code"": ""HK"", ""kind"": ""country""}","zh",,"CS-MMSS14D","gid://shopify/Product/8611751919794","gid://shopify/ProductVariant/67586234319026","minisforum-ms-s1-max","5699900","HKD","""in_stock""",,"產品簡介
+Minisforum MS-S1 Max 係迷你工作站，可揀 AMD Ryzen™ AI Max+ 395（內顯 Radeon™ 8060S）或 AI Max+ PRO 495（內顯 Radeon™ 8065S），板載大容量 LPDDR5x 統一記憶體，多個 M.2 PCIe 4.0 儲存位。
+內建雙 10G RJ45 網口、Wi-Fi 7，適合本地 AI、創作、高效能辦公同需要高速有線網絡嘅場景。香港行貨，3 年保養。香港官方有售，庫存以產品頁顯示為準。
+
+MINISFORUM MS-S1 Max MINI WORKSTATION
+
+CPU： (new) AMD Ryzen™ AI Max+ PRO 495             /OR/ AMD Ryzen™ AI Max+ 395
+GPU：P495 — Radeon 8065S；395 — Radeon 8060S
+RAM：LPDDR5x Unified Memory
+SSD：PCIe 4.0 x16 Expansion
+Dual Fans, 320W PSU
+
+常見問題
+
+問：MS-S1 Max 有邊幾款處理器可以揀？
+答：可以揀 AMD Ryzen™ AI Max+ 395（16 核 32 線程，最高約 5.1GHz，內顯 Radeon™ 8060S）或 AI Max+ PRO 495（16 核 32 線程，最高約 5.2GHz，內顯 Radeon™ 8065S）。記憶體係板載 LPDDR5x 統一記憶體（唔係 SODIMM）；儲存支援多個 M.2 2280 PCIe 4.0 插槽。
+問：有冇雙網口？網絡係咩規格？
+答：有雙 10G RJ45 有線網口，另配 Wi-Fi 7 同藍牙 5.4，適合需要高速有線連線、分流或者聚合嘅場景。
+問：適唔適合本地 AI 或者創作工作站？
+答：適合。機身約 210 × 185 × 68mm，有雙風扇同較高功耗設計，配合大容量統一記憶體同強內顯，啱本地 AI、創作同高效能多工；預裝 Windows 11 Pro。
+問：記憶體可唔可以自行加條升級？
+答：MS-S1 Max 用板載 LPDDR5x 統一記憶體，唔係一般 SODIMM 插槽，記憶體容量唔可以自行加條升級；儲存方面仍可使用多個 M.2 位擴充。
+問：係咪香港行貨？保養幾耐？
+答：係香港行貨，由香港出貨。保養期 3 年（由購買日起計）。詳情請參閱保養與退貨條款。
+問：點睇庫存／有冇貨？
+答：香港官方有售，庫存以產品頁顯示為準。下單前請睇產品頁顯示。","[{""title"": ""MS-S1 Max"", ""language"": ""zh"", ""description"": ""產品簡介\nMinisforum MS-S1 Max 係迷你工作站，可揀 AMD Ryzen™ AI Max+ 395（內顯 Radeon™ 8060S）或 AI Max+ PRO 495（內顯 Radeon™ 8065S），板載大容量 LPDDR5x 統一記憶體，多個 M.2 PCIe 4.0 儲存位。\n內建雙 10G RJ45 網口、Wi-Fi 7，適合本地 AI、創作、高效能辦公同需要高速有線網絡嘅場景。香港行貨，3 年保養。香港官方有售，庫存以產品頁顯示為準。\n\nMINISFORUM MS-S1 Max MINI WORKSTATION\n\nCPU： (new) AMD Ryzen™ AI Max+ PRO 495             /OR/ AMD Ryzen™ AI Max+ 395\nGPU：P495 — Radeon 8065S；395 — Radeon 8060S\nRAM：LPDDR5x Unified Memory\nSSD：PCIe 4.0 x16 Expansion\nDual Fans, 320W PSU\n\n常見問題\n\n問：MS-S1 Max 有邊幾款處理器可以揀？\n答：可以揀 AMD Ryzen™ AI Max+ 395（16 核 32 線程，最高約 5.1GHz，內顯 Radeon™ 8060S）或 AI Max+ PRO 495（16 核 32 線程，最高約 5.2GHz，內顯 Radeon™ 8065S）。記憶體係板載 LPDDR5x 統一記憶體（唔係 SODIMM）；儲存支援多個 M.2 2280 PCIe 4.0 插槽。\n問：有冇雙網口？網絡係咩規格？\n答：有雙 10G RJ45 有線網口，另配 Wi-Fi 7 同藍牙 5.4，適合需要高速有線連線、分流或者聚合嘅場景。\n問：適唔適合本地 AI 或者創作工作站？\n答：適合。機身約 210 × 185 × 68mm，有雙風扇同較高功耗設計，配合大容量統一記憶體同強內顯，啱本地 AI、創作同高效能多工；預裝 Windows 11 Pro。\n問：記憶體可唔可以自行加條升級？\n答：MS-S1 Max 用板載 LPDDR5x 統一記憶體，唔係一般 SODIMM 插槽，記憶體容量唔可以自行加條升級；儲存方面仍可使用多個 M.2 位擴充。\n問：係咪香港行貨？保養幾耐？\n答：係香港行貨，由香港出貨。保養期 3 年（由購買日起計）。詳情請參閱保養與退貨條款。\n問：點睇庫存／有冇貨？\n答：香港官方有售，庫存以產品頁顯示為準。下單前請睇產品頁顯示。""}]"
+"01a18955-85cd-7084-8df1-33b12f5f511a","minisforumhk","https://minisforum.hk/products/minisforum-nab6-lite","NAB6 Lite","579900","HKD","2026-10-29 20:24:05.837182+00","2026-10-26 15:35:43.589933+00","{""code"": ""HK"", ""kind"": ""country""}","zh",,"CS-MNAB6L","gid://shopify/Product/8190920425650","gid://shopify/ProductVariant/44403416236210","minisforum-nab6-lite","679900","HKD","""in_stock""",,,"[{""title"": ""NAB6 Lite"", ""language"": ""zh"", ""description"": null}]"
+"01a18955-8753-77ed-af43-7af115ed1b0c","minisforumhk","https://minisforum.hk/products/minisforum-um760-plus","Minisforum UM760 Plus","799900","HKD","2026-10-29 20:24:06.227569+00","2026-10-26 15:01:27.589635+00","{""code"": ""HK"", ""kind"": ""country""}","zh",,"CS-MUM76PB","gid://shopify/Product/8653371703474","gid://shopify/ProductVariant/46717390094514","minisforum-um760-plus",,,"""in_stock""",,"AMD Ryzen™5 7640HS CPUAMD Radeon 760MDual channel DDR5 (max 96GB), Pre-installed : 64GB DDR5Dual M.2 NVMe slots, Pre-installed : 1TB SSDHDMI (2.1) x 1, DisplayPort (1.4) x 1, USB 4 Type-C x 1 , Oculink x12.5Gb LAN, WiFi 6E &amp; Bluetooth 5.3USB 3.2 Gen2 &amp; USB 2.0 portsWindows 11 Pro","[{""title"": ""Minisforum UM760 Plus"", ""language"": ""zh"", ""description"": ""AMD Ryzen™5 7640HS CPUAMD Radeon 760MDual channel DDR5 (max 96GB), Pre-installed : 64GB DDR5Dual M.2 NVMe slots, Pre-installed : 1TB SSDHDMI (2.1) x 1, DisplayPort (1.4) x 1, USB 4 Type-C x 1 , Oculink x12.5Gb LAN, WiFi 6E &amp; Bluetooth 5.3USB 3.2 Gen2 &amp; USB 2.0 portsWindows 11 Pro""}]"
+"01a18955-8775-7002-b7e3-ddcd0cc272d3","minisforumhk","https://minisforum.hk/products/minisforum-nab3r","Minisforum NAB3R","429900","HKD","2026-10-29 20:24:06.261348+00","2026-10-26 15:35:43.965553+00","{""code"": ""HK"", ""kind"": ""country""}","zh",,"CS-MNAB3","gid://shopify/Product/8910568030386","gid://shopify/ProductVariant/47587267412146","minisforum-nab3r",,,"""in_stock""",,"NAB3R / Intel® Core™ i3-1220p / Intel® UHD Graphics(Graphics Frequency 1.10 GHz)DDR4 3200MHz 16GB / 512GB SSD / Windows 11 Pro3年保用","[{""title"": ""Minisforum NAB3R"", ""language"": ""zh"", ""description"": ""NAB3R / Intel® Core™ i3-1220p / Intel® UHD Graphics(Graphics Frequency 1.10 GHz)DDR4 3200MHz 16GB / 512GB SSD / Windows 11 Pro3年保用""}]"
+"01a18955-87fc-718d-b05b-a72197184137","minisforumhk","https://minisforum.hk/products/minisforum-um880-pro?variant=44641620885682","Minisforum UM880 Pro","399900","HKD","2026-10-29 20:24:06.396601+00","2026-10-26 15:35:51.060512+00","{""code"": ""HK"", ""kind"": ""country""}","zh",,"BS-MUM880","gid://shopify/Product/8272074604722","gid://shopify/ProductVariant/44641620885682","minisforum-um880-pro","439900","HKD","""out_of_stock""",,,"[{""title"": ""Minisforum UM880 Pro"", ""language"": ""zh"", ""description"": null}]"
+"01a18955-880e-76e2-adbf-d9311ba322f0","minisforumhk","https://minisforum.hk/products/minisforum-um880-pro?variant=45234391285938","Minisforum UM880 Pro","799900","HKD","2026-10-29 20:24:06.414296+00","2026-10-26 15:35:51.060512+00","{""code"": ""HK"", ""kind"": ""country""}","zh",,"CS-MUM880","gid://shopify/Product/8272074604722","gid://shopify/ProductVariant/45234391285938","minisforum-um880-pro","899900","HKD","""out_of_stock""",,,"[{""title"": ""Minisforum UM880 Pro"", ""language"": ""zh"", ""description"": null}]"
+"01a18955-881a-7150-9257-a8946b06c72d","minisforumhk","https://minisforum.hk/products/minisforum-um880-pro?variant=45526026748082","Minisforum UM880 Pro","1049900","HKD","2026-10-29 20:24:06.426159+00","2026-10-26 15:35:51.060512+00","{""code"": ""HK"", ""kind"": ""country""}","zh",,"CS-MUM880A","gid://shopify/Product/8272074604722","gid://shopify/ProductVariant/45526026748082","minisforum-um880-pro","1149900","HKD","""in_stock""",,,"[{""title"": ""Minisforum UM880 Pro"", ""language"": ""zh"", ""description"": null}]"
+"01a18955-8cd4-7714-a1a9-45bfdcbd6e04","minisforumhk","https://minisforum.hk/products/m2-air","MINISFORUM M2 AIR","479900","HKD","2026-10-29 20:24:07.636937+00","2026-10-26 15:35:43.361004+00","{""code"": ""HK"", ""kind"": ""country""}","zh",,"CS-MM2AIR","gid://shopify/Product/9000504950962","gid://shopify/ProductVariant/48015658647730","m2-air",,,"""in_stock""",,"Intel® Core™ 3 processor 304 (up to 4.3 GHz)/ Intel® Graphics (Graphics Frequency 2.30 GHz)DDR5 5600MHz 16GB / 500GB SSD M.2 2280 Slot PCIe 4. 0HDMI*2, USB 4*1 (8K/40Hz), USB3.2 *1RJ45 2.5 LAN*23-Years warrantyPre-installed: Windows 11 Pro112× 112 × 37.2 mm","[{""title"": ""MINISFORUM M2 AIR"", ""language"": ""zh"", ""description"": ""Intel® Core™ 3 processor 304 (up to 4.3 GHz)/ Intel® Graphics (Graphics Frequency 2.30 GHz)DDR5 5600MHz 16GB / 500GB SSD M.2 2280 Slot PCIe 4. 0HDMI*2, USB 4*1 (8K/40Hz), USB3.2 *1RJ45 2.5 LAN*23-Years warrantyPre-installed: Windows 11 Pro112× 112 × 37.2 mm""}]"
+"01a18955-913f-70f6-b414-677187ecbaac","minisforumhk","https://minisforum.hk/products/ms01?variant=46717350838450","Minisforum MS-01 WorkStation","339900","HKD","2026-10-29 20:24:08.767475+00","2026-10-26 14:54:34.110826+00","{""code"": ""HK"", ""kind"": ""country""}","zh",,"BS-MMS01I5","gid://shopify/Product/7891818873010","gid://shopify/ProductVariant/46717350838450","ms01","569900","HKD","""out_of_stock""",,,"[{""title"": ""Minisforum MS-01 WorkStation"", ""language"": ""zh"", ""description"": null}]"
+"01a18955-9147-737f-b796-5948eddf8b81","minisforumhk","https://minisforum.hk/products/ms01?variant=43558086181042","Minisforum MS-01 WorkStation","879900","HKD","2026-10-29 20:24:08.775533+00","2026-10-26 14:54:34.110826+00","{""code"": ""HK"", ""kind"": ""country""}","zh",,"CS-MFMS01","gid://shopify/Product/7891818873010","gid://shopify/ProductVariant/43558086181042","ms01","979900","HKD","""in_stock""",,,"[{""title"": ""Minisforum MS-01 WorkStation"", ""language"": ""zh"", ""description"": null}]"
+"01a18955-9158-7516-a157-f35143797b41","minisforumhk","https://minisforum.hk/products/ms01?variant=45526087663794","Minisforum MS-01 WorkStation","999900","HKD","2026-10-29 20:24:08.792092+00","2026-10-26 14:54:34.110826+00","{""code"": ""HK"", ""kind"": ""country""}","zh",,"CS-MMS01P","gid://shopify/Product/7891818873010","gid://shopify/ProductVariant/45526087663794","ms01","1049900","HKD","""out_of_stock""",,,"[{""title"": ""Minisforum MS-01 WorkStation"", ""language"": ""zh"", ""description"": null}]"
+"01a18955-915f-75e3-a81d-a3560733eb92","minisforumhk","https://minisforum.hk/products/ms01?variant=45526096380082","Minisforum MS-01 WorkStation","1299900","HKD","2026-10-29 20:24:08.799225+00","2026-10-26 14:54:34.110826+00","{""code"": ""HK"", ""kind"": ""country""}","zh",,"CS-MMS01PA","gid://shopify/Product/7891818873010","gid://shopify/ProductVariant/45526096380082","ms01","1359900","HKD","""in_stock""",,,"[{""title"": ""Minisforum MS-01 WorkStation"", ""language"": ""zh"", ""description"": null}]"
+"01a189ae-fba0-72ea-a0e7-bbedbad0bb5d","minisforumhk","https://minisforum.hk/products/minisforum-ms-02-ultra?variant=46939685552306","Minisforum MS-02 Ultra","849900","HKD","2026-10-29 22:01:48.704915+00","2026-10-26 16:04:21.180177+00","{""code"": ""HK"", ""kind"": ""country""}","zh",,"BS-MM2U285","gid://shopify/Product/8707165749426","gid://shopify/ProductVariant/46939685552306","minisforum-ms-02-ultra","899900","HKD","""in_stock""",,"Processor: Intel® Core™ Ultra 9 285HX | 275HXMemory &amp; Storage: Dual DDR5-4800MHz | M.2 2280 SSD SlotExpansion: PCIe 5.0 x16 Slot (Bifurcation Support)USB: 2 x USB4 V2 (80 Gbps, DP 2.0 Alt Mode)High-Speed Network: 2 x 25GbE SFP+ (285HX Only)Connectivity: 1 x 10GbE RJ45 LAN 
+/ ONLY 285HX Model Support ECC /","[{""title"": ""Minisforum MS-02 Ultra"", ""language"": ""zh"", ""description"": ""Processor: Intel® Core™ Ultra 9 285HX | 275HXMemory &amp; Storage: Dual DDR5-4800MHz | M.2 2280 SSD SlotExpansion: PCIe 5.0 x16 Slot (Bifurcation Support)USB: 2 x USB4 V2 (80 Gbps, DP 2.0 Alt Mode)High-Speed Network: 2 x 25GbE SFP+ (285HX Only)Connectivity: 1 x 10GbE RJ45 LAN \n/ ONLY 285HX Model Support ECC /""}]"
+"01a189ae-fba5-73d7-afe7-9c764685c64a","minisforumhk","https://minisforum.hk/products/minisforum-ms-02-ultra?variant=46939685585074","Minisforum MS-02 Ultra","1399900","HKD","2026-10-29 22:01:48.709508+00","2026-10-26 16:04:21.180177+00","{""code"": ""HK"", ""kind"": ""country""}","zh",,"CS-MM2U285","gid://shopify/Product/8707165749426","gid://shopify/ProductVariant/46939685585074","minisforum-ms-02-ultra",,,"""in_stock""",,"Processor: Intel® Core™ Ultra 9 285HX | 275HXMemory &amp; Storage: Dual DDR5-4800MHz | M.2 2280 SSD SlotExpansion: PCIe 5.0 x16 Slot (Bifurcation Support)USB: 2 x USB4 V2 (80 Gbps, DP 2.0 Alt Mode)High-Speed Network: 2 x 25GbE SFP+ (285HX Only)Connectivity: 1 x 10GbE RJ45 LAN 
+/ ONLY 285HX Model Support ECC /","[{""title"": ""Minisforum MS-02 Ultra"", ""language"": ""zh"", ""description"": ""Processor: Intel® Core™ Ultra 9 285HX | 275HXMemory &amp; Storage: Dual DDR5-4800MHz | M.2 2280 SSD SlotExpansion: PCIe 5.0 x16 Slot (Bifurcation Support)USB: 2 x USB4 V2 (80 Gbps, DP 2.0 Alt Mode)High-Speed Network: 2 x 25GbE SFP+ (285HX Only)Connectivity: 1 x 10GbE RJ45 LAN \n/ ONLY 285HX Model Support ECC /""}]"
+"01a189ae-fbab-7250-8a04-a4100e9bae81","minisforumhk","https://minisforum.hk/products/minisforum-ms-02-ultra?variant=46939685617842","Minisforum MS-02 Ultra","3299900","HKD","2026-10-29 22:01:48.716184+00","2026-10-26 16:04:21.180177+00","{""code"": ""HK"", ""kind"": ""country""}","zh",,"CS-MM2U28D","gid://shopify/Product/8707165749426","gid://shopify/ProductVariant/46939685617842","minisforum-ms-02-ultra","3499900","HKD","""out_of_stock""",,"Processor: Intel® Core™ Ultra 9 285HX | 275HXMemory &amp; Storage: Dual DDR5-4800MHz | M.2 2280 SSD SlotExpansion: PCIe 5.0 x16 Slot (Bifurcation Support)USB: 2 x USB4 V2 (80 Gbps, DP 2.0 Alt Mode)High-Speed Network: 2 x 25GbE SFP+ (285HX Only)Connectivity: 1 x 10GbE RJ45 LAN 
+/ ONLY 285HX Model Support ECC /","[{""title"": ""Minisforum MS-02 Ultra"", ""language"": ""zh"", ""description"": ""Processor: Intel® Core™ Ultra 9 285HX | 275HXMemory &amp; Storage: Dual DDR5-4800MHz | M.2 2280 SSD SlotExpansion: PCIe 5.0 x16 Slot (Bifurcation Support)USB: 2 x USB4 V2 (80 Gbps, DP 2.0 Alt Mode)High-Speed Network: 2 x 25GbE SFP+ (285HX Only)Connectivity: 1 x 10GbE RJ45 LAN \n/ ONLY 285HX Model Support ECC /""}]"
+"01a189ae-fbb1-735b-a684-e9c700595212","minisforumhk","https://minisforum.hk/products/minisforum-ms-02-ultra?variant=46939685650610","Minisforum MS-02 Ultra","679900","HKD","2026-10-29 22:01:48.721894+00","2026-10-26 16:04:21.180177+00","{""code"": ""HK"", ""kind"": ""country""}","zh",,"BS-MM2U275","gid://shopify/Product/8707165749426","gid://shopify/ProductVariant/46939685650610","minisforum-ms-02-ultra","779900","HKD","""out_of_stock""",,"Processor: Intel® Core™ Ultra 9 285HX | 275HXMemory &amp; Storage: Dual DDR5-4800MHz | M.2 2280 SSD SlotExpansion: PCIe 5.0 x16 Slot (Bifurcation Support)USB: 2 x USB4 V2 (80 Gbps, DP 2.0 Alt Mode)High-Speed Network: 2 x 25GbE SFP+ (285HX Only)Connectivity: 1 x 10GbE RJ45 LAN 
+/ ONLY 285HX Model Support ECC /","[{""title"": ""Minisforum MS-02 Ultra"", ""language"": ""zh"", ""description"": ""Processor: Intel® Core™ Ultra 9 285HX | 275HXMemory &amp; Storage: Dual DDR5-4800MHz | M.2 2280 SSD SlotExpansion: PCIe 5.0 x16 Slot (Bifurcation Support)USB: 2 x USB4 V2 (80 Gbps, DP 2.0 Alt Mode)High-Speed Network: 2 x 25GbE SFP+ (285HX Only)Connectivity: 1 x 10GbE RJ45 LAN \n/ ONLY 285HX Model Support ECC /""}]"
+"01a189ae-fbb7-7198-82dd-42225e122c35","minisforumhk","https://minisforum.hk/products/minisforum-ms-02-ultra?variant=46939685683378","Minisforum MS-02 Ultra","1199900","HKD","2026-10-29 22:01:48.727425+00","2026-10-26 16:04:21.180177+00","{""code"": ""HK"", ""kind"": ""country""}","zh",,"CS-MM2U275","gid://shopify/Product/8707165749426","gid://shopify/ProductVariant/46939685683378","minisforum-ms-02-ultra","1399900","HKD","""out_of_stock""",,"Processor: Intel® Core™ Ultra 9 285HX | 275HXMemory &amp; Storage: Dual DDR5-4800MHz | M.2 2280 SSD SlotExpansion: PCIe 5.0 x16 Slot (Bifurcation Support)USB: 2 x USB4 V2 (80 Gbps, DP 2.0 Alt Mode)High-Speed Network: 2 x 25GbE SFP+ (285HX Only)Connectivity: 1 x 10GbE RJ45 LAN 
+/ ONLY 285HX Model Support ECC /","[{""title"": ""Minisforum MS-02 Ultra"", ""language"": ""zh"", ""description"": ""Processor: Intel® Core™ Ultra 9 285HX | 275HXMemory &amp; Storage: Dual DDR5-4800MHz | M.2 2280 SSD SlotExpansion: PCIe 5.0 x16 Slot (Bifurcation Support)USB: 2 x USB4 V2 (80 Gbps, DP 2.0 Alt Mode)High-Speed Network: 2 x 25GbE SFP+ (285HX Only)Connectivity: 1 x 10GbE RJ45 LAN \n/ ONLY 285HX Model Support ECC /""}]"
+"01a19360-0e76-7001-8e12-de954214bd2b","minisforumhk","https://minisforum.hk/products/um760-slim?variant=44701848600754","UM760 Slim","549900","HKD","2026-10-31 19:11:48.343+00","2026-10-26 16:04:02.37922+00","{""code"": ""HK"", ""kind"": ""country""}","zh",,"CS-MFUM76","gid://shopify/Product/8296452718770","gid://shopify/ProductVariant/44701848600754","um760-slim","649900","HKD","""in_stock""",,"產品簡介
+Minisforum UM760 Slim 係 AMD Ryzen™ 5 7640HS 迷你電腦，內顯 Radeon™ 760M，雙通道 DDR5（最高約 96GB），兩個 M.2 PCIe 4.0 儲存位。
+有 1 個 2.5G 網口、Wi-Fi 6E、USB4、HDMI 2.1 同 DP 1.4，適合入門桌面、辦公室同家用。香港行貨，3 年保養。另有準系統可自配。香港官方有售，庫存以產品頁顯示為準。
+
+搭載 AMD Ryzen™ 5 7640HS 處理器與 AMD Radeon™ 760M 顯示卡，提供強大的運算與圖形處理能力。支援雙通道 DDR5 記憶體，最高可擴充至 96GB，滿足高效能需求。內建兩個 M.2 PCIe 4.0 SSD 插槽，確保高速儲存性能。豐富的外接介面包含 HDMI 2.1、USB4、2.5G Ethernet，以及 Wi-Fi 6E 和藍牙 5.3，適合各種應用場景，無論是遊戲、創意工作或日常使用都能輕鬆應對。
+ 
+常見問題
+
+問：UM760 Slim 用咩處理器同記憶體？
+答：用 AMD Ryzen™ 5 7640HS（6 核 12 線程，最高 5.0GHz），內顯 AMD Radeon™ 760M。記憶體係雙通道 DDR5 SODIMM（兩條插槽），最高可擴充至 96GB；儲存有 2 個 M.2 2280 PCIe 4.0 SSD 插槽。
+問：有冇雙網口？對外接口點樣？
+答：係 1 個 2.5G RJ45 網口（單網口），另有 Wi-Fi 6E 同藍牙 5.3。顯示同擴充包括 HDMI 2.1、DP 1.4、USB4，以及多組 USB Type-A。
+問：適唔適合入門或者辦公室用？
+答：適合。機身約 130 × 126 × 52.3mm，夠文書、瀏覽、視像會議同輕量多工。有準系統同已配 RAM／SSD／Windows 11 Pro 嘅系統機可以揀，方便入門或者即開即用。
+問：準系統包唔包記憶體、SSD 同 Windows？
+答：準系統唔包記憶體、SSD 同作業系統，要自行安裝兼容 DDR5 SODIMM、M.2 SSD 同系統。系統機款已預裝對應規格同 Windows 11 Pro。
+問：係咪香港行貨？保養幾耐？
+答：係香港行貨，由香港出貨。保養期 3 年（由購買日起計）。詳情請參閱保養與退貨條款。
+問：點睇庫存／有冇貨？
+答：香港官方有售，庫存以產品頁顯示為準。下單前請睇產品頁顯示。","[{""title"": ""UM760 Slim"", ""language"": ""zh"", ""description"": ""產品簡介\nMinisforum UM760 Slim 係 AMD Ryzen™ 5 7640HS 迷你電腦，內顯 Radeon™ 760M，雙通道 DDR5（最高約 96GB），兩個 M.2 PCIe 4.0 儲存位。\n有 1 個 2.5G 網口、Wi-Fi 6E、USB4、HDMI 2.1 同 DP 1.4，適合入門桌面、辦公室同家用。香港行貨，3 年保養。另有準系統可自配。香港官方有售，庫存以產品頁顯示為準。\n\n搭載 AMD Ryzen™ 5 7640HS 處理器與 AMD Radeon™ 760M 顯示卡，提供強大的運算與圖形處理能力。支援雙通道 DDR5 記憶體，最高可擴充至 96GB，滿足高效能需求。內建兩個 M.2 PCIe 4.0 SSD 插槽，確保高速儲存性能。豐富的外接介面包含 HDMI 2.1、USB4、2.5G Ethernet，以及 Wi-Fi 6E 和藍牙 5.3，適合各種應用場景，無論是遊戲、創意工作或日常使用都能輕鬆應對。\n \n常見問題\n\n問：UM760 Slim 用咩處理器同記憶體？\n答：用 AMD Ryzen™ 5 7640HS（6 核 12 線程，最高 5.0GHz），內顯 AMD Radeon™ 760M。記憶體係雙通道 DDR5 SODIMM（兩條插槽），最高可擴充至 96GB；儲存有 2 個 M.2 2280 PCIe 4.0 SSD 插槽。\n問：有冇雙網口？對外接口點樣？\n答：係 1 個 2.5G RJ45 網口（單網口），另有 Wi-Fi 6E 同藍牙 5.3。顯示同擴充包括 HDMI 2.1、DP 1.4、USB4，以及多組 USB Type-A。\n問：適唔適合入門或者辦公室用？\n答：適合。機身約 130 × 126 × 52.3mm，夠文書、瀏覽、視像會議同輕量多工。有準系統同已配 RAM／SSD／Windows 11 Pro 嘅系統機可以揀，方便入門或者即開即用。\n問：準系統包唔包記憶體、SSD 同 Windows？\n答：準系統唔包記憶體、SSD 同作業系統，要自行安裝兼容 DDR5 SODIMM、M.2 SSD 同系統。系統機款已預裝對應規格同 Windows 11 Pro。\n問：係咪香港行貨？保養幾耐？\n答：係香港行貨，由香港出貨。保養期 3 年（由購買日起計）。詳情請參閱保養與退貨條款。\n問：點睇庫存／有冇貨？\n答：香港官方有售，庫存以產品頁顯示為準。下單前請睇產品頁顯示。""}]"
+"01a19360-0e7a-7313-8833-57688e245fbd","minisforumhk","https://minisforum.hk/products/um760-slim?variant=45137758290098","UM760 Slim","699900","HKD","2026-10-31 19:11:48.346828+00","2026-10-26 16:04:02.37922+00","{""code"": ""HK"", ""kind"": ""country""}","zh",,"CS-MFUM76P","gid://shopify/Product/8296452718770","gid://shopify/ProductVariant/45137758290098","um760-slim","799900","HKD","""in_stock""",,"產品簡介
+Minisforum UM760 Slim 係 AMD Ryzen™ 5 7640HS 迷你電腦，內顯 Radeon™ 760M，雙通道 DDR5（最高約 96GB），兩個 M.2 PCIe 4.0 儲存位。
+有 1 個 2.5G 網口、Wi-Fi 6E、USB4、HDMI 2.1 同 DP 1.4，適合入門桌面、辦公室同家用。香港行貨，3 年保養。另有準系統可自配。香港官方有售，庫存以產品頁顯示為準。
+
+搭載 AMD Ryzen™ 5 7640HS 處理器與 AMD Radeon™ 760M 顯示卡，提供強大的運算與圖形處理能力。支援雙通道 DDR5 記憶體，最高可擴充至 96GB，滿足高效能需求。內建兩個 M.2 PCIe 4.0 SSD 插槽，確保高速儲存性能。豐富的外接介面包含 HDMI 2.1、USB4、2.5G Ethernet，以及 Wi-Fi 6E 和藍牙 5.3，適合各種應用場景，無論是遊戲、創意工作或日常使用都能輕鬆應對。
+ 
+常見問題
+
+問：UM760 Slim 用咩處理器同記憶體？
+答：用 AMD Ryzen™ 5 7640HS（6 核 12 線程，最高 5.0GHz），內顯 AMD Radeon™ 760M。記憶體係雙通道 DDR5 SODIMM（兩條插槽），最高可擴充至 96GB；儲存有 2 個 M.2 2280 PCIe 4.0 SSD 插槽。
+問：有冇雙網口？對外接口點樣？
+答：係 1 個 2.5G RJ45 網口（單網口），另有 Wi-Fi 6E 同藍牙 5.3。顯示同擴充包括 HDMI 2.1、DP 1.4、USB4，以及多組 USB Type-A。
+問：適唔適合入門或者辦公室用？
+答：適合。機身約 130 × 126 × 52.3mm，夠文書、瀏覽、視像會議同輕量多工。有準系統同已配 RAM／SSD／Windows 11 Pro 嘅系統機可以揀，方便入門或者即開即用。
+問：準系統包唔包記憶體、SSD 同 Windows？
+答：準系統唔包記憶體、SSD 同作業系統，要自行安裝兼容 DDR5 SODIMM、M.2 SSD 同系統。系統機款已預裝對應規格同 Windows 11 Pro。
+問：係咪香港行貨？保養幾耐？
+答：係香港行貨，由香港出貨。保養期 3 年（由購買日起計）。詳情請參閱保養與退貨條款。
+問：點睇庫存／有冇貨？
+答：香港官方有售，庫存以產品頁顯示為準。下單前請睇產品頁顯示。","[{""title"": ""UM760 Slim"", ""language"": ""zh"", ""description"": ""產品簡介\nMinisforum UM760 Slim 係 AMD Ryzen™ 5 7640HS 迷你電腦，內顯 Radeon™ 760M，雙通道 DDR5（最高約 96GB），兩個 M.2 PCIe 4.0 儲存位。\n有 1 個 2.5G 網口、Wi-Fi 6E、USB4、HDMI 2.1 同 DP 1.4，適合入門桌面、辦公室同家用。香港行貨，3 年保養。另有準系統可自配。香港官方有售，庫存以產品頁顯示為準。\n\n搭載 AMD Ryzen™ 5 7640HS 處理器與 AMD Radeon™ 760M 顯示卡，提供強大的運算與圖形處理能力。支援雙通道 DDR5 記憶體，最高可擴充至 96GB，滿足高效能需求。內建兩個 M.2 PCIe 4.0 SSD 插槽，確保高速儲存性能。豐富的外接介面包含 HDMI 2.1、USB4、2.5G Ethernet，以及 Wi-Fi 6E 和藍牙 5.3，適合各種應用場景，無論是遊戲、創意工作或日常使用都能輕鬆應對。\n \n常見問題\n\n問：UM760 Slim 用咩處理器同記憶體？\n答：用 AMD Ryzen™ 5 7640HS（6 核 12 線程，最高 5.0GHz），內顯 AMD Radeon™ 760M。記憶體係雙通道 DDR5 SODIMM（兩條插槽），最高可擴充至 96GB；儲存有 2 個 M.2 2280 PCIe 4.0 SSD 插槽。\n問：有冇雙網口？對外接口點樣？\n答：係 1 個 2.5G RJ45 網口（單網口），另有 Wi-Fi 6E 同藍牙 5.3。顯示同擴充包括 HDMI 2.1、DP 1.4、USB4，以及多組 USB Type-A。\n問：適唔適合入門或者辦公室用？\n答：適合。機身約 130 × 126 × 52.3mm，夠文書、瀏覽、視像會議同輕量多工。有準系統同已配 RAM／SSD／Windows 11 Pro 嘅系統機可以揀，方便入門或者即開即用。\n問：準系統包唔包記憶體、SSD 同 Windows？\n答：準系統唔包記憶體、SSD 同作業系統，要自行安裝兼容 DDR5 SODIMM、M.2 SSD 同系統。系統機款已預裝對應規格同 Windows 11 Pro。\n問：係咪香港行貨？保養幾耐？\n答：係香港行貨，由香港出貨。保養期 3 年（由購買日起計）。詳情請參閱保養與退貨條款。\n問：點睇庫存／有冇貨？\n答：香港官方有售，庫存以產品頁顯示為準。下單前請睇產品頁顯示。""}]"
+"01a19360-1205-73e1-a67d-19b797fdb184","minisforumhk","https://minisforum.hk/products/minisforum-m1-pro?variant=46171873509554","Minisforum M1 Pro","549900","HKD","2026-10-31 19:11:49.253588+00","2026-10-26 16:04:05.967662+00","{""code"": ""HK"", ""kind"": ""country""}","zh",,"BS-MM1PRO","gid://shopify/Product/8587812307122","gid://shopify/ProductVariant/46171873509554","minisforum-m1-pro","649900","HKD","""out_of_stock""",,"MINISFORUM M1 Pro 提供 Intel® Core™ Ultra 5 125H 及 Ultra 9 285H 兩款處理器選擇，分別配備 Intel® Arc™ Graphics 及 Intel® Arc™ 140T GPU，兼顧日常辦公、內容創作及多工處理需要。支援雙通道 DDR5 記憶體，提供最高 96GB 預載配置；內置兩個 M.2 2280 NVMe SSD 插槽，預載最高 2TB SSD，方便日後擴充儲存空間。另配備 2.5Gb LAN、Wi-Fi 7、Bluetooth 5.4 及 Windows 11 Pro，適合追求高效能、穩定連接及小巧機身的商務與專業用戶。","[{""title"": ""Minisforum M1 Pro"", ""language"": ""zh"", ""description"": ""MINISFORUM M1 Pro 提供 Intel® Core™ Ultra 5 125H 及 Ultra 9 285H 兩款處理器選擇，分別配備 Intel® Arc™ Graphics 及 Intel® Arc™ 140T GPU，兼顧日常辦公、內容創作及多工處理需要。支援雙通道 DDR5 記憶體，提供最高 96GB 預載配置；內置兩個 M.2 2280 NVMe SSD 插槽，預載最高 2TB SSD，方便日後擴充儲存空間。另配備 2.5Gb LAN、Wi-Fi 7、Bluetooth 5.4 及 Windows 11 Pro，適合追求高效能、穩定連接及小巧機身的商務與專業用戶。""}]"
+"01a19360-1209-768d-b500-f38f6486f24c","minisforumhk","https://minisforum.hk/products/minisforum-m1-pro?variant=47172878270642","Minisforum M1 Pro","1199900","HKD","2026-10-31 19:11:49.258065+00","2026-10-26 16:04:05.967662+00","{""code"": ""HK"", ""kind"": ""country""}","zh",,"CS-MM1PROB","gid://shopify/Product/8587812307122","gid://shopify/ProductVariant/47172878270642","minisforum-m1-pro","1399900","HKD","""in_stock""",,"MINISFORUM M1 Pro 提供 Intel® Core™ Ultra 5 125H 及 Ultra 9 285H 兩款處理器選擇，分別配備 Intel® Arc™ Graphics 及 Intel® Arc™ 140T GPU，兼顧日常辦公、內容創作及多工處理需要。支援雙通道 DDR5 記憶體，提供最高 96GB 預載配置；內置兩個 M.2 2280 NVMe SSD 插槽，預載最高 2TB SSD，方便日後擴充儲存空間。另配備 2.5Gb LAN、Wi-Fi 7、Bluetooth 5.4 及 Windows 11 Pro，適合追求高效能、穩定連接及小巧機身的商務與專業用戶。","[{""title"": ""Minisforum M1 Pro"", ""language"": ""zh"", ""description"": ""MINISFORUM M1 Pro 提供 Intel® Core™ Ultra 5 125H 及 Ultra 9 285H 兩款處理器選擇，分別配備 Intel® Arc™ Graphics 及 Intel® Arc™ 140T GPU，兼顧日常辦公、內容創作及多工處理需要。支援雙通道 DDR5 記憶體，提供最高 96GB 預載配置；內置兩個 M.2 2280 NVMe SSD 插槽，預載最高 2TB SSD，方便日後擴充儲存空間。另配備 2.5Gb LAN、Wi-Fi 7、Bluetooth 5.4 及 Windows 11 Pro，適合追求高效能、穩定連接及小巧機身的商務與專業用戶。""}]"
+"01a19360-120e-7196-9674-4435e0c19dd4","minisforumhk","https://minisforum.hk/products/minisforum-m1-pro?variant=46171873575090","Minisforum M1 Pro","1499900","HKD","2026-10-31 19:11:49.262425+00","2026-10-26 16:04:05.967662+00","{""code"": ""HK"", ""kind"": ""country""}","zh",,"CS-MM1PROC","gid://shopify/Product/8587812307122","gid://shopify/ProductVariant/46171873575090","minisforum-m1-pro","1699900","HKD","""out_of_stock""",,"MINISFORUM M1 Pro 提供 Intel® Core™ Ultra 5 125H 及 Ultra 9 285H 兩款處理器選擇，分別配備 Intel® Arc™ Graphics 及 Intel® Arc™ 140T GPU，兼顧日常辦公、內容創作及多工處理需要。支援雙通道 DDR5 記憶體，提供最高 96GB 預載配置；內置兩個 M.2 2280 NVMe SSD 插槽，預載最高 2TB SSD，方便日後擴充儲存空間。另配備 2.5Gb LAN、Wi-Fi 7、Bluetooth 5.4 及 Windows 11 Pro，適合追求高效能、穩定連接及小巧機身的商務與專業用戶。","[{""title"": ""Minisforum M1 Pro"", ""language"": ""zh"", ""description"": ""MINISFORUM M1 Pro 提供 Intel® Core™ Ultra 5 125H 及 Ultra 9 285H 兩款處理器選擇，分別配備 Intel® Arc™ Graphics 及 Intel® Arc™ 140T GPU，兼顧日常辦公、內容創作及多工處理需要。支援雙通道 DDR5 記憶體，提供最高 96GB 預載配置；內置兩個 M.2 2280 NVMe SSD 插槽，預載最高 2TB SSD，方便日後擴充儲存空間。另配備 2.5Gb LAN、Wi-Fi 7、Bluetooth 5.4 及 Windows 11 Pro，適合追求高效能、穩定連接及小巧機身的商務與專業用戶。""}]"
+"01a19360-1318-72bc-bae7-08110298ff03","minisforumhk","https://minisforum.hk/products/minisforum-m2?variant=47706162364594","Minisforum M2","479900","HKD","2026-10-31 19:11:49.528104+00","2026-10-26 16:03:57.430484+00","{""code"": ""HK"", ""kind"": ""country""}","zh",,"BS-MM2U7","gid://shopify/Product/8940915458226","gid://shopify/ProductVariant/47706162364594","minisforum-m2",,,"""in_stock""",,"Minisforum M2     
+Intel Core Ultra 7 356H, 16Cores 16Threads
+Up to 90 AI TOPS (NPU 50 TOPS + GPU 40 TOPS)
+DUAL DDR5 (Up to 128GB)
+DUAL M.2 2280 NVME SSD Slot (PCIe 4.0 x4, Up to 8TB)
+WIFI 7 &amp; BT 5.4, DUAL 2.5GbE LAN
+
+USB 40Gbps
+130 x 127 x 50mm","[{""title"": ""Minisforum M2"", ""language"": ""zh"", ""description"": ""Minisforum M2     \nIntel Core Ultra 7 356H, 16Cores 16Threads\nUp to 90 AI TOPS (NPU 50 TOPS + GPU 40 TOPS)\nDUAL DDR5 (Up to 128GB)\nDUAL M.2 2280 NVME SSD Slot (PCIe 4.0 x4, Up to 8TB)\nWIFI 7 &amp; BT 5.4, DUAL 2.5GbE LAN\n\nUSB 40Gbps\n130 x 127 x 50mm""}]"
+"01a19360-131b-76fe-932a-f70844f85333","minisforumhk","https://minisforum.hk/products/minisforum-m2?variant=47706162397362","Minisforum M2","899900","HKD","2026-10-31 19:11:49.531918+00","2026-10-26 16:03:57.430484+00","{""code"": ""HK"", ""kind"": ""country""}","zh",,"CS-MM2U7A","gid://shopify/Product/8940915458226","gid://shopify/ProductVariant/47706162397362","minisforum-m2",,,"""out_of_stock""",,"Minisforum M2     
+Intel Core Ultra 7 356H, 16Cores 16Threads
+Up to 90 AI TOPS (NPU 50 TOPS + GPU 40 TOPS)
+DUAL DDR5 (Up to 128GB)
+DUAL M.2 2280 NVME SSD Slot (PCIe 4.0 x4, Up to 8TB)
+WIFI 7 &amp; BT 5.4, DUAL 2.5GbE LAN
+
+USB 40Gbps
+130 x 127 x 50mm","[{""title"": ""Minisforum M2"", ""language"": ""zh"", ""description"": ""Minisforum M2     \nIntel Core Ultra 7 356H, 16Cores 16Threads\nUp to 90 AI TOPS (NPU 50 TOPS + GPU 40 TOPS)\nDUAL DDR5 (Up to 128GB)\nDUAL M.2 2280 NVME SSD Slot (PCIe 4.0 x4, Up to 8TB)\nWIFI 7 &amp; BT 5.4, DUAL 2.5GbE LAN\n\nUSB 40Gbps\n130 x 127 x 50mm""}]"
+"01a19360-136c-7406-97d5-007ce25d821b","minisforumhk","https://minisforum.hk/products/minisforum-atomman-g1-pro","MINISFORUM AtomMan G1 PRO","1499900","HKD","2026-10-31 19:11:49.612413+00","2026-10-26 16:04:09.043538+00","{""code"": ""HK"", ""kind"": ""country""}","zh",,"CS-MG1PROA","gid://shopify/Product/8707877896370","gid://shopify/ProductVariant/46941860135090","minisforum-atomman-g1-pro","1599900","HKD","""in_stock""",,"產品簡介
+Minisforum AtomMan G1 PRO 係高效能迷你電競／創作主機，搭載 AMD Ryzen™ 9 8945HX（16 核 32 線程）同 NVIDIA GeForce RTX 5060 8GB 獨立顯卡，預載 32GB DDR5 同 1TB PCIe 4.0 SSD。
+有 5G 有線網口、Wi-Fi 7，多組 HDMI 2.1／DP 2.1／USB4，適合 3A 遊戲、3D／影片創作同需要獨顯嘅高效能場景。香港行貨，3 年保養。香港官方有售，庫存以產品頁顯示為準。
+
+主要規格
+
+處理器：AMD Ryzen™ 9 8945HX（16 核 32 線程，最高 5.4GHz）
+顯示卡：NVIDIA GeForce RTX 5060 8GB
+記憶體：32GB DDR5 5200MHz
+儲存：1TB M.2 2280 PCIe 4.0 SSD（共 2 條 M.2 插槽）
+接口：USB4 ×2（8K@60Hz）、USB 3.2 Gen2 ×3、HDMI 2.1 ×2（8K@60Hz）、DP 2.1 ×2、DP 1.4a ×1
+網絡：5G RJ45 ×1
+無線：Wi-Fi 7、藍牙 5.4
+作業系統：Windows 11 Pro
+尺寸：297 × 117 × 70 mm
+
+常見問題
+
+問：G1 PRO 用咩處理器同顯卡？
+答：用 AMD Ryzen™ 9 8945HX（16 核 32 線程，最高約 5.4GHz），配 NVIDIA GeForce RTX 5060 8GB 獨立顯卡（Full Power 設計，以官方規格為準）。預載 32GB DDR5 5200MHz 記憶體同 1TB M.2 PCIe 4.0 SSD，預裝 Windows 11 Pro。
+問：適唔適合打機或者內容創作？
+答：適合。獨顯加高核心數處理器，啱 3A 遊戲、直播、3D／影片剪輯同其他需要 GPU 加速嘅工作。機身約 297 × 117 × 70mm，屬迷你電競主機定位，唔係入門文書機。
+問：可唔可以再加 SSD？記憶體可唔可以升級？
+答：儲存共有 2 個 M.2 2280 PCIe 4.0 插槽，出廠用咗 1 個，通常可以再加 1 條。記憶體規格同可否自行升級請以產品頁同實機為準。
+問：有咩顯示同網絡接口？
+答：顯示包括 HDMI 2.1 ×2、DP 2.1 ×2、DP 1.4a ×1，另有 USB4 ×2。網絡係 1 個 5G RJ45，另配 Wi-Fi 7 同藍牙 5.4。
+問：係咪香港行貨？保養幾耐？
+答：係香港行貨，由香港出貨。保養期 3 年（由購買日起計）。詳情請參閱保養與退貨條款。
+問：點睇庫存／有冇貨？
+答：香港官方有售，庫存以產品頁顯示為準。下單前請睇產品頁顯示。","[{""title"": ""MINISFORUM AtomMan G1 PRO"", ""language"": ""zh"", ""description"": ""產品簡介\nMinisforum AtomMan G1 PRO 係高效能迷你電競／創作主機，搭載 AMD Ryzen™ 9 8945HX（16 核 32 線程）同 NVIDIA GeForce RTX 5060 8GB 獨立顯卡，預載 32GB DDR5 同 1TB PCIe 4.0 SSD。\n有 5G 有線網口、Wi-Fi 7，多組 HDMI 2.1／DP 2.1／USB4，適合 3A 遊戲、3D／影片創作同需要獨顯嘅高效能場景。香港行貨，3 年保養。香港官方有售，庫存以產品頁顯示為準。\n\n主要規格\n\n處理器：AMD Ryzen™ 9 8945HX（16 核 32 線程，最高 5.4GHz）\n顯示卡：NVIDIA GeForce RTX 5060 8GB\n記憶體：32GB DDR5 5200MHz\n儲存：1TB M.2 2280 PCIe 4.0 SSD（共 2 條 M.2 插槽）\n接口：USB4 ×2（8K@60Hz）、USB 3.2 Gen2 ×3、HDMI 2.1 ×2（8K@60Hz）、DP 2.1 ×2、DP 1.4a ×1\n網絡：5G RJ45 ×1\n無線：Wi-Fi 7、藍牙 5.4\n作業系統：Windows 11 Pro\n尺寸：297 × 117 × 70 mm\n\n常見問題\n\n問：G1 PRO 用咩處理器同顯卡？\n答：用 AMD Ryzen™ 9 8945HX（16 核 32 線程，最高約 5.4GHz），配 NVIDIA GeForce RTX 5060 8GB 獨立顯卡（Full Power 設計，以官方規格為準）。預載 32GB DDR5 5200MHz 記憶體同 1TB M.2 PCIe 4.0 SSD，預裝 Windows 11 Pro。\n問：適唔適合打機或者內容創作？\n答：適合。獨顯加高核心數處理器，啱 3A 遊戲、直播、3D／影片剪輯同其他需要 GPU 加速嘅工作。機身約 297 × 117 × 70mm，屬迷你電競主機定位，唔係入門文書機。\n問：可唔可以再加 SSD？記憶體可唔可以升級？\n答：儲存共有 2 個 M.2 2280 PCIe 4.0 插槽，出廠用咗 1 個，通常可以再加 1 條。記憶體規格同可否自行升級請以產品頁同實機為準。\n問：有咩顯示同網絡接口？\n答：顯示包括 HDMI 2.1 ×2、DP 2.1 ×2、DP 1.4a ×1，另有 USB4 ×2。網絡係 1 個 5G RJ45，另配 Wi-Fi 7 同藍牙 5.4。\n問：係咪香港行貨？保養幾耐？\n答：係香港行貨，由香港出貨。保養期 3 年（由購買日起計）。詳情請參閱保養與退貨條款。\n問：點睇庫存／有冇貨？\n答：香港官方有售，庫存以產品頁顯示為準。下單前請睇產品頁顯示。""}]"
+"01a19360-1413-77c1-9bfe-752b155070c7","minisforumhk","https://minisforum.hk/products/um760-slim?variant=45467430518962","UM760 Slim","219900","HKD","2026-10-31 19:11:49.779411+00","2026-10-26 16:04:02.37922+00","{""code"": ""HK"", ""kind"": ""country""}","zh",,"BS-MFUM760","gid://shopify/Product/8296452718770","gid://shopify/ProductVariant/45467430518962","um760-slim","249900","HKD","""out_of_stock""",,"產品簡介
+Minisforum UM760 Slim 係 AMD Ryzen™ 5 7640HS 迷你電腦，內顯 Radeon™ 760M，雙通道 DDR5（最高約 96GB），兩個 M.2 PCIe 4.0 儲存位。
+有 1 個 2.5G 網口、Wi-Fi 6E、USB4、HDMI 2.1 同 DP 1.4，適合入門桌面、辦公室同家用。香港行貨，3 年保養。另有準系統可自配。香港官方有售，庫存以產品頁顯示為準。
+
+搭載 AMD Ryzen™ 5 7640HS 處理器與 AMD Radeon™ 760M 顯示卡，提供強大的運算與圖形處理能力。支援雙通道 DDR5 記憶體，最高可擴充至 96GB，滿足高效能需求。內建兩個 M.2 PCIe 4.0 SSD 插槽，確保高速儲存性能。豐富的外接介面包含 HDMI 2.1、USB4、2.5G Ethernet，以及 Wi-Fi 6E 和藍牙 5.3，適合各種應用場景，無論是遊戲、創意工作或日常使用都能輕鬆應對。
+ 
+常見問題
+
+問：UM760 Slim 用咩處理器同記憶體？
+答：用 AMD Ryzen™ 5 7640HS（6 核 12 線程，最高 5.0GHz），內顯 AMD Radeon™ 760M。記憶體係雙通道 DDR5 SODIMM（兩條插槽），最高可擴充至 96GB；儲存有 2 個 M.2 2280 PCIe 4.0 SSD 插槽。
+問：有冇雙網口？對外接口點樣？
+答：係 1 個 2.5G RJ45 網口（單網口），另有 Wi-Fi 6E 同藍牙 5.3。顯示同擴充包括 HDMI 2.1、DP 1.4、USB4，以及多組 USB Type-A。
+問：適唔適合入門或者辦公室用？
+答：適合。機身約 130 × 126 × 52.3mm，夠文書、瀏覽、視像會議同輕量多工。有準系統同已配 RAM／SSD／Windows 11 Pro 嘅系統機可以揀，方便入門或者即開即用。
+問：準系統包唔包記憶體、SSD 同 Windows？
+答：準系統唔包記憶體、SSD 同作業系統，要自行安裝兼容 DDR5 SODIMM、M.2 SSD 同系統。系統機款已預裝對應規格同 Windows 11 Pro。
+問：係咪香港行貨？保養幾耐？
+答：係香港行貨，由香港出貨。保養期 3 年（由購買日起計）。詳情請參閱保養與退貨條款。
+問：點睇庫存／有冇貨？
+答：香港官方有售，庫存以產品頁顯示為準。下單前請睇產品頁顯示。","[{""title"": ""UM760 Slim"", ""language"": ""zh"", ""description"": ""產品簡介\nMinisforum UM760 Slim 係 AMD Ryzen™ 5 7640HS 迷你電腦，內顯 Radeon™ 760M，雙通道 DDR5（最高約 96GB），兩個 M.2 PCIe 4.0 儲存位。\n有 1 個 2.5G 網口、Wi-Fi 6E、USB4、HDMI 2.1 同 DP 1.4，適合入門桌面、辦公室同家用。香港行貨，3 年保養。另有準系統可自配。香港官方有售，庫存以產品頁顯示為準。\n\n搭載 AMD Ryzen™ 5 7640HS 處理器與 AMD Radeon™ 760M 顯示卡，提供強大的運算與圖形處理能力。支援雙通道 DDR5 記憶體，最高可擴充至 96GB，滿足高效能需求。內建兩個 M.2 PCIe 4.0 SSD 插槽，確保高速儲存性能。豐富的外接介面包含 HDMI 2.1、USB4、2.5G Ethernet，以及 Wi-Fi 6E 和藍牙 5.3，適合各種應用場景，無論是遊戲、創意工作或日常使用都能輕鬆應對。\n \n常見問題\n\n問：UM760 Slim 用咩處理器同記憶體？\n答：用 AMD Ryzen™ 5 7640HS（6 核 12 線程，最高 5.0GHz），內顯 AMD Radeon™ 760M。記憶體係雙通道 DDR5 SODIMM（兩條插槽），最高可擴充至 96GB；儲存有 2 個 M.2 2280 PCIe 4.0 SSD 插槽。\n問：有冇雙網口？對外接口點樣？\n答：係 1 個 2.5G RJ45 網口（單網口），另有 Wi-Fi 6E 同藍牙 5.3。顯示同擴充包括 HDMI 2.1、DP 1.4、USB4，以及多組 USB Type-A。\n問：適唔適合入門或者辦公室用？\n答：適合。機身約 130 × 126 × 52.3mm，夠文書、瀏覽、視像會議同輕量多工。有準系統同已配 RAM／SSD／Windows 11 Pro 嘅系統機可以揀，方便入門或者即開即用。\n問：準系統包唔包記憶體、SSD 同 Windows？\n答：準系統唔包記憶體、SSD 同作業系統，要自行安裝兼容 DDR5 SODIMM、M.2 SSD 同系統。系統機款已預裝對應規格同 Windows 11 Pro。\n問：係咪香港行貨？保養幾耐？\n答：係香港行貨，由香港出貨。保養期 3 年（由購買日起計）。詳情請參閱保養與退貨條款。\n問：點睇庫存／有冇貨？\n答：香港官方有售，庫存以產品頁顯示為準。下單前請睇產品頁顯示。""}]"
+"01a19360-1429-7420-8721-7890c2457c25","minisforumhk","https://minisforum.hk/products/minisforum-ms-a1","Minisforum MS-A1 WorkStation","219900","HKD","2026-10-31 19:11:49.801274+00","2026-10-26 16:03:58.050604+00","{""code"": ""HK"", ""kind"": ""country""}","zh",,"BS-MFMSA1","gid://shopify/Product/8246431613106","gid://shopify/ProductVariant/44571303706802","minisforum-ms-a1","269900","HKD","""out_of_stock""",,,"[{""title"": ""Minisforum MS-A1 WorkStation"", ""language"": ""zh"", ""description"": null}]"
+"01a19360-146f-7239-ba1a-5e13632fe0ca","minisforumhk","https://minisforum.hk/products/minisforum-ai-x1-pro?variant=47886526120114","Minisforum AI X1 Pro","1999900","HKD","2026-10-31 19:11:49.871389+00","2026-10-26 16:04:02.239571+00","{""code"": ""HK"", ""kind"": ""country""}","zh",,"CS-MX1P47C","gid://shopify/Product/8439757996210","gid://shopify/ProductVariant/47886526120114","minisforum-ai-x1-pro",,,"""in_stock""",,"產品簡介
+Minisforum AI X1 Pro 係高階 Ryzen™ AI 迷你電腦，可揀 AI 9 HX 370 或 HX 470，內顯 Radeon™ 890M，DDR5 雙插槽，最多 3 個 M.2 PCIe 4.0 儲存位。
+內建雙 2.5G 網口、Wi-Fi 7、USB4、OCuLink 同指紋登入，適合辦公室、本地 AI、創作同需要雙網口嘅 home server 場景。香港行貨，3 年保養。另有準系統可自配記憶體同 SSD。香港官方有售，庫存以產品頁顯示為準。
+
+
+
+ AMD Ryzen™ 9 AI HX 370  (up to 5.1 GHz) 
+
+OR AMD Ryzen™ 9 AI HX 470 (up to 5.2 GHz)
+RAM: DDR5 5600MHz (SO-DIMM*2, Max support 128GB)
+
+
+SSD: M.2 2280 PCIe4.0 Slot *3 
+
+
+
+
+
+MAX support 8K/60Hz or 4K/60Hz
+
+HDMI 2.1 *1・USB4 Port *2 (Alt PD)・OCuLink Port *1
+
+
+RJ45 2.5G LAN・Wi-Fi 7・BT 5.4
+
+
+ 指紋認証 &amp; Copilot PC
+
+Windows 11 Pro
+195 x 195 x 42.5mm
+
+常見問題
+
+問：AI X1 Pro 同 AI X1 有咩分別？
+答：AI X1 Pro 定位更高：有 3 個 M.2 2280 PCIe 4.0 插槽（X1 係 2 個）、雙 2.5G 網口（X1 係單網口）、指紋登入，機身約 195 × 195 × 42.5mm。處理器可揀 Ryzen™ AI 9 HX 370 或 HX 470，內顯都係 Radeon™ 890M。
+問：準系統包唔包記憶體同 SSD？
+答：準系統版本（標明「準系統」）唔包記憶體、SSD 同 Windows，要自己安裝。其餘配置版已包含記憶體、SSD 同 Windows 11 Pro。記憶體用 DDR5 5600 SO-DIMM ×2；儲存最多可用 3 個 M.2 插槽。
+問：有冇雙網口？適唔適合 home server／辦公室？
+答：有雙 2.5G RJ45，另有 Wi-Fi 7 同藍牙 5.4，亦有 OCuLink 可外接顯示卡。雙網口加多儲存插槽，適合辦公室常開機、輕量 home server，或者需要有線分流／聚合嘅場景。
+問：顯示同擴充接口有咩？
+答：有 HDMI 2.1 ×1、DP 2.0 ×1、USB4 ×2（支援影像輸出同 PD），以及 OCuLink ×1。實際解像度同更新率以官方實貨為準。
+問：係咪香港行貨？保養幾耐？
+答：係香港行貨。保養期 3 年（由購買日起計）。詳情請參閱保養與退貨條款。
+問：點睇庫存／有冇貨？
+答：香港官方有售，庫存以產品頁顯示為準。下單前請睇產品頁顯示。","[{""title"": ""Minisforum AI X1 Pro"", ""language"": ""zh"", ""description"": ""產品簡介\nMinisforum AI X1 Pro 係高階 Ryzen™ AI 迷你電腦，可揀 AI 9 HX 370 或 HX 470，內顯 Radeon™ 890M，DDR5 雙插槽，最多 3 個 M.2 PCIe 4.0 儲存位。\n內建雙 2.5G 網口、Wi-Fi 7、USB4、OCuLink 同指紋登入，適合辦公室、本地 AI、創作同需要雙網口嘅 home server 場景。香港行貨，3 年保養。另有準系統可自配記憶體同 SSD。香港官方有售，庫存以產品頁顯示為準。\n\n\n\n AMD Ryzen™ 9 AI HX 370  (up to 5.1 GHz) \n\nOR AMD Ryzen™ 9 AI HX 470 (up to 5.2 GHz)\nRAM: DDR5 5600MHz (SO-DIMM*2, Max support 128GB)\n\n\nSSD: M.2 2280 PCIe4.0 Slot *3 \n\n\n\n\n\nMAX support 8K/60Hz or 4K/60Hz\n\nHDMI 2.1 *1・USB4 Port *2 (Alt PD)・OCuLink Port *1\n\n\nRJ45 2.5G LAN・Wi-Fi 7・BT 5.4\n\n\n 指紋認証 &amp; Copilot PC\n\nWindows 11 Pro\n195 x 195 x 42.5mm\n\n常見問題\n\n問：AI X1 Pro 同 AI X1 有咩分別？\n答：AI X1 Pro 定位更高：有 3 個 M.2 2280 PCIe 4.0 插槽（X1 係 2 個）、雙 2.5G 網口（X1 係單網口）、指紋登入，機身約 195 × 195 × 42.5mm。處理器可揀 Ryzen™ AI 9 HX 370 或 HX 470，內顯都係 Radeon™ 890M。\n問：準系統包唔包記憶體同 SSD？\n答：準系統版本（標明「準系統」）唔包記憶體、SSD 同 Windows，要自己安裝。其餘配置版已包含記憶體、SSD 同 Windows 11 Pro。記憶體用 DDR5 5600 SO-DIMM ×2；儲存最多可用 3 個 M.2 插槽。\n問：有冇雙網口？適唔適合 home server／辦公室？\n答：有雙 2.5G RJ45，另有 Wi-Fi 7 同藍牙 5.4，亦有 OCuLink 可外接顯示卡。雙網口加多儲存插槽，適合辦公室常開機、輕量 home server，或者需要有線分流／聚合嘅場景。\n問：顯示同擴充接口有咩？\n答：有 HDMI 2.1 ×1、DP 2.0 ×1、USB4 ×2（支援影像輸出同 PD），以及 OCuLink ×1。實際解像度同更新率以官方實貨為準。\n問：係咪香港行貨？保養幾耐？\n答：係香港行貨。保養期 3 年（由購買日起計）。詳情請參閱保養與退貨條款。\n問：點睇庫存／有冇貨？\n答：香港官方有售，庫存以產品頁顯示為準。下單前請睇產品頁顯示。""}]"
+"01a19360-1489-70ed-ae66-8af4e412f536","minisforumhk","https://minisforum.hk/products/minisforum-ai-x1-pro?variant=48068397367474","Minisforum AI X1 Pro","699900","HKD","2026-10-31 19:11:49.897231+00","2026-10-26 16:04:02.239571+00","{""code"": ""HK"", ""kind"": ""country""}","zh",,"BS-MX1P47","gid://shopify/Product/8439757996210","gid://shopify/ProductVariant/48068397367474","minisforum-ai-x1-pro","749900","HKD","""in_stock""",,"產品簡介
+Minisforum AI X1 Pro 係高階 Ryzen™ AI 迷你電腦，可揀 AI 9 HX 370 或 HX 470，內顯 Radeon™ 890M，DDR5 雙插槽，最多 3 個 M.2 PCIe 4.0 儲存位。
+內建雙 2.5G 網口、Wi-Fi 7、USB4、OCuLink 同指紋登入，適合辦公室、本地 AI、創作同需要雙網口嘅 home server 場景。香港行貨，3 年保養。另有準系統可自配記憶體同 SSD。香港官方有售，庫存以產品頁顯示為準。
+
+
+
+ AMD Ryzen™ 9 AI HX 370  (up to 5.1 GHz) 
+
+OR AMD Ryzen™ 9 AI HX 470 (up to 5.2 GHz)
+RAM: DDR5 5600MHz (SO-DIMM*2, Max support 128GB)
+
+
+SSD: M.2 2280 PCIe4.0 Slot *3 
+
+
+
+
+
+MAX support 8K/60Hz or 4K/60Hz
+
+HDMI 2.1 *1・USB4 Port *2 (Alt PD)・OCuLink Port *1
+
+
+RJ45 2.5G LAN・Wi-Fi 7・BT 5.4
+
+
+ 指紋認証 &amp; Copilot PC
+
+Windows 11 Pro
+195 x 195 x 42.5mm
+
+常見問題
+
+問：AI X1 Pro 同 AI X1 有咩分別？
+答：AI X1 Pro 定位更高：有 3 個 M.2 2280 PCIe 4.0 插槽（X1 係 2 個）、雙 2.5G 網口（X1 係單網口）、指紋登入，機身約 195 × 195 × 42.5mm。處理器可揀 Ryzen™ AI 9 HX 370 或 HX 470，內顯都係 Radeon™ 890M。
+問：準系統包唔包記憶體同 SSD？
+答：準系統版本（標明「準系統」）唔包記憶體、SSD 同 Windows，要自己安裝。其餘配置版已包含記憶體、SSD 同 Windows 11 Pro。記憶體用 DDR5 5600 SO-DIMM ×2；儲存最多可用 3 個 M.2 插槽。
+問：有冇雙網口？適唔適合 home server／辦公室？
+答：有雙 2.5G RJ45，另有 Wi-Fi 7 同藍牙 5.4，亦有 OCuLink 可外接顯示卡。雙網口加多儲存插槽，適合辦公室常開機、輕量 home server，或者需要有線分流／聚合嘅場景。
+問：顯示同擴充接口有咩？
+答：有 HDMI 2.1 ×1、DP 2.0 ×1、USB4 ×2（支援影像輸出同 PD），以及 OCuLink ×1。實際解像度同更新率以官方實貨為準。
+問：係咪香港行貨？保養幾耐？
+答：係香港行貨。保養期 3 年（由購買日起計）。詳情請參閱保養與退貨條款。
+問：點睇庫存／有冇貨？
+答：香港官方有售，庫存以產品頁顯示為準。下單前請睇產品頁顯示。","[{""title"": ""Minisforum AI X1 Pro"", ""language"": ""zh"", ""description"": ""產品簡介\nMinisforum AI X1 Pro 係高階 Ryzen™ AI 迷你電腦，可揀 AI 9 HX 370 或 HX 470，內顯 Radeon™ 890M，DDR5 雙插槽，最多 3 個 M.2 PCIe 4.0 儲存位。\n內建雙 2.5G 網口、Wi-Fi 7、USB4、OCuLink 同指紋登入，適合辦公室、本地 AI、創作同需要雙網口嘅 home server 場景。香港行貨，3 年保養。另有準系統可自配記憶體同 SSD。香港官方有售，庫存以產品頁顯示為準。\n\n\n\n AMD Ryzen™ 9 AI HX 370  (up to 5.1 GHz) \n\nOR AMD Ryzen™ 9 AI HX 470 (up to 5.2 GHz)\nRAM: DDR5 5600MHz (SO-DIMM*2, Max support 128GB)\n\n\nSSD: M.2 2280 PCIe4.0 Slot *3 \n\n\n\n\n\nMAX support 8K/60Hz or 4K/60Hz\n\nHDMI 2.1 *1・USB4 Port *2 (Alt PD)・OCuLink Port *1\n\n\nRJ45 2.5G LAN・Wi-Fi 7・BT 5.4\n\n\n 指紋認証 &amp; Copilot PC\n\nWindows 11 Pro\n195 x 195 x 42.5mm\n\n常見問題\n\n問：AI X1 Pro 同 AI X1 有咩分別？\n答：AI X1 Pro 定位更高：有 3 個 M.2 2280 PCIe 4.0 插槽（X1 係 2 個）、雙 2.5G 網口（X1 係單網口）、指紋登入，機身約 195 × 195 × 42.5mm。處理器可揀 Ryzen™ AI 9 HX 370 或 HX 470，內顯都係 Radeon™ 890M。\n問：準系統包唔包記憶體同 SSD？\n答：準系統版本（標明「準系統」）唔包記憶體、SSD 同 Windows，要自己安裝。其餘配置版已包含記憶體、SSD 同 Windows 11 Pro。記憶體用 DDR5 5600 SO-DIMM ×2；儲存最多可用 3 個 M.2 插槽。\n問：有冇雙網口？適唔適合 home server／辦公室？\n答：有雙 2.5G RJ45，另有 Wi-Fi 7 同藍牙 5.4，亦有 OCuLink 可外接顯示卡。雙網口加多儲存插槽，適合辦公室常開機、輕量 home server，或者需要有線分流／聚合嘅場景。\n問：顯示同擴充接口有咩？\n答：有 HDMI 2.1 ×1、DP 2.0 ×1、USB4 ×2（支援影像輸出同 PD），以及 OCuLink ×1。實際解像度同更新率以官方實貨為準。\n問：係咪香港行貨？保養幾耐？\n答：係香港行貨。保養期 3 年（由購買日起計）。詳情請參閱保養與退貨條款。\n問：點睇庫存／有冇貨？\n答：香港官方有售，庫存以產品頁顯示為準。下單前請睇產品頁顯示。""}]"
+"01a19360-1511-72fa-9d8f-a2a4c26340e5","minisforumhk","https://minisforum.hk/products/minisforum-ai-x1-pro?variant=45526033236146","Minisforum AI X1 Pro","599900","HKD","2026-10-31 19:11:50.034051+00","2026-10-26 16:04:02.239571+00","{""code"": ""HK"", ""kind"": ""country""}","zh",,"BS-MX1P37","gid://shopify/Product/8439757996210","gid://shopify/ProductVariant/45526033236146","minisforum-ai-x1-pro",,,"""in_stock""",,"產品簡介
+Minisforum AI X1 Pro 係高階 Ryzen™ AI 迷你電腦，可揀 AI 9 HX 370 或 HX 470，內顯 Radeon™ 890M，DDR5 雙插槽，最多 3 個 M.2 PCIe 4.0 儲存位。
+內建雙 2.5G 網口、Wi-Fi 7、USB4、OCuLink 同指紋登入，適合辦公室、本地 AI、創作同需要雙網口嘅 home server 場景。香港行貨，3 年保養。另有準系統可自配記憶體同 SSD。香港官方有售，庫存以產品頁顯示為準。
+
+
+
+ AMD Ryzen™ 9 AI HX 370  (up to 5.1 GHz) 
+
+OR AMD Ryzen™ 9 AI HX 470 (up to 5.2 GHz)
+RAM: DDR5 5600MHz (SO-DIMM*2, Max support 128GB)
+
+
+SSD: M.2 2280 PCIe4.0 Slot *3 
+
+
+
+
+
+MAX support 8K/60Hz or 4K/60Hz
+
+HDMI 2.1 *1・USB4 Port *2 (Alt PD)・OCuLink Port *1
+
+
+RJ45 2.5G LAN・Wi-Fi 7・BT 5.4
+
+
+ 指紋認証 &amp; Copilot PC
+
+Windows 11 Pro
+195 x 195 x 42.5mm
+
+常見問題
+
+問：AI X1 Pro 同 AI X1 有咩分別？
+答：AI X1 Pro 定位更高：有 3 個 M.2 2280 PCIe 4.0 插槽（X1 係 2 個）、雙 2.5G 網口（X1 係單網口）、指紋登入，機身約 195 × 195 × 42.5mm。處理器可揀 Ryzen™ AI 9 HX 370 或 HX 470，內顯都係 Radeon™ 890M。
+問：準系統包唔包記憶體同 SSD？
+答：準系統版本（標明「準系統」）唔包記憶體、SSD 同 Windows，要自己安裝。其餘配置版已包含記憶體、SSD 同 Windows 11 Pro。記憶體用 DDR5 5600 SO-DIMM ×2；儲存最多可用 3 個 M.2 插槽。
+問：有冇雙網口？適唔適合 home server／辦公室？
+答：有雙 2.5G RJ45，另有 Wi-Fi 7 同藍牙 5.4，亦有 OCuLink 可外接顯示卡。雙網口加多儲存插槽，適合辦公室常開機、輕量 home server，或者需要有線分流／聚合嘅場景。
+問：顯示同擴充接口有咩？
+答：有 HDMI 2.1 ×1、DP 2.0 ×1、USB4 ×2（支援影像輸出同 PD），以及 OCuLink ×1。實際解像度同更新率以官方實貨為準。
+問：係咪香港行貨？保養幾耐？
+答：係香港行貨。保養期 3 年（由購買日起計）。詳情請參閱保養與退貨條款。
+問：點睇庫存／有冇貨？
+答：香港官方有售，庫存以產品頁顯示為準。下單前請睇產品頁顯示。","[{""title"": ""Minisforum AI X1 Pro"", ""language"": ""zh"", ""description"": ""產品簡介\nMinisforum AI X1 Pro 係高階 Ryzen™ AI 迷你電腦，可揀 AI 9 HX 370 或 HX 470，內顯 Radeon™ 890M，DDR5 雙插槽，最多 3 個 M.2 PCIe 4.0 儲存位。\n內建雙 2.5G 網口、Wi-Fi 7、USB4、OCuLink 同指紋登入，適合辦公室、本地 AI、創作同需要雙網口嘅 home server 場景。香港行貨，3 年保養。另有準系統可自配記憶體同 SSD。香港官方有售，庫存以產品頁顯示為準。\n\n\n\n AMD Ryzen™ 9 AI HX 370  (up to 5.1 GHz) \n\nOR AMD Ryzen™ 9 AI HX 470 (up to 5.2 GHz)\nRAM: DDR5 5600MHz (SO-DIMM*2, Max support 128GB)\n\n\nSSD: M.2 2280 PCIe4.0 Slot *3 \n\n\n\n\n\nMAX support 8K/60Hz or 4K/60Hz\n\nHDMI 2.1 *1・USB4 Port *2 (Alt PD)・OCuLink Port *1\n\n\nRJ45 2.5G LAN・Wi-Fi 7・BT 5.4\n\n\n 指紋認証 &amp; Copilot PC\n\nWindows 11 Pro\n195 x 195 x 42.5mm\n\n常見問題\n\n問：AI X1 Pro 同 AI X1 有咩分別？\n答：AI X1 Pro 定位更高：有 3 個 M.2 2280 PCIe 4.0 插槽（X1 係 2 個）、雙 2.5G 網口（X1 係單網口）、指紋登入，機身約 195 × 195 × 42.5mm。處理器可揀 Ryzen™ AI 9 HX 370 或 HX 470，內顯都係 Radeon™ 890M。\n問：準系統包唔包記憶體同 SSD？\n答：準系統版本（標明「準系統」）唔包記憶體、SSD 同 Windows，要自己安裝。其餘配置版已包含記憶體、SSD 同 Windows 11 Pro。記憶體用 DDR5 5600 SO-DIMM ×2；儲存最多可用 3 個 M.2 插槽。\n問：有冇雙網口？適唔適合 home server／辦公室？\n答：有雙 2.5G RJ45，另有 Wi-Fi 7 同藍牙 5.4，亦有 OCuLink 可外接顯示卡。雙網口加多儲存插槽，適合辦公室常開機、輕量 home server，或者需要有線分流／聚合嘅場景。\n問：顯示同擴充接口有咩？\n答：有 HDMI 2.1 ×1、DP 2.0 ×1、USB4 ×2（支援影像輸出同 PD），以及 OCuLink ×1。實際解像度同更新率以官方實貨為準。\n問：係咪香港行貨？保養幾耐？\n答：係香港行貨。保養期 3 年（由購買日起計）。詳情請參閱保養與退貨條款。\n問：點睇庫存／有冇貨？\n答：香港官方有售，庫存以產品頁顯示為準。下單前請睇產品頁顯示。""}]"
+"01a19360-1517-7428-b562-ecc1637858c6","minisforumhk","https://minisforum.hk/products/minisforum-ai-x1-pro?variant=47719893401778","Minisforum AI X1 Pro","1099900","HKD","2026-10-31 19:11:50.039726+00","2026-10-26 16:04:02.239571+00","{""code"": ""HK"", ""kind"": ""country""}","zh",,"CS-MX1P37A","gid://shopify/Product/8439757996210","gid://shopify/ProductVariant/47719893401778","minisforum-ai-x1-pro",,,"""in_stock""",,"產品簡介
+Minisforum AI X1 Pro 係高階 Ryzen™ AI 迷你電腦，可揀 AI 9 HX 370 或 HX 470，內顯 Radeon™ 890M，DDR5 雙插槽，最多 3 個 M.2 PCIe 4.0 儲存位。
+內建雙 2.5G 網口、Wi-Fi 7、USB4、OCuLink 同指紋登入，適合辦公室、本地 AI、創作同需要雙網口嘅 home server 場景。香港行貨，3 年保養。另有準系統可自配記憶體同 SSD。香港官方有售，庫存以產品頁顯示為準。
+
+
+
+ AMD Ryzen™ 9 AI HX 370  (up to 5.1 GHz) 
+
+OR AMD Ryzen™ 9 AI HX 470 (up to 5.2 GHz)
+RAM: DDR5 5600MHz (SO-DIMM*2, Max support 128GB)
+
+
+SSD: M.2 2280 PCIe4.0 Slot *3 
+
+
+
+
+
+MAX support 8K/60Hz or 4K/60Hz
+
+HDMI 2.1 *1・USB4 Port *2 (Alt PD)・OCuLink Port *1
+
+
+RJ45 2.5G LAN・Wi-Fi 7・BT 5.4
+
+
+ 指紋認証 &amp; Copilot PC
+
+Windows 11 Pro
+195 x 195 x 42.5mm
+
+常見問題
+
+問：AI X1 Pro 同 AI X1 有咩分別？
+答：AI X1 Pro 定位更高：有 3 個 M.2 2280 PCIe 4.0 插槽（X1 係 2 個）、雙 2.5G 網口（X1 係單網口）、指紋登入，機身約 195 × 195 × 42.5mm。處理器可揀 Ryzen™ AI 9 HX 370 或 HX 470，內顯都係 Radeon™ 890M。
+問：準系統包唔包記憶體同 SSD？
+答：準系統版本（標明「準系統」）唔包記憶體、SSD 同 Windows，要自己安裝。其餘配置版已包含記憶體、SSD 同 Windows 11 Pro。記憶體用 DDR5 5600 SO-DIMM ×2；儲存最多可用 3 個 M.2 插槽。
+問：有冇雙網口？適唔適合 home server／辦公室？
+答：有雙 2.5G RJ45，另有 Wi-Fi 7 同藍牙 5.4，亦有 OCuLink 可外接顯示卡。雙網口加多儲存插槽，適合辦公室常開機、輕量 home server，或者需要有線分流／聚合嘅場景。
+問：顯示同擴充接口有咩？
+答：有 HDMI 2.1 ×1、DP 2.0 ×1、USB4 ×2（支援影像輸出同 PD），以及 OCuLink ×1。實際解像度同更新率以官方實貨為準。
+問：係咪香港行貨？保養幾耐？
+答：係香港行貨。保養期 3 年（由購買日起計）。詳情請參閱保養與退貨條款。
+問：點睇庫存／有冇貨？
+答：香港官方有售，庫存以產品頁顯示為準。下單前請睇產品頁顯示。","[{""title"": ""Minisforum AI X1 Pro"", ""language"": ""zh"", ""description"": ""產品簡介\nMinisforum AI X1 Pro 係高階 Ryzen™ AI 迷你電腦，可揀 AI 9 HX 370 或 HX 470，內顯 Radeon™ 890M，DDR5 雙插槽，最多 3 個 M.2 PCIe 4.0 儲存位。\n內建雙 2.5G 網口、Wi-Fi 7、USB4、OCuLink 同指紋登入，適合辦公室、本地 AI、創作同需要雙網口嘅 home server 場景。香港行貨，3 年保養。另有準系統可自配記憶體同 SSD。香港官方有售，庫存以產品頁顯示為準。\n\n\n\n AMD Ryzen™ 9 AI HX 370  (up to 5.1 GHz) \n\nOR AMD Ryzen™ 9 AI HX 470 (up to 5.2 GHz)\nRAM: DDR5 5600MHz (SO-DIMM*2, Max support 128GB)\n\n\nSSD: M.2 2280 PCIe4.0 Slot *3 \n\n\n\n\n\nMAX support 8K/60Hz or 4K/60Hz\n\nHDMI 2.1 *1・USB4 Port *2 (Alt PD)・OCuLink Port *1\n\n\nRJ45 2.5G LAN・Wi-Fi 7・BT 5.4\n\n\n 指紋認証 &amp; Copilot PC\n\nWindows 11 Pro\n195 x 195 x 42.5mm\n\n常見問題\n\n問：AI X1 Pro 同 AI X1 有咩分別？\n答：AI X1 Pro 定位更高：有 3 個 M.2 2280 PCIe 4.0 插槽（X1 係 2 個）、雙 2.5G 網口（X1 係單網口）、指紋登入，機身約 195 × 195 × 42.5mm。處理器可揀 Ryzen™ AI 9 HX 370 或 HX 470，內顯都係 Radeon™ 890M。\n問：準系統包唔包記憶體同 SSD？\n答：準系統版本（標明「準系統」）唔包記憶體、SSD 同 Windows，要自己安裝。其餘配置版已包含記憶體、SSD 同 Windows 11 Pro。記憶體用 DDR5 5600 SO-DIMM ×2；儲存最多可用 3 個 M.2 插槽。\n問：有冇雙網口？適唔適合 home server／辦公室？\n答：有雙 2.5G RJ45，另有 Wi-Fi 7 同藍牙 5.4，亦有 OCuLink 可外接顯示卡。雙網口加多儲存插槽，適合辦公室常開機、輕量 home server，或者需要有線分流／聚合嘅場景。\n問：顯示同擴充接口有咩？\n答：有 HDMI 2.1 ×1、DP 2.0 ×1、USB4 ×2（支援影像輸出同 PD），以及 OCuLink ×1。實際解像度同更新率以官方實貨為準。\n問：係咪香港行貨？保養幾耐？\n答：係香港行貨。保養期 3 年（由購買日起計）。詳情請參閱保養與退貨條款。\n問：點睇庫存／有冇貨？\n答：香港官方有售，庫存以產品頁顯示為準。下單前請睇產品頁顯示。""}]"
+"01a19360-151c-748c-be4c-f707920f94f8","minisforumhk","https://minisforum.hk/products/minisforum-ai-x1-pro?variant=45217743995058","Minisforum AI X1 Pro","1399900","HKD","2026-10-31 19:11:50.044846+00","2026-10-26 16:04:02.239571+00","{""code"": ""HK"", ""kind"": ""country""}","zh",,"CS-MX1P37B","gid://shopify/Product/8439757996210","gid://shopify/ProductVariant/45217743995058","minisforum-ai-x1-pro",,,"""out_of_stock""",,"產品簡介
+Minisforum AI X1 Pro 係高階 Ryzen™ AI 迷你電腦，可揀 AI 9 HX 370 或 HX 470，內顯 Radeon™ 890M，DDR5 雙插槽，最多 3 個 M.2 PCIe 4.0 儲存位。
+內建雙 2.5G 網口、Wi-Fi 7、USB4、OCuLink 同指紋登入，適合辦公室、本地 AI、創作同需要雙網口嘅 home server 場景。香港行貨，3 年保養。另有準系統可自配記憶體同 SSD。香港官方有售，庫存以產品頁顯示為準。
+
+
+
+ AMD Ryzen™ 9 AI HX 370  (up to 5.1 GHz) 
+
+OR AMD Ryzen™ 9 AI HX 470 (up to 5.2 GHz)
+RAM: DDR5 5600MHz (SO-DIMM*2, Max support 128GB)
+
+
+SSD: M.2 2280 PCIe4.0 Slot *3 
+
+
+
+
+
+MAX support 8K/60Hz or 4K/60Hz
+
+HDMI 2.1 *1・USB4 Port *2 (Alt PD)・OCuLink Port *1
+
+
+RJ45 2.5G LAN・Wi-Fi 7・BT 5.4
+
+
+ 指紋認証 &amp; Copilot PC
+
+Windows 11 Pro
+195 x 195 x 42.5mm
+
+常見問題
+
+問：AI X1 Pro 同 AI X1 有咩分別？
+答：AI X1 Pro 定位更高：有 3 個 M.2 2280 PCIe 4.0 插槽（X1 係 2 個）、雙 2.5G 網口（X1 係單網口）、指紋登入，機身約 195 × 195 × 42.5mm。處理器可揀 Ryzen™ AI 9 HX 370 或 HX 470，內顯都係 Radeon™ 890M。
+問：準系統包唔包記憶體同 SSD？
+答：準系統版本（標明「準系統」）唔包記憶體、SSD 同 Windows，要自己安裝。其餘配置版已包含記憶體、SSD 同 Windows 11 Pro。記憶體用 DDR5 5600 SO-DIMM ×2；儲存最多可用 3 個 M.2 插槽。
+問：有冇雙網口？適唔適合 home server／辦公室？
+答：有雙 2.5G RJ45，另有 Wi-Fi 7 同藍牙 5.4，亦有 OCuLink 可外接顯示卡。雙網口加多儲存插槽，適合辦公室常開機、輕量 home server，或者需要有線分流／聚合嘅場景。
+問：顯示同擴充接口有咩？
+答：有 HDMI 2.1 ×1、DP 2.0 ×1、USB4 ×2（支援影像輸出同 PD），以及 OCuLink ×1。實際解像度同更新率以官方實貨為準。
+問：係咪香港行貨？保養幾耐？
+答：係香港行貨。保養期 3 年（由購買日起計）。詳情請參閱保養與退貨條款。
+問：點睇庫存／有冇貨？
+答：香港官方有售，庫存以產品頁顯示為準。下單前請睇產品頁顯示。","[{""title"": ""Minisforum AI X1 Pro"", ""language"": ""zh"", ""description"": ""產品簡介\nMinisforum AI X1 Pro 係高階 Ryzen™ AI 迷你電腦，可揀 AI 9 HX 370 或 HX 470，內顯 Radeon™ 890M，DDR5 雙插槽，最多 3 個 M.2 PCIe 4.0 儲存位。\n內建雙 2.5G 網口、Wi-Fi 7、USB4、OCuLink 同指紋登入，適合辦公室、本地 AI、創作同需要雙網口嘅 home server 場景。香港行貨，3 年保養。另有準系統可自配記憶體同 SSD。香港官方有售，庫存以產品頁顯示為準。\n\n\n\n AMD Ryzen™ 9 AI HX 370  (up to 5.1 GHz) \n\nOR AMD Ryzen™ 9 AI HX 470 (up to 5.2 GHz)\nRAM: DDR5 5600MHz (SO-DIMM*2, Max support 128GB)\n\n\nSSD: M.2 2280 PCIe4.0 Slot *3 \n\n\n\n\n\nMAX support 8K/60Hz or 4K/60Hz\n\nHDMI 2.1 *1・USB4 Port *2 (Alt PD)・OCuLink Port *1\n\n\nRJ45 2.5G LAN・Wi-Fi 7・BT 5.4\n\n\n 指紋認証 &amp; Copilot PC\n\nWindows 11 Pro\n195 x 195 x 42.5mm\n\n常見問題\n\n問：AI X1 Pro 同 AI X1 有咩分別？\n答：AI X1 Pro 定位更高：有 3 個 M.2 2280 PCIe 4.0 插槽（X1 係 2 個）、雙 2.5G 網口（X1 係單網口）、指紋登入，機身約 195 × 195 × 42.5mm。處理器可揀 Ryzen™ AI 9 HX 370 或 HX 470，內顯都係 Radeon™ 890M。\n問：準系統包唔包記憶體同 SSD？\n答：準系統版本（標明「準系統」）唔包記憶體、SSD 同 Windows，要自己安裝。其餘配置版已包含記憶體、SSD 同 Windows 11 Pro。記憶體用 DDR5 5600 SO-DIMM ×2；儲存最多可用 3 個 M.2 插槽。\n問：有冇雙網口？適唔適合 home server／辦公室？\n答：有雙 2.5G RJ45，另有 Wi-Fi 7 同藍牙 5.4，亦有 OCuLink 可外接顯示卡。雙網口加多儲存插槽，適合辦公室常開機、輕量 home server，或者需要有線分流／聚合嘅場景。\n問：顯示同擴充接口有咩？\n答：有 HDMI 2.1 ×1、DP 2.0 ×1、USB4 ×2（支援影像輸出同 PD），以及 OCuLink ×1。實際解像度同更新率以官方實貨為準。\n問：係咪香港行貨？保養幾耐？\n答：係香港行貨。保養期 3 年（由購買日起計）。詳情請參閱保養與退貨條款。\n問：點睇庫存／有冇貨？\n答：香港官方有售，庫存以產品頁顯示為準。下單前請睇產品頁顯示。""}]"
+"01a19360-1521-7013-91b1-a7d500f38e1a","minisforumhk","https://minisforum.hk/products/minisforum-ai-x1-pro?variant=45217744027826","Minisforum AI X1 Pro","1799900","HKD","2026-10-31 19:11:50.049945+00","2026-10-26 16:04:02.239571+00","{""code"": ""HK"", ""kind"": ""country""}","zh",,"CS-MX1P37C","gid://shopify/Product/8439757996210","gid://shopify/ProductVariant/45217744027826","minisforum-ai-x1-pro",,,"""in_stock""",,"產品簡介
+Minisforum AI X1 Pro 係高階 Ryzen™ AI 迷你電腦，可揀 AI 9 HX 370 或 HX 470，內顯 Radeon™ 890M，DDR5 雙插槽，最多 3 個 M.2 PCIe 4.0 儲存位。
+內建雙 2.5G 網口、Wi-Fi 7、USB4、OCuLink 同指紋登入，適合辦公室、本地 AI、創作同需要雙網口嘅 home server 場景。香港行貨，3 年保養。另有準系統可自配記憶體同 SSD。香港官方有售，庫存以產品頁顯示為準。
+
+
+
+ AMD Ryzen™ 9 AI HX 370  (up to 5.1 GHz) 
+
+OR AMD Ryzen™ 9 AI HX 470 (up to 5.2 GHz)
+RAM: DDR5 5600MHz (SO-DIMM*2, Max support 128GB)
+
+
+SSD: M.2 2280 PCIe4.0 Slot *3 
+
+
+
+
+
+MAX support 8K/60Hz or 4K/60Hz
+
+HDMI 2.1 *1・USB4 Port *2 (Alt PD)・OCuLink Port *1
+
+
+RJ45 2.5G LAN・Wi-Fi 7・BT 5.4
+
+
+ 指紋認証 &amp; Copilot PC
+
+Windows 11 Pro
+195 x 195 x 42.5mm
+
+常見問題
+
+問：AI X1 Pro 同 AI X1 有咩分別？
+答：AI X1 Pro 定位更高：有 3 個 M.2 2280 PCIe 4.0 插槽（X1 係 2 個）、雙 2.5G 網口（X1 係單網口）、指紋登入，機身約 195 × 195 × 42.5mm。處理器可揀 Ryzen™ AI 9 HX 370 或 HX 470，內顯都係 Radeon™ 890M。
+問：準系統包唔包記憶體同 SSD？
+答：準系統版本（標明「準系統」）唔包記憶體、SSD 同 Windows，要自己安裝。其餘配置版已包含記憶體、SSD 同 Windows 11 Pro。記憶體用 DDR5 5600 SO-DIMM ×2；儲存最多可用 3 個 M.2 插槽。
+問：有冇雙網口？適唔適合 home server／辦公室？
+答：有雙 2.5G RJ45，另有 Wi-Fi 7 同藍牙 5.4，亦有 OCuLink 可外接顯示卡。雙網口加多儲存插槽，適合辦公室常開機、輕量 home server，或者需要有線分流／聚合嘅場景。
+問：顯示同擴充接口有咩？
+答：有 HDMI 2.1 ×1、DP 2.0 ×1、USB4 ×2（支援影像輸出同 PD），以及 OCuLink ×1。實際解像度同更新率以官方實貨為準。
+問：係咪香港行貨？保養幾耐？
+答：係香港行貨。保養期 3 年（由購買日起計）。詳情請參閱保養與退貨條款。
+問：點睇庫存／有冇貨？
+答：香港官方有售，庫存以產品頁顯示為準。下單前請睇產品頁顯示。","[{""title"": ""Minisforum AI X1 Pro"", ""language"": ""zh"", ""description"": ""產品簡介\nMinisforum AI X1 Pro 係高階 Ryzen™ AI 迷你電腦，可揀 AI 9 HX 370 或 HX 470，內顯 Radeon™ 890M，DDR5 雙插槽，最多 3 個 M.2 PCIe 4.0 儲存位。\n內建雙 2.5G 網口、Wi-Fi 7、USB4、OCuLink 同指紋登入，適合辦公室、本地 AI、創作同需要雙網口嘅 home server 場景。香港行貨，3 年保養。另有準系統可自配記憶體同 SSD。香港官方有售，庫存以產品頁顯示為準。\n\n\n\n AMD Ryzen™ 9 AI HX 370  (up to 5.1 GHz) \n\nOR AMD Ryzen™ 9 AI HX 470 (up to 5.2 GHz)\nRAM: DDR5 5600MHz (SO-DIMM*2, Max support 128GB)\n\n\nSSD: M.2 2280 PCIe4.0 Slot *3 \n\n\n\n\n\nMAX support 8K/60Hz or 4K/60Hz\n\nHDMI 2.1 *1・USB4 Port *2 (Alt PD)・OCuLink Port *1\n\n\nRJ45 2.5G LAN・Wi-Fi 7・BT 5.4\n\n\n 指紋認証 &amp; Copilot PC\n\nWindows 11 Pro\n195 x 195 x 42.5mm\n\n常見問題\n\n問：AI X1 Pro 同 AI X1 有咩分別？\n答：AI X1 Pro 定位更高：有 3 個 M.2 2280 PCIe 4.0 插槽（X1 係 2 個）、雙 2.5G 網口（X1 係單網口）、指紋登入，機身約 195 × 195 × 42.5mm。處理器可揀 Ryzen™ AI 9 HX 370 或 HX 470，內顯都係 Radeon™ 890M。\n問：準系統包唔包記憶體同 SSD？\n答：準系統版本（標明「準系統」）唔包記憶體、SSD 同 Windows，要自己安裝。其餘配置版已包含記憶體、SSD 同 Windows 11 Pro。記憶體用 DDR5 5600 SO-DIMM ×2；儲存最多可用 3 個 M.2 插槽。\n問：有冇雙網口？適唔適合 home server／辦公室？\n答：有雙 2.5G RJ45，另有 Wi-Fi 7 同藍牙 5.4，亦有 OCuLink 可外接顯示卡。雙網口加多儲存插槽，適合辦公室常開機、輕量 home server，或者需要有線分流／聚合嘅場景。\n問：顯示同擴充接口有咩？\n答：有 HDMI 2.1 ×1、DP 2.0 ×1、USB4 ×2（支援影像輸出同 PD），以及 OCuLink ×1。實際解像度同更新率以官方實貨為準。\n問：係咪香港行貨？保養幾耐？\n答：係香港行貨。保養期 3 年（由購買日起計）。詳情請參閱保養與退貨條款。\n問：點睇庫存／有冇貨？\n答：香港官方有售，庫存以產品頁顯示為準。下單前請睇產品頁顯示。""}]"
+"01a19360-1526-737c-932a-60ab16c25f4c","minisforumhk","https://minisforum.hk/products/minisforum-ai-x1-pro?variant=47180503220402","Minisforum AI X1 Pro","1249900","HKD","2026-10-31 19:11:50.05481+00","2026-10-26 16:04:02.239571+00","{""code"": ""HK"", ""kind"": ""country""}","zh",,"CS-MX1P47A","gid://shopify/Product/8439757996210","gid://shopify/ProductVariant/47180503220402","minisforum-ai-x1-pro",,,"""in_stock""",,"產品簡介
+Minisforum AI X1 Pro 係高階 Ryzen™ AI 迷你電腦，可揀 AI 9 HX 370 或 HX 470，內顯 Radeon™ 890M，DDR5 雙插槽，最多 3 個 M.2 PCIe 4.0 儲存位。
+內建雙 2.5G 網口、Wi-Fi 7、USB4、OCuLink 同指紋登入，適合辦公室、本地 AI、創作同需要雙網口嘅 home server 場景。香港行貨，3 年保養。另有準系統可自配記憶體同 SSD。香港官方有售，庫存以產品頁顯示為準。
+
+
+
+ AMD Ryzen™ 9 AI HX 370  (up to 5.1 GHz) 
+
+OR AMD Ryzen™ 9 AI HX 470 (up to 5.2 GHz)
+RAM: DDR5 5600MHz (SO-DIMM*2, Max support 128GB)
+
+
+SSD: M.2 2280 PCIe4.0 Slot *3 
+
+
+
+
+
+MAX support 8K/60Hz or 4K/60Hz
+
+HDMI 2.1 *1・USB4 Port *2 (Alt PD)・OCuLink Port *1
+
+
+RJ45 2.5G LAN・Wi-Fi 7・BT 5.4
+
+
+ 指紋認証 &amp; Copilot PC
+
+Windows 11 Pro
+195 x 195 x 42.5mm
+
+常見問題
+
+問：AI X1 Pro 同 AI X1 有咩分別？
+答：AI X1 Pro 定位更高：有 3 個 M.2 2280 PCIe 4.0 插槽（X1 係 2 個）、雙 2.5G 網口（X1 係單網口）、指紋登入，機身約 195 × 195 × 42.5mm。處理器可揀 Ryzen™ AI 9 HX 370 或 HX 470，內顯都係 Radeon™ 890M。
+問：準系統包唔包記憶體同 SSD？
+答：準系統版本（標明「準系統」）唔包記憶體、SSD 同 Windows，要自己安裝。其餘配置版已包含記憶體、SSD 同 Windows 11 Pro。記憶體用 DDR5 5600 SO-DIMM ×2；儲存最多可用 3 個 M.2 插槽。
+問：有冇雙網口？適唔適合 home server／辦公室？
+答：有雙 2.5G RJ45，另有 Wi-Fi 7 同藍牙 5.4，亦有 OCuLink 可外接顯示卡。雙網口加多儲存插槽，適合辦公室常開機、輕量 home server，或者需要有線分流／聚合嘅場景。
+問：顯示同擴充接口有咩？
+答：有 HDMI 2.1 ×1、DP 2.0 ×1、USB4 ×2（支援影像輸出同 PD），以及 OCuLink ×1。實際解像度同更新率以官方實貨為準。
+問：係咪香港行貨？保養幾耐？
+答：係香港行貨。保養期 3 年（由購買日起計）。詳情請參閱保養與退貨條款。
+問：點睇庫存／有冇貨？
+答：香港官方有售，庫存以產品頁顯示為準。下單前請睇產品頁顯示。","[{""title"": ""Minisforum AI X1 Pro"", ""language"": ""zh"", ""description"": ""產品簡介\nMinisforum AI X1 Pro 係高階 Ryzen™ AI 迷你電腦，可揀 AI 9 HX 370 或 HX 470，內顯 Radeon™ 890M，DDR5 雙插槽，最多 3 個 M.2 PCIe 4.0 儲存位。\n內建雙 2.5G 網口、Wi-Fi 7、USB4、OCuLink 同指紋登入，適合辦公室、本地 AI、創作同需要雙網口嘅 home server 場景。香港行貨，3 年保養。另有準系統可自配記憶體同 SSD。香港官方有售，庫存以產品頁顯示為準。\n\n\n\n AMD Ryzen™ 9 AI HX 370  (up to 5.1 GHz) \n\nOR AMD Ryzen™ 9 AI HX 470 (up to 5.2 GHz)\nRAM: DDR5 5600MHz (SO-DIMM*2, Max support 128GB)\n\n\nSSD: M.2 2280 PCIe4.0 Slot *3 \n\n\n\n\n\nMAX support 8K/60Hz or 4K/60Hz\n\nHDMI 2.1 *1・USB4 Port *2 (Alt PD)・OCuLink Port *1\n\n\nRJ45 2.5G LAN・Wi-Fi 7・BT 5.4\n\n\n 指紋認証 &amp; Copilot PC\n\nWindows 11 Pro\n195 x 195 x 42.5mm\n\n常見問題\n\n問：AI X1 Pro 同 AI X1 有咩分別？\n答：AI X1 Pro 定位更高：有 3 個 M.2 2280 PCIe 4.0 插槽（X1 係 2 個）、雙 2.5G 網口（X1 係單網口）、指紋登入，機身約 195 × 195 × 42.5mm。處理器可揀 Ryzen™ AI 9 HX 370 或 HX 470，內顯都係 Radeon™ 890M。\n問：準系統包唔包記憶體同 SSD？\n答：準系統版本（標明「準系統」）唔包記憶體、SSD 同 Windows，要自己安裝。其餘配置版已包含記憶體、SSD 同 Windows 11 Pro。記憶體用 DDR5 5600 SO-DIMM ×2；儲存最多可用 3 個 M.2 插槽。\n問：有冇雙網口？適唔適合 home server／辦公室？\n答：有雙 2.5G RJ45，另有 Wi-Fi 7 同藍牙 5.4，亦有 OCuLink 可外接顯示卡。雙網口加多儲存插槽，適合辦公室常開機、輕量 home server，或者需要有線分流／聚合嘅場景。\n問：顯示同擴充接口有咩？\n答：有 HDMI 2.1 ×1、DP 2.0 ×1、USB4 ×2（支援影像輸出同 PD），以及 OCuLink ×1。實際解像度同更新率以官方實貨為準。\n問：係咪香港行貨？保養幾耐？\n答：係香港行貨。保養期 3 年（由購買日起計）。詳情請參閱保養與退貨條款。\n問：點睇庫存／有冇貨？\n答：香港官方有售，庫存以產品頁顯示為準。下單前請睇產品頁顯示。""}]"
+"01a19360-152b-712b-8017-bf2ef6d15d0e","minisforumhk","https://minisforum.hk/products/minisforum-ai-x1-pro?variant=47731592331442","Minisforum AI X1 Pro","1499900","HKD","2026-10-31 19:11:50.060094+00","2026-10-26 16:04:02.239571+00","{""code"": ""HK"", ""kind"": ""country""}","zh",,"CS-MX1P47B","gid://shopify/Product/8439757996210","gid://shopify/ProductVariant/47731592331442","minisforum-ai-x1-pro",,,"""in_stock""",,"產品簡介
+Minisforum AI X1 Pro 係高階 Ryzen™ AI 迷你電腦，可揀 AI 9 HX 370 或 HX 470，內顯 Radeon™ 890M，DDR5 雙插槽，最多 3 個 M.2 PCIe 4.0 儲存位。
+內建雙 2.5G 網口、Wi-Fi 7、USB4、OCuLink 同指紋登入，適合辦公室、本地 AI、創作同需要雙網口嘅 home server 場景。香港行貨，3 年保養。另有準系統可自配記憶體同 SSD。香港官方有售，庫存以產品頁顯示為準。
+
+
+
+ AMD Ryzen™ 9 AI HX 370  (up to 5.1 GHz) 
+
+OR AMD Ryzen™ 9 AI HX 470 (up to 5.2 GHz)
+RAM: DDR5 5600MHz (SO-DIMM*2, Max support 128GB)
+
+
+SSD: M.2 2280 PCIe4.0 Slot *3 
+
+
+
+
+
+MAX support 8K/60Hz or 4K/60Hz
+
+HDMI 2.1 *1・USB4 Port *2 (Alt PD)・OCuLink Port *1
+
+
+RJ45 2.5G LAN・Wi-Fi 7・BT 5.4
+
+
+ 指紋認証 &amp; Copilot PC
+
+Windows 11 Pro
+195 x 195 x 42.5mm
+
+常見問題
+
+問：AI X1 Pro 同 AI X1 有咩分別？
+答：AI X1 Pro 定位更高：有 3 個 M.2 2280 PCIe 4.0 插槽（X1 係 2 個）、雙 2.5G 網口（X1 係單網口）、指紋登入，機身約 195 × 195 × 42.5mm。處理器可揀 Ryzen™ AI 9 HX 370 或 HX 470，內顯都係 Radeon™ 890M。
+問：準系統包唔包記憶體同 SSD？
+答：準系統版本（標明「準系統」）唔包記憶體、SSD 同 Windows，要自己安裝。其餘配置版已包含記憶體、SSD 同 Windows 11 Pro。記憶體用 DDR5 5600 SO-DIMM ×2；儲存最多可用 3 個 M.2 插槽。
+問：有冇雙網口？適唔適合 home server／辦公室？
+答：有雙 2.5G RJ45，另有 Wi-Fi 7 同藍牙 5.4，亦有 OCuLink 可外接顯示卡。雙網口加多儲存插槽，適合辦公室常開機、輕量 home server，或者需要有線分流／聚合嘅場景。
+問：顯示同擴充接口有咩？
+答：有 HDMI 2.1 ×1、DP 2.0 ×1、USB4 ×2（支援影像輸出同 PD），以及 OCuLink ×1。實際解像度同更新率以官方實貨為準。
+問：係咪香港行貨？保養幾耐？
+答：係香港行貨。保養期 3 年（由購買日起計）。詳情請參閱保養與退貨條款。
+問：點睇庫存／有冇貨？
+答：香港官方有售，庫存以產品頁顯示為準。下單前請睇產品頁顯示。","[{""title"": ""Minisforum AI X1 Pro"", ""language"": ""zh"", ""description"": ""產品簡介\nMinisforum AI X1 Pro 係高階 Ryzen™ AI 迷你電腦，可揀 AI 9 HX 370 或 HX 470，內顯 Radeon™ 890M，DDR5 雙插槽，最多 3 個 M.2 PCIe 4.0 儲存位。\n內建雙 2.5G 網口、Wi-Fi 7、USB4、OCuLink 同指紋登入，適合辦公室、本地 AI、創作同需要雙網口嘅 home server 場景。香港行貨，3 年保養。另有準系統可自配記憶體同 SSD。香港官方有售，庫存以產品頁顯示為準。\n\n\n\n AMD Ryzen™ 9 AI HX 370  (up to 5.1 GHz) \n\nOR AMD Ryzen™ 9 AI HX 470 (up to 5.2 GHz)\nRAM: DDR5 5600MHz (SO-DIMM*2, Max support 128GB)\n\n\nSSD: M.2 2280 PCIe4.0 Slot *3 \n\n\n\n\n\nMAX support 8K/60Hz or 4K/60Hz\n\nHDMI 2.1 *1・USB4 Port *2 (Alt PD)・OCuLink Port *1\n\n\nRJ45 2.5G LAN・Wi-Fi 7・BT 5.4\n\n\n 指紋認証 &amp; Copilot PC\n\nWindows 11 Pro\n195 x 195 x 42.5mm\n\n常見問題\n\n問：AI X1 Pro 同 AI X1 有咩分別？\n答：AI X1 Pro 定位更高：有 3 個 M.2 2280 PCIe 4.0 插槽（X1 係 2 個）、雙 2.5G 網口（X1 係單網口）、指紋登入，機身約 195 × 195 × 42.5mm。處理器可揀 Ryzen™ AI 9 HX 370 或 HX 470，內顯都係 Radeon™ 890M。\n問：準系統包唔包記憶體同 SSD？\n答：準系統版本（標明「準系統」）唔包記憶體、SSD 同 Windows，要自己安裝。其餘配置版已包含記憶體、SSD 同 Windows 11 Pro。記憶體用 DDR5 5600 SO-DIMM ×2；儲存最多可用 3 個 M.2 插槽。\n問：有冇雙網口？適唔適合 home server／辦公室？\n答：有雙 2.5G RJ45，另有 Wi-Fi 7 同藍牙 5.4，亦有 OCuLink 可外接顯示卡。雙網口加多儲存插槽，適合辦公室常開機、輕量 home server，或者需要有線分流／聚合嘅場景。\n問：顯示同擴充接口有咩？\n答：有 HDMI 2.1 ×1、DP 2.0 ×1、USB4 ×2（支援影像輸出同 PD），以及 OCuLink ×1。實際解像度同更新率以官方實貨為準。\n問：係咪香港行貨？保養幾耐？\n答：係香港行貨。保養期 3 年（由購買日起計）。詳情請參閱保養與退貨條款。\n問：點睇庫存／有冇貨？\n答：香港官方有售，庫存以產品頁顯示為準。下單前請睇產品頁顯示。""}]"
+"01a19360-1541-77e4-8bfa-27602fafaa79","minisforumhk","https://minisforum.hk/products/um870-plus?variant=45467436679346","Minisforum UM870 Plus","299900","HKD","2026-10-31 19:11:50.081722+00","2026-10-26 16:04:01.682549+00","{""code"": ""HK"", ""kind"": ""country""}","zh",,"BS-MFUM87P","gid://shopify/Product/8374719119538","gid://shopify/ProductVariant/45467436679346","um870-plus",,,"""out_of_stock""",,"產品簡介
+Minisforum UM870 Plus 係 AMD Ryzen™ 7 8745H 迷你電腦，內顯 Radeon™ 780M，雙通道 DDR5 SO-DIMM，兩個 M.2 PCIe 4.0 儲存位，並配備 OCuLink。
+有 1 個 2.5G 網口、Wi-Fi 6E、USB4、HDMI 2.1 同 DP 1.4，適合辦公室、家用同需要 OCuLink 擴充嘅場景。香港行貨，3 年保養。另有準系統可自配。香港官方有售，庫存以產品頁顯示為準。
+
+AMD Ryzen™7 8745HAMD Radeon™ 780MUp to 2*48 GB DDR5 SO-DIMM 5600 MHz Slots Up to 2*2 TB 2280 PCIe 4.0 x4 NVMe SSD OCuLink 接口Wi-Fi 6E, BT 5.3, 2.5 Gb/s RJ45HDMI 2.1, DP 1.4, USB4Windows 11 Pro（只限系統機；準系統不含作業系統）130 × 126 × 52.3 mm
+常見問題
+
+問：UM870 Plus 用咩處理器同記憶體？
+答：用 AMD Ryzen™ 7 8745H（8 核 16 線程，最高 4.9GHz），內顯 AMD Radeon™ 780M。記憶體係雙通道 DDR5 SO-DIMM 5600MHz（兩條插槽，最高可至約 96GB）；儲存有 2 個 M.2 2280 PCIe 4.0 插槽。
+問：有冇 OCuLink？網絡係單網口定雙網口？
+答：有 OCuLink，方便外接兼容擴充。網絡係 1 個 2.5G RJ45（單網口），另有 Wi-Fi 6E 同藍牙 5.3。
+問：適唔適合辦公室或者外接顯卡用途？
+答：適合辦公室、家用同輕量創作；有 OCuLink 嘅用家可以按需要接兼容外接顯示方案。機身約 130 × 126 × 52.3mm，有 USB4、HDMI 2.1、DP 1.4。
+問：準系統包唔包記憶體、SSD 同 Windows？
+答：準系統唔包記憶體、SSD 同作業系統。系統機款已預裝對應 RAM／SSD 同 Windows 11 Pro。
+問：係咪香港行貨？保養幾耐？
+答：係香港行貨，由香港出貨。保養期 3 年（由購買日起計）。詳情請參閱保養與退貨條款。
+問：點睇庫存／有冇貨？
+答：香港官方有售，庫存以產品頁顯示為準。下單前請睇產品頁顯示。","[{""title"": ""Minisforum UM870 Plus"", ""language"": ""zh"", ""description"": ""產品簡介\nMinisforum UM870 Plus 係 AMD Ryzen™ 7 8745H 迷你電腦，內顯 Radeon™ 780M，雙通道 DDR5 SO-DIMM，兩個 M.2 PCIe 4.0 儲存位，並配備 OCuLink。\n有 1 個 2.5G 網口、Wi-Fi 6E、USB4、HDMI 2.1 同 DP 1.4，適合辦公室、家用同需要 OCuLink 擴充嘅場景。香港行貨，3 年保養。另有準系統可自配。香港官方有售，庫存以產品頁顯示為準。\n\nAMD Ryzen™7 8745HAMD Radeon™ 780MUp to 2*48 GB DDR5 SO-DIMM 5600 MHz Slots Up to 2*2 TB 2280 PCIe 4.0 x4 NVMe SSD OCuLink 接口Wi-Fi 6E, BT 5.3, 2.5 Gb/s RJ45HDMI 2.1, DP 1.4, USB4Windows 11 Pro（只限系統機；準系統不含作業系統）130 × 126 × 52.3 mm\n常見問題\n\n問：UM870 Plus 用咩處理器同記憶體？\n答：用 AMD Ryzen™ 7 8745H（8 核 16 線程，最高 4.9GHz），內顯 AMD Radeon™ 780M。記憶體係雙通道 DDR5 SO-DIMM 5600MHz（兩條插槽，最高可至約 96GB）；儲存有 2 個 M.2 2280 PCIe 4.0 插槽。\n問：有冇 OCuLink？網絡係單網口定雙網口？\n答：有 OCuLink，方便外接兼容擴充。網絡係 1 個 2.5G RJ45（單網口），另有 Wi-Fi 6E 同藍牙 5.3。\n問：適唔適合辦公室或者外接顯卡用途？\n答：適合辦公室、家用同輕量創作；有 OCuLink 嘅用家可以按需要接兼容外接顯示方案。機身約 130 × 126 × 52.3mm，有 USB4、HDMI 2.1、DP 1.4。\n問：準系統包唔包記憶體、SSD 同 Windows？\n答：準系統唔包記憶體、SSD 同作業系統。系統機款已預裝對應 RAM／SSD 同 Windows 11 Pro。\n問：係咪香港行貨？保養幾耐？\n答：係香港行貨，由香港出貨。保養期 3 年（由購買日起計）。詳情請參閱保養與退貨條款。\n問：點睇庫存／有冇貨？\n答：香港官方有售，庫存以產品頁顯示為準。下單前請睇產品頁顯示。""}]"
+"01a19360-1546-733d-a1f5-13f3264763cc","minisforumhk","https://minisforum.hk/products/um870-plus?variant=47684343660722","Minisforum UM870 Plus","599900","HKD","2026-10-31 19:11:50.087097+00","2026-10-26 16:04:01.682549+00","{""code"": ""HK"", ""kind"": ""country""}","zh",,"CS-MUM87P","gid://shopify/Product/8374719119538","gid://shopify/ProductVariant/47684343660722","um870-plus",,,"""in_stock""",,"產品簡介
+Minisforum UM870 Plus 係 AMD Ryzen™ 7 8745H 迷你電腦，內顯 Radeon™ 780M，雙通道 DDR5 SO-DIMM，兩個 M.2 PCIe 4.0 儲存位，並配備 OCuLink。
+有 1 個 2.5G 網口、Wi-Fi 6E、USB4、HDMI 2.1 同 DP 1.4，適合辦公室、家用同需要 OCuLink 擴充嘅場景。香港行貨，3 年保養。另有準系統可自配。香港官方有售，庫存以產品頁顯示為準。
+
+AMD Ryzen™7 8745HAMD Radeon™ 780MUp to 2*48 GB DDR5 SO-DIMM 5600 MHz Slots Up to 2*2 TB 2280 PCIe 4.0 x4 NVMe SSD OCuLink 接口Wi-Fi 6E, BT 5.3, 2.5 Gb/s RJ45HDMI 2.1, DP 1.4, USB4Windows 11 Pro（只限系統機；準系統不含作業系統）130 × 126 × 52.3 mm
+常見問題
+
+問：UM870 Plus 用咩處理器同記憶體？
+答：用 AMD Ryzen™ 7 8745H（8 核 16 線程，最高 4.9GHz），內顯 AMD Radeon™ 780M。記憶體係雙通道 DDR5 SO-DIMM 5600MHz（兩條插槽，最高可至約 96GB）；儲存有 2 個 M.2 2280 PCIe 4.0 插槽。
+問：有冇 OCuLink？網絡係單網口定雙網口？
+答：有 OCuLink，方便外接兼容擴充。網絡係 1 個 2.5G RJ45（單網口），另有 Wi-Fi 6E 同藍牙 5.3。
+問：適唔適合辦公室或者外接顯卡用途？
+答：適合辦公室、家用同輕量創作；有 OCuLink 嘅用家可以按需要接兼容外接顯示方案。機身約 130 × 126 × 52.3mm，有 USB4、HDMI 2.1、DP 1.4。
+問：準系統包唔包記憶體、SSD 同 Windows？
+答：準系統唔包記憶體、SSD 同作業系統。系統機款已預裝對應 RAM／SSD 同 Windows 11 Pro。
+問：係咪香港行貨？保養幾耐？
+答：係香港行貨，由香港出貨。保養期 3 年（由購買日起計）。詳情請參閱保養與退貨條款。
+問：點睇庫存／有冇貨？
+答：香港官方有售，庫存以產品頁顯示為準。下單前請睇產品頁顯示。","[{""title"": ""Minisforum UM870 Plus"", ""language"": ""zh"", ""description"": ""產品簡介\nMinisforum UM870 Plus 係 AMD Ryzen™ 7 8745H 迷你電腦，內顯 Radeon™ 780M，雙通道 DDR5 SO-DIMM，兩個 M.2 PCIe 4.0 儲存位，並配備 OCuLink。\n有 1 個 2.5G 網口、Wi-Fi 6E、USB4、HDMI 2.1 同 DP 1.4，適合辦公室、家用同需要 OCuLink 擴充嘅場景。香港行貨，3 年保養。另有準系統可自配。香港官方有售，庫存以產品頁顯示為準。\n\nAMD Ryzen™7 8745HAMD Radeon™ 780MUp to 2*48 GB DDR5 SO-DIMM 5600 MHz Slots Up to 2*2 TB 2280 PCIe 4.0 x4 NVMe SSD OCuLink 接口Wi-Fi 6E, BT 5.3, 2.5 Gb/s RJ45HDMI 2.1, DP 1.4, USB4Windows 11 Pro（只限系統機；準系統不含作業系統）130 × 126 × 52.3 mm\n常見問題\n\n問：UM870 Plus 用咩處理器同記憶體？\n答：用 AMD Ryzen™ 7 8745H（8 核 16 線程，最高 4.9GHz），內顯 AMD Radeon™ 780M。記憶體係雙通道 DDR5 SO-DIMM 5600MHz（兩條插槽，最高可至約 96GB）；儲存有 2 個 M.2 2280 PCIe 4.0 插槽。\n問：有冇 OCuLink？網絡係單網口定雙網口？\n答：有 OCuLink，方便外接兼容擴充。網絡係 1 個 2.5G RJ45（單網口），另有 Wi-Fi 6E 同藍牙 5.3。\n問：適唔適合辦公室或者外接顯卡用途？\n答：適合辦公室、家用同輕量創作；有 OCuLink 嘅用家可以按需要接兼容外接顯示方案。機身約 130 × 126 × 52.3mm，有 USB4、HDMI 2.1、DP 1.4。\n問：準系統包唔包記憶體、SSD 同 Windows？\n答：準系統唔包記憶體、SSD 同作業系統。系統機款已預裝對應 RAM／SSD 同 Windows 11 Pro。\n問：係咪香港行貨？保養幾耐？\n答：係香港行貨，由香港出貨。保養期 3 年（由購買日起計）。詳情請參閱保養與退貨條款。\n問：點睇庫存／有冇貨？\n答：香港官方有售，庫存以產品頁顯示為準。下單前請睇產品頁顯示。""}]"
+"01a19360-154c-7474-9e8a-bf3822ec2a10","minisforumhk","https://minisforum.hk/products/um870-plus?variant=47978992009394","Minisforum UM870 Plus","749900","HKD","2026-10-31 19:11:50.092313+00","2026-10-26 16:04:01.682549+00","{""code"": ""HK"", ""kind"": ""country""}","zh",,"CS-MUM87PP","gid://shopify/Product/8374719119538","gid://shopify/ProductVariant/47978992009394","um870-plus",,,"""in_stock""",,"產品簡介
+Minisforum UM870 Plus 係 AMD Ryzen™ 7 8745H 迷你電腦，內顯 Radeon™ 780M，雙通道 DDR5 SO-DIMM，兩個 M.2 PCIe 4.0 儲存位，並配備 OCuLink。
+有 1 個 2.5G 網口、Wi-Fi 6E、USB4、HDMI 2.1 同 DP 1.4，適合辦公室、家用同需要 OCuLink 擴充嘅場景。香港行貨，3 年保養。另有準系統可自配。香港官方有售，庫存以產品頁顯示為準。
+
+AMD Ryzen™7 8745HAMD Radeon™ 780MUp to 2*48 GB DDR5 SO-DIMM 5600 MHz Slots Up to 2*2 TB 2280 PCIe 4.0 x4 NVMe SSD OCuLink 接口Wi-Fi 6E, BT 5.3, 2.5 Gb/s RJ45HDMI 2.1, DP 1.4, USB4Windows 11 Pro（只限系統機；準系統不含作業系統）130 × 126 × 52.3 mm
+常見問題
+
+問：UM870 Plus 用咩處理器同記憶體？
+答：用 AMD Ryzen™ 7 8745H（8 核 16 線程，最高 4.9GHz），內顯 AMD Radeon™ 780M。記憶體係雙通道 DDR5 SO-DIMM 5600MHz（兩條插槽，最高可至約 96GB）；儲存有 2 個 M.2 2280 PCIe 4.0 插槽。
+問：有冇 OCuLink？網絡係單網口定雙網口？
+答：有 OCuLink，方便外接兼容擴充。網絡係 1 個 2.5G RJ45（單網口），另有 Wi-Fi 6E 同藍牙 5.3。
+問：適唔適合辦公室或者外接顯卡用途？
+答：適合辦公室、家用同輕量創作；有 OCuLink 嘅用家可以按需要接兼容外接顯示方案。機身約 130 × 126 × 52.3mm，有 USB4、HDMI 2.1、DP 1.4。
+問：準系統包唔包記憶體、SSD 同 Windows？
+答：準系統唔包記憶體、SSD 同作業系統。系統機款已預裝對應 RAM／SSD 同 Windows 11 Pro。
+問：係咪香港行貨？保養幾耐？
+答：係香港行貨，由香港出貨。保養期 3 年（由購買日起計）。詳情請參閱保養與退貨條款。
+問：點睇庫存／有冇貨？
+答：香港官方有售，庫存以產品頁顯示為準。下單前請睇產品頁顯示。","[{""title"": ""Minisforum UM870 Plus"", ""language"": ""zh"", ""description"": ""產品簡介\nMinisforum UM870 Plus 係 AMD Ryzen™ 7 8745H 迷你電腦，內顯 Radeon™ 780M，雙通道 DDR5 SO-DIMM，兩個 M.2 PCIe 4.0 儲存位，並配備 OCuLink。\n有 1 個 2.5G 網口、Wi-Fi 6E、USB4、HDMI 2.1 同 DP 1.4，適合辦公室、家用同需要 OCuLink 擴充嘅場景。香港行貨，3 年保養。另有準系統可自配。香港官方有售，庫存以產品頁顯示為準。\n\nAMD Ryzen™7 8745HAMD Radeon™ 780MUp to 2*48 GB DDR5 SO-DIMM 5600 MHz Slots Up to 2*2 TB 2280 PCIe 4.0 x4 NVMe SSD OCuLink 接口Wi-Fi 6E, BT 5.3, 2.5 Gb/s RJ45HDMI 2.1, DP 1.4, USB4Windows 11 Pro（只限系統機；準系統不含作業系統）130 × 126 × 52.3 mm\n常見問題\n\n問：UM870 Plus 用咩處理器同記憶體？\n答：用 AMD Ryzen™ 7 8745H（8 核 16 線程，最高 4.9GHz），內顯 AMD Radeon™ 780M。記憶體係雙通道 DDR5 SO-DIMM 5600MHz（兩條插槽，最高可至約 96GB）；儲存有 2 個 M.2 2280 PCIe 4.0 插槽。\n問：有冇 OCuLink？網絡係單網口定雙網口？\n答：有 OCuLink，方便外接兼容擴充。網絡係 1 個 2.5G RJ45（單網口），另有 Wi-Fi 6E 同藍牙 5.3。\n問：適唔適合辦公室或者外接顯卡用途？\n答：適合辦公室、家用同輕量創作；有 OCuLink 嘅用家可以按需要接兼容外接顯示方案。機身約 130 × 126 × 52.3mm，有 USB4、HDMI 2.1、DP 1.4。\n問：準系統包唔包記憶體、SSD 同 Windows？\n答：準系統唔包記憶體、SSD 同作業系統。系統機款已預裝對應 RAM／SSD 同 Windows 11 Pro。\n問：係咪香港行貨？保養幾耐？\n答：係香港行貨，由香港出貨。保養期 3 年（由購買日起計）。詳情請參閱保養與退貨條款。\n問：點睇庫存／有冇貨？\n答：香港官方有售，庫存以產品頁顯示為準。下單前請睇產品頁顯示。""}]"
+"01a19360-1574-766f-832f-069efcca0dda","minisforumhk","https://minisforum.hk/products/um780l-slim?variant=67586515566770","MINISFORUM UM780L Slim","549900","HKD","2026-10-31 19:11:50.132676+00","2026-10-26 16:03:56.07882+00","{""code"": ""HK"", ""kind"": ""country""}","zh",,"CS-MFUM78","gid://shopify/Product/15395707846834","gid://shopify/ProductVariant/67586515566770","um780l-slim",,,"""in_stock""",,"MINISFORUM UM780L SlimAMD R7-7840HS,8C/16T | AMD Radeon™ 780M16GB LPDDR5X-7500Mhz512GB/1TB M.2 2280 NVME SSD (PCIe x4 Gen4)2.5G &amp; WIFI 6E &amp; BT 5.2Windows 11 Pro","[{""title"": ""MINISFORUM UM780L Slim"", ""language"": ""zh"", ""description"": ""MINISFORUM UM780L SlimAMD R7-7840HS,8C/16T | AMD Radeon™ 780M16GB LPDDR5X-7500Mhz512GB/1TB M.2 2280 NVME SSD (PCIe x4 Gen4)2.5G &amp; WIFI 6E &amp; BT 5.2Windows 11 Pro""}]"
+"01a19360-157a-77f6-b886-47a378bf337b","minisforumhk","https://minisforum.hk/products/um780l-slim?variant=67586515599538","MINISFORUM UM780L Slim","599900","HKD","2026-10-31 19:11:50.138517+00","2026-10-26 16:03:56.07882+00","{""code"": ""HK"", ""kind"": ""country""}","zh",,"CS-MFUM78A","gid://shopify/Product/15395707846834","gid://shopify/ProductVariant/67586515599538","um780l-slim",,,"""in_stock""",,"MINISFORUM UM780L SlimAMD R7-7840HS,8C/16T | AMD Radeon™ 780M16GB LPDDR5X-7500Mhz512GB/1TB M.2 2280 NVME SSD (PCIe x4 Gen4)2.5G &amp; WIFI 6E &amp; BT 5.2Windows 11 Pro","[{""title"": ""MINISFORUM UM780L Slim"", ""language"": ""zh"", ""description"": ""MINISFORUM UM780L SlimAMD R7-7840HS,8C/16T | AMD Radeon™ 780M16GB LPDDR5X-7500Mhz512GB/1TB M.2 2280 NVME SSD (PCIe x4 Gen4)2.5G &amp; WIFI 6E &amp; BT 5.2Windows 11 Pro""}]"
+"01a19360-1640-7290-9eda-d5215f49473e","minisforumhk","https://minisforum.hk/products/minisforum-g7-pro","Minisforum G7 Pro","1799900","HKD","2026-10-31 19:11:50.33676+00","2026-10-26 16:04:07.887032+00","{""code"": ""HK"", ""kind"": ""country""}","zh",,"CS-MG7PROA","gid://shopify/Product/8749245399218","gid://shopify/ProductVariant/47130070220978","minisforum-g7-pro","1849900","HKD","""in_stock""",,"產品簡介
+Minisforum G7 Pro 係高效能迷你電競／創作主機，搭載 Intel® Core™ i9-14900HX（24 核 32 線程，最高約 5.8GHz）同 NVIDIA GeForce RTX 5070 8GB GDDR7 獨立顯卡，預載 32GB DDR5 同 1TB PCIe 4.0 SSD。
+有 1 個 2.5G 網口、Wi-Fi 7、HDMI 2.1 同 USB4，適合 3A 遊戲、內容創作同需要獨立顯卡嘅進階場景，唔係入門文書機。香港行貨，3 年保養。香港官方有售，庫存以產品頁顯示為準。
+
+Intel® Core™ i9 14900HX, 24C/32T (up to 5.8 GHz)NVIDIA GeForce RTX 5070 8GB GDDR7 獨立顯示卡AI Performance · Up to 798 TOPSRAM: 32GB DDR5 5200MHz (SODIMM Slots*2, Max 96GB)SSD: 1TB (M.2 2280 PCIe 4.0 Slot *3, SD Card Slot *1)HDMI 2.1 *1, USB4 *1 (Max Support 8K/60Hz)2.5GbE LAN Port *1 | Wi-Fi 7(2x2) | BT 5.4Windows 11 Pro | 3年保用398 × 260 × 80mm (底座計算在內)
+常見問題
+
+問：G7 Pro 用咩處理器同顯卡？
+答：用 Intel® Core™ i9-14900HX（24 核 32 線程，最高約 5.8GHz），獨立顯卡係 NVIDIA GeForce RTX 5070 8GB GDDR7。官方標示 AI 效能最高約 798 TOPS（以官方說明為準）。預裝 Windows 11 Pro。
+問：記憶體同儲存可以點擴充？
+答：記憶體係雙通道 DDR5 5200MHz SODIMM（兩條插槽，最高約 96GB）；儲存有多個 M.2 2280 PCIe 4.0 插槽（另有 SD 卡槽）。預載配置以產品頁為準。
+問：適唔適合打機同創作？
+答：適合需要獨立顯卡嘅 3A 遊戲、影片剪接、3D／創作同本地 AI 加速。機身約 398 × 260 × 80mm（連底座），有 2.5G 有線網口、Wi-Fi 7、HDMI 2.1 同 USB4。
+問：同 AtomMan G1 PRO 有咩分別？
+答：兩者都係獨立顯卡迷你電競機；G7 Pro 用 Intel i9-14900HX + RTX 5070，G1 PRO 用 AMD Ryzen™ 9 8945HX + RTX 5060。實際規格同顯卡型號以各產品頁為準。
+問：係咪香港行貨？保養幾耐？
+答：係香港行貨，由香港出貨。保養期 3 年（由購買日起計）。詳情請參閱保養與退貨條款。
+問：點睇庫存／有冇貨？
+答：香港官方有售，庫存以產品頁顯示為準。下單前請睇產品頁顯示。","[{""title"": ""Minisforum G7 Pro"", ""language"": ""zh"", ""description"": ""產品簡介\nMinisforum G7 Pro 係高效能迷你電競／創作主機，搭載 Intel® Core™ i9-14900HX（24 核 32 線程，最高約 5.8GHz）同 NVIDIA GeForce RTX 5070 8GB GDDR7 獨立顯卡，預載 32GB DDR5 同 1TB PCIe 4.0 SSD。\n有 1 個 2.5G 網口、Wi-Fi 7、HDMI 2.1 同 USB4，適合 3A 遊戲、內容創作同需要獨立顯卡嘅進階場景，唔係入門文書機。香港行貨，3 年保養。香港官方有售，庫存以產品頁顯示為準。\n\nIntel® Core™ i9 14900HX, 24C/32T (up to 5.8 GHz)NVIDIA GeForce RTX 5070 8GB GDDR7 獨立顯示卡AI Performance · Up to 798 TOPSRAM: 32GB DDR5 5200MHz (SODIMM Slots*2, Max 96GB)SSD: 1TB (M.2 2280 PCIe 4.0 Slot *3, SD Card Slot *1)HDMI 2.1 *1, USB4 *1 (Max Support 8K/60Hz)2.5GbE LAN Port *1 | Wi-Fi 7(2x2) | BT 5.4Windows 11 Pro | 3年保用398 × 260 × 80mm (底座計算在內)\n常見問題\n\n問：G7 Pro 用咩處理器同顯卡？\n答：用 Intel® Core™ i9-14900HX（24 核 32 線程，最高約 5.8GHz），獨立顯卡係 NVIDIA GeForce RTX 5070 8GB GDDR7。官方標示 AI 效能最高約 798 TOPS（以官方說明為準）。預裝 Windows 11 Pro。\n問：記憶體同儲存可以點擴充？\n答：記憶體係雙通道 DDR5 5200MHz SODIMM（兩條插槽，最高約 96GB）；儲存有多個 M.2 2280 PCIe 4.0 插槽（另有 SD 卡槽）。預載配置以產品頁為準。\n問：適唔適合打機同創作？\n答：適合需要獨立顯卡嘅 3A 遊戲、影片剪接、3D／創作同本地 AI 加速。機身約 398 × 260 × 80mm（連底座），有 2.5G 有線網口、Wi-Fi 7、HDMI 2.1 同 USB4。\n問：同 AtomMan G1 PRO 有咩分別？\n答：兩者都係獨立顯卡迷你電競機；G7 Pro 用 Intel i9-14900HX + RTX 5070，G1 PRO 用 AMD Ryzen™ 9 8945HX + RTX 5060。實際規格同顯卡型號以各產品頁為準。\n問：係咪香港行貨？保養幾耐？\n答：係香港行貨，由香港出貨。保養期 3 年（由購買日起計）。詳情請參閱保養與退貨條款。\n問：點睇庫存／有冇貨？\n答：香港官方有售，庫存以產品頁顯示為準。下單前請睇產品頁顯示。""}]"

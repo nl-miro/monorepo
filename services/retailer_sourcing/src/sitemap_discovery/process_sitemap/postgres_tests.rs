@@ -3,7 +3,7 @@ use super::handler::Store;
 use super::store::PgStore;
 use super::store::StoreError;
 use crate::platform::object_storage::{
-    ObjectStorage, ObjectStorageMetadata, PROCESSED_SITEMAPS_BUCKET,
+    ObjectStorageMetadata, ObjectStorageRepository, PROCESSED_SITEMAPS_BUCKET,
 };
 use crate::platform::test_db::{Database, json_query};
 use bodul_shared::retailer::RetailerCode;
@@ -126,7 +126,7 @@ fn postgres_processing_reads_entities_and_writes_atomically() {
     );
 }
 
-pub(super) fn verify_round_trip(db: &Database, objects: ObjectStorage) {
+pub(super) fn verify_round_trip(db: &Database, objects: ObjectStorageRepository) {
     let store = PgStore::new(db.pool.clone(), objects.clone());
     let entity = ProcessedSitemap::new(
         Uuid::now_v7(),

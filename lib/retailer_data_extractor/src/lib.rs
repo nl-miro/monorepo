@@ -7,8 +7,9 @@ use bodul_shared::link::LinkKind;
 /// Retailer identifier accepted by [`architecture_for`].
 use bodul_shared::prelude::RetailerCode;
 use bodul_shared::{NormalizedData, SitemapConfig};
-use html_extractor::Backend;
+pub use html_extractor::ValueLessResult;
 use html_extractor::io::Architecture;
+use html_extractor::{Backend, InputKind};
 use retailer_sauce::structuralized::StructuralizedData;
 
 pub use pretty::pretty_json;
@@ -44,6 +45,16 @@ pub fn extract_for(retailer_code: RetailerCode, html: &str) -> Result<String, St
     value[localization::KEY] =
         serde_json::to_value(localization::extract(html)).map_err(|error| error.to_string())?;
     Ok(value.to_string())
+}
+
+/// Produces diagnostic HTML and child results using the retailer's architecture.
+/// Input is a complete document; no localization sidecar is added.
+pub fn valueless_for(retailer_code: RetailerCode, html: &str) -> Result<ValueLessResult, String> {
+    let architecture = architecture_for(retailer_code).map_err(|error| error.to_string())?;
+
+    Backend::Scraper
+        .valueless(html, &architecture, InputKind::Document)
+        .map_err(|error| error.to_string())
 }
 
 pub fn normalize_for(
@@ -145,6 +156,26 @@ pub fn offer_download_url(retailer_code: RetailerCode, url: &str) -> &str {
 mod tests {
     use super::*;
     use html_extractor::serde_json;
+
+    #[test]
+    fn valueless_uses_the_registered_architecture_and_keeps_children() {
+        let html = r#"<html><head><script type="application/ld+json">{"name":"Product"}</script></head><body>untouched</body></html>"#;
+        let result = valueless_for(RetailerCode::AnkerAu, html).unwrap();
+        let architecture = architecture_for(RetailerCode::AnkerAu).unwrap();
+        let expected = Backend::Scraper
+            .valueless(html, &architecture, InputKind::Document)
+            .unwrap();
+        assert_eq!(result.html, expected.html);
+        assert!(!result.children.is_empty());
+        assert_eq!(result.children.len(), expected.children.len());
+        assert!(
+            valueless_for(
+                RetailerCode::AnkerAu,
+                "<script type=\"application/ld+json\">{invalid}</script>"
+            )
+            .is_err()
+        );
+    }
 
     #[test]
     fn extracts_a_page_with_the_retailers_architecture() {

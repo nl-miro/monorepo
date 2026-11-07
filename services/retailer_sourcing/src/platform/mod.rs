@@ -24,7 +24,7 @@ pub struct Platform {
     pub db: db::DbPool,
     pub http: http::Client,
     pub offer_http: http::OfferClient,
-    pub object_storage: object_storage::ObjectStorage,
+    pub object_storage: object_storage::ObjectStorageRepository,
 }
 
 impl Platform {
@@ -32,7 +32,7 @@ impl Platform {
     /// off the async runtime.
     pub fn connect(
         database_url: &str,
-        object_storage: object_storage::ObjectStorage,
+        object_storage: object_storage::ObjectStorageRepository,
         offer_http: http::OfferClient,
     ) -> Result<Self, db::DbError> {
         Ok(Self {

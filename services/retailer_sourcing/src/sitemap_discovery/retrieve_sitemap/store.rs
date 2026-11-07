@@ -8,7 +8,7 @@ use super::super::schema::sitemaps_raw;
 use super::entity::{RetrievedSitemapDocument, StoredSitemapDocument};
 use super::handler::Store;
 use crate::platform::db::{self, DbPool};
-use crate::platform::object_storage::{self, ObjectStorage, RAW_SITEMAPS_BUCKET};
+use crate::platform::object_storage::{self, ObjectStorageRepository, RAW_SITEMAPS_BUCKET};
 
 #[derive(Debug, thiserror::Error)]
 pub enum StoreError {
@@ -26,11 +26,11 @@ pub enum StoreError {
 
 pub struct PgStore {
     pool: DbPool,
-    objects: ObjectStorage,
+    objects: ObjectStorageRepository,
 }
 
 impl PgStore {
-    pub fn new(pool: DbPool, objects: ObjectStorage) -> Self {
+    pub fn new(pool: DbPool, objects: ObjectStorageRepository) -> Self {
         Self { pool, objects }
     }
 }

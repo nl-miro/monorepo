@@ -376,11 +376,10 @@ fn localized_urls_preserve_new_values_and_adapt_old_arrays() {
 }
 
 #[test]
-fn region_inputs_support_current_and_legacy_api_shapes() {
+fn region_inputs_require_codes() {
     for market in [
         json!({"kind":"region","code":"eu"}),
         json!({"kind":"region","code":"eu","label":null}),
-        json!({"kind":"region","label":"European Union","code":null}),
     ] {
         let value = json!({"target_market":market,"language":"en"});
         let localization = super::read_localization(value).unwrap();
@@ -389,4 +388,6 @@ fn region_inputs_support_current_and_legacy_api_shapes() {
             json!({"target_market":{"kind":"region","code":"eu"},"language":"en"})
         );
     }
+    let value = json!({"target_market":{"kind":"region","label":"European Union"},"language":"en"});
+    assert!(super::read_localization(value).is_err());
 }

@@ -371,22 +371,19 @@ async fn search_normalizes_before_repository_and_fetches_one_extra() {
 }
 
 #[test]
-fn current_region_api_uses_code_for_new_and_historical_eu() {
-    for market in [
-        json!({"kind":"region","code":"eu"}),
-        json!({"kind":"region","label":"European Union"}),
-    ] {
+fn current_region_api_requires_codes() {
+    {
+        let market = json!({"kind":"region","code":"eu"});
         let localization = OfferLocalization::from_record(Some(market), Some("en".into())).unwrap();
         assert_eq!(
             serde_json::to_value(localization).unwrap(),
             json!({"target_market":{"kind":"region","code":"eu","label":null},"language":"en"})
         );
     }
-    let unknown =
-        OfferLocalization::from_record(Some(json!({"kind":"region","label":"Europe"})), None)
-            .unwrap();
-    assert_eq!(
-        unknown.target_market.unwrap().label.as_deref(),
-        Some("Europe")
-    );
+    for label in ["Europe", "European Union"] {
+        assert!(
+            OfferLocalization::from_record(Some(json!({"kind":"region","label":label})), None)
+                .is_err()
+        );
+    }
 }

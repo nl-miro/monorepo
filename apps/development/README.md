@@ -174,3 +174,27 @@ screens. When every count in a queue is zero, its icon and colored boxes shrink
 together to 24px (18px on narrow screens), with box labels and zeros visually
 hidden but available to screen readers. The icon column retains its full width
 so status columns align across empty and populated collections.
+
+## Valueless diagnostics
+
+Run `make valueless-offer-details` from the repository root or this folder.
+Use `DATA_DIR` and `RETAILERS="ankerau ankerjapancom"` as with extraction.
+The standalone binary accepts `valueless-offer-details <data_dir> [retailer ...]`.
+Without retailer arguments it discovers retailers with `offer_details/sources`.
+
+Each `sources/<page>.html` is processed as a full document with that retailer's
+architecture and the Scraper backend. Output goes to
+`offer_details/valueless/<page>/document.html`. Every child has its own indexed,
+sanitized-name subdirectory, recursively, including collection results.
+Next.js App Router shape results use `document.json`; other results use HTML.
+These are diagnostic files, not sanitized pages intended for hosting.
+
+Reruns replace all diagnostics for each processed source. Failed sources have
+stale and partial output removed; cleanup failures are reported. Other sources
+continue. Summaries report successes and failures per retailer. Exit status is
+0 on success, 1 for processing failures, or 2 for setup/argument errors.
+Sources and extraction output remain untouched; the combined processing command
+does not run valueless. Avoid concurrent runs writing the same output directory.
+
+`make ci` covers command selection, output hierarchy, reruns, and failures using
+temporary fixtures, alongside the existing app tests.

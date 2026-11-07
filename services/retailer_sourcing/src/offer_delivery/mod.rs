@@ -1,12 +1,5 @@
-//! Offer delivery.
-//!
-//! Hands completed offer exports to other services. One slice so far:
-//!
-//! 1. [`record_export_messages`] records one outbox message per exported
-//!    variation when offer discovery reports a completed export.
-//!
-//! Delivery itself runs through the outbox publisher on request. Other
-//! contexts may only use [`prelude`].
+//! Records one outbox message per completed export variation for delivery
+//! to other services on request. Other contexts access this module via [`prelude`].
 
 pub mod prelude;
 

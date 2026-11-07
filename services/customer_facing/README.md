@@ -9,8 +9,9 @@ messages are generated.
 ## Setup and startup
 
 Use the repository's pinned Rust toolchain, GNU Make, libpq, and PostgreSQL 16
-or later. Mulac 0.5.0 is resolved from the configured `null-labs-hq` Cargo registry.
-See [ADR 42](../../docs/adr/0042-published-mulac-crates.md) for dependency resolution.
+or later. Mulac is resolved through path dependencies to `../mulac` relative to
+the monorepo root. See [ADR 45](../../docs/adr/0045-local-mulac-path-dependencies.md)
+for the baseline checkout and CI setup.
 
 Configure this service's own UTF8 development database and a separate test
 database. The development user needs migration DDL permissions; the test user
@@ -391,7 +392,7 @@ creation history uses `OfferCreated.v9` with localized content.
 Localization-only and identifier-only changes have their own domain events.
 
 Offers preserves each Testimony revision in Mulac event and outbox metadata;
-legacy metadata can omit it. Published Mulac 0.5.0 provides the optional-sequence
+legacy metadata can omit it. The local Mulac baseline provides the optional-sequence
 API. This does not change HTTP inbox metadata or add
 source-order guarantees. See the [verification walkthrough](../../docs/offer-facts-walkthrough.md)
 and ADRs [27](../../docs/adr/0027-offer-revision-metadata.md),

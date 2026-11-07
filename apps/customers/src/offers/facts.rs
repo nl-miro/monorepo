@@ -6,10 +6,10 @@ use serde::{Deserialize, Deserializer, de::Error};
 #[derive(Clone, Debug, serde::Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct LocalizedContent {
-    #[serde(deserialize_with = "retailer_sauce::observation::required_nullable")]
+    #[serde(deserialize_with = "retailer_sauce::json::required_nullable")]
     pub language: Option<String>,
     pub title: String,
-    #[serde(deserialize_with = "retailer_sauce::observation::required_nullable")]
+    #[serde(deserialize_with = "retailer_sauce::json::required_nullable")]
     pub description: Option<String>,
     pub url: String,
 }

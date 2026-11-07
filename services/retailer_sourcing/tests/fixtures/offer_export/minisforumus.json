@@ -1,7 +1,7 @@
 {
   "variations": [
     {
-      "title":"Mini PC",
+      "localization":{"target_market":{"kind":"country","code":"US"},"language":"en"}, "title":"Mini PC",
       "identifiers":{"sku":"PC-1"},
       "price":{"amount":59900,"currency":"USD"},
       "compare_at_price":null,

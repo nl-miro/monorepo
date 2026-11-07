@@ -8,7 +8,9 @@ use self::record::{ConsolidatedSitemapPgRecord, sitemaps_consolidated};
 use super::entity::ConsolidatedSitemap;
 use super::handler::Store;
 use crate::platform::db::{self, DbPool};
-use crate::platform::object_storage::{self, CONSOLIDATED_SITEMAPS_BUCKET, ObjectStorage};
+use crate::platform::object_storage::{
+    self, CONSOLIDATED_SITEMAPS_BUCKET, ObjectStorageRepository,
+};
 
 #[derive(Debug, thiserror::Error)]
 pub enum StoreError {
@@ -27,11 +29,11 @@ pub enum StoreError {
 /// Postgres storage for this slice.
 pub struct PgStore {
     pool: DbPool,
-    objects: ObjectStorage,
+    objects: ObjectStorageRepository,
 }
 
 impl PgStore {
-    pub fn new(pool: DbPool, objects: ObjectStorage) -> Self {
+    pub fn new(pool: DbPool, objects: ObjectStorageRepository) -> Self {
         Self { pool, objects }
     }
 }

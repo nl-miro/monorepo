@@ -20,6 +20,10 @@ The normal progression is `[ ]` → `[.]` → `[>]` → `[~]` → `[x]`.
 When asked only to plan, finish at `[>]`. When implementation is also requested,
 continue to `[~]` as implementation begins.
 
+## Code style
+
+- Always leave an empty line before an explicit `return` statement or an implicit return (the final expression of a function, method, or closure).
+
 ## Commits
 
 - Never add `Co-Authored-By` or other signature lines to commits or pull request descriptions.

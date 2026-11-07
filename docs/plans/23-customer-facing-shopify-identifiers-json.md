@@ -29,7 +29,7 @@ Grounded at monorepo `ed55cb1eb34740ef1e2ace2a8ba0174a8a078443`.
   added five nullable text columns: GTIN, SKU and three Shopify identifiers.
   Add a new migration; do not rewrite this applied migration.
 - [Projection writes](../../services/customer_facing/src/offer_projection.rs)
-  parse validated `ProductIdentifiers` on creation and a complete decided set
+  parse validated `OfferIdentifiers` on creation and a complete decided set
   on `OfferIdentifiersChanged`. Creation inserts all five columns; identifier
   changes replace them. Each mutation and original-message receipt in
   `applied_offer_messages` share one transaction. A missing-parent update

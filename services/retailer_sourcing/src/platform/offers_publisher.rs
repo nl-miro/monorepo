@@ -2,7 +2,7 @@
 
 use std::{env::VarError, io};
 
-use inbox::prelude::SubmitInboxRequest;
+use ::inbox::prelude::SubmitInboxRequest;
 use inbox_client::{ConfigError, InboxClient, SubmitError};
 use outbox::prelude::{OutboundMessageEnvelope, OutboxError, OutboxPublisherPort};
 use tokio::runtime::Handle;

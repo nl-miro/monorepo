@@ -1,52 +1,30 @@
 use bodul_shared::retailer::RetailerCode;
+use chrono::{DateTime, Utc};
 use kernel::ApplicationCommand;
-use money::Money;
-use retailer_sauce::observation::Observation;
+use retailer_sauce::availability::Availability;
+use retailer_sauce::item_condition::ItemCondition;
 use serde::{Deserialize, Serialize};
+
+use super::state::{Content, ExternalOfferIdentifiers, Price};
+use super::target_market::TargetMarket;
 
 pub enum ProductOfferCommand {
     ImportOfferDetails(ImportOfferDetailsCommand),
 }
 
 #[derive(Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct ImportOfferDetailsCommand {
-    #[serde(
-        default,
-        skip_serializing_if = "Observation::is_missing",
-        deserialize_with = "retailer_sauce::observation::object_observation"
-    )]
-    pub was_price: Observation<Money>,
-    #[serde(default, skip_serializing_if = "Observation::is_missing")]
-    pub availability: Observation<retailer_sauce::availability::Availability>,
-    #[serde(default, skip_serializing_if = "Observation::is_missing")]
-    pub item_condition: Observation<retailer_sauce::item_condition::ItemCondition>,
-    #[serde(
-        default,
-        skip_serializing_if = "Option::is_none",
-        deserialize_with = "retailer_sauce::structuralized::content::observation"
-    )]
-    pub content: Option<retailer_sauce::structuralized::content::Content>,
-
-    #[serde(default)]
-    pub gtin: Option<retailer_sauce::identifier::Gtin>,
-    #[serde(default)]
-    pub sku: Option<retailer_sauce::identifier::Sku>,
-    #[serde(default)]
-    pub external_identifiers: retailer_sauce::identifier::ExternalIdentifiers,
-    #[serde(
-        default,
-        skip_serializing_if = "Option::is_none",
-        deserialize_with = "retailer_sauce::localization::observation"
-    )]
-    pub localization: Option<retailer_sauce::localization::Localization>,
-    #[serde(default)]
-    pub scraped_at: Option<chrono::DateTime<chrono::Utc>>,
-    #[serde(default)]
-    pub images: Vec<String>,
     pub retailer_code: RetailerCode,
-    pub title: String,
-    pub price: Money,
     pub url: String,
+    pub identifiers: ExternalOfferIdentifiers,
+    pub target_market: TargetMarket,
+    pub language: String,
+    pub content: Content,
+    pub price: Price,
+    pub availability: Option<Availability>,
+    pub item_condition: Option<ItemCondition>,
+    pub created_at: DateTime<Utc>,
 }
 
 pub const CREATE_FROM_OFFER_DETAILS_COMMAND: &str = "ImportOfferDetails";
@@ -57,153 +35,47 @@ impl ApplicationCommand for ImportOfferDetailsCommand {
     }
 }
 
-#[cfg(test)]
-mod export_contract_tests {
-    use super::*;
-
-    #[test]
-    fn accepts_the_sourcing_export_contract_fixture() {
-        let fixture = include_str!(
-            "../../../retailer_sourcing/tests/fixtures/offer_export/import_payload.json"
-        );
-        let command: ImportOfferDetailsCommand = serde_json::from_str(fixture).unwrap();
-        assert_eq!(command.command_type(), "ImportOfferDetails");
-        assert_eq!(command.retailer_code, RetailerCode::AnkerAu);
-        assert_eq!(command.title, " USB charger ž ");
-        assert_eq!(command.price, Money::new(1999, money::Currency::AUD));
-        assert_eq!(
-            command.url,
-            "https://shop.example/Charger?q=red&variant=1#details"
-        );
-    }
-
-    #[test]
-    fn legacy_and_v2_imports_have_strict_array_types() {
-        let mut input: serde_json::Value = serde_json::from_str(include_str!(
-            "../../../retailer_sourcing/tests/fixtures/offer_export/import_payload.json"
-        ))
-        .unwrap();
-        assert!(
-            serde_json::from_value::<ImportOfferDetailsCommand>(input.clone())
-                .unwrap()
-                .images
-                .is_empty()
-        );
-        input["images"] = serde_json::json!(["https://shop.example/a", "/invalid"]);
-        assert_eq!(
-            serde_json::from_value::<ImportOfferDetailsCommand>(input.clone())
-                .unwrap()
-                .images
-                .len(),
-            2
-        );
-        for value in [
-            serde_json::json!(null),
-            serde_json::json!("url"),
-            serde_json::json!([3]),
-        ] {
-            input["images"] = value;
-            assert!(serde_json::from_value::<ImportOfferDetailsCommand>(input.clone()).is_err());
-        }
-    }
-
-    #[test]
-    fn accepts_sourcing_v2_fixture() {
-        let command: ImportOfferDetailsCommand = serde_json::from_str(include_str!(
-            "../../../retailer_sourcing/tests/fixtures/offer_export/import_payload_v2.json"
-        ))
-        .unwrap();
-        assert_eq!(command.images, ["https://example.com/a.png"]);
-    }
-}
-
-#[derive(Default)]
-pub struct OfferObservation {
-    pub was_price: Observation<Money>,
-    pub availability: Observation<retailer_sauce::availability::Availability>,
-    pub item_condition: Observation<retailer_sauce::item_condition::ItemCondition>,
-    pub content: Option<retailer_sauce::structuralized::content::Content>,
-    pub identifiers: retailer_sauce::identifier::ProductIdentifiers,
-    pub scraped_at: Option<chrono::DateTime<chrono::Utc>>,
-    pub localization: Option<retailer_sauce::localization::Localization>,
-}
-impl OfferObservation {
+impl ImportOfferDetailsCommand {
     pub fn guard(&self) -> Result<(), String> {
-        if let Some(value) = self.availability.value() {
+        if let Some(value) = &self.availability {
             value.guard()?;
         }
-        if let Some(value) = self.item_condition.value() {
+        if let Some(value) = &self.item_condition {
             value.guard()?;
         }
-        if let Some(value) = &self.content {
-            value.guard()?;
-        }
-        self.identifiers.guard()?;
-        if let Some(localization) = &self.localization {
-            localization.guard()?;
+        super::event::guard_was_price(&self.price.current, self.price.previous.as_ref())?;
+        if self.content.description.contains('\0') {
+            return Err(err_invalid_description());
         }
         Ok(())
     }
 }
 
-#[cfg(test)]
-mod extended_contract_tests {
-    use super::*;
-    #[test]
-    fn shared_v3_to_v5_fixtures_preserve_fields_and_validate_before_mutation() {
-        for fixture in [
-            include_str!(
-                "../../../retailer_sourcing/tests/fixtures/offer_export/import_payload_v3.json"
-            ),
-            include_str!(
-                "../../../retailer_sourcing/tests/fixtures/offer_export/import_payload_v4.json"
-            ),
-            include_str!(
-                "../../../retailer_sourcing/tests/fixtures/offer_export/import_payload_v5.json"
-            ),
-        ] {
-            let command: ImportOfferDetailsCommand = serde_json::from_str(fixture).unwrap();
-            assert!(command.scraped_at.is_some());
-            if let Some(localization) = command.localization {
-                assert_eq!(localization.language.as_deref(), Some("en-AU"));
-            }
-            if let Some(gtin) = command.gtin {
-                assert_eq!(gtin.value, "0012345678905");
-                assert_eq!(command.sku.unwrap().value, "A1-BLACK");
-            }
-        }
-    }
+fn err_invalid_description() -> String {
+    "description must not contain NUL".into()
 }
 
 #[cfg(test)]
-mod facts_contract_tests {
+mod tests {
     use super::*;
+
     #[test]
-    fn accepts_new_sourcing_versions_without_losing_observation_semantics() {
-        for (version, fixture) in [
-            (
-                6,
-                include_str!(
-                    "../../../retailer_sourcing/tests/fixtures/offer_export/import_payload_v6.json"
-                ),
-            ),
-            (
-                7,
-                include_str!(
-                    "../../../retailer_sourcing/tests/fixtures/offer_export/import_payload_v7.json"
-                ),
-            ),
-            (
-                8,
-                include_str!(
-                    "../../../retailer_sourcing/tests/fixtures/offer_export/import_payload_v8.json"
-                ),
-            ),
-        ] {
-            let command: ImportOfferDetailsCommand = serde_json::from_str(fixture).unwrap();
-            assert_eq!(command.was_price.value().unwrap().amount(), 2999);
-            assert_eq!(!command.availability.is_missing(), version >= 7);
-            assert_eq!(command.content.is_some(), version >= 8);
-        }
+    fn new_import_contract_round_trips() {
+        let payload: serde_json::Value = serde_json::from_str(include_str!(
+            "../../tests/fixtures/import_offer_details.json"
+        ))
+        .unwrap();
+        let command: ImportOfferDetailsCommand = serde_json::from_value(payload.clone()).unwrap();
+        command.guard().unwrap();
+        assert_eq!(command.content.title, "Charger");
+        assert_eq!(command.identifiers.sku.as_deref(), Some("A1"));
+        assert_eq!(command.price.current.amount(), 1999);
+        assert_eq!(serde_json::to_value(command).unwrap(), payload);
+    }
+
+    #[test]
+    fn old_flat_import_contract_is_rejected() {
+        let payload = serde_json::json!({"retailer_code":"AnkerAu", "title":"Charger", "price":{"amount":1999,"currency":"AUD"}, "url":"https://example.com/charger"});
+        assert!(serde_json::from_value::<ImportOfferDetailsCommand>(payload).is_err());
     }
 }

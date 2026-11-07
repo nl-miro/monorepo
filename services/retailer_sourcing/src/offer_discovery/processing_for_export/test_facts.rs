@@ -9,7 +9,7 @@ pub(crate) fn document() -> Value {
         "url":"https://shop.example/facts",
         "price":{"amount":1999,"currency":"AUD"},
         "images":["https://shop.example/facts.png"],
-        "localization":{"target_market":null,"language":"en"},
+        "localization":{"target_market":{"kind":"country","code":"AU"},"language":"en"},
         "identifiers":{"sku":"SOURCE-SKU"}
     });
     let mut populated = base.clone();
@@ -48,42 +48,31 @@ pub(crate) fn assert_payloads(export: &OfferExport, document: &Value) {
         assert_eq!(entry.variation_index, index);
         let payload = serde_json::to_value(&entry.payload).unwrap();
         let source = &variations[index];
-        for field in ["title", "price", "url"] {
+        for field in ["price", "url"] {
             assert_eq!(payload[field], source[field]);
         }
-        for (field, introduced) in [
-            ("was_price", 6),
-            ("availability", 7),
-            ("item_condition", 7),
-            ("content", 8),
-        ] {
-            let expected = (export.schema_version >= introduced)
-                .then(|| source.get(field))
-                .flatten();
-            assert_eq!(
-                payload.get(field),
-                expected,
-                "v{} variant {index} {field}",
-                export.schema_version
-            );
+        for field in ["was_price", "availability", "item_condition"] {
+            assert_eq!(payload[field], source[field], "variant {index} {field}");
+            assert!(payload.get(field).is_some());
         }
+        assert_eq!(payload["content"]["title"], source["title"]);
+        assert_eq!(
+            payload["content"]["description"],
+            source["content"]["description"]
+        );
+        assert!(payload.get("title").is_none());
     }
 }
 
 #[test]
 fn persistence_fixture_preserves_missing_null_raw_and_exact_fact_values() {
     let document = document();
-    for version in [1, 5, 6, 7, 8] {
-        let export = super::conversion::convert(
-            super::conversion::tests::source(),
-            &document.to_string(),
-            version,
-        )
-        .unwrap();
-        assert_payloads(&export, &document);
-        let bytes = serde_json::to_string(&export).unwrap();
-        let restored: OfferExport = serde_json::from_str(&bytes).unwrap();
-        assert_payloads(&restored, &document);
-        assert_eq!(serde_json::to_string(&restored).unwrap(), bytes);
-    }
+    let export =
+        super::conversion::convert(super::conversion::tests::source(), &document.to_string())
+            .unwrap();
+    assert_payloads(&export, &document);
+    let bytes = serde_json::to_string(&export).unwrap();
+    let restored: OfferExport = serde_json::from_str(&bytes).unwrap();
+    assert_payloads(&restored, &document);
+    assert_eq!(serde_json::to_string(&restored).unwrap(), bytes);
 }

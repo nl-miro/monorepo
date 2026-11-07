@@ -1,7 +1,9 @@
 use super::entity::RawOffer;
 use super::handler::Store;
 use super::store::PgStore;
-use crate::platform::object_storage::{ObjectStorage, OfferStorageMetadata, RAW_OFFERS_BUCKET};
+use crate::platform::object_storage::{
+    ObjectStorageRepository, OfferStorageMetadata, RAW_OFFERS_BUCKET,
+};
 use crate::platform::test_db::{Database, json_query};
 use crate::platform::test_objects::Server;
 use bodul_shared::retailer::RetailerCode;
@@ -19,7 +21,7 @@ fn entity() -> RawOffer {
     }
 }
 
-pub(super) fn verify_round_trip(db: &Database, objects: ObjectStorage) {
+pub(super) fn verify_round_trip(db: &Database, objects: ObjectStorageRepository) {
     let store = PgStore::new(db.pool.clone(), objects.clone());
     let mut conn = db.pool.get().unwrap();
     let mut entity = entity();

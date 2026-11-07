@@ -90,13 +90,13 @@ locations projectors. Its import CLI stores inbox messages, and the separate
 
 ## Aggregate and repository contracts
 
-| Contract            | Implementation requirement                                                                                                          |
-| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| `Aggregate`         | Define `Event: Clone` and `Id: Clone`; implement `from_history`, `uncommitted_events`, and `mark_events_committed`.                 |
-| `HasAggregateId`    | Return the stream ID from each event variant. Implement it on the event record enum too.                                            |
-| `EventEnvelope<E>`  | Carry event, `u64` sequence, and `everyday::DateTime`. `new` timestamps a new event; `with_timestamp` preserves a stored timestamp. |
-| `EventStore<Id, E>` | Implement synchronous `load(id)` and `append(Vec<EventEnvelope<E>>)`.                                                               |
-| `EventPublisher<E>` | Implement synchronous publication of `&[E]`. The repository publishes payloads without their envelope sequence/timestamp.           |
+| Contract            | Implementation requirement                                                                                                                                          |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Aggregate`         | Define `Event: Clone`, `Id: Clone`, and `HistoryError: Error + Send + Sync + 'static`; implement `from_history`, `uncommitted_events`, and `mark_events_committed`. |
+| `HasAggregateId`    | Return the stream ID from each event variant. Implement it on the event record enum too.                                                                            |
+| `EventEnvelope<E>`  | Carry event, `u64` sequence, and `everyday::DateTime`. `new` timestamps a new event; `with_timestamp` preserves a stored timestamp.                                 |
+| `EventStore<Id, E>` | Implement synchronous `load(id)` and `append(Vec<EventEnvelope<E>>)`.                                                                                               |
+| `EventPublisher<E>` | Implement synchronous publication of `&[E]`. The repository publishes payloads without their envelope sequence/timestamp.                                           |
 
 The reference aggregates start their streams at sequence 1, advance the sequence
 when recording a new event, and keep those envelopes in an uncommitted list.
@@ -114,10 +114,10 @@ that list empty. Replay must not publish events or write projections.
 4. A store error returns `RepositoryError::EventStore`. A publication error
    returns `RepositoryError::Publisher` after the append already succeeded.
 
-`Aggregate::from_history` returns `Self`, not a `Result`. The product
-aggregate's fallible `try_from_history` is wrapped with `expect` in its trait
-implementation, so an invalid history can panic rather than produce a repository
-error.
+`Aggregate::from_history` returns `Result<Self, Self::HistoryError>`.
+Both Offers aggregates return `OfferHistoryError` for invalid history. Repository
+loading propagates it as `RepositoryError::History`, retaining its underlying
+error through `source()`. Empty stored streams still return `Ok(None)`.
 
 The actual save order is **append → publish → clear**. The older
 `docs/technical/specifications/testimony.md` describes clearing before

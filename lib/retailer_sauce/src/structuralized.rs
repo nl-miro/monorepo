@@ -67,10 +67,10 @@ pub mod content {
             #[derive(Deserialize)]
             #[serde(deny_unknown_fields)]
             struct Fields {
-                #[serde(deserialize_with = "crate::observation::required_nullable")]
+                #[serde(deserialize_with = "crate::json::required_nullable")]
                 description: Option<String>,
             }
-            let fields: Fields = crate::observation::object(deserializer)?;
+            let fields: Fields = crate::json::object(deserializer)?;
             Ok(Self {
                 description: fields.description,
             })

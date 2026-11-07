@@ -223,7 +223,7 @@ fn typed_jsonb_and_database_shape_reject_invalid_values() {
             .is_err()
     );
     for value in ["", "a\0b"] {
-        let invalid = Identifier(retailer_sauce::identifier::ExternalIdentifiers {
+        let invalid = Identifier(retailer_sauce::identifier::OfferIdentifiers {
             shopify_handle: Some(retailer_sauce::identifier::ShopifyHandle {
                 value: value.into(),
             }),

@@ -92,9 +92,12 @@ async fn tmp_import_stores_command_in_inbox_and_reports_storage_failure() {
     let RetailerOfferEvent::OfferCreated(event) = events[0].event() else {
         panic!("expected creation event");
     };
-    assert_eq!(event.title, "USB charger");
+    assert_eq!(event.content.title, "USB charger");
     assert_eq!(event.url, input["url"].as_str().unwrap());
-    assert_eq!(event.price, money::Money::new(1999, money::Currency::AUD));
+    assert_eq!(
+        event.price.current,
+        money::Money::new(1999, money::Currency::AUD)
+    );
     assert_eq!(
         event.retailer_code,
         bodul_shared::retailer::RetailerCode::from_str("ankerau").unwrap()
@@ -479,7 +482,7 @@ async fn registered_projectors_create_and_update_read_models() {
         .run_pending_migrations(MIGRATIONS)
         .unwrap();
 
-    use crate::offers::event::{OfferPriceChangedEvent, OfferTitleChangedEvent};
+    use crate::offers::event::{HistoricalOfferPriceChangedEvent, OfferTitleChangedEvent};
     use diesel::RunQueryDsl;
     use kernel::ApplicationEvent;
     let (kernel, state) = crate::start_mulac(pool.clone()).unwrap();
@@ -518,7 +521,7 @@ async fn registered_projectors_create_and_update_read_models() {
         id: id.clone(),
         title: "Updated charger".to_owned(),
     };
-    let price = OfferPriceChangedEvent {
+    let price = HistoricalOfferPriceChangedEvent {
         id: id.clone(),
         price: money::Money::new(1299, money::Currency::EUR),
     };
@@ -706,7 +709,7 @@ async fn inbox_submission_preserves_payload_metadata_and_duplicate_rows() {
     assert_eq!(inbox_test_snapshot(&pool, sql), original);
 
     // Rejected envelopes must not insert messages.
-    for body in inbox::prelude::testing::invalid_submissions() {
+    for body in ::inbox::prelude::testing::invalid_submissions() {
         client
             .post("/api/inbox")
             .body_json(&body)
@@ -777,31 +780,38 @@ async fn inbox_submission_processes_offer_through_all_http_stages() {
     let (kernel, state) = crate::start_mulac(pool.clone()).unwrap();
     let client = TestClient::new(crate::app_with_reporting_token(state, "test".into()));
     let command = crate::offers::command::ImportOfferDetailsCommand {
-        was_price: Default::default(),
-        availability: Default::default(),
-        item_condition: Default::default(),
-        content: None,
-        gtin: None,
-        sku: None,
-        external_identifiers: Default::default(),
-        localization: None,
-        scraped_at: None,
-        images: Vec::new(),
         retailer_code: bodul_shared::retailer::RetailerCode::AnkerAu,
-        title: "USB charger".into(),
-        price: money::Money::new(1999, money::Currency::AUD),
         url: "https://example.com/Charger?q=red#details".into(),
+        identifiers: crate::offers::state::ExternalOfferIdentifiers {
+            gtin: None,
+            sku: None,
+            shopify_product_gid: None,
+            shopify_product_variant_gid: None,
+        },
+        target_market: crate::offers::target_market::TargetMarket::Country {
+            code: everyday::prelude::CountryCode::AU,
+        },
+        language: "en".into(),
+        content: crate::offers::state::Content {
+            title: "USB charger".into(),
+            description: String::new(),
+            images: Vec::new(),
+        },
+        price: crate::offers::state::Price {
+            current: money::Money::new(1999, money::Currency::AUD),
+            previous: None,
+            scraped_at: chrono::Utc::now(),
+        },
+        availability: None,
+        item_condition: None,
+        created_at: chrono::Utc::now(),
     };
     let response = client
         .post("/api/inbox")
         .body_json(&json!({
             "routing_key":crate::offers::command::CREATE_FROM_OFFER_DETAILS_COMMAND,
             "source":"crawler",
-            "payload": {
-                "retailer_code":"AnkerAu", "title":"USB charger",
-                "price":{"amount":1999,"currency":"AUD"},
-                "url":"https://example.com/Charger?q=red#details"
-            }
+            "payload": serde_json::to_value(&command).unwrap()
         }))
         .send()
         .await;
@@ -823,7 +833,7 @@ async fn inbox_submission_processes_offer_through_all_http_stages() {
         "SELECT to_jsonb(o) AS data FROM read_offers o JOIN read_offer_identities i USING (id, retailer_code, url)",
     );
     Uuid::parse_str(projection["id"].as_str().unwrap()).unwrap();
-    assert_eq!(projection["title"], command.title);
+    assert_eq!(projection["title"], command.content.title);
     assert_eq!(projection["retailer_code"], "ankerau");
     assert_eq!(projection["url"], command.url);
     assert_eq!(projection["price_amount"], 1999);
@@ -865,20 +875,31 @@ async fn queue_endpoints_process_one_stage_and_preserve_unavailable_outbox() {
     };
     for number in 0..3 {
         let command = crate::offers::command::ImportOfferDetailsCommand {
-            was_price: Default::default(),
-            availability: Default::default(),
-            item_condition: Default::default(),
-            content: None,
-            gtin: None,
-            sku: None,
-            external_identifiers: Default::default(),
-            localization: None,
-            scraped_at: None,
-            images: Vec::new(),
             retailer_code: bodul_shared::retailer::RetailerCode::AnkerAu,
-            title: "Charger".into(),
-            price: money::Money::new(1999, money::Currency::AUD),
             url: format!("https://example.com/charger/{number}"),
+            identifiers: crate::offers::state::ExternalOfferIdentifiers {
+                gtin: None,
+                sku: None,
+                shopify_product_gid: None,
+                shopify_product_variant_gid: None,
+            },
+            target_market: crate::offers::target_market::TargetMarket::Country {
+                code: everyday::prelude::CountryCode::AU,
+            },
+            language: "en".into(),
+            content: crate::offers::state::Content {
+                title: "Charger".into(),
+                description: String::new(),
+                images: Vec::new(),
+            },
+            price: crate::offers::state::Price {
+                current: money::Money::new(1999, money::Currency::AUD),
+                previous: None,
+                scraped_at: chrono::Utc::now(),
+            },
+            availability: None,
+            item_condition: None,
+            created_at: chrono::Utc::now(),
         };
         diesel::sql_query("INSERT INTO inbox_entries (id, payload, meta, scheduled_at) VALUES ($1, $2, $3, NOW() + $4 * INTERVAL '1 day')")
             .bind::<SqlUuid, _>(Uuid::new_v4())
@@ -999,8 +1020,8 @@ async fn outbox_delivery_completes_only_confirmed_items_and_retries_failures() {
     }
     let publisher = Arc::new(Publisher(AtomicBool::new(false)));
     let (kernel, mut state) = crate::start_mulac(pool.clone()).unwrap();
-    state.outbox = outbox::prelude::poem::OutboxAdapter::new(
-        outbox::prelude::AsyncOutboxService::from_postgres(pool.clone(), publisher.clone()),
+    state.outbox = ::outbox::prelude::poem::OutboxAdapter::new(
+        ::outbox::prelude::OutboxService::from_postgres(pool.clone(), publisher.clone()),
     );
     let client = TestClient::new(crate::app_with_reporting_token(state, "test".into()));
     use kernel::EventSubscriberPort;
@@ -1168,20 +1189,31 @@ async fn commands_run_keeps_successful_commands_of_a_failed_batch() {
     let (kernel, state) = crate::start_mulac(pool.clone()).unwrap();
     let client = TestClient::new(crate::app_with_reporting_token(state, "test".into()));
     let command = crate::offers::command::ImportOfferDetailsCommand {
-        was_price: Default::default(),
-        availability: Default::default(),
-        item_condition: Default::default(),
-        content: None,
-        gtin: None,
-        sku: None,
-        external_identifiers: Default::default(),
-        localization: None,
-        scraped_at: None,
-        images: Vec::new(),
         retailer_code: bodul_shared::retailer::RetailerCode::AnkerAu,
-        title: "Charger".into(),
-        price: money::Money::new(1999, money::Currency::AUD),
         url: "https://example.com/charger".into(),
+        identifiers: crate::offers::state::ExternalOfferIdentifiers {
+            gtin: None,
+            sku: None,
+            shopify_product_gid: None,
+            shopify_product_variant_gid: None,
+        },
+        target_market: crate::offers::target_market::TargetMarket::Country {
+            code: everyday::prelude::CountryCode::AU,
+        },
+        language: "en".into(),
+        content: crate::offers::state::Content {
+            title: "Charger".into(),
+            description: String::new(),
+            images: Vec::new(),
+        },
+        price: crate::offers::state::Price {
+            current: money::Money::new(1999, money::Currency::AUD),
+            previous: None,
+            scraped_at: chrono::Utc::now(),
+        },
+        availability: None,
+        item_condition: None,
+        created_at: chrono::Utc::now(),
     };
     let valid = Uuid::new_v4();
     let unregistered = Uuid::new_v4();

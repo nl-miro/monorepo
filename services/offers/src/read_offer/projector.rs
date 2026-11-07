@@ -3,7 +3,8 @@ use super::{
     repository::{RetailerOfferRepository, RetailerOfferRepositoryError},
 };
 use crate::offers::event::{
-    OFFER_CREATED_EVENT, OfferCreatedEvent, OfferPriceChangedEvent, OfferTitleChangedEvent,
+    HistoricalOfferCreatedEvent, HistoricalOfferPriceChangedEvent, OFFER_CREATED_EVENT,
+    OfferTitleChangedEvent,
 };
 use kernel::{EventError, EventSubscriberPort, NewEventEnvelope};
 
@@ -35,14 +36,14 @@ impl<R: RetailerOfferRepository> EventSubscriberPort for RetailerOfferProjector<
                     .map_err(err_projection_failed)
             }
             crate::offers::event::OFFER_ITEM_CONDITION_CHANGED_EVENT => {
-                let event: crate::offers::event::OfferItemConditionChangedEvent =
+                let event: crate::offers::event::HistoricalOfferItemConditionChangedEvent =
                     serde_json::from_str(&envelope.payload).map_err(err_invalid_event)?;
                 self.repository
                     .update_item_condition(&event.id, &event.item_condition)
                     .map_err(err_projection_failed)
             }
             crate::offers::event::OFFER_AVAILABILITY_CHANGED_EVENT => {
-                let event: crate::offers::event::OfferAvailabilityChangedEvent =
+                let event: crate::offers::event::HistoricalOfferAvailabilityChangedEvent =
                     serde_json::from_str(&envelope.payload).map_err(err_invalid_event)?;
                 self.repository
                     .update_availability(&event.id, &event.availability)
@@ -83,7 +84,7 @@ impl<R: RetailerOfferRepository> EventSubscriberPort for RetailerOfferProjector<
                     .map_err(err_projection_failed)
             }
             OFFER_CREATED_EVENT => {
-                let event: OfferCreatedEvent =
+                let event: HistoricalOfferCreatedEvent =
                     serde_json::from_str(&envelope.payload).map_err(err_invalid_event)?;
 
                 let entity = RetailerOffer {
@@ -112,7 +113,7 @@ impl<R: RetailerOfferRepository> EventSubscriberPort for RetailerOfferProjector<
                     .map_err(err_projection_failed)
             }
             crate::offers::event::OFFER_PRICE_CHANGED_EVENT => {
-                let event: OfferPriceChangedEvent =
+                let event: HistoricalOfferPriceChangedEvent =
                     serde_json::from_str(&envelope.payload).map_err(err_invalid_event)?;
                 self.repository
                     .update_price(&event.id, &event.price)
@@ -134,7 +135,6 @@ fn err_projection_failed(error: RetailerOfferRepositoryError) -> EventError {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::offers::event::RetailerOfferEvent;
     use crate::offers::retailer_offer_id::RetailerOfferId;
     use std::sync::Mutex;
 
@@ -212,7 +212,7 @@ mod tests {
         fn update_identifiers(
             &self,
             id: &crate::offers::retailer_offer_id::RetailerOfferId,
-            identifiers: &retailer_sauce::identifier::ProductIdentifiers,
+            identifiers: &retailer_sauce::identifier::OfferIdentifiers,
         ) -> Result<(), RetailerOfferRepositoryError> {
             let mut state = self.0.lock().unwrap();
             let entity = state.as_mut().unwrap();
@@ -284,7 +284,7 @@ mod tests {
     #[test]
     fn maps_supported_events_and_rejects_malformed_payloads() {
         let projector = RetailerOfferProjector::new(RecordingRepository::default());
-        let event = OfferCreatedEvent {
+        let event = HistoricalOfferCreatedEvent {
             facts: Default::default(),
             identifiers: Default::default(),
             localization: Default::default(),
@@ -299,10 +299,7 @@ mod tests {
         };
         let mut envelope = NewEventEnvelope {
             event_type: OFFER_CREATED_EVENT.to_owned(),
-            payload: serde_json::to_string(&RetailerOfferEvent::OfferCreated(Box::new(
-                event.clone(),
-            )))
-            .unwrap(),
+            payload: serde_json::to_string(&event).unwrap(),
             metadata: None,
         };
         let unavailable = RetailerOfferProjector::new(
@@ -331,12 +328,10 @@ mod tests {
             Some(&expected)
         );
         envelope.event_type = crate::offers::event::OFFER_TITLE_CHANGED_EVENT.to_owned();
-        envelope.payload = serde_json::to_string(&RetailerOfferEvent::OfferTitleChanged(
-            OfferTitleChangedEvent {
-                id: event.id.clone(),
-                title: "New title".to_owned(),
-            },
-        ))
+        envelope.payload = serde_json::to_string(&OfferTitleChangedEvent {
+            id: event.id.clone(),
+            title: "New title".to_owned(),
+        })
         .unwrap();
         projector.handle(&envelope).unwrap();
         expected.title = "New title".to_owned();
@@ -346,12 +341,10 @@ mod tests {
         );
         envelope.event_type = crate::offers::event::OFFER_PRICE_CHANGED_EVENT.to_owned();
         expected.price = money::Money::new(1200, money::Currency::EUR);
-        envelope.payload = serde_json::to_string(&RetailerOfferEvent::OfferPriceChanged(
-            OfferPriceChangedEvent {
-                id: event.id,
-                price: expected.price.clone(),
-            },
-        ))
+        envelope.payload = serde_json::to_string(&HistoricalOfferPriceChangedEvent {
+            id: event.id,
+            price: expected.price.clone(),
+        })
         .unwrap();
         projector.handle(&envelope).unwrap();
         assert_eq!(

@@ -1,12 +1,12 @@
 //! Queue routes delegate validation and blocking execution to Mulac's adapters.
 
+use ::commanding::prelude::axum::{CommandsRunResponse, RunCommands};
+use ::eventing::prelude::axum::{EventsRunResponse, RunEvents};
+use ::outbox::prelude::axum::{OutboxAdapter, OutboxHttpError, OutboxRunResponse, RunOutbox};
 use axum::Json;
 use axum::extract::State;
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
-use commanding::prelude::axum::{CommandsRunResponse, RunCommands};
-use eventing::prelude::axum::{EventsRunResponse, RunEvents};
-use outbox::prelude::axum::{OutboxAdapter, OutboxHttpError, OutboxRunResponse, RunOutbox};
 use serde::Serialize;
 use utoipa::ToSchema;
 use utoipa_axum::router::OpenApiRouter;

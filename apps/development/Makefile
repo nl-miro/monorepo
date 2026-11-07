@@ -41,3 +41,7 @@ process-sitemap-sources:
 # of page and writes them to DATA_DIR/<retailer>/sitemaps/consolidate/<retrieval id>.json.
 consolidate-sitemap-sources:
 	cargo run --release --bin consolidate-sitemap-sources -- $(DATA_DIR)
+
+.PHONY: valueless-offer-details
+valueless-offer-details:
+	cargo run --release --bin valueless-offer-details -- "$(DATA_DIR)" $(RETAILERS)

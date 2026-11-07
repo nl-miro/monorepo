@@ -13,6 +13,8 @@ pub trait Aggregate: Sized {
     type Event: Clone;
     /// The aggregate's identifier type.
     type Id: Clone;
+    /// Failure encountered while replaying stored history.
+    type HistoryError: std::error::Error + Send + Sync + 'static;
 
     /// Reconstructs an aggregate from its complete event history.
     ///
@@ -24,8 +26,11 @@ pub trait Aggregate: Sized {
     /// * `events` - All events in the aggregate's history (in sequence order)
     ///
     /// # Returns
-    /// The reconstructed aggregate with no uncommitted events
-    fn from_history(id: Self::Id, events: Vec<EventEnvelope<Self::Event>>) -> Self;
+    /// The reconstructed aggregate with no uncommitted events, or a history error.
+    fn from_history(
+        id: Self::Id,
+        events: Vec<EventEnvelope<Self::Event>>,
+    ) -> Result<Self, Self::HistoryError>;
 
     /// Returns a reference to the aggregate's uncommitted events.
     fn uncommitted_events(&self) -> &[EventEnvelope<Self::Event>];

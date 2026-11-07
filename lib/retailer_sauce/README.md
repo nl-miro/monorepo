@@ -16,8 +16,7 @@ Retailer integrations.
   returns, the shared `Offer` scaffold, and `content::Content` for an exact
   optional description. Present content requires a JSON object and a description
   key; `{ "description": null }` explicitly clears it.
-- `observation`: distinguishes a missing legacy field from a present nullable
-  observation, with strict object decoders for pricing and content boundaries.
+- `json`: validates JSON numbers and object shapes and provides required-nullable field decoding.
 
 This crate is part of the `lib` workspace. See the
 [root README](../../README.md) for requirements and Make targets.
@@ -42,7 +41,8 @@ description only in the destination bucket. Legacy title/description updates
 change the selected bucket; legacy language corrections move it, replacing any
 destination collision without copying a translation.
 
-Regional markets use `RegionCode` (`eu` for the European Union). Historical
-label-based regions decode to `LegacyRegion` to preserve immutable encoding;
-`canonicalized()` maps only the exact European Union label. Country codes remain
-separate, and unknown regional codes are rejected. See ADR 40.
+Regional markets use `RegionCode` (`eu` for the European Union). `TargetMarket` supports only `Country { code }` and `Region { code }`. Regional labels and unknown codes are rejected.
+
+Shared JSON shape validators live in `retailer_sauce::json`. Optional source facts use `Option<T>`; missing and explicit-null values both deserialize as `None`.
+
+`identifier::OfferIdentifiers` owns GTIN, SKU, Shopify product GID, Shopify product variation GID, and Shopify handle as direct optional fields. Its JSON representation exposes all five fields directly.

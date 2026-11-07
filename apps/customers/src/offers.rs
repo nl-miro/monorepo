@@ -23,7 +23,7 @@ pub struct Offer {
     pub availability: Option<retailer_sauce::availability::Availability>,
     pub item_condition: Option<retailer_sauce::item_condition::ItemCondition>,
     pub content: Vec<facts::LocalizedContent>,
-    pub identifiers: retailer_sauce::identifier::ProductIdentifiers,
+    pub identifiers: retailer_sauce::identifier::OfferIdentifiers,
     pub localization: retailer_sauce::localization::Localization,
     pub images: Vec<String>,
     pub id: String,
@@ -44,7 +44,9 @@ struct OfferWire {
     pub item_condition: Option<retailer_sauce::item_condition::ItemCondition>,
     pub content: Vec<facts::LocalizedContent>,
     #[serde(flatten)]
-    pub identifiers: retailer_sauce::identifier::ProductIdentifiers,
+    pub identifiers: retailer_sauce::identifier::OfferIdentifiers,
+    #[serde(default)]
+    pub external_identifiers: retailer_sauce::identifier::OfferIdentifiers,
     #[serde(default, deserialize_with = "read_localization")]
     pub localization: retailer_sauce::localization::Localization,
     #[serde(default)]
@@ -62,7 +64,7 @@ impl<'de> Deserialize<'de> for Offer {
         use serde::de::Error;
         let mut value = serde_json::Value::deserialize(deserializer)?;
         facts::normalize_content(&mut value).map_err(D::Error::custom)?;
-        let wire: OfferWire = serde_json::from_value(value).map_err(D::Error::custom)?;
+        let mut wire: OfferWire = serde_json::from_value(value).map_err(D::Error::custom)?;
         facts::guard_content(&wire.content, &wire.localization.language)
             .map_err(D::Error::custom)?;
         let selected = wire
@@ -75,6 +77,10 @@ impl<'de> Deserialize<'de> for Offer {
                 "selected content title and URL must match flat fields",
             ));
         }
+        wire.identifiers.shopify_product_gid = wire.external_identifiers.shopify_product_gid;
+        wire.identifiers.shopify_product_variation_gid =
+            wire.external_identifiers.shopify_product_variation_gid;
+        wire.identifiers.shopify_handle = wire.external_identifiers.shopify_handle;
         Ok(Self {
             was_price: wire.was_price,
             availability: wire.availability,
@@ -247,7 +253,6 @@ fn read_localization<'de, D: serde::Deserializer<'de>>(
         }
     }
     serde_json::from_value::<retailer_sauce::localization::Localization>(value)
-        .map(|value| value.canonicalized())
         .map_err(serde::de::Error::custom)
 }
 

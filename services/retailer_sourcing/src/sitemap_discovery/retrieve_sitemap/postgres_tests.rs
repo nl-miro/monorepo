@@ -1,7 +1,9 @@
 use super::entity::RetrievedSitemapDocument;
 use super::handler::Store;
 use super::store::{PgStore, StoreError};
-use crate::platform::object_storage::{ObjectStorage, ObjectStorageMetadata, RAW_SITEMAPS_BUCKET};
+use crate::platform::object_storage::{
+    ObjectStorageMetadata, ObjectStorageRepository, RAW_SITEMAPS_BUCKET,
+};
 use crate::platform::test_db::{Database, json_query};
 use crate::platform::test_objects::Server;
 use diesel::connection::SimpleConnection;
@@ -24,7 +26,7 @@ fn documents() -> Vec<RetrievedSitemapDocument> {
     )
 }
 
-pub(super) fn verify_round_trip(db: &Database, objects: ObjectStorage) {
+pub(super) fn verify_round_trip(db: &Database, objects: ObjectStorageRepository) {
     let store = PgStore::new(db.pool.clone(), objects.clone());
     let input = documents();
     let stored = store.store_documents(&input).unwrap();

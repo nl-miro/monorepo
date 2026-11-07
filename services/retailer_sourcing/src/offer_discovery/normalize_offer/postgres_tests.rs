@@ -3,7 +3,8 @@ use super::handler::Store;
 use super::store::PgStore;
 use crate::platform::db::Json;
 use crate::platform::object_storage::{
-    EXTRACTED_OFFERS_BUCKET, NORMALIZED_OFFERS_BUCKET, ObjectStorage, OfferStorageMetadata,
+    EXTRACTED_OFFERS_BUCKET, NORMALIZED_OFFERS_BUCKET, ObjectStorageRepository,
+    OfferStorageMetadata,
 };
 use crate::platform::test_db::{Database, json_query};
 use crate::platform::test_objects::Server;
@@ -15,7 +16,7 @@ use uuid::Uuid;
 
 const ROW: &str = "SELECT to_jsonb(o) AS value FROM offer_details_normalized o";
 
-pub(super) fn verify_round_trip(db: &Database, objects: ObjectStorage) {
+pub(super) fn verify_round_trip(db: &Database, objects: ObjectStorageRepository) {
     let store = PgStore::new(db.pool.clone(), objects.clone());
     let mut conn = db.pool.get().unwrap();
     let offer_id = Uuid::now_v7();

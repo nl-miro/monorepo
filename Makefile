@@ -52,3 +52,7 @@ export-sitemaps:
 
 wip:
 	git add . && git commit -m 'wip'
+
+.PHONY: valueless-offer-details
+valueless-offer-details:
+	$(MAKE) -C apps/development $@ DATA_DIR="$(abspath $(DATA_DIR))" RETAILERS="$(RETAILERS)"

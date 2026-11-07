@@ -672,8 +672,8 @@ mod locale_fallback_tests {
                 decision: String::new(),
             }],
         };
-        let region = TargetMarket::LegacyRegion {
-            label: "Europe".into(),
+        let region = TargetMarket::Region {
+            code: retailer_sauce::localization::RegionCode::EuropeanUnion,
         };
         apply_selection(
             &mut evidence,

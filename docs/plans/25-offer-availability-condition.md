@@ -77,15 +77,11 @@ Database cases compile but await execution. The required matrix remains:
 | Missing change-event key, boolean, unknown enum spelling, blank/NUL Other                                                                                  | Invalid input does not mutate projections or leave an applied receipt.                                       |
 | Duplicate delivery, retry, update before creation                                                                                                          | Stable delivery identity, receipt protection, visible retry until creation; no new ordering guarantees.      |
 
-Use shared [v6](../../services/retailer_sourcing/tests/fixtures/offer_export/import_payload_v6.json),
-[v7](../../services/retailer_sourcing/tests/fixtures/offer_export/import_payload_v7.json),
-and [v8](../../services/retailer_sourcing/tests/fixtures/offer_export/import_payload_v8.json)
-fixtures: v6 omits statuses, v7 supplies them, v8 adds content. The shared
-[v6–v8 persistence/recovery cases](../../services/retailer_sourcing/src/offer_discovery/processing_for_export/postgres_tests/facts.rs)
-now cover status values, nulls, omission and raw historical strings alongside
-pricing/content, with unchanged pinned bytes and export/entry/message identities.
-The real-storage suite retains v1 and adds current v8; these cases still need
-PostgreSQL and object-storage execution.
+Use the current [facts fixture](../../services/retailer_sourcing/tests/fixtures/offer_export/import_with_facts.json).
+The [persistence/recovery cases](../../services/retailer_sourcing/src/offer_discovery/processing_for_export/postgres_tests/facts.rs)
+cover values, nulls and omission with stable export and delivery identities.
+These cases require PostgreSQL and object storage.
+
 
 **2. Re-run required checks with usable sockets.** Previous root CI stopped at
 socket creation; DB suites lacked `DATABASE_URL_TEST`. Those are unverified

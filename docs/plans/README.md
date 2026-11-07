@@ -7,6 +7,12 @@ clarification extends item 22. Status markers follow the
 
 ## Current round and dependencies
 
+[Plan 38: Separate export loading from outbox recording](38-export-loader-and-outbox-recorder.md)
+is implemented. It splits the listener's combined Store into ExportStore and
+OutboxStore traits, backed by the existing object-storage client and PostgreSQL
+respectively. The export adapter retains its PostgreSQL metadata lookup. Service
+CI, all 70 PostgreSQL tests and a live health check passed.
+
 [Plan 34: Inbox and outbox statistics](34-inbox-outbox-statistics.md) is implemented
 for all three dashboard services, extending the existing UTC-day reports and
 colored boxes to all four queues. PostgreSQL and live checks remain blocked

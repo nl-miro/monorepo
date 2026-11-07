@@ -16,7 +16,7 @@ pub type PostgresOfferHandler = ProcessOfferHandler<
     PostgresRetailerOfferIdentifiersRepository,
 >;
 
-pub use super::identifiers_repository::PostgresRetailerOfferIdentifiersRepository;
+pub use crate::read_offers_identifiers::repository::PostgresRetailerOfferIdentifiersRepository;
 
 pub fn offer_handler(pool: DbPool) -> PostgresOfferHandler {
     ProcessOfferHandler::new(

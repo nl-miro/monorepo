@@ -100,7 +100,7 @@ impl RetailerOfferRepository for InMemoryRetailerOfferRepository {
     fn update_identifiers(
         &self,
         id: &crate::offers::retailer_offer_id::RetailerOfferId,
-        identifiers: &retailer_sauce::identifier::ProductIdentifiers,
+        identifiers: &retailer_sauce::identifier::OfferIdentifiers,
     ) -> Result<(), RetailerOfferRepositoryError> {
         identifiers.guard().map_err(super::err_update)?;
         let id = Uuid::parse_str(id.value()).map_err(super::err_update)?;
@@ -286,14 +286,14 @@ mod tests {
 #[cfg(test)]
 mod localized_content_tests {
     use super::*;
-    use crate::offers::event::OfferCreatedEvent;
+    use crate::offers::event::HistoricalOfferCreatedEvent;
     use serde_json::json;
 
     #[test]
     fn full_snapshots_are_atomic_and_legacy_changes_reconcile_selected_bucket() {
         let repository = InMemoryRetailerOfferRepository::new();
         let id = Uuid::now_v7();
-        let created: OfferCreatedEvent = serde_json::from_value(json!({
+        let created: HistoricalOfferCreatedEvent = serde_json::from_value(json!({
             "id":id,"retailer_code":"AnkerCom","title":" English ","price":{"amount":1999,"currency":"USD"},"url":"https://example.com/localized","created_at":"2020-01-02T03:04:05Z",
             "localization":{"target_market":null,"language":"en-US"},
             "content":{"description":" Exact legacy "}

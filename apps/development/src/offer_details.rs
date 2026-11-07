@@ -63,7 +63,7 @@ fn run(stage: &Stage) -> Result<bool, String> {
     );
     let wanted: Vec<String> = args.collect();
 
-    let retailers = retailers(stage, &data_dir, &wanted)?;
+    let retailers = retailers(stage.input, &data_dir, &wanted)?;
     if retailers.is_empty() {
         return Err(format!(
             "no offer_details/{} folders in {}",
@@ -98,8 +98,8 @@ fn run(stage: &Stage) -> Result<bool, String> {
 
 /// The retailer folders to process, with their codes and `offer_details`
 /// folders, sorted by name.
-fn retailers(
-    stage: &Stage,
+pub(crate) fn retailers(
+    input: &str,
     data_dir: &Path,
     wanted: &[String],
 ) -> Result<Vec<(String, RetailerCode, PathBuf)>, String> {
@@ -108,7 +108,7 @@ fn retailers(
             .map_err(|e| format!("{}: {e}", data_dir.display()))?
             .filter_map(|entry| entry.ok())
             .filter(|entry| {
-                let input = entry.path().join("offer_details").join(stage.input);
+                let input = entry.path().join("offer_details").join(input);
                 input.is_dir()
             })
             .filter_map(|entry| entry.file_name().into_string().ok())
@@ -130,8 +130,8 @@ fn retailers(
             Err(e) => return Err(format!("{name}: {e}")),
         };
         let dir = data_dir.join(&name).join("offer_details");
-        if !dir.join(stage.input).is_dir() {
-            return Err(format!("{}: no {} folder", dir.display(), stage.input));
+        if !dir.join(input).is_dir() {
+            return Err(format!("{}: no {} folder", dir.display(), input));
         }
         retailers.push((name, code, dir));
     }

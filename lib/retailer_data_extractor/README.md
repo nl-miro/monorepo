@@ -72,3 +72,10 @@ not reinterpreted. Deploy compatible readers before new producers and pause
 projection writers during the regional-code migrations (ADR 40). Source exports
 now write v9, Offers creation v10 and localization changes v2; old immutable
 versions retain their original readers and encodings.
+
+`valueless_for(retailer_code, html)` returns the complete `ValueLessResult`
+(re-exported by this crate), including diagnostic HTML and children. It uses
+`architecture_for`, the Scraper backend and complete-document input, propagating
+architecture and parser errors. Unlike extraction it adds no localization
+sidecar. The development app's `valueless-offer-details` binary writes these
+results to diagnostic files.

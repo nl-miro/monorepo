@@ -1,6 +1,6 @@
 mod support;
 use retailer_sourcing::object_storage::{
-    Error, ObjectStorage, ObjectStorageMetadata, RAW_SITEMAPS_BUCKET,
+    Error, ObjectStorageMetadata, ObjectStorageRepository, RAW_SITEMAPS_BUCKET,
 };
 use serde_json::json;
 use support::Server;
@@ -66,8 +66,13 @@ fn uploads_exact_input_and_validates_every_part_of_the_reference() {
 #[test]
 fn configuration_rejects_invalid_url_or_token() {
     let server = Server::new();
-    assert!(ObjectStorage::new("not a URL", "token", server.runtime.handle().clone()).is_err());
-    assert!(ObjectStorage::new(&server.url, "", server.runtime.handle().clone()).is_err());
+    assert!(
+        ObjectStorageRepository::new("not a URL", "token", server.runtime.handle().clone())
+            .is_err()
+    );
+    assert!(
+        ObjectStorageRepository::new(&server.url, "", server.runtime.handle().clone()).is_err()
+    );
 }
 
 #[test]

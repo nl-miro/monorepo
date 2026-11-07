@@ -61,3 +61,8 @@ Decision, Consequences) and give it the next number.
 - [44: Offer download proxies](0044-offer-download-proxies.md)
 
 - [45: Hardcoded offer proxies](0045-hardcoded-offer-proxies.md)
+- [ADR 43: Fallible aggregate history loading](0043-fallible-history-loading.md)
+
+- [ADR 44: Unversioned sourcing exports](0044-unversioned-sourcing-exports.md)
+
+- [ADR 45: Local Mulac path dependencies](0045-local-mulac-path-dependencies.md)

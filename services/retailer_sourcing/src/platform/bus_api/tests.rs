@@ -1,15 +1,15 @@
 use std::time::Duration;
 
+use ::commanding::prelude::axum::CommandingAdapter;
+use ::commanding::prelude::{CommandingService, testing as commands};
+use ::eventing::prelude::axum::EventingAdapter;
+use ::eventing::prelude::{EventingService, testing as events};
 use axum::Router;
 use axum::body::Body;
 use axum::extract::DefaultBodyLimit;
 use axum::http::{Request, StatusCode, header};
-use commanding::prelude::axum::CommandingAdapter;
-use commanding::prelude::{AsyncCommandingService, testing as commands};
 use diesel::PgConnection;
 use diesel::r2d2::ConnectionManager;
-use eventing::prelude::axum::EventingAdapter;
-use eventing::prelude::{AsyncEventingService, testing as events};
 use http_body_util::BodyExt;
 use serde_json::{Value, json};
 use tower::ServiceExt;
@@ -21,8 +21,8 @@ use crate::platform::state::AppState;
 const PATHS: [&str; 2] = ["/api/commands/run", "/api/events/run"];
 
 fn configured(
-    commands: impl Into<AsyncCommandingService>,
-    events: impl Into<AsyncEventingService>,
+    commands: CommandingService<commands::Repository>,
+    events: EventingService<events::Repository>,
 ) -> Router {
     let pool = DbPool::builder()
         .max_size(1)
@@ -34,6 +34,7 @@ fn configured(
     let mut bus = Bus::default().start(pool).unwrap();
     bus.commands = CommandingAdapter::new(commands);
     bus.events = EventingAdapter::new(events);
+
     crate::app(AppState {
         bus: Some(bus),
         ..AppState::default()
@@ -69,7 +70,7 @@ pub(super) async fn run(app: &Router, path: &str, limit: usize) -> Value {
 
 #[tokio::test]
 async fn adapters_validate_before_checking_configuration() {
-    let available = configured(commands::empty_consumer(), events::empty_consumer());
+    let available = configured(commands::empty_service(), events::empty_service());
     let unavailable = crate::app(AppState::default());
     for path in PATHS {
         for app in [&available, &unavailable] {
@@ -136,7 +137,7 @@ async fn adapters_preserve_body_rejections() {
 
 #[tokio::test]
 async fn each_adapter_processes_only_its_requested_batch() {
-    let app = configured(commands::queued_consumer(3), events::queued_consumer(3));
+    let app = configured(commands::queued_service(3), events::queued_service(3));
     for path in PATHS {
         for processed in [2, 1, 0] {
             assert_eq!(
@@ -150,26 +151,38 @@ async fn each_adapter_processes_only_its_requested_batch() {
 #[tokio::test]
 async fn consumer_errors_remain_batch_results() {
     let app = configured(
-        commands::failing_reservation_consumer(),
-        events::failing_reservation_consumer(),
+        commands::failing_reservation_service(),
+        events::failing_reservation_service(),
     );
-    for path in PATHS {
-        crate::tests::assert_batch_errors(&run(&app, path, 1).await, 1);
+    for (path, expected) in PATHS
+        .into_iter()
+        .zip([commands::RESERVATION_FAILURE, events::RESERVATION_FAILURE])
+    {
+        assert_eq!(
+            run(&app, path, 1).await,
+            json!({"processed":null,"errors":[expected]})
+        );
     }
-    let (event_service, completed) = events::partially_failing_consumer();
-    let app = configured(commands::failing_handler_consumer(), event_service);
-    crate::tests::assert_batch_errors(&run(&app, PATHS[0], 1).await, 1);
-    crate::tests::assert_batch_errors(&run(&app, PATHS[1], 10).await, 1);
+    let (event_service, completed) = events::partially_failing_service();
+    let app = configured(commands::failing_handler_service(), event_service);
+    assert_eq!(
+        run(&app, PATHS[0], 1).await,
+        json!({"processed":null,"errors":[commands::HANDLER_FAILURE]})
+    );
+    assert_eq!(
+        run(&app, PATHS[1], 10).await,
+        json!({"processed":null,"errors":[events::SUBSCRIBER_FAILURE]})
+    );
     assert_eq!(*completed.lock().unwrap(), 2);
 }
 
 #[tokio::test]
 async fn adapter_task_failures_are_sanitized() {
-    let app = configured(commands::panicking_consumer(), events::panicking_consumer());
+    let app = configured(commands::panicking_service(), events::panicking_service());
     for path in PATHS {
         let (status, text) = send(&app, path, Some("application/json"), r#"{"limit":1}"#).await;
         assert_eq!(status, StatusCode::INTERNAL_SERVER_ERROR);
-        crate::tests::assert_error_id(&text);
+        assert_eq!(text, "queue processing task failed");
     }
 }
 

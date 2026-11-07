@@ -52,12 +52,12 @@ pub enum Error {
 }
 
 #[derive(Clone)]
-pub struct ObjectStorage {
+pub struct ObjectStorageRepository {
     client: Client,
     runtime: Handle,
 }
 
-impl ObjectStorage {
+impl ObjectStorageRepository {
     pub fn from_env(runtime: Handle) -> Result<Self, Error> {
         let url = std::env::var("OBJECT_STORAGE_URL")
             .map_err(|_| Error::Configuration("OBJECT_STORAGE_URL is required"))?;

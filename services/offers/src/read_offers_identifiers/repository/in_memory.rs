@@ -38,7 +38,7 @@ impl RetailerOfferIdentifiersRepository for InMemoryRetailerOfferIdentifiersRepo
     fn update_identifiers(
         &self,
         id: &crate::offers::retailer_offer_id::RetailerOfferId,
-        identifiers: &retailer_sauce::identifier::ProductIdentifiers,
+        identifiers: &retailer_sauce::identifier::OfferIdentifiers,
     ) -> Result<(), RetailerOfferIdentifiersRepositoryError> {
         let id = validate_update(id, identifiers)?;
         let mut entries = self.entries.lock().map_err(err_update)?;
@@ -52,7 +52,7 @@ impl RetailerOfferIdentifiersRepository for InMemoryRetailerOfferIdentifiersRepo
 mod tests {
     use super::*;
     use crate::offers::retailer_offer_id::RetailerOfferId;
-    use retailer_sauce::identifier::ProductIdentifiers;
+    use retailer_sauce::identifier::OfferIdentifiers;
     use serde_json::json;
 
     #[test]
@@ -60,9 +60,9 @@ mod tests {
         let repository = InMemoryRetailerOfferIdentifiersRepository::new();
         let uuid = Uuid::new_v4();
         let id = RetailerOfferId::new(uuid.to_string());
-        let initial: ProductIdentifiers = serde_json::from_value(json!({
+        let initial: OfferIdentifiers = serde_json::from_value(json!({
             "gtin":"0012345678905", "sku":" SKU 001 ",
-            "external_identifiers":{"shopify_product_gid":"gid://shopify/Product/001", "shopify_product_variation_gid":"002", "shopify_handle":" Ž \\\" "}
+            "shopify_product_gid":"gid://shopify/Product/001", "shopify_product_variation_gid":"002", "shopify_handle":" Ž \\\" "
         })).unwrap();
         let entity = RetailerOfferIdentifiers {
             identifiers: initial.clone(),
@@ -76,7 +76,7 @@ mod tests {
         invalid.sku.as_mut().unwrap().value.clear();
         assert!(repository.update_identifiers(&id, &invalid).is_err());
         assert_eq!(repository.entries.lock().unwrap()[&uuid], entity);
-        let replacement: ProductIdentifiers = serde_json::from_value(json!({"sku":"new"})).unwrap();
+        let replacement: OfferIdentifiers = serde_json::from_value(json!({"sku":"new"})).unwrap();
         for _ in 0..2 {
             repository.update_identifiers(&id, &replacement).unwrap();
         }
@@ -85,17 +85,17 @@ mod tests {
         assert_eq!(stored.url, entity.url);
         assert_eq!(stored.retailer_code, entity.retailer_code);
         repository
-            .update_identifiers(&id, &ProductIdentifiers::default())
+            .update_identifiers(&id, &OfferIdentifiers::default())
             .unwrap();
         assert_eq!(
             repository.entries.lock().unwrap()[&uuid].identifiers,
-            ProductIdentifiers::default()
+            OfferIdentifiers::default()
         );
         assert!(
             repository
                 .update_identifiers(
                     &RetailerOfferId::new(Uuid::new_v4().to_string()),
-                    &ProductIdentifiers::default()
+                    &OfferIdentifiers::default()
                 )
                 .is_err()
         );
@@ -103,7 +103,7 @@ mod tests {
             repository
                 .update_identifiers(
                     &RetailerOfferId::new("invalid"),
-                    &ProductIdentifiers::default()
+                    &OfferIdentifiers::default()
                 )
                 .is_err()
         );

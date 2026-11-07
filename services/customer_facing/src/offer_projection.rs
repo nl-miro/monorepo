@@ -15,7 +15,7 @@ use kernel::{
     NewEventEnvelope,
     prelude::{
         CommandConsumer, CommandDispatcher, DbPool, DieselPgCommandRepository,
-        DieselPgEventRepository, EventGateway,
+        DieselPgEventRepository, EventGateway, EventRecorder,
     },
 };
 use money::Money;
@@ -38,7 +38,7 @@ struct Created {
     item_condition: Option<ItemCondition>,
     content: Vec<offer_content::Content>,
     #[serde(flatten)]
-    identifiers: retailer_sauce::identifier::ProductIdentifiers,
+    identifiers: retailer_sauce::identifier::OfferIdentifiers,
     #[serde(default)]
     localization: retailer_sauce::localization::Localization,
     #[serde(default)]
@@ -68,7 +68,7 @@ struct PriceChanged {
 #[derive(Deserialize)]
 struct Pricing {
     price: Money,
-    #[serde(deserialize_with = "retailer_sauce::observation::required_nullable")]
+    #[serde(deserialize_with = "retailer_sauce::json::required_nullable")]
     was_price: Option<Money>,
 }
 
@@ -81,14 +81,14 @@ struct PricingChanged {
 #[derive(Deserialize)]
 struct AvailabilityChanged {
     id: Uuid,
-    #[serde(deserialize_with = "retailer_sauce::observation::required_nullable")]
+    #[serde(deserialize_with = "retailer_sauce::json::required_nullable")]
     availability: Option<Availability>,
 }
 
 #[derive(Deserialize)]
 struct ItemConditionChanged {
     id: Uuid,
-    #[serde(deserialize_with = "retailer_sauce::observation::required_nullable")]
+    #[serde(deserialize_with = "retailer_sauce::json::required_nullable")]
     item_condition: Option<ItemCondition>,
 }
 
@@ -124,14 +124,14 @@ struct IdentifiersChanged {
         flatten,
         deserialize_with = "retailer_sauce::identifier::complete_identifiers"
     )]
-    identifiers: retailer_sauce::identifier::ProductIdentifiers,
+    identifiers: retailer_sauce::identifier::OfferIdentifiers,
 }
 
 #[derive(Deserialize)]
 struct ContentsChanged {
     id: Uuid,
     content: Vec<offer_content::Content>,
-    #[serde(deserialize_with = "retailer_sauce::observation::required_nullable")]
+    #[serde(deserialize_with = "retailer_sauce::json::required_nullable")]
     language: Option<String>,
 }
 
@@ -332,7 +332,7 @@ impl Change {
             .bind::<diesel::sql_types::Nullable<Text>, _>(
                 change.identifiers.sku.as_ref().map(|value| &value.value),
             )
-            .bind::<Jsonb, _>(Identifier(change.identifiers.external_identifiers.clone()))
+            .bind::<Jsonb, _>(Identifier(change.identifiers.clone()))
             .execute(connection)?,
             Self::Localization(change) => {
                 let current = content::lock(connection, change.id)?;
@@ -340,7 +340,7 @@ impl Change {
                 content::write_language(connection, change.id, &list, &change.localization.language)?;
                 diesel::sql_query("UPDATE offers SET target_market=$2 WHERE id=$1")
                     .bind::<SqlUuid, _>(change.id)
-                    .bind::<diesel::sql_types::Nullable<Jsonb>, _>(change.localization.target_market.as_ref().map(|market| serde_json::to_value(market.canonicalized()).expect("serializable market")))
+                    .bind::<diesel::sql_types::Nullable<Jsonb>, _>(change.localization.target_market.as_ref().map(|market| serde_json::to_value(market).expect("serializable market")))
                     .execute(connection)?
             }
             Self::ScrapedAt(change) => diesel::sql_query(
@@ -369,10 +369,10 @@ impl Change {
                 .bind::<Text, _>(offer.price.currency().as_str())
                 .bind::<Timestamptz, _>(offer.created_at)
                 .bind::<diesel::sql_types::Nullable<Timestamptz>, _>(offer.scraped_at)
-                .bind::<diesel::sql_types::Nullable<diesel::sql_types::Jsonb>, _>(offer.localization.target_market.as_ref().map(|market| serde_json::to_value(market.canonicalized()).expect("serializable market")))
+                .bind::<diesel::sql_types::Nullable<diesel::sql_types::Jsonb>, _>(offer.localization.target_market.as_ref().map(|market| serde_json::to_value(market).expect("serializable market")))
                 .bind::<diesel::sql_types::Nullable<Text>, _>(offer.identifiers.gtin.as_ref().map(|value| &value.value))
                 .bind::<diesel::sql_types::Nullable<Text>, _>(offer.identifiers.sku.as_ref().map(|value| &value.value))
-                .bind::<Jsonb, _>(Identifier(offer.identifiers.external_identifiers.clone()))
+                .bind::<Jsonb, _>(Identifier(offer.identifiers.clone()))
                 .bind::<diesel::sql_types::Nullable<BigInt>, _>(offer.was_price.as_ref().map(Money::amount))
                 .bind::<diesel::sql_types::Nullable<Text>, _>(offer.was_price.as_ref().map(|value| value.currency().as_str()))
                 .bind::<diesel::sql_types::Nullable<Jsonb>, _>(offer.availability.as_ref().map(|value| serde_json::to_value(value).expect("serializable availability")))
@@ -481,10 +481,13 @@ impl ErasedCommandHandler for Projection {
 }
 
 pub fn consumer(pool: DbPool) -> Arc<CommandConsumer<DieselPgCommandRepository>> {
-    let commands = Arc::new(DieselPgCommandRepository::new(pool.clone()));
-    let events = EventGateway::two_phased(Arc::new(DieselPgEventRepository::new(pool.clone())));
+    let storage = Arc::new(DieselPgCommandRepository::new(pool.clone()));
+    let events = EventGateway::two_phased(Arc::new(EventRecorder::new(Arc::new(
+        DieselPgEventRepository::new(pool.clone()),
+    ))));
+
     Arc::new(CommandConsumer::new(
-        commands,
+        storage,
         Arc::new(CommandDispatcher::new(
             Arc::new(Projection(pool)),
             Arc::new(events),
@@ -498,47 +501,39 @@ mod tests {
     use serde_json::json;
 
     #[test]
-    fn source_fixtures_and_historical_creation_keep_the_producer_contract() {
-        let fixtures = [
-            include_str!(
-                "../../retailer_sourcing/tests/fixtures/offer_export/import_payload_v6.json"
-            ),
-            include_str!(
-                "../../retailer_sourcing/tests/fixtures/offer_export/import_payload_v7.json"
-            ),
-            include_str!(
-                "../../retailer_sourcing/tests/fixtures/offer_export/import_payload_v8.json"
-            ),
-        ];
-        for (version, fixture) in (6..=8).zip(fixtures) {
-            let mut payload: serde_json::Value = serde_json::from_str(fixture).unwrap();
-            payload["id"] = json!(Uuid::now_v7());
-            payload["created_at"] = json!("2026-10-27T00:00:00Z");
+    fn creation_preserves_comparison_price_and_status_facts() {
+        let mut payload = json!({
+            "id":Uuid::now_v7(), "created_at":"2026-10-27T00:00:00Z",
+            "retailer_code":"AnkerAu", "title":"USB charger",
+            "url":"https://shop.example/charger",
+            "price":{"amount":1999,"currency":"AUD"},
+            "was_price":{"amount":2999,"currency":"AUD"},
+            "availability":"available", "item_condition":"new",
+            "localization":{"target_market":{"kind":"country","code":"AU"},"language":"en"},
+            "content":[{"language":"en","title":"USB charger","description":"USB charger description"}]
+        });
+        let Change::Created(offer) = Change::parse("OfferCreated", &payload.to_string()).unwrap()
+        else {
+            panic!("expected creation")
+        };
+        assert_eq!(offer.was_price.unwrap().amount(), 2999);
+        assert!(offer.availability.is_some());
+        assert!(offer.item_condition.is_some());
+        assert!(offer.content[0].description.is_some());
+        // Replay preserves source facts, including an old comparison that
+        // no longer agrees with current-price policy. Read mapping hides it.
+        for (amount, currency) in [(1999, "AUD"), (1998, "AUD"), (2999, "EUR")] {
+            payload["was_price"] = json!({"amount":amount,"currency":currency});
             let Change::Created(offer) =
                 Change::parse("OfferCreated", &payload.to_string()).unwrap()
             else {
                 panic!("expected creation")
             };
-            assert_eq!(offer.was_price.unwrap().amount(), 2999);
-            assert_eq!(offer.availability.is_some(), version >= 7);
-            assert_eq!(offer.item_condition.is_some(), version >= 7);
-            assert_eq!(offer.content[0].description.is_some(), version >= 8);
-
-            // Replay preserves source facts, including an old comparison that
-            // no longer agrees with current-price policy. Read mapping hides it.
-            for (amount, currency) in [(1999, "AUD"), (1998, "AUD"), (2999, "EUR")] {
-                payload["was_price"] = json!({"amount":amount,"currency":currency});
-                let Change::Created(offer) =
-                    Change::parse("OfferCreated", &payload.to_string()).unwrap()
-                else {
-                    panic!("expected creation")
-                };
-                let was = offer.was_price.unwrap();
-                assert_eq!(was.amount(), amount);
-                assert_eq!(was.currency().as_str(), currency);
-                let new = json!({"id":payload["id"],"pricing":{"price":payload["price"],"was_price":payload["was_price"]}});
-                assert!(Change::parse("OfferPricingChanged", &new.to_string()).is_err());
-            }
+            let was = offer.was_price.unwrap();
+            assert_eq!(was.amount(), amount);
+            assert_eq!(was.currency().as_str(), currency);
+            let new = json!({"id":payload["id"],"pricing":{"price":payload["price"],"was_price":payload["was_price"]}});
+            assert!(Change::parse("OfferPricingChanged", &new.to_string()).is_err());
         }
     }
 

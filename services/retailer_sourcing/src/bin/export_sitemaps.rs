@@ -11,8 +11,8 @@
 
 use retailer_sourcing::json;
 use retailer_sourcing::object_storage::{
-    CONSOLIDATED_SITEMAPS_BUCKET, ObjectStorage, ObjectStorageMetadata, PROCESSED_SITEMAPS_BUCKET,
-    RAW_SITEMAPS_BUCKET,
+    CONSOLIDATED_SITEMAPS_BUCKET, ObjectStorageMetadata, ObjectStorageRepository,
+    PROCESSED_SITEMAPS_BUCKET, RAW_SITEMAPS_BUCKET,
 };
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
@@ -59,7 +59,7 @@ struct CrawlRecord {
     consolidated_storage: Option<json::Json<ObjectStorageMetadata>>,
 }
 
-fn fetch_crawl(record: CrawlRecord, objects: &ObjectStorage) -> Result<Crawl, String> {
+fn fetch_crawl(record: CrawlRecord, objects: &ObjectStorageRepository) -> Result<Crawl, String> {
     let body = objects
         .get(PROCESSED_SITEMAPS_BUCKET, record.id, &record.storage.0)
         .map_err(|e| e.to_string())?;
@@ -111,8 +111,8 @@ fn run() -> Result<(), String> {
         .ok_or("usage: export_sitemaps <data_dir>")?;
     let database_url = env::var("DATABASE_URL").map_err(|_| "DATABASE_URL must be set")?;
     let runtime = tokio::runtime::Runtime::new().map_err(|error| error.to_string())?;
-    let objects =
-        ObjectStorage::from_env(runtime.handle().clone()).map_err(|error| error.to_string())?;
+    let objects = ObjectStorageRepository::from_env(runtime.handle().clone())
+        .map_err(|error| error.to_string())?;
     let mut connection = PgConnection::establish(&database_url).map_err(|e| e.to_string())?;
 
     let crawls: Vec<CrawlRecord> = diesel::sql_query(CRAWLS_QUERY)
@@ -163,7 +163,7 @@ fn run() -> Result<(), String> {
 
 fn fetch_sources(
     records: Vec<SourceRecord>,
-    objects: &ObjectStorage,
+    objects: &ObjectStorageRepository,
     retrieval_id: Uuid,
 ) -> Result<Vec<Source>, String> {
     if records.is_empty() {

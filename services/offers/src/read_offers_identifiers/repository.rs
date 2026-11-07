@@ -6,7 +6,7 @@ pub use postgres::PostgresRetailerOfferIdentifiersRepository;
 
 use super::entity::RetailerOfferIdentifiers;
 use crate::offers::retailer_offer_id::RetailerOfferId;
-use retailer_sauce::identifier::ProductIdentifiers;
+use retailer_sauce::identifier::OfferIdentifiers;
 
 #[derive(Debug, thiserror::Error)]
 #[error("offer identity read model operation failed: {0}")]
@@ -23,7 +23,7 @@ pub trait RetailerOfferIdentifiersRepository: Send + Sync {
     fn update_identifiers(
         &self,
         id: &RetailerOfferId,
-        identifiers: &ProductIdentifiers,
+        identifiers: &OfferIdentifiers,
     ) -> Result<(), RetailerOfferIdentifiersRepositoryError>;
 }
 
@@ -41,7 +41,7 @@ fn err_identity_missing() -> RetailerOfferIdentifiersRepositoryError {
 
 fn validate_update(
     id: &RetailerOfferId,
-    identifiers: &ProductIdentifiers,
+    identifiers: &OfferIdentifiers,
 ) -> Result<uuid::Uuid, RetailerOfferIdentifiersRepositoryError> {
     identifiers.guard().map_err(err_update)?;
     uuid::Uuid::parse_str(id.value()).map_err(err_update)

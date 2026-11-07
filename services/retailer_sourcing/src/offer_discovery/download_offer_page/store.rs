@@ -8,7 +8,7 @@ use super::super::schema::offer_details_raw;
 use super::entity::RawOffer;
 use super::handler::Store;
 use crate::platform::db::{self, DbPool};
-use crate::platform::object_storage::{self, ObjectStorage, RAW_OFFERS_BUCKET};
+use crate::platform::object_storage::{self, ObjectStorageRepository, RAW_OFFERS_BUCKET};
 
 #[derive(Debug, thiserror::Error)]
 pub enum StoreError {
@@ -27,11 +27,11 @@ pub enum StoreError {
 /// Postgres storage for this slice.
 pub struct PgStore {
     pool: DbPool,
-    objects: ObjectStorage,
+    objects: ObjectStorageRepository,
 }
 
 impl PgStore {
-    pub fn new(pool: DbPool, objects: ObjectStorage) -> Self {
+    pub fn new(pool: DbPool, objects: ObjectStorageRepository) -> Self {
         Self { pool, objects }
     }
 }

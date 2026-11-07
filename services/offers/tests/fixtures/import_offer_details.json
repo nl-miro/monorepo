@@ -1,0 +1,12 @@
+{
+  "retailer_code": "AnkerAu",
+  "url": "https://example.com/charger",
+  "identifiers": {"gtin": null, "sku": "A1", "shopify_product_gid": null, "shopify_product_variant_gid": null},
+  "target_market": {"kind": "country", "code": "AU"},
+  "language": "en",
+  "content": {"title": "Charger", "description": "USB charger", "images": []},
+  "price": {"current": {"amount": 1999, "currency": "AUD"}, "previous": null, "scraped_at": "2026-11-01T12:00:00Z"},
+  "availability": null,
+  "item_condition": null,
+  "created_at": "2026-11-01T12:00:00Z"
+}

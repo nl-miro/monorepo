@@ -1,7 +1,8 @@
 //! Inbox endpoints; Mulac's Poem adapter parses, validates and executes them.
 
-use commanding::prelude::poem::{RunRequest, RunResponse};
-use inbox::prelude::poem::{InboxAdapter, InboxSubmission, SubmitInboxRequest};
+use ::inbox::prelude::poem::{
+    InboxAdapter, InboxSubmission, RunRequest, RunResponse, SubmitInboxRequest,
+};
 use poem::Result;
 use poem_openapi::{OpenApi, payload::Json};
 
@@ -32,8 +33,8 @@ impl InboxApi {
 
 #[cfg(test)]
 mod tests {
-    use inbox::prelude::poem::InboxAdapter;
-    use inbox::prelude::testing;
+    use ::inbox::prelude::poem::InboxAdapter;
+    use ::inbox::prelude::testing;
     use poem::{http::StatusCode, test::TestClient};
     use serde_json::{Value, json};
 
@@ -64,7 +65,9 @@ mod tests {
         for body in testing::valid_submissions() {
             let response = client.post("/api/inbox").body_json(&body).send().await;
             response.assert_status(StatusCode::INTERNAL_SERVER_ERROR);
-            crate::tests::assert_error_response(response).await;
+            response
+                .assert_text("inbox message could not be stored")
+                .await;
         }
     }
 
@@ -88,7 +91,9 @@ mod tests {
                 .send()
                 .await;
             response.assert_status(StatusCode::INTERNAL_SERVER_ERROR);
-            crate::tests::assert_error_response(response).await;
+            response
+                .assert_text("inbox message could not be stored")
+                .await;
         }
         let response = client
             .post("/api/inbox")
@@ -152,7 +157,7 @@ mod tests {
     #[tokio::test]
     async fn inbox_sanitizes_blocking_task_failures() {
         let (kernel, mut state) = crate::start_mulac(crate::test_pool()).unwrap();
-        state.inbox = InboxAdapter::new(testing::panicking_parts());
+        state.inbox = InboxAdapter::new(testing::panicking_service());
         let client = TestClient::new(crate::app_with_reporting_token(state, "test".into()));
         let response = client
             .post("/api/inbox")
@@ -160,7 +165,7 @@ mod tests {
             .send()
             .await;
         response.assert_status(StatusCode::INTERNAL_SERVER_ERROR);
-        crate::tests::assert_error_response(response).await;
+        response.assert_text("inbox submission task failed").await;
         kernel.shutdown();
     }
 }

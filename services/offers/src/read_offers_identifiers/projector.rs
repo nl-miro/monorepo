@@ -3,7 +3,7 @@ use super::{
     repository::{RetailerOfferIdentifiersRepository, RetailerOfferIdentifiersRepositoryError},
 };
 use crate::offers::event::{
-    OFFER_CREATED_EVENT, OFFER_IDENTIFIERS_CHANGED_EVENT, OfferCreatedEvent,
+    HistoricalOfferCreatedEvent, OFFER_CREATED_EVENT, OFFER_IDENTIFIERS_CHANGED_EVENT,
     OfferIdentifiersChangedEvent,
 };
 use kernel::{EventError, EventSubscriberPort, NewEventEnvelope};
@@ -24,7 +24,7 @@ impl<R: RetailerOfferIdentifiersRepository> EventSubscriberPort
     fn handle(&self, envelope: &NewEventEnvelope) -> Result<(), EventError> {
         match envelope.event_type.as_str() {
             OFFER_CREATED_EVENT => {
-                let event: OfferCreatedEvent =
+                let event: HistoricalOfferCreatedEvent =
                     serde_json::from_str(&envelope.payload).map_err(err_invalid_event)?;
                 let entity = RetailerOfferIdentifiers {
                     identifiers: event.identifiers,
@@ -77,7 +77,7 @@ mod tests {
         fn update_identifiers(
             &self,
             id: &RetailerOfferId,
-            identifiers: &retailer_sauce::identifier::ProductIdentifiers,
+            identifiers: &retailer_sauce::identifier::OfferIdentifiers,
         ) -> Result<(), RetailerOfferIdentifiersRepositoryError> {
             let mut state = self.0.lock().unwrap();
             let entity = state.as_mut().expect("creation is projected first");
@@ -124,11 +124,11 @@ mod tests {
     fn maps_supported_events_and_rejects_malformed_payloads() {
         let projector = RetailerOfferIdentifiersProjector::new(RecordingRepository::default());
         let identifiers = serde_json::from_value(serde_json::json!({
-            "gtin":"0012345678905", "sku":"original", "external_identifiers": {
+            "gtin":"0012345678905", "sku":"original",
                 "shopify_product_gid":"001", "shopify_product_variation_gid":"002", "shopify_handle":"charger"
-            }
+
         })).unwrap();
-        let event = OfferCreatedEvent {
+        let event = HistoricalOfferCreatedEvent {
             facts: Default::default(),
             identifiers,
             localization: Default::default(),
@@ -166,7 +166,7 @@ mod tests {
         );
         let update: OfferIdentifiersChangedEvent = serde_json::from_value(serde_json::json!({
             "id":event.id, "gtin":"0012345678905", "sku":"SKU-001",
-            "external_identifiers":{"shopify_product_gid":"gid://shopify/Product/001", "shopify_product_variation_gid":null,"shopify_handle":" Exact handle "}
+            "shopify_product_gid":"gid://shopify/Product/001", "shopify_product_variation_gid":null,"shopify_handle":" Exact handle "
         })).unwrap();
         expected.identifiers = update.identifiers.clone();
         envelope.event_type = OFFER_IDENTIFIERS_CHANGED_EVENT.to_owned();
