@@ -1,4 +1,6 @@
 //! Shared object-storage access and typed JSONB codecs for the service and exports.
+#[path = "platform/graphql.rs"]
+pub mod graphql;
 #[path = "platform/db/json.rs"]
 pub mod json;
 #[path = "platform/object_storage.rs"]

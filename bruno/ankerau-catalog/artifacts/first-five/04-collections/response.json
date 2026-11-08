@@ -1,0 +1,809 @@
+{
+  "data": {
+    "p0": {
+      "id": "gid://shopify/Product/15395172450555",
+      "collections": {
+        "pageInfo": {
+          "hasNextPage": false,
+          "endCursor": "eyJsYXN0X2lkIjo1MTE0ODk1NzMxMTUsImxhc3RfdmFsdWUiOiIyMDI2LTA5LTI4IDExOjA4OjAzLjczNzY5OSIsIm9mZnNldCI6MjB9"
+        },
+        "edges": [
+          {
+            "cursor": "eyJsYXN0X2lkIjo1MTE0ODk1NzMxMTUsImxhc3RfdmFsdWUiOiIyMDI2LTA5LTI4IDExOjA4OjAzLjczNzY5OSIsIm9mZnNldCI6MjB9",
+            "node": {
+              "__typename": "Collection",
+              "description": "",
+              "descriptionHtml": "",
+              "handle": "apple-watch-qi-wireless-charger",
+              "id": "gid://shopify/Collection/511489573115",
+              "image": null,
+              "onlineStoreUrl": "https://au.store.anker.com/collections/apple-watch-qi-wireless-charger",
+              "seo": {
+                "__typename": "SEO",
+                "description": "Shop Anker Qi wireless chargers for Apple Watch and keep your watch topped up constantly. Track your health, listen to music, and stay connected on the go.",
+                "title": null
+              },
+              "title": "Apple Watch Qi Wireless Charger",
+              "updatedAt": "2026-11-08T12:26:23Z"
+            }
+          }
+        ]
+      }
+    },
+    "p1": {
+      "id": "gid://shopify/Product/15395172516091",
+      "collections": {
+        "pageInfo": {
+          "hasNextPage": true,
+          "endCursor": "eyJsYXN0X2lkIjo1MTE0ODQzOTU3NzEsImxhc3RfdmFsdWUiOiIyMDI2LTA5LTI4IDExOjAyOjAyLjk0OTEyMiIsIm9mZnNldCI6Mjl9"
+        },
+        "edges": [
+          {
+            "cursor": "eyJsYXN0X2lkIjo1MTE0ODIyMDAzMTUsImxhc3RfdmFsdWUiOiIyMDI2LTA5LTI4IDExOjAwOjIyLjU0NTM5NCIsIm9mZnNldCI6MjB9",
+            "node": {
+              "__typename": "Collection",
+              "description": "",
+              "descriptionHtml": "",
+              "handle": "magsafe-3",
+              "id": "gid://shopify/Collection/511482200315",
+              "image": null,
+              "onlineStoreUrl": "https://au.store.anker.com/collections/magsafe-3",
+              "seo": {
+                "__typename": "SEO",
+                "description": null,
+                "title": null
+              },
+              "title": "Magsafe 3",
+              "updatedAt": "2026-11-08T12:26:23Z"
+            }
+          },
+          {
+            "cursor": "eyJsYXN0X2lkIjo1MTE0ODI0NjI0NTksImxhc3RfdmFsdWUiOiIyMDI2LTA5LTI4IDExOjAwOjQwLjc4NTk3OCIsIm9mZnNldCI6MjF9",
+            "node": {
+              "__typename": "Collection",
+              "description": "",
+              "descriptionHtml": "",
+              "handle": "15w-wireless-charger",
+              "id": "gid://shopify/Collection/511482462459",
+              "image": null,
+              "onlineStoreUrl": "https://au.store.anker.com/collections/15w-wireless-charger",
+              "seo": {
+                "__typename": "SEO",
+                "description": "Discover the efficiency of Anker's 15W wireless charger!  It provides rapid charging, compatible with various Qi - equipped devices.  Its sleek design takes up minimal space. Safety is prioritized with multiple protective mechanisms. Purchase this 15W wireless charger now.",
+                "title": null
+              },
+              "title": "15W Wireless Charger",
+              "updatedAt": "2026-11-08T12:26:23Z"
+            }
+          },
+          {
+            "cursor": "eyJsYXN0X2lkIjo1MTE0ODI2MjYyOTksImxhc3RfdmFsdWUiOiIyMDI2LTA5LTI4IDExOjAwOjQ1Ljk4MDY0NCIsIm9mZnNldCI6MjJ9",
+            "node": {
+              "__typename": "Collection",
+              "description": "",
+              "descriptionHtml": "",
+              "handle": "magsafe-phone-holder",
+              "id": "gid://shopify/Collection/511482626299",
+              "image": null,
+              "onlineStoreUrl": "https://au.store.anker.com/collections/magsafe-phone-holder",
+              "seo": {
+                "__typename": "SEO",
+                "description": null,
+                "title": null
+              },
+              "title": "Magsafe Phone Holder",
+              "updatedAt": "2026-11-08T12:26:23Z"
+            }
+          },
+          {
+            "cursor": "eyJsYXN0X2lkIjo1MTE0ODI4NTU2NzUsImxhc3RfdmFsdWUiOiIyMDI2LTA5LTI4IDExOjAwOjU1LjIxOTI3MyIsIm9mZnNldCI6MjN9",
+            "node": {
+              "__typename": "Collection",
+              "description": "",
+              "descriptionHtml": "",
+              "handle": "magnetic",
+              "id": "gid://shopify/Collection/511482855675",
+              "image": null,
+              "onlineStoreUrl": "https://au.store.anker.com/collections/magnetic",
+              "seo": {
+                "__typename": "SEO",
+                "description": "Discover our collection of magnetic wireless chargers at <a href=\"https://www.anker.com/au\">Anker Australia </a>and enjoy cable-free charging anywhere.",
+                "title": "Magnetic Wireless Chargers"
+              },
+              "title": "Magnetic Chargers",
+              "updatedAt": "2026-11-08T12:26:23Z"
+            }
+          },
+          {
+            "cursor": "eyJsYXN0X2lkIjo1MTE0ODMwNTIyODMsImxhc3RfdmFsdWUiOiIyMDI2LTA5LTI4IDExOjAxOjAyLjE3NTcwMSIsIm9mZnNldCI6MjR9",
+            "node": {
+              "__typename": "Collection",
+              "description": "",
+              "descriptionHtml": "",
+              "handle": "powerbanks-wireless",
+              "id": "gid://shopify/Collection/511483052283",
+              "image": null,
+              "onlineStoreUrl": "https://au.store.anker.com/collections/powerbanks-wireless",
+              "seo": {
+                "__typename": "SEO",
+                "description": "Discover our collection of wireless power banks at Anker.com and take power on the road.",
+                "title": "Wireless Power Banks "
+              },
+              "title": "Wireless Power Banks",
+              "updatedAt": "2026-11-08T12:26:23Z"
+            }
+          },
+          {
+            "cursor": "eyJsYXN0X2lkIjo1MTE0ODMxODMzNTUsImxhc3RfdmFsdWUiOiIyMDI2LTA5LTI4IDExOjAxOjA2LjkwNzE5MiIsIm9mZnNldCI6MjV9",
+            "node": {
+              "__typename": "Collection",
+              "description": "",
+              "descriptionHtml": "",
+              "handle": "eofy-\u7b2c\u4e8c\u4ef6\u4e94\u6298",
+              "id": "gid://shopify/Collection/511483183355",
+              "image": null,
+              "onlineStoreUrl": "https://au.store.anker.com/collections/eofy-%E7%AC%AC%E4%BA%8C%E4%BB%B6%E4%BA%94%E6%8A%98",
+              "seo": {
+                "__typename": "SEO",
+                "description": null,
+                "title": null
+              },
+              "title": "eofy \u7b2c\u4e8c\u4ef6\u4e94\u6298",
+              "updatedAt": "2026-11-08T12:26:23Z"
+            }
+          },
+          {
+            "cursor": "eyJsYXN0X2lkIjo1MTE0ODMzMTQ0MjcsImxhc3RfdmFsdWUiOiIyMDI2LTA5LTI4IDExOjAxOjExLjYzMzI2MiIsIm9mZnNldCI6MjZ9",
+            "node": {
+              "__typename": "Collection",
+              "description": "",
+              "descriptionHtml": "",
+              "handle": "wireless-chargers-for-iphone",
+              "id": "gid://shopify/Collection/511483314427",
+              "image": null,
+              "onlineStoreUrl": "https://au.store.anker.com/collections/wireless-chargers-for-iphone",
+              "seo": {
+                "__typename": "SEO",
+                "description": "Unlock the power of wireless charging with Anker's state-of-the-art iPhone wireless chargers for a fast and seamless charging experience.",
+                "title": "Wireless Chargers for iPhone:Fast & Convenient"
+              },
+              "title": "Wireless Chargers for iPhone",
+              "updatedAt": "2026-11-08T12:26:23Z"
+            }
+          },
+          {
+            "cursor": "eyJsYXN0X2lkIjo1MTE0ODM3NzMxNzksImxhc3RfdmFsdWUiOiIyMDI2LTA5LTI4IDExOjAxOjI4LjkyMjAzNSIsIm9mZnNldCI6Mjd9",
+            "node": {
+              "__typename": "Collection",
+              "description": "",
+              "descriptionHtml": "",
+              "handle": "anker-maggo-power-bank",
+              "id": "gid://shopify/Collection/511483773179",
+              "image": null,
+              "onlineStoreUrl": "https://au.store.anker.com/collections/anker-maggo-power-bank",
+              "seo": {
+                "__typename": "SEO",
+                "description": null,
+                "title": null
+              },
+              "title": "Anker MagGo Power Bank",
+              "updatedAt": "2026-11-08T12:26:23Z"
+            }
+          },
+          {
+            "cursor": "eyJsYXN0X2lkIjo1MTE0ODM4NzE0ODMsImxhc3RfdmFsdWUiOiIyMDI2LTA5LTI4IDExOjAxOjMzLjIzMzAwNyIsIm9mZnNldCI6Mjh9",
+            "node": {
+              "__typename": "Collection",
+              "description": "",
+              "descriptionHtml": "",
+              "handle": "chargers-for-iwatch",
+              "id": "gid://shopify/Collection/511483871483",
+              "image": null,
+              "onlineStoreUrl": "https://au.store.anker.com/collections/chargers-for-iwatch",
+              "seo": {
+                "__typename": "SEO",
+                "description": "Discover Anker's chargers for iWatch with MagSafe - a sleek and efficient charging solution for Apple Watch, iPhone 16/15/14/13/12 & AirPods. Stay powered up on the go!",
+                "title": "Chargers for iWatch: Efficient Charging"
+              },
+              "title": "Chargers for iWatch",
+              "updatedAt": "2026-11-08T12:26:23Z"
+            }
+          },
+          {
+            "cursor": "eyJsYXN0X2lkIjo1MTE0ODQzOTU3NzEsImxhc3RfdmFsdWUiOiIyMDI2LTA5LTI4IDExOjAyOjAyLjk0OTEyMiIsIm9mZnNldCI6Mjl9",
+            "node": {
+              "__typename": "Collection",
+              "description": "",
+              "descriptionHtml": "",
+              "handle": "wstdbts-30",
+              "id": "gid://shopify/Collection/511484395771",
+              "image": null,
+              "onlineStoreUrl": "https://au.store.anker.com/collections/wstdbts-30",
+              "seo": {
+                "__typename": "SEO",
+                "description": null,
+                "title": null
+              },
+              "title": "WSTDBTS$30",
+              "updatedAt": "2026-11-08T12:26:23Z"
+            }
+          }
+        ]
+      }
+    },
+    "p2": {
+      "id": "gid://shopify/Product/15395172581627",
+      "collections": {
+        "pageInfo": {
+          "hasNextPage": true,
+          "endCursor": "eyJsYXN0X2lkIjo1MTE0ODM2MDkzMzksImxhc3RfdmFsdWUiOiIyMDI2LTA5LTI4IDExOjAxOjIxLjYxOTkzOSIsIm9mZnNldCI6Mjl9"
+        },
+        "edges": [
+          {
+            "cursor": "eyJsYXN0X2lkIjo1MTE0ODIwNjkyNDMsImxhc3RfdmFsdWUiOiIyMDI2LTA5LTI4IDExOjAwOjE3LjI5NjcwMiIsIm9mZnNldCI6MjB9",
+            "node": {
+              "__typename": "Collection",
+              "description": "",
+              "descriptionHtml": "",
+              "handle": "chargers-for-ipad",
+              "id": "gid://shopify/Collection/511482069243",
+              "image": null,
+              "onlineStoreUrl": "https://au.store.anker.com/collections/chargers-for-ipad",
+              "seo": {
+                "__typename": "SEO",
+                "description": "Upgrade your iPad charging with Anker\u2019s 150W GaNPrime charger. Power up to 4 devices safely and efficiently. Stay powered anywhere with Anker!",
+                "title": "Anker iPad Chargers \u2013 Fast & Reliable Power "
+              },
+              "title": "Chargers for iPad",
+              "updatedAt": "2026-11-08T12:26:23Z"
+            }
+          },
+          {
+            "cursor": "eyJsYXN0X2lkIjo1MTE0ODIyOTg2MTksImxhc3RfdmFsdWUiOiIyMDI2LTA5LTI4IDExOjAwOjMwLjc0MTQyOSIsIm9mZnNldCI6MjF9",
+            "node": {
+              "__typename": "Collection",
+              "description": "",
+              "descriptionHtml": "",
+              "handle": "chargers",
+              "id": "gid://shopify/Collection/511482298619",
+              "image": null,
+              "onlineStoreUrl": "https://au.store.anker.com/collections/chargers",
+              "seo": {
+                "__typename": "SEO",
+                "description": "Explore Anker's USB-C wall and car chargers designed to fast charge phones, tablets, and laptops with reliable performance for all your everyday needs.",
+                "title": "Chargers for All Devices"
+              },
+              "title": "Chargers",
+              "updatedAt": "2026-11-08T12:26:23Z"
+            }
+          },
+          {
+            "cursor": "eyJsYXN0X2lkIjo1MTE0ODI0Mjk2OTEsImxhc3RfdmFsdWUiOiIyMDI2LTA5LTI4IDExOjAwOjM4LjM5ODA3OSIsIm9mZnNldCI6MjJ9",
+            "node": {
+              "__typename": "Collection",
+              "description": "Anker is focused on exploring high-efficiency and eco-friendly ways to stay charged, from high-powered wall chargers to multi-port chargers with GaNPrime technology. Anker chargers are your best solution for efficient and eco-friendly charging.",
+              "descriptionHtml": "<p><meta charset=\"utf-8\"><span>Anker is focused on exploring high-efficiency and eco-friendly ways to stay charged, from high-powered wall chargers to multi-port chargers with GaNPrime technology. Anker chargers are your best solution for efficient and eco-friendly charging.</span><br></p>\n<!---->",
+              "handle": "top-recommended-power-banks",
+              "id": "gid://shopify/Collection/511482429691",
+              "image": null,
+              "onlineStoreUrl": "https://au.store.anker.com/collections/top-recommended-power-banks",
+              "seo": {
+                "__typename": "SEO",
+                "description": null,
+                "title": null
+              },
+              "title": "Recommended",
+              "updatedAt": "2026-11-08T12:26:23Z"
+            }
+          },
+          {
+            "cursor": "eyJsYXN0X2lkIjo1MTE0ODI1OTM1MzEsImxhc3RfdmFsdWUiOiIyMDI2LTA5LTI4IDExOjAwOjQ1LjUwNTUwOSIsIm9mZnNldCI6MjN9",
+            "node": {
+              "__typename": "Collection",
+              "description": "",
+              "descriptionHtml": "",
+              "handle": "android-charger",
+              "id": "gid://shopify/Collection/511482593531",
+              "image": null,
+              "onlineStoreUrl": "https://au.store.anker.com/collections/android-charger",
+              "seo": {
+                "__typename": "SEO",
+                "description": "Stay connected and productive with Anker Android chargers. High-speed charging and advanced safety features keep you a breeze in charging anytime, anywhere.",
+                "title": "Fast and Efficient Power with Android Chargers"
+              },
+              "title": "Android Charger",
+              "updatedAt": "2026-11-08T12:26:23Z"
+            }
+          },
+          {
+            "cursor": "eyJsYXN0X2lkIjo1MTE0ODI3NTczNzEsImxhc3RfdmFsdWUiOiIyMDI2LTA5LTI4IDExOjAwOjUwLjgxNzM0OSIsIm9mZnNldCI6MjR9",
+            "node": {
+              "__typename": "Collection",
+              "description": "Xbox controller chargers provide a convenient and reliable solution for charging Xbox controllers, ensuring they are always powered up and ready for gaming sessions without the need for disposable batteries. Leverage Anker chargers for Xbox controllers to get an easy and efficient way of powering up your gaming gear. With a sleek design and reliable performance, Anker Xbox series x or s controller chargers offer a hassle-free way to keep your Xbox controllers fully charged and ready for intense gaming sessions. Additionally, these chargers feature a compact docking station that can simultaneously charge multiple controllers, ensuring you never run out of power. Moreover, our Xbox one or 360 controller chargers are equipped with exclusive PowerIQ 4.0 charging technology featuring Dynamic Power Distribution to deliver faster and more efficient charging, allowing you to quickly get back to your gaming adventures. So say goodbye to the hassle of constantly swapping out batteries or dealing with tangled cables. With Anker controller chargers for Xbox one, 360, series x or s, etc, you can enjoy uninterrupted gaming and have peace of mind for knowing that your controllers are always charged and ready to go.",
+              "descriptionHtml": "<p data-mce-fragment=\"1\">Xbox controller chargers provide a convenient and reliable solution for charging Xbox controllers, ensuring they are always powered up and ready for gaming sessions without the need for disposable batteries. Leverage Anker chargers for Xbox controllers to get an easy and efficient way of powering up your gaming gear.</p>\n<p data-mce-fragment=\"1\">With a sleek design and reliable performance, Anker Xbox series x or s controller chargers offer a hassle-free way to keep your Xbox controllers fully charged and ready for intense gaming sessions. Additionally, these chargers feature a compact docking station that can simultaneously charge multiple controllers, ensuring you never run out of power. Moreover, our Xbox one or 360 controller chargers are equipped with exclusive PowerIQ 4.0 charging technology featuring Dynamic Power Distribution to deliver faster and more efficient charging, allowing you to quickly get back to your gaming adventures. So say goodbye to the hassle of constantly swapping out batteries or dealing with tangled cables. With Anker controller chargers for Xbox one, 360, series x or s, etc, you can enjoy uninterrupted gaming and have peace of mind for knowing that your controllers are always charged and ready to go.</p>",
+              "handle": "chargers-for-xbox-controller",
+              "id": "gid://shopify/Collection/511482757371",
+              "image": null,
+              "onlineStoreUrl": "https://au.store.anker.com/collections/chargers-for-xbox-controller",
+              "seo": {
+                "__typename": "SEO",
+                "description": "Elevate your gaming experience with the convenience and reliability of Anker Xbox controller chargers, enjoying high-performance charging & energy conservation.",
+                "title": null
+              },
+              "title": "Chargers for Xbox Controller",
+              "updatedAt": "2026-11-08T12:26:23Z"
+            }
+          },
+          {
+            "cursor": "eyJsYXN0X2lkIjo1MTE0ODMwODUwNTEsImxhc3RfdmFsdWUiOiIyMDI2LTA5LTI4IDExOjAxOjAyLjUwMzczNCIsIm9mZnNldCI6MjV9",
+            "node": {
+              "__typename": "Collection",
+              "description": "",
+              "descriptionHtml": "",
+              "handle": "chargers-for-microsoft-surface",
+              "id": "gid://shopify/Collection/511483085051",
+              "image": null,
+              "onlineStoreUrl": "https://au.store.anker.com/collections/chargers-for-microsoft-surface",
+              "seo": {
+                "__typename": "SEO",
+                "description": "Keep your Microsoft Surface charged with Anker's 150W chargers. Featuring 4 ports, enjoy efficient power delivery for multiple devices simultaneously.",
+                "title": "Surface Charger for Fast Charging"
+              },
+              "title": "Chargers for Microsoft Surface",
+              "updatedAt": "2026-11-08T12:26:23Z"
+            }
+          },
+          {
+            "cursor": "eyJsYXN0X2lkIjo1MTE0ODMxMTc4MTksImxhc3RfdmFsdWUiOiIyMDI2LTA5LTI4IDExOjAxOjA0LjU3Mjg0NyIsIm9mZnNldCI6MjZ9",
+            "node": {
+              "__typename": "Collection",
+              "description": "iPhone 13 chargers provide fast and reliable charging for different iPhone 13 models, ensuring users can keep their devices powered up and ready for use throughout the day. Anker is offering a collection of iPhone 13 charger blocks that are sure to impress. The Anker 747 charger, for example, boasts an astonishing 150W output and 4 ports, able to fast charge several devices simultaneously with little reduction in speed. Moreover, its dynamic power distribution feature can distribute power smartly between devices it is charging, further displaying its prowess in charging. Aside from its charging capability, it has a very compact appearance: it is no more than 7cm in all dimensions. This makes it an extremely portable device compared to other bulkier chargers. Lastly, it gives customers peace of mind by implementing the ActiveShield 2.0 technology, monitoring temperature 3 million times a day to ensure the safety of use. In short, Anker\u2019s iPhone 13 charging solutions are fast, safe and reliable. Come browse Anker\u2019s collection of Apple iPhone 13 chargers, as well as chargers for iPhone 12 and chargers for iPhone 14 today for efficient charging and undisrupted life! FAQ What kind of charger does the iPhone 13 use? There are mainly three iPhone 13 charger types: Apple\u2019s Original Wired Chargers: These are the chargers bundled with iPhone 13 which usually include a cable from USB-C to Lightning (since the iPhone 13 charger port is Lightning) to give fast charging. Third-party USB-C Chargers: You can also charge iPhone 13 with reliable third-party USB-C chargers, like Anker Type C chargers. MagSafe Chargers: iPhone 13 supports wireless charging, so wireless chargers supporting MagSafe technology can also be used to charge iPhone 13 series. Can I use 30W charger for iPhone 13? Yes, you can use a 30W charger for iPhone 13 or iPhone 13 pro max. The iPhone 13 series is compatible with a wide range of chargers, including 30W models, which allow you to charge your iPhone 13 more quickly and efficiently, ensuring you have enough power to stay connected and productive throughout the day. How fast does Lightning charger charge iPhone 13? This depends on the wattage or charging power of your Lightning chargers. For instance, using a 20W iPhone 13 mini charger normally fully charges this model in 87 minutes, while the regular iPhone 13 can be fully charged in 89 minutes with a 20W Apple Lightning power adapter. On the other hand, an iPhone 13 Pro charger of 30W can fully charge this model in 89 minutes. So generally, it takes about 90 minutes to charge different iPhone 13 models from 0% to 100%. Why is my iPhone 13 charging so slowly? Please check the following parts when your iPhone 13 is charging slowly: Power Adapter: The power adapter you're using may not provide sufficient power output. To ensure fast charging, it's recommended to use an official Apple power adapter or a reputable third-party adapter like the Anker 747. Charging Cable: A damaged or non-certified charging cable can hinder charging speeds. Make sure you're using an Apple-certified cable or a third-party cable from reliable brands. Background Apps/Activities: Running resource-intensive apps or processes in the background can slow down the charging speed. Try closing unnecessary apps and reducing background activity while charging. Charging port: A damaged or clogged iPhone 13 charge port or iPhone 13 pro charger port may result in slower charging. Please check and clean them regularly for efficient charging. Does fast charging damage iPhone 13? No. Fast charging generally does not damage iPhone 13 if you use official or certified fast chargers. This is because most qualified fast chargers are equipped with built-in safeguards to regulate the charging process and protect the battery from overcharging or overheating.",
+              "descriptionHtml": "<p data-mce-fragment=\"1\">iPhone 13 chargers provide fast and reliable charging for different iPhone 13 models, ensuring users can keep their devices powered up and ready for use throughout the day.</p>\n<p data-mce-fragment=\"1\">Anker is offering a collection of iPhone 13 charger blocks that are sure to impress. The <span data-mce-fragment=\"1\"><a href=\"https://www.anker.com/products/a2340\" data-mce-fragment=\"1\" data-mce-href=\"https://www.anker.com/products/a2340\"><u data-mce-fragment=\"1\">Anker 747 charger</u></a></span>, for example, boasts an astonishing 150W output and 4 ports, able to fast charge several devices simultaneously with little reduction in speed. Moreover, its dynamic power distribution feature can distribute power smartly between devices it is charging, further displaying its prowess in charging. Aside from its charging capability, it has a very compact appearance: it is no more than 7cm in all dimensions. This makes it an extremely portable device compared to other bulkier chargers. Lastly, it gives customers peace of mind by implementing the ActiveShield 2.0 technology, monitoring temperature 3 million times a day to ensure the safety of use. In short, Anker\u2019s iPhone 13 charging solutions are fast, safe and reliable. Come browse Anker\u2019s collection of Apple iPhone 13 chargers, as well as <span data-mce-fragment=\"1\"><a href=\"https://www.anker.com/collections/chargers-for-iphone-12\" data-mce-fragment=\"1\" data-mce-href=\"https://www.anker.com/collections/chargers-for-iphone-12\"><u data-mce-fragment=\"1\">chargers for iPhone 12</u></a></span>\u00a0and <span data-mce-fragment=\"1\"><a href=\"https://www.anker.com/collections/chargers-for-iphone-14\" data-mce-fragment=\"1\" data-mce-href=\"https://www.anker.com/collections/chargers-for-iphone-14\"><u data-mce-fragment=\"1\">chargers for iPhone 14</u></a></span>\u00a0today\u00a0for efficient charging and undisrupted life!</p>\n<h2 data-mce-fragment=\"1\"><strong data-mce-fragment=\"1\">FAQ</strong></h2>\n<h3 data-mce-fragment=\"1\"><strong data-mce-fragment=\"1\">What kind of charger does the iPhone 13 use?</strong></h3>\n<p data-mce-fragment=\"1\">There are mainly three iPhone 13 charger types:</p>\n<p data-mce-fragment=\"1\"><strong data-mce-fragment=\"1\"><b data-mce-fragment=\"1\">Apple</b></strong><strong data-mce-fragment=\"1\"><b data-mce-fragment=\"1\">\u2019</b></strong><strong data-mce-fragment=\"1\"><b data-mce-fragment=\"1\">s Original Wired Chargers: </b></strong>These are the chargers bundled with iPhone 13 which usually include a cable from USB-C to Lightning (since the iPhone 13 charger port is Lightning) to give fast charging.</p>\n<p data-mce-fragment=\"1\"><strong data-mce-fragment=\"1\"><b data-mce-fragment=\"1\">Third-party USB-C Chargers:</b></strong>\u00a0You can also charge iPhone 13 with reliable third-party USB-C chargers, like Anker Type C chargers.</p>\n<p data-mce-fragment=\"1\"><strong data-mce-fragment=\"1\"><b data-mce-fragment=\"1\">MagSafe Charger</b></strong><strong data-mce-fragment=\"1\"><b data-mce-fragment=\"1\">s</b></strong><strong data-mce-fragment=\"1\"><b data-mce-fragment=\"1\">:</b></strong>\u00a0iPhone 13 supports wireless charging, so wireless chargers supporting MagSafe technology can also be used to charge iPhone 13 series.</p>\n<h3 data-mce-fragment=\"1\"><strong data-mce-fragment=\"1\">Can I use 30W charger for iPhone 13?</strong></h3>\n<p data-mce-fragment=\"1\">Yes, you can use a 30W charger for iPhone 13 or iPhone 13 pro max. The iPhone 13 series is compatible with a wide range of chargers, including 30W models, which\u00a0allow you to charge your iPhone 13 more quickly and efficiently, ensuring you have enough power to stay connected and productive throughout the day.</p>\n<h3 data-mce-fragment=\"1\"><strong data-mce-fragment=\"1\">How fast does Lightning charger charge iPhone 13?</strong></h3>\n<p data-mce-fragment=\"1\">This depends on the wattage or charging power of your Lightning chargers. For instance, using a 20W iPhone 13 mini charger normally fully charges this model in 87 minutes, while the regular iPhone 13 can be fully charged in 89 minutes with a 20W Apple Lightning power adapter. On the other hand, an iPhone 13 Pro charger of 30W can fully charge this model in 89 minutes. So generally, it takes about 90 minutes to charge different iPhone 13 models from 0% to 100%.</p>\n<h3 data-mce-fragment=\"1\"><strong data-mce-fragment=\"1\">Why is my iPhone 13 charging so slowly?</strong></h3>\n<p data-mce-fragment=\"1\">Please check the following parts when\u00a0your iPhone 13 is charging slowly:</p>\n<p data-mce-fragment=\"1\"><strong data-mce-fragment=\"1\"><b data-mce-fragment=\"1\">Power Adapter:</b></strong>\u00a0The power adapter you're using may not provide sufficient power output. To ensure fast charging, it's recommended to use an official Apple power adapter or a reputable third-party adapter like the Anker 747.</p>\n<p data-mce-fragment=\"1\"><strong data-mce-fragment=\"1\"><b data-mce-fragment=\"1\">Charging Cable:</b></strong>\u00a0A damaged or non-certified charging cable can hinder charging speeds. Make sure you're using an Apple-certified cable or a third-party cable from reliable brands.</p>\n<p data-mce-fragment=\"1\"><strong data-mce-fragment=\"1\"><b data-mce-fragment=\"1\">Background Apps/Activities: </b></strong>Running resource-intensive apps or processes in the background can slow down the charging speed. Try closing unnecessary apps and reducing background activity while charging.</p>\n<p data-mce-fragment=\"1\"><strong data-mce-fragment=\"1\"><b data-mce-fragment=\"1\">Charging port: </b></strong>A damaged or clogged iPhone 13 charge port or iPhone 13 pro charger port may result in slower charging. Please check and clean them regularly for efficient charging.</p>\n<h3 data-mce-fragment=\"1\"><strong data-mce-fragment=\"1\">Does fast charging damage iPhone 13?</strong></h3>\n<p data-mce-fragment=\"1\">No. Fast charging generally does not damage iPhone 13 if you use official or certified fast chargers. This is because most qualified fast chargers are equipped with built-in safeguards to regulate the charging process and protect the battery from overcharging or overheating.</p>",
+              "handle": "chargers-for-iphone-13",
+              "id": "gid://shopify/Collection/511483117819",
+              "image": null,
+              "onlineStoreUrl": "https://au.store.anker.com/collections/chargers-for-iphone-13",
+              "seo": {
+                "__typename": "SEO",
+                "description": "Experience fast and reliable charging with Anker's high-quality chargers for iPhone 13. Stay powered up and connected with Anker wherever you go.",
+                "title": "Fast, Reliable and Safe Chargers for iPhone 13"
+              },
+              "title": "iphone 13 charger",
+              "updatedAt": "2026-11-08T12:26:23Z"
+            }
+          },
+          {
+            "cursor": "eyJsYXN0X2lkIjo1MTE0ODMxODMzNTUsImxhc3RfdmFsdWUiOiIyMDI2LTA5LTI4IDExOjAxOjA2LjkwNzE5MiIsIm9mZnNldCI6Mjd9",
+            "node": {
+              "__typename": "Collection",
+              "description": "",
+              "descriptionHtml": "",
+              "handle": "eofy-\u7b2c\u4e8c\u4ef6\u4e94\u6298",
+              "id": "gid://shopify/Collection/511483183355",
+              "image": null,
+              "onlineStoreUrl": "https://au.store.anker.com/collections/eofy-%E7%AC%AC%E4%BA%8C%E4%BB%B6%E4%BA%94%E6%8A%98",
+              "seo": {
+                "__typename": "SEO",
+                "description": null,
+                "title": null
+              },
+              "title": "eofy \u7b2c\u4e8c\u4ef6\u4e94\u6298",
+              "updatedAt": "2026-11-08T12:26:23Z"
+            }
+          },
+          {
+            "cursor": "eyJsYXN0X2lkIjo1MTE0ODM0NzgyNjcsImxhc3RfdmFsdWUiOiIyMDI2LTA5LTI4IDExOjAxOjE2LjkwODMzOCIsIm9mZnNldCI6Mjh9",
+            "node": {
+              "__typename": "Collection",
+              "description": "",
+              "descriptionHtml": "",
+              "handle": "charger-for-macbook-pro",
+              "id": "gid://shopify/Collection/511483478267",
+              "image": null,
+              "onlineStoreUrl": "https://au.store.anker.com/collections/charger-for-macbook-pro",
+              "seo": {
+                "__typename": "SEO",
+                "description": "Buy Anker MacBook Pro chargers as the ultimate charging solution. Elevate performance, speed & safety to new heights with Anker\u2019s premium & compact chargers.",
+                "title": null
+              },
+              "title": "Charger for MacBook Pro",
+              "updatedAt": "2026-11-08T12:26:23Z"
+            }
+          },
+          {
+            "cursor": "eyJsYXN0X2lkIjo1MTE0ODM2MDkzMzksImxhc3RfdmFsdWUiOiIyMDI2LTA5LTI4IDExOjAxOjIxLjYxOTkzOSIsIm9mZnNldCI6Mjl9",
+            "node": {
+              "__typename": "Collection",
+              "description": "",
+              "descriptionHtml": "",
+              "handle": "charger-adapters-for-apple-watch",
+              "id": "gid://shopify/Collection/511483609339",
+              "image": null,
+              "onlineStoreUrl": "https://au.store.anker.com/collections/charger-adapters-for-apple-watch",
+              "seo": {
+                "__typename": "SEO",
+                "description": "Ensure unlimited power supply for Apple watches with Anker\u2019s Apple watch charger adapters. Anker\u2019s fast charging modules revitalize your Apple watch in no time.",
+                "title": "Stay Powered Up With Apple Watch Charger Adapter"
+              },
+              "title": "Charger Adapters for Apple Watch",
+              "updatedAt": "2026-11-08T12:26:23Z"
+            }
+          }
+        ]
+      }
+    },
+    "p3": {
+      "id": "gid://shopify/Product/15395172647163",
+      "collections": {
+        "pageInfo": {
+          "hasNextPage": false,
+          "endCursor": "eyJsYXN0X2lkIjo1MTMxMDM0OTU0MTksImxhc3RfdmFsdWUiOiIyMDI2LTEwLTE2IDAzOjM3OjA4LjUzMjIwMiIsIm9mZnNldCI6Mjd9"
+        },
+        "edges": [
+          {
+            "cursor": "eyJsYXN0X2lkIjo1MTE0ODczNDQ4OTEsImxhc3RfdmFsdWUiOiIyMDI2LTA5LTI4IDExOjA1OjAyLjM3NTQzOSIsIm9mZnNldCI6MjB9",
+            "node": {
+              "__typename": "Collection",
+              "description": "",
+              "descriptionHtml": "",
+              "handle": "portable-power-bank-for-samsung-phone",
+              "id": "gid://shopify/Collection/511487344891",
+              "image": null,
+              "onlineStoreUrl": "https://au.store.anker.com/collections/portable-power-bank-for-samsung-phone",
+              "seo": {
+                "__typename": "SEO",
+                "description": "Discover Anker portable power banks for Samsung phones and enjoy fast, safe & reliable charging. Our power banks have gigantic capacity for various devices.",
+                "title": null
+              },
+              "title": "Portable Power Bank for Samsung Phone",
+              "updatedAt": "2026-11-08T12:26:23Z"
+            }
+          },
+          {
+            "cursor": "eyJsYXN0X2lkIjo1MTE0ODc0NzU5NjMsImxhc3RfdmFsdWUiOiIyMDI2LTA5LTI4IDExOjA1OjIzLjgxNzAxNyIsIm9mZnNldCI6MjF9",
+            "node": {
+              "__typename": "Collection",
+              "description": "",
+              "descriptionHtml": "",
+              "handle": "power-banks",
+              "id": "gid://shopify/Collection/511487475963",
+              "image": null,
+              "onlineStoreUrl": "https://au.store.anker.com/collections/power-banks",
+              "seo": {
+                "__typename": "SEO",
+                "description": "Stay powered on-the-go with Anker's portable chargers. Explore power banks featuring fast charging, compact designs, and reliable energy for all your adventures.",
+                "title": "Power Banks - Best Portable Chargers & Battery Packs"
+              },
+              "title": "Power Banks",
+              "updatedAt": "2026-11-08T12:26:23Z"
+            }
+          },
+          {
+            "cursor": "eyJsYXN0X2lkIjo1MTE0ODgxNjQwOTEsImxhc3RfdmFsdWUiOiIyMDI2LTA5LTI4IDExOjA2OjEyLjIzNDcyNyIsIm9mZnNldCI6MjJ9",
+            "node": {
+              "__typename": "Collection",
+              "description": "",
+              "descriptionHtml": "",
+              "handle": "prime-code",
+              "id": "gid://shopify/Collection/511488164091",
+              "image": null,
+              "onlineStoreUrl": "https://au.store.anker.com/collections/prime-code",
+              "seo": {
+                "__typename": "SEO",
+                "description": null,
+                "title": null
+              },
+              "title": "Prime Code",
+              "updatedAt": "2026-11-08T12:26:23Z"
+            }
+          },
+          {
+            "cursor": "eyJsYXN0X2lkIjo1MTE0ODgyOTUxNjMsImxhc3RfdmFsdWUiOiIyMDI2LTA5LTI4IDExOjA2OjI0Ljk1NjI1MyIsIm9mZnNldCI6MjN9",
+            "node": {
+              "__typename": "Collection",
+              "description": "",
+              "descriptionHtml": "",
+              "handle": "gifts-for-gamers",
+              "id": "gid://shopify/Collection/511488295163",
+              "image": null,
+              "onlineStoreUrl": "https://au.store.anker.com/collections/gifts-for-gamers",
+              "seo": {
+                "__typename": "SEO",
+                "description": "Stay charged anywhere with Anker high\u2011wattage power banks \u2014 fast charging for laptops, tablets & more. Reliable, durable, built for travel.",
+                "title": "High-Wattage Power Banks"
+              },
+              "title": "Top Choices for Gamers",
+              "updatedAt": "2026-11-08T12:26:23Z"
+            }
+          },
+          {
+            "cursor": "eyJsYXN0X2lkIjo1MTE0ODg2MjI4NDMsImxhc3RfdmFsdWUiOiIyMDI2LTA5LTI4IDExOjA2OjQ0LjM1ODAyNCIsIm9mZnNldCI6MjR9",
+            "node": {
+              "__typename": "Collection",
+              "description": "",
+              "descriptionHtml": "",
+              "handle": "best-seller",
+              "id": "gid://shopify/Collection/511488622843",
+              "image": null,
+              "onlineStoreUrl": "https://au.store.anker.com/collections/best-seller",
+              "seo": {
+                "__typename": "SEO",
+                "description": "Explore Anker Best Sellers featuring top-rated chargers, power banks, cables, and hubs designed for reliability, speed, and everyday convenience.",
+                "title": "Best Seller"
+              },
+              "title": "Best Seller",
+              "updatedAt": "2026-11-08T12:26:23Z"
+            }
+          },
+          {
+            "cursor": "eyJsYXN0X2lkIjo1MTE0ODg5NTA1MjMsImxhc3RfdmFsdWUiOiIyMDI2LTA5LTI4IDExOjA3OjA0LjAyNzk3MCIsIm9mZnNldCI6MjV9",
+            "node": {
+              "__typename": "Collection",
+              "description": "",
+              "descriptionHtml": "",
+              "handle": "usb-c-portable-charger",
+              "id": "gid://shopify/Collection/511488950523",
+              "image": null,
+              "onlineStoreUrl": "https://au.store.anker.com/collections/usb-c-portable-charger",
+              "seo": {
+                "__typename": "SEO",
+                "description": "Charge phones, tablets, and laptops anywhere with Anker\u2019s USB-C portable chargers. Enjoy 24,000mAh capacity, 140W fast charging, and built-in device protection.",
+                "title": "USB-C Portable Chargers \u2013 Power Anywhere "
+              },
+              "title": "USB C Portable Charger",
+              "updatedAt": "2026-11-08T12:26:23Z"
+            }
+          },
+          {
+            "cursor": "eyJsYXN0X2lkIjo1MTE0ODkxNzk4OTksImxhc3RfdmFsdWUiOiIyMDI2LTA5LTI4IDExOjA3OjIyLjAyOTQ0MCIsIm9mZnNldCI6MjZ9",
+            "node": {
+              "__typename": "Collection",
+              "description": "",
+              "descriptionHtml": "",
+              "handle": "charging-dock-for-apple",
+              "id": "gid://shopify/Collection/511489179899",
+              "image": null,
+              "onlineStoreUrl": "https://au.store.anker.com/collections/charging-dock-for-apple",
+              "seo": {
+                "__typename": "SEO",
+                "description": "Shop Anker's compact and versatile Apple charging docks. Charge your multiple Apple devices in style & on the go effortlessly, delivering quick, reliable power.",
+                "title": null
+              },
+              "title": "Charging Dock for Apple",
+              "updatedAt": "2026-11-08T12:26:23Z"
+            }
+          },
+          {
+            "cursor": "eyJsYXN0X2lkIjo1MTMxMDM0OTU0MTksImxhc3RfdmFsdWUiOiIyMDI2LTEwLTE2IDAzOjM3OjA4LjUzMjIwMiIsIm9mZnNldCI6Mjd9",
+            "node": {
+              "__typename": "Collection",
+              "description": "",
+              "descriptionHtml": "",
+              "handle": "wired-power-bank",
+              "id": "gid://shopify/Collection/513103495419",
+              "image": null,
+              "onlineStoreUrl": "https://au.store.anker.com/collections/wired-power-bank",
+              "seo": {
+                "__typename": "SEO",
+                "description": null,
+                "title": null
+              },
+              "title": "Wired Power Bank",
+              "updatedAt": "2026-11-08T12:26:23Z"
+            }
+          }
+        ]
+      }
+    },
+    "p4": {
+      "id": "gid://shopify/Product/15395172712699",
+      "collections": {
+        "pageInfo": {
+          "hasNextPage": true,
+          "endCursor": "eyJsYXN0X2lkIjo1MTE0ODgxOTY4NTksImxhc3RfdmFsdWUiOiIyMDI2LTA5LTI4IDExOjA2OjE0LjU4ODI1NCIsIm9mZnNldCI6Mjl9"
+        },
+        "edges": [
+          {
+            "cursor": "eyJsYXN0X2lkIjo1MTE0ODQyMzE5MzEsImxhc3RfdmFsdWUiOiIyMDI2LTA5LTI4IDExOjAxOjU1LjAwNjE3NCIsIm9mZnNldCI6MjB9",
+            "node": {
+              "__typename": "Collection",
+              "description": "",
+              "descriptionHtml": "",
+              "handle": "usb-c-adapter",
+              "id": "gid://shopify/Collection/511484231931",
+              "image": null,
+              "onlineStoreUrl": "https://au.store.anker.com/collections/usb-c-adapter",
+              "seo": {
+                "__typename": "SEO",
+                "description": "Discover Anker's versatile USB-C adapters to enjoy universal compatibility, high-definition brilliance & easy plug-and-play. Elevate your connectivity today!",
+                "title": "USB-C Adapters: Versatile Connectivity Simplified"
+              },
+              "title": "USB-C Adapter",
+              "updatedAt": "2026-11-04T12:27:09Z"
+            }
+          },
+          {
+            "cursor": "eyJsYXN0X2lkIjo1MTE0ODQ0OTQwNzUsImxhc3RfdmFsdWUiOiIyMDI2LTA5LTI4IDExOjAyOjEwLjM1MzMyMSIsIm9mZnNldCI6MjF9",
+            "node": {
+              "__typename": "Collection",
+              "description": "",
+              "descriptionHtml": "",
+              "handle": "10ft-usb-c-cable",
+              "id": "gid://shopify/Collection/511484494075",
+              "image": null,
+              "onlineStoreUrl": "https://au.store.anker.com/collections/10ft-usb-c-cable",
+              "seo": {
+                "__typename": "SEO",
+                "description": "Elevate your charging with the Anker 10ft USB C Cables. With 100W max charging support and 480Mbps max transfer speed, Anker is essential for modern living.",
+                "title": "10ft USB C Cable: Unparalleled Connection Freedom"
+              },
+              "title": "10Ft USB C Cable",
+              "updatedAt": "2026-11-08T12:26:23Z"
+            }
+          },
+          {
+            "cursor": "eyJsYXN0X2lkIjo1MTE0ODQ1MjY4NDMsImxhc3RfdmFsdWUiOiIyMDI2LTA5LTI4IDExOjAyOjE1LjE5MTQ0NSIsIm9mZnNldCI6MjJ9",
+            "node": {
+              "__typename": "Collection",
+              "description": "",
+              "descriptionHtml": "",
+              "handle": "usb-hub",
+              "id": "gid://shopify/Collection/511484526843",
+              "image": null,
+              "onlineStoreUrl": "https://au.store.anker.com/collections/usb-hub",
+              "seo": {
+                "__typename": "SEO",
+                "description": "Elevate productivity with Anker's USB hubs, expand your connectivity options, transfer files at lightning speed & enjoy crystal-clear displays up to 4K@60H",
+                "title": "USB Hubs: Elevate Connectivity & Productivity"
+              },
+              "title": "USB Hub",
+              "updatedAt": "2026-11-08T12:26:23Z"
+            }
+          },
+          {
+            "cursor": "eyJsYXN0X2lkIjo1MTE0ODQ1NTk2MTEsImxhc3RfdmFsdWUiOiIyMDI2LTA5LTI4IDExOjAyOjE5LjMxMTc4MiIsIm9mZnNldCI6MjN9",
+            "node": {
+              "__typename": "Collection",
+              "description": "",
+              "descriptionHtml": "",
+              "handle": "usb-to-hdmi-adapter",
+              "id": "gid://shopify/Collection/511484559611",
+              "image": null,
+              "onlineStoreUrl": "https://au.store.anker.com/collections/usb-to-hdmi-adapter",
+              "seo": {
+                "__typename": "SEO",
+                "description": "Elevate your displays with Anker's USB to HDMI adapters. Enjoy 4K 60Hz resolution, plug-and-play setup, and seamless connectivity for productivity and entertainment.",
+                "title": "USB to HDMI Adapter - Connect Seamlessly"
+              },
+              "title": "USB to HDMI Adapter",
+              "updatedAt": "2026-11-08T12:26:23Z"
+            }
+          },
+          {
+            "cursor": "eyJsYXN0X2lkIjo1MTE0ODQ4MjE3NTUsImxhc3RfdmFsdWUiOiIyMDI2LTA5LTI4IDExOjAyOjM0LjE0NDUyMiIsIm9mZnNldCI6MjR9",
+            "node": {
+              "__typename": "Collection",
+              "description": "",
+              "descriptionHtml": "",
+              "handle": "charging-cable-for-iphone-13",
+              "id": "gid://shopify/Collection/511484821755",
+              "image": null,
+              "onlineStoreUrl": "https://au.store.anker.com/collections/charging-cable-for-iphone-13",
+              "seo": {
+                "__typename": "SEO",
+                "description": "Take Anker\u2019s iPhone 13 charging cables to elevate your charging experience with their fast charging support and 480Mbps max transfer speed. Embrace Anker now!",
+                "title": "iPhone 13 Charging Cable: Fast and Durable"
+              },
+              "title": "Charging Cable for iPhone 13",
+              "updatedAt": "2026-11-08T12:26:23Z"
+            }
+          },
+          {
+            "cursor": "eyJsYXN0X2lkIjo1MTE0ODUwODM4OTksImxhc3RfdmFsdWUiOiIyMDI2LTA5LTI4IDExOjAyOjU2LjEzNjg4MiIsIm9mZnNldCI6MjV9",
+            "node": {
+              "__typename": "Collection",
+              "description": "",
+              "descriptionHtml": "",
+              "handle": "hdmi-hub",
+              "id": "gid://shopify/Collection/511485083899",
+              "image": null,
+              "onlineStoreUrl": "https://au.store.anker.com/collections/hdmi-hub",
+              "seo": {
+                "__typename": "SEO",
+                "description": "Connect your laptop to dual 4K displays, high-speed data, and pass-through charging with Anker HDMI docking stations and hubs for a seamless workspace.",
+                "title": "HDMI Hub & Docking Station"
+              },
+              "title": "HDMI Hub",
+              "updatedAt": "2026-11-08T12:26:23Z"
+            }
+          },
+          {
+            "cursor": "eyJsYXN0X2lkIjo1MTE0ODUxODIyMDMsImxhc3RfdmFsdWUiOiIyMDI2LTA5LTI4IDExOjAzOjEyLjA2MDYyMSIsIm9mZnNldCI6MjZ9",
+            "node": {
+              "__typename": "Collection",
+              "description": "",
+              "descriptionHtml": "",
+              "handle": "usb-c-hdmi-hub",
+              "id": "gid://shopify/Collection/511485182203",
+              "image": null,
+              "onlineStoreUrl": "https://au.store.anker.com/collections/usb-c-hdmi-hub",
+              "seo": {
+                "__typename": "SEO",
+                "description": "Boost connectivity with Anker's powerful USB C HDMI hubs. Get various ports, 4K display & high-speed data transfer from our stylish and versatile USB hubs.",
+                "title": "USB C HDMI Hub"
+              },
+              "title": "USB C HDMI Hub",
+              "updatedAt": "2026-11-08T12:26:23Z"
+            }
+          },
+          {
+            "cursor": "eyJsYXN0X2lkIjo1MTE0ODUzNzg4MTEsImxhc3RfdmFsdWUiOiIyMDI2LTA5LTI4IDExOjAzOjU0LjQwNDg1OSIsIm9mZnNldCI6Mjd9",
+            "node": {
+              "__typename": "Collection",
+              "description": "",
+              "descriptionHtml": "",
+              "handle": "charging-cable-for-iphone-14",
+              "id": "gid://shopify/Collection/511485378811",
+              "image": null,
+              "onlineStoreUrl": "https://au.store.anker.com/collections/charging-cable-for-iphone-14",
+              "seo": {
+                "__typename": "SEO",
+                "description": "Elevate your iPhone charging with Anker's iPhone 14 charging cables: premium design, MFi certification, fast charging & data transfer & exceptional durability.",
+                "title": null
+              },
+              "title": "Charging Cable for iPhone 14",
+              "updatedAt": "2026-11-08T12:26:23Z"
+            }
+          },
+          {
+            "cursor": "eyJsYXN0X2lkIjo1MTE0ODY3MjIyOTksImxhc3RfdmFsdWUiOiIyMDI2LTA5LTI4IDExOjA0OjE2LjgyMDI4MyIsIm9mZnNldCI6Mjh9",
+            "node": {
+              "__typename": "Collection",
+              "description": "",
+              "descriptionHtml": "",
+              "handle": "desktop-usb-hub",
+              "id": "gid://shopify/Collection/511486722299",
+              "image": null,
+              "onlineStoreUrl": "https://au.store.anker.com/collections/desktop-usb-hub",
+              "seo": {
+                "__typename": "SEO",
+                "description": "Elevate connectivity with Anker's advanced desktop USB hubs. Experience up to 10Gbps lightning-fast data transfer and up to 4K crystal-clear external display.",
+                "title": null
+              },
+              "title": "Desktop USB Hub",
+              "updatedAt": "2026-11-08T12:26:23Z"
+            }
+          },
+          {
+            "cursor": "eyJsYXN0X2lkIjo1MTE0ODgxOTY4NTksImxhc3RfdmFsdWUiOiIyMDI2LTA5LTI4IDExOjA2OjE0LjU4ODI1NCIsIm9mZnNldCI6Mjl9",
+            "node": {
+              "__typename": "Collection",
+              "description": "",
+              "descriptionHtml": "",
+              "handle": "laptop-docking-station",
+              "id": "gid://shopify/Collection/511488196859",
+              "image": null,
+              "onlineStoreUrl": "https://au.store.anker.com/collections/laptop-docking-station",
+              "seo": {
+                "__typename": "SEO",
+                "description": "Maximize connectivity & productivity with Anker's versatile laptop docking stations for laptops. Enjoy the convenience and upgrade your laptop experience today! ",
+                "title": "Enhance Work Efficiency: Docking Stations for Laptops"
+              },
+              "title": "Laptop Docking Station",
+              "updatedAt": "2026-11-08T12:26:23Z"
+            }
+          }
+        ]
+      }
+    }
+  },
+  "extensions": {
+    "context": {
+      "country": "AU",
+      "language": "EN"
+    },
+    "cost": {
+      "requestedQueryCost": 170
+    }
+  }
+}

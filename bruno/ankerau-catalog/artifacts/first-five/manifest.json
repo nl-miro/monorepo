@@ -1,0 +1,168 @@
+{
+  "environment": "first-five",
+  "requests": [
+    {
+      "directory": "01-details",
+      "query_cost": 82,
+      "product_ids": [
+        "gid://shopify/Product/15395172450555",
+        "gid://shopify/Product/15395172516091",
+        "gid://shopify/Product/15395172581627",
+        "gid://shopify/Product/15395172647163",
+        "gid://shopify/Product/15395172712699"
+      ]
+    },
+    {
+      "directory": "02-collections",
+      "query_cost": 106,
+      "product_ids": [
+        "gid://shopify/Product/15395172450555",
+        "gid://shopify/Product/15395172516091",
+        "gid://shopify/Product/15395172581627",
+        "gid://shopify/Product/15395172647163",
+        "gid://shopify/Product/15395172712699"
+      ]
+    },
+    {
+      "directory": "03-collections",
+      "query_cost": 170,
+      "product_ids": [
+        "gid://shopify/Product/15395172450555",
+        "gid://shopify/Product/15395172516091",
+        "gid://shopify/Product/15395172581627",
+        "gid://shopify/Product/15395172647163",
+        "gid://shopify/Product/15395172712699"
+      ]
+    },
+    {
+      "directory": "04-collections",
+      "query_cost": 170,
+      "product_ids": [
+        "gid://shopify/Product/15395172450555",
+        "gid://shopify/Product/15395172516091",
+        "gid://shopify/Product/15395172581627",
+        "gid://shopify/Product/15395172647163",
+        "gid://shopify/Product/15395172712699"
+      ]
+    },
+    {
+      "directory": "05-collections",
+      "query_cost": 102,
+      "product_ids": [
+        "gid://shopify/Product/15395172516091",
+        "gid://shopify/Product/15395172581627",
+        "gid://shopify/Product/15395172712699"
+      ]
+    },
+    {
+      "directory": "06-collections",
+      "query_cost": 68,
+      "product_ids": [
+        "gid://shopify/Product/15395172516091",
+        "gid://shopify/Product/15395172581627"
+      ]
+    },
+    {
+      "directory": "07-collections",
+      "query_cost": 68,
+      "product_ids": [
+        "gid://shopify/Product/15395172516091",
+        "gid://shopify/Product/15395172581627"
+      ]
+    },
+    {
+      "directory": "08-images",
+      "query_cost": 58,
+      "product_ids": [
+        "gid://shopify/Product/15395172450555",
+        "gid://shopify/Product/15395172516091",
+        "gid://shopify/Product/15395172581627",
+        "gid://shopify/Product/15395172647163",
+        "gid://shopify/Product/15395172712699"
+      ]
+    },
+    {
+      "directory": "09-images",
+      "query_cost": 36,
+      "product_ids": [
+        "gid://shopify/Product/15395172516091",
+        "gid://shopify/Product/15395172581627"
+      ]
+    },
+    {
+      "directory": "10-images",
+      "query_cost": 18,
+      "product_ids": [
+        "gid://shopify/Product/15395172516091"
+      ]
+    },
+    {
+      "directory": "11-media",
+      "query_cost": 130,
+      "product_ids": [
+        "gid://shopify/Product/15395172450555",
+        "gid://shopify/Product/15395172516091",
+        "gid://shopify/Product/15395172581627",
+        "gid://shopify/Product/15395172647163",
+        "gid://shopify/Product/15395172712699"
+      ]
+    },
+    {
+      "directory": "12-media",
+      "query_cost": 84,
+      "product_ids": [
+        "gid://shopify/Product/15395172516091",
+        "gid://shopify/Product/15395172581627"
+      ]
+    },
+    {
+      "directory": "13-media",
+      "query_cost": 42,
+      "product_ids": [
+        "gid://shopify/Product/15395172516091"
+      ]
+    },
+    {
+      "directory": "14-variants",
+      "query_cost": 757,
+      "product_ids": [
+        "gid://shopify/Product/15395172450555",
+        "gid://shopify/Product/15395172516091",
+        "gid://shopify/Product/15395172581627",
+        "gid://shopify/Product/15395172647163",
+        "gid://shopify/Product/15395172712699"
+      ]
+    },
+    {
+      "directory": "15-sellingPlanGroups",
+      "query_cost": 334,
+      "product_ids": [
+        "gid://shopify/Product/15395172450555",
+        "gid://shopify/Product/15395172516091",
+        "gid://shopify/Product/15395172581627",
+        "gid://shopify/Product/15395172647163",
+        "gid://shopify/Product/15395172712699"
+      ]
+    },
+    {
+      "directory": "16-removedFields",
+      "query_cost": 43,
+      "product_ids": [
+        "gid://shopify/Product/15395172450555",
+        "gid://shopify/Product/15395172516091",
+        "gid://shopify/Product/15395172581627",
+        "gid://shopify/Product/15395172647163",
+        "gid://shopify/Product/15395172712699"
+      ]
+    }
+  ],
+  "product_ids": [
+    "gid://shopify/Product/15395172450555",
+    "gid://shopify/Product/15395172516091",
+    "gid://shopify/Product/15395172581627",
+    "gid://shopify/Product/15395172647163",
+    "gid://shopify/Product/15395172712699"
+  ],
+  "max_query_cost": 757,
+  "cost_limit": 1000
+}

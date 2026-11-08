@@ -1,0 +1,24 @@
+meta {
+  name: 08 availability and prices
+  type: http
+  seq: 8
+}
+
+post {
+  url: https://oneanker-au.myshopify.com/api/2026-10/graphql.json
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "query": "query CatalogAvailabilityPrices($after: String) @inContext(country:AU, language:EN) { products(first:250,after:$after,sortKey:ID) { pageInfo { hasNextPage endCursor } nodes { id availableForSale priceRange { minVariantPrice { amount currencyCode } maxVariantPrice { amount currencyCode } } variants(first:5) { pageInfo { hasNextPage endCursor } edges { cursor node { id price { amount currencyCode } availableForSale } } } } } }",
+    "variables": {
+      "after": null
+    }
+  }
+}

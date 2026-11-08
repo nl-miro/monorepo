@@ -1,0 +1,168 @@
+{
+  "data": {
+    "p0": {
+      "id": "gid://shopify/Product/15395172516091",
+      "collections": {
+        "pageInfo": {
+          "hasNextPage": false,
+          "endCursor": "eyJsYXN0X2lkIjo1MTE0ODk4NjgwMjcsImxhc3RfdmFsdWUiOiIyMDI2LTA5LTI4IDExOjA4OjMzLjYxODI3NCIsIm9mZnNldCI6NTV9"
+        },
+        "edges": [
+          {
+            "cursor": "eyJsYXN0X2lkIjo1MTE0ODgwNjU3ODcsImxhc3RfdmFsdWUiOiIyMDI2LTA5LTI4IDExOjA1OjU4LjU3OTMyMCIsIm9mZnNldCI6NTB9",
+            "node": {
+              "__typename": "Collection",
+              "description": "",
+              "descriptionHtml": "",
+              "handle": "samsung-galaxy-s23-ultra-wireless-charger",
+              "id": "gid://shopify/Collection/511488065787",
+              "image": null,
+              "onlineStoreUrl": "https://au.store.anker.com/collections/samsung-galaxy-s23-ultra-wireless-charger",
+              "seo": {
+                "__typename": "SEO",
+                "description": "Grab Samsung Galaxy S23 Ultra wireless chargers and unleash Anker\u2019s wireless advantage. Charge up your Samsung Galaxy S23 with unmatched speed and efficiency.",
+                "title": "Samsung Galaxy S23 Ultra Wireless Chargers"
+              },
+              "title": "Samsung Galaxy S23 Ultra Wireless Charger",
+              "updatedAt": "2026-11-08T12:26:23Z"
+            }
+          },
+          {
+            "cursor": "eyJsYXN0X2lkIjo1MTE0ODg1OTAwNzUsImxhc3RfdmFsdWUiOiIyMDI2LTA5LTI4IDExOjA2OjQzLjE0OTcwNyIsIm9mZnNldCI6NTF9",
+            "node": {
+              "__typename": "Collection",
+              "description": "",
+              "descriptionHtml": "",
+              "handle": "maggo-code",
+              "id": "gid://shopify/Collection/511488590075",
+              "image": null,
+              "onlineStoreUrl": "https://au.store.anker.com/collections/maggo-code",
+              "seo": {
+                "__typename": "SEO",
+                "description": null,
+                "title": null
+              },
+              "title": "MagGo Code",
+              "updatedAt": "2026-11-08T12:26:23Z"
+            }
+          },
+          {
+            "cursor": "eyJsYXN0X2lkIjo1MTE0ODg5NTA1MjMsImxhc3RfdmFsdWUiOiIyMDI2LTA5LTI4IDExOjA3OjA0LjAyNzk3MCIsIm9mZnNldCI6NTJ9",
+            "node": {
+              "__typename": "Collection",
+              "description": "",
+              "descriptionHtml": "",
+              "handle": "usb-c-portable-charger",
+              "id": "gid://shopify/Collection/511488950523",
+              "image": null,
+              "onlineStoreUrl": "https://au.store.anker.com/collections/usb-c-portable-charger",
+              "seo": {
+                "__typename": "SEO",
+                "description": "Charge phones, tablets, and laptops anywhere with Anker\u2019s USB-C portable chargers. Enjoy 24,000mAh capacity, 140W fast charging, and built-in device protection.",
+                "title": "USB-C Portable Chargers \u2013 Power Anywhere "
+              },
+              "title": "USB C Portable Charger",
+              "updatedAt": "2026-11-08T12:26:23Z"
+            }
+          },
+          {
+            "cursor": "eyJsYXN0X2lkIjo1MTE0ODk1NDAzNDcsImxhc3RfdmFsdWUiOiIyMDI2LTA5LTI4IDExOjA4OjAzLjcwNTQ2NCIsIm9mZnNldCI6NTN9",
+            "node": {
+              "__typename": "Collection",
+              "description": "Discover Anker\u2019s iPhone Essentials, including durable iPhone cases, high-quality screen protectors, portable power banks, and wireless chargers designed specifically for iPhone. Keep your iPhone protected and powered up with Anker\u2019s premium accessories that offer sleek designs, superior performance, and reliable protection. Shop now for the ultimate charging and protection solutions for your iPhone.",
+              "descriptionHtml": "<p><meta charset=\"utf-8\">Discover Anker\u2019s iPhone Essentials, including durable iPhone cases, high-quality screen protectors, portable power banks, and wireless chargers designed specifically for iPhone. Keep your iPhone protected and powered up with Anker\u2019s premium accessories that offer sleek designs, superior performance, and reliable protection. Shop now for the ultimate charging and protection solutions for your iPhone.</p>",
+              "handle": "iphone-accessories",
+              "id": "gid://shopify/Collection/511489540347",
+              "image": null,
+              "onlineStoreUrl": "https://au.store.anker.com/collections/iphone-accessories",
+              "seo": {
+                "__typename": "SEO",
+                "description": "Enhance your iPhone experience with premium Anker accessories like MagSafe chargers, portable power banks, and fast charging cables. Buy Now!",
+                "title": "Fast Charging Solutions for iPhones"
+              },
+              "title": "iPhone Accessories",
+              "updatedAt": "2026-11-08T12:26:23Z"
+            }
+          },
+          {
+            "cursor": "eyJsYXN0X2lkIjo1MTE0ODk2Mzg2NTEsImxhc3RfdmFsdWUiOiIyMDI2LTA5LTI4IDExOjA4OjE3LjU0NzI1NiIsIm9mZnNldCI6NTR9",
+            "node": {
+              "__typename": "Collection",
+              "description": "Apple accessories play a vital role in enhancing the functionality, compatibility, and overall user experience of Apple devices, ensuring a seamless and efficient ecosystem. Anker's lineup of Apple accessories offers a versatile array of solutions for tech enthusiasts seeking convenience, speed, and sustainability. Buy 2 for 10% Off and Get Free Gift! Discounts apply automatically at checkout and cannot be combined with other promotional codes.",
+              "descriptionHtml": "<p><meta charset=\"utf-8\"><span>Apple accessories play a vital role in enhancing the functionality, compatibility, and overall user experience of Apple devices, ensuring a seamless and efficient ecosystem. Anker's lineup of Apple accessories offers a versatile array of solutions for tech enthusiasts seeking convenience, speed, and sustainability.</span><br></p>\n<div class=\"Filter_DefaultBanner__jhDg6 layer\">\n<div class=\"content\">\n<div class=\"Filter_learnMoreBox__gkmBf\">\n<div class=\"LearnMore_contentBox__SQRSz\">\n<div class=\"learn-more-container overflow-hidden\">\n<p class=\"Filter_desc__0nW17\"><b>Buy 2 for 10% Off and Get Free Gift! Discounts apply automatically at checkout and cannot be combined with other promotional codes.</b></p>\n</div>\n</div>\n</div>\n</div>\n</div>\n<div class=\"layer\"><a class=\"content block w-full\" href=\"https://www.anker.com/maggo-magsafe-compatible-wireless-charger\"><picture class=\"block overflow-hidden w-full\"><source srcset=\"https://cdn.shopify.com/s/files/1/0493/9834/9974/files/765_180_632b8230-0750-4679-b4dd-4b27beb76248_750x.png?v=1725958417\" media=\"(max-width: 375px)\"><source srcset=\"https://cdn.shopify.com/s/files/1/0493/9834/9974/files/765_180_632b8230-0750-4679-b4dd-4b27beb76248_1534x.png?v=1725958417\" media=\"(max-width: 767px)\"><source srcset=\"https://cdn.shopify.com/s/files/1/0493/9834/9974/files/1920_180_cac7cfbd-d5d2-4520-855a-e672d1a63541_2046x.png?v=1725958417\" media=\"(max-width: 1023px)\"><source srcset=\"https://cdn.shopify.com/s/files/1/0493/9834/9974/files/1920_180_cac7cfbd-d5d2-4520-855a-e672d1a63541_2558x.png?v=1725958417\" media=\"(max-width: 1279px)\"><source srcset=\"https://cdn.shopify.com/s/files/1/0493/9834/9974/files/1920_180_cac7cfbd-d5d2-4520-855a-e672d1a63541_2878x.png?v=1725958417\" media=\"(max-width: 1439px)\"><source srcset=\"https://cdn.shopify.com/s/files/1/0493/9834/9974/files/1920_180_cac7cfbd-d5d2-4520-855a-e672d1a63541_3078x.png?v=1725958417\" media=\"(max-width: 1539px)\"><source srcset=\"https://cdn.shopify.com/s/files/1/0493/9834/9974/files/1920_180_cac7cfbd-d5d2-4520-855a-e672d1a63541_3838x.png?v=1725958417\" media=\"(max-width: 1919px)\"></source></source></source></picture></a></div>",
+              "handle": "apple-accessories-1",
+              "id": "gid://shopify/Collection/511489638651",
+              "image": null,
+              "onlineStoreUrl": "https://au.store.anker.com/collections/apple-accessories-1",
+              "seo": {
+                "__typename": "SEO",
+                "description": null,
+                "title": null
+              },
+              "title": "Apple Accessories",
+              "updatedAt": "2026-11-08T12:26:23Z"
+            }
+          },
+          {
+            "cursor": "eyJsYXN0X2lkIjo1MTE0ODk4NjgwMjcsImxhc3RfdmFsdWUiOiIyMDI2LTA5LTI4IDExOjA4OjMzLjYxODI3NCIsIm9mZnNldCI6NTV9",
+            "node": {
+              "__typename": "Collection",
+              "description": "",
+              "descriptionHtml": "",
+              "handle": "magsafe-charger-for-iphone-15",
+              "id": "gid://shopify/Collection/511489868027",
+              "image": null,
+              "onlineStoreUrl": "https://au.store.anker.com/collections/magsafe-charger-for-iphone-15",
+              "seo": {
+                "__typename": "SEO",
+                "description": "Supercharge your iPhone 15 with Anker's MagSafe charger for iPhone 15. Replenish your iPhone 15 battery in no time with the power of 15W wireless charging.",
+                "title": null
+              },
+              "title": "MagSafe Charger For iPhone 15",
+              "updatedAt": "2026-11-08T12:26:23Z"
+            }
+          }
+        ]
+      }
+    },
+    "p1": {
+      "id": "gid://shopify/Product/15395172581627",
+      "collections": {
+        "pageInfo": {
+          "hasNextPage": false,
+          "endCursor": "eyJsYXN0X2lkIjo1MTE0ODk4NjgwMjcsImxhc3RfdmFsdWUiOiIyMDI2LTA5LTI4IDExOjA4OjMzLjYxODI3NCIsIm9mZnNldCI6NTB9"
+        },
+        "edges": [
+          {
+            "cursor": "eyJsYXN0X2lkIjo1MTE0ODk4NjgwMjcsImxhc3RfdmFsdWUiOiIyMDI2LTA5LTI4IDExOjA4OjMzLjYxODI3NCIsIm9mZnNldCI6NTB9",
+            "node": {
+              "__typename": "Collection",
+              "description": "",
+              "descriptionHtml": "",
+              "handle": "magsafe-charger-for-iphone-15",
+              "id": "gid://shopify/Collection/511489868027",
+              "image": null,
+              "onlineStoreUrl": "https://au.store.anker.com/collections/magsafe-charger-for-iphone-15",
+              "seo": {
+                "__typename": "SEO",
+                "description": "Supercharge your iPhone 15 with Anker's MagSafe charger for iPhone 15. Replenish your iPhone 15 battery in no time with the power of 15W wireless charging.",
+                "title": null
+              },
+              "title": "MagSafe Charger For iPhone 15",
+              "updatedAt": "2026-11-08T12:26:23Z"
+            }
+          }
+        ]
+      }
+    }
+  },
+  "extensions": {
+    "context": {
+      "country": "AU",
+      "language": "EN"
+    },
+    "cost": {
+      "requestedQueryCost": 68
+    }
+  }
+}

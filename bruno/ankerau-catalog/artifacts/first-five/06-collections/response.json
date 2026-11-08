@@ -1,0 +1,415 @@
+{
+  "data": {
+    "p0": {
+      "id": "gid://shopify/Product/15395172516091",
+      "collections": {
+        "pageInfo": {
+          "hasNextPage": true,
+          "endCursor": "eyJsYXN0X2lkIjo1MTE0ODc5MzQ3MTUsImxhc3RfdmFsdWUiOiIyMDI2LTA5LTI4IDExOjA1OjUwLjUzMDY0OSIsIm9mZnNldCI6NDl9"
+        },
+        "edges": [
+          {
+            "cursor": "eyJsYXN0X2lkIjo1MTE0ODcwMTcyMTEsImxhc3RfdmFsdWUiOiIyMDI2LTA5LTI4IDExOjA0OjMxLjcxOTk5NSIsIm9mZnNldCI6NDB9",
+            "node": {
+              "__typename": "Collection",
+              "description": "",
+              "descriptionHtml": "",
+              "handle": "magsafe-battery-pack",
+              "id": "gid://shopify/Collection/511487017211",
+              "image": null,
+              "onlineStoreUrl": "https://au.store.anker.com/collections/magsafe-battery-pack",
+              "seo": {
+                "__typename": "SEO",
+                "description": "Charge your iPhone wirelessly with Anker's MagSafe battery packs. Sleek design, 5,000mAh capacity, and a built-in kickstand for hands-free convenience.",
+                "title": "Best MagSafe Battery Packs for Power & Mobility"
+              },
+              "title": "MagSafe Battery Pack",
+              "updatedAt": "2026-11-08T12:26:23Z"
+            }
+          },
+          {
+            "cursor": "eyJsYXN0X2lkIjo1MTE0ODczNDQ4OTEsImxhc3RfdmFsdWUiOiIyMDI2LTA5LTI4IDExOjA1OjAyLjM3NTQzOSIsIm9mZnNldCI6NDF9",
+            "node": {
+              "__typename": "Collection",
+              "description": "",
+              "descriptionHtml": "",
+              "handle": "portable-power-bank-for-samsung-phone",
+              "id": "gid://shopify/Collection/511487344891",
+              "image": null,
+              "onlineStoreUrl": "https://au.store.anker.com/collections/portable-power-bank-for-samsung-phone",
+              "seo": {
+                "__typename": "SEO",
+                "description": "Discover Anker portable power banks for Samsung phones and enjoy fast, safe & reliable charging. Our power banks have gigantic capacity for various devices.",
+                "title": null
+              },
+              "title": "Portable Power Bank for Samsung Phone",
+              "updatedAt": "2026-11-08T12:26:23Z"
+            }
+          },
+          {
+            "cursor": "eyJsYXN0X2lkIjo1MTE0ODczNzc2NTksImxhc3RfdmFsdWUiOiIyMDI2LTA5LTI4IDExOjA1OjExLjI0MTQ2MCIsIm9mZnNldCI6NDJ9",
+            "node": {
+              "__typename": "Collection",
+              "description": "",
+              "descriptionHtml": "",
+              "handle": "aff324crazyoff",
+              "id": "gid://shopify/Collection/511487377659",
+              "image": null,
+              "onlineStoreUrl": "https://au.store.anker.com/collections/aff324crazyoff",
+              "seo": {
+                "__typename": "SEO",
+                "description": null,
+                "title": null
+              },
+              "title": "AFFAUAK25%OFF",
+              "updatedAt": "2026-11-08T12:26:23Z"
+            }
+          },
+          {
+            "cursor": "eyJsYXN0X2lkIjo1MTE0ODc0NzU5NjMsImxhc3RfdmFsdWUiOiIyMDI2LTA5LTI4IDExOjA1OjIzLjgxNzAxNyIsIm9mZnNldCI6NDN9",
+            "node": {
+              "__typename": "Collection",
+              "description": "",
+              "descriptionHtml": "",
+              "handle": "power-banks",
+              "id": "gid://shopify/Collection/511487475963",
+              "image": null,
+              "onlineStoreUrl": "https://au.store.anker.com/collections/power-banks",
+              "seo": {
+                "__typename": "SEO",
+                "description": "Stay powered on-the-go with Anker's portable chargers. Explore power banks featuring fast charging, compact designs, and reliable energy for all your adventures.",
+                "title": "Power Banks - Best Portable Chargers & Battery Packs"
+              },
+              "title": "Power Banks",
+              "updatedAt": "2026-11-08T12:26:23Z"
+            }
+          },
+          {
+            "cursor": "eyJsYXN0X2lkIjo1MTE0ODc3MzgxMDcsImxhc3RfdmFsdWUiOiIyMDI2LTA5LTI4IDExOjA1OjM5Ljc1NjQxMyIsIm9mZnNldCI6NDR9",
+            "node": {
+              "__typename": "Collection",
+              "description": "",
+              "descriptionHtml": "",
+              "handle": "apple-watch-wireless-charger",
+              "id": "gid://shopify/Collection/511487738107",
+              "image": null,
+              "onlineStoreUrl": "https://au.store.anker.com/collections/apple-watch-wireless-charger",
+              "seo": {
+                "__typename": "SEO",
+                "description": "Discover the Anker advantage with our Apple Watch chargers wireless. Top your Apple Watches up swiftly with Anker\u2019s premium wireless Apple Watch chargers.",
+                "title": null
+              },
+              "title": "Apple Watch Wireless Charger",
+              "updatedAt": "2026-11-08T12:26:23Z"
+            }
+          },
+          {
+            "cursor": "eyJsYXN0X2lkIjo1MTE0ODc3NzA4NzUsImxhc3RfdmFsdWUiOiIyMDI2LTA5LTI4IDExOjA1OjQwLjU0ODQxNiIsIm9mZnNldCI6NDV9",
+            "node": {
+              "__typename": "Collection",
+              "description": "",
+              "descriptionHtml": "",
+              "handle": "magsafe-car-charger",
+              "id": "gid://shopify/Collection/511487770875",
+              "image": null,
+              "onlineStoreUrl": "https://au.store.anker.com/collections/magsafe-car-charger",
+              "seo": {
+                "__typename": "SEO",
+                "description": "Charge your iPhone effortlessly with Anker\u2019s MagSafe car charger. Enjoy fast and stable wireless charging with a magnetic hold made for every drive.",
+                "title": "MagSafe Car Charger with Fast Wireless Charging "
+              },
+              "title": "Magsafe Car Charger",
+              "updatedAt": "2026-11-08T12:26:23Z"
+            }
+          },
+          {
+            "cursor": "eyJsYXN0X2lkIjo1MTE0ODc4MDM2NDMsImxhc3RfdmFsdWUiOiIyMDI2LTA5LTI4IDExOjA1OjQzLjk2MTMyMSIsIm9mZnNldCI6NDZ9",
+            "node": {
+              "__typename": "Collection",
+              "description": "",
+              "descriptionHtml": "",
+              "handle": "magsafe-phone-grip",
+              "id": "gid://shopify/Collection/511487803643",
+              "image": null,
+              "onlineStoreUrl": "https://au.store.anker.com/collections/magsafe-phone-grip",
+              "seo": {
+                "__typename": "SEO",
+                "description": "Get Anker MagSafe phone grips to embrace secure connections & hands-free delight. Anker MagSafe rings feature flexible straps or rings to maximize your comfort.",
+                "title": null
+              },
+              "title": "Magsafe Phone Grip",
+              "updatedAt": "2026-11-08T12:26:23Z"
+            }
+          },
+          {
+            "cursor": "eyJsYXN0X2lkIjo1MTE0ODc4MzY0MTEsImxhc3RfdmFsdWUiOiIyMDI2LTA5LTI4IDExOjA1OjQ0LjIyODI3NSIsIm9mZnNldCI6NDd9",
+            "node": {
+              "__typename": "Collection",
+              "description": "",
+              "descriptionHtml": "",
+              "handle": "magsafe-charging-station",
+              "id": "gid://shopify/Collection/511487836411",
+              "image": null,
+              "onlineStoreUrl": "https://au.store.anker.com/collections/magsafe-charging-station",
+              "seo": {
+                "__typename": "SEO",
+                "description": "Get Anker MagSafe charging stations and charge Apple devices at once. Our 3-in-1 charging stations for MagSafe triple the efficiency and are travel-friendly.\nURL: https://www.anker.com/collections/magsafe-charging-station",
+                "title": null
+              },
+              "title": "Magsafe Charging Station",
+              "updatedAt": "2026-11-08T12:26:23Z"
+            }
+          },
+          {
+            "cursor": "eyJsYXN0X2lkIjo1MTE0ODc4NjkxNzksImxhc3RfdmFsdWUiOiIyMDI2LTA5LTI4IDExOjA1OjQ3LjI2NjgzMCIsIm9mZnNldCI6NDh9",
+            "node": {
+              "__typename": "Collection",
+              "description": "",
+              "descriptionHtml": "",
+              "handle": "usb-c-to-magsafe-3-cable",
+              "id": "gid://shopify/Collection/511487869179",
+              "image": null,
+              "onlineStoreUrl": "https://au.store.anker.com/collections/usb-c-to-magsafe-3-cable",
+              "seo": {
+                "__typename": "SEO",
+                "description": "Grab Anker\u2019s USB C to MagSafe 3 cables and replenish your MacBooks with blazing efficiency. Embrace secure connections and prevent accidental unplugging.",
+                "title": null
+              },
+              "title": "Usb C to Magsafe 3 Cable",
+              "updatedAt": "2026-11-08T12:26:23Z"
+            }
+          },
+          {
+            "cursor": "eyJsYXN0X2lkIjo1MTE0ODc5MzQ3MTUsImxhc3RfdmFsdWUiOiIyMDI2LTA5LTI4IDExOjA1OjUwLjUzMDY0OSIsIm9mZnNldCI6NDl9",
+            "node": {
+              "__typename": "Collection",
+              "description": "",
+              "descriptionHtml": "",
+              "handle": "qi2-wireless-charger",
+              "id": "gid://shopify/Collection/511487934715",
+              "image": null,
+              "onlineStoreUrl": "https://au.store.anker.com/collections/qi2-wireless-charger",
+              "seo": {
+                "__typename": "SEO",
+                "description": "Anker Qi2 wireless chargers offer 15W charging. Anker MagGo products, tailored for MagSafe users, ensure a swift and efficient power experience. Shop Anker Qi2 wireless chargers now!",
+                "title": null
+              },
+              "title": "Qi2 Wireless Chargers",
+              "updatedAt": "2026-11-08T12:26:23Z"
+            }
+          }
+        ]
+      }
+    },
+    "p1": {
+      "id": "gid://shopify/Product/15395172581627",
+      "collections": {
+        "pageInfo": {
+          "hasNextPage": true,
+          "endCursor": "eyJsYXN0X2lkIjo1MTE0ODk2NzE0MTksImxhc3RfdmFsdWUiOiIyMDI2LTA5LTI4IDExOjA4OjIxLjA4NzYwNyIsIm9mZnNldCI6NDl9"
+        },
+        "edges": [
+          {
+            "cursor": "eyJsYXN0X2lkIjo1MTE0ODc2Mzk4MDMsImxhc3RfdmFsdWUiOiIyMDI2LTA5LTI4IDExOjA1OjM0LjExMjEwNyIsIm9mZnNldCI6NDB9",
+            "node": {
+              "__typename": "Collection",
+              "description": "",
+              "descriptionHtml": "",
+              "handle": "gan-charger",
+              "id": "gid://shopify/Collection/511487639803",
+              "image": null,
+              "onlineStoreUrl": "https://au.store.anker.com/collections/gan-charger",
+              "seo": {
+                "__typename": "SEO",
+                "description": "Experience the future of fast charging with Anker\u2019s GaN chargers. Higher efficiency, rapid speeds, and intelligent power distribution. Get your GaN charger now!",
+                "title": "GaN Chargers \u2013 Fast & Efficient Charging "
+              },
+              "title": "GaN Charger",
+              "updatedAt": "2026-11-08T12:26:23Z"
+            }
+          },
+          {
+            "cursor": "eyJsYXN0X2lkIjo1MTE0ODc3MDUzMzksImxhc3RfdmFsdWUiOiIyMDI2LTA5LTI4IDExOjA1OjM3LjIyOTI5NSIsIm9mZnNldCI6NDF9",
+            "node": {
+              "__typename": "Collection",
+              "description": "",
+              "descriptionHtml": "",
+              "handle": "charging-dock-for-apple-watch",
+              "id": "gid://shopify/Collection/511487705339",
+              "image": null,
+              "onlineStoreUrl": "https://au.store.anker.com/collections/charging-dock-for-apple-watch",
+              "seo": {
+                "__typename": "SEO",
+                "description": "Discover Anker's Apple Watch charging docks - efficient, stylish & portable. Charge multiple devices simultaneously with MagSafe for fast & convenient power-up.",
+                "title": null
+              },
+              "title": "Charging Dock for Apple Watch",
+              "updatedAt": "2026-11-08T12:26:23Z"
+            }
+          },
+          {
+            "cursor": "eyJsYXN0X2lkIjo1MTE0ODg0OTE3NzEsImxhc3RfdmFsdWUiOiIyMDI2LTA5LTI4IDExOjA2OjM2LjYwOTY4NCIsIm9mZnNldCI6NDJ9",
+            "node": {
+              "__typename": "Collection",
+              "description": "",
+              "descriptionHtml": "<p>\u00a0</p>\n<div id=\"_feilian_extension_installed\"></div>",
+              "handle": "wall-chargers",
+              "id": "gid://shopify/Collection/511488491771",
+              "image": null,
+              "onlineStoreUrl": "https://au.store.anker.com/collections/wall-chargers",
+              "seo": {
+                "__typename": "SEO",
+                "description": null,
+                "title": null
+              },
+              "title": "Wall Charger",
+              "updatedAt": "2026-11-08T12:26:23Z"
+            }
+          },
+          {
+            "cursor": "eyJsYXN0X2lkIjo1MTE0ODkwODE1OTUsImxhc3RfdmFsdWUiOiIyMDI2LTA5LTI4IDExOjA3OjE0LjA4NDI3MCIsIm9mZnNldCI6NDN9",
+            "node": {
+              "__typename": "Collection",
+              "description": "",
+              "descriptionHtml": "",
+              "handle": "chargers-for-iphone-15",
+              "id": "gid://shopify/Collection/511489081595",
+              "image": null,
+              "onlineStoreUrl": "https://au.store.anker.com/collections/chargers-for-iphone-15",
+              "seo": {
+                "__typename": "SEO",
+                "description": "Power up your iPhone 15 with Anker's 100W chargers. Experience rapid charging, temperature control, and compact designs for on-the-go convenience.",
+                "title": "Best Anker Chargers for iPhone 15"
+              },
+              "title": "iphone 15 charger",
+              "updatedAt": "2026-11-08T12:26:23Z"
+            }
+          },
+          {
+            "cursor": "eyJsYXN0X2lkIjo1MTE0ODkxNDcxMzEsImxhc3RfdmFsdWUiOiIyMDI2LTA5LTI4IDExOjA3OjIxLjA2ODAzMiIsIm9mZnNldCI6NDR9",
+            "node": {
+              "__typename": "Collection",
+              "description": "",
+              "descriptionHtml": "",
+              "handle": "charging-cables-for-iphone-15",
+              "id": "gid://shopify/Collection/511489147131",
+              "image": null,
+              "onlineStoreUrl": "https://au.store.anker.com/collections/charging-cables-for-iphone-15",
+              "seo": {
+                "__typename": "SEO",
+                "description": "Buy Anker's iPhone 15 charging cables for fast, durable & efficient charging. Up to 140W charging, 480Mbps transfer & hassle-free charging with premium quality.",
+                "title": "Charging Cables for iPhone 15"
+              },
+              "title": "Charging Cable for iPhone 15",
+              "updatedAt": "2026-11-08T12:26:23Z"
+            }
+          },
+          {
+            "cursor": "eyJsYXN0X2lkIjo1MTE0ODkxNzk4OTksImxhc3RfdmFsdWUiOiIyMDI2LTA5LTI4IDExOjA3OjIyLjAyOTQ0MCIsIm9mZnNldCI6NDV9",
+            "node": {
+              "__typename": "Collection",
+              "description": "",
+              "descriptionHtml": "",
+              "handle": "charging-dock-for-apple",
+              "id": "gid://shopify/Collection/511489179899",
+              "image": null,
+              "onlineStoreUrl": "https://au.store.anker.com/collections/charging-dock-for-apple",
+              "seo": {
+                "__typename": "SEO",
+                "description": "Shop Anker's compact and versatile Apple charging docks. Charge your multiple Apple devices in style & on the go effortlessly, delivering quick, reliable power.",
+                "title": null
+              },
+              "title": "Charging Dock for Apple",
+              "updatedAt": "2026-11-08T12:26:23Z"
+            }
+          },
+          {
+            "cursor": "eyJsYXN0X2lkIjo1MTE0ODkyMTI2NjcsImxhc3RfdmFsdWUiOiIyMDI2LTA5LTI4IDExOjA3OjI1LjQxMTI0MiIsIm9mZnNldCI6NDZ9",
+            "node": {
+              "__typename": "Collection",
+              "description": "",
+              "descriptionHtml": "",
+              "handle": "travel-chargers",
+              "id": "gid://shopify/Collection/511489212667",
+              "image": null,
+              "onlineStoreUrl": "https://au.store.anker.com/collections/travel-chargers",
+              "seo": {
+                "__typename": "SEO",
+                "description": "Buy Anker's travel chargers: Compact, powerful & safe. Charge up to 3 devices at once, perfect for travelers seeking convenience and peace of mind on the go.",
+                "title": null
+              },
+              "title": "Travel Chargers",
+              "updatedAt": "2026-11-08T12:26:23Z"
+            }
+          },
+          {
+            "cursor": "eyJsYXN0X2lkIjo1MTE0ODkyNzgyMDMsImxhc3RfdmFsdWUiOiIyMDI2LTA5LTI4IDExOjA3OjMwLjI0MDc1NiIsIm9mZnNldCI6NDd9",
+            "node": {
+              "__typename": "Collection",
+              "description": "",
+              "descriptionHtml": "",
+              "handle": "charging-pad-for-iphone",
+              "id": "gid://shopify/Collection/511489278203",
+              "image": null,
+              "onlineStoreUrl": "https://au.store.anker.com/collections/charging-pad-for-iphone",
+              "seo": {
+                "__typename": "SEO",
+                "description": "Shop Anker\u2019s charging pad for iPhone to experience seamless wireless charging. They are fast, efficient, safe, and stylish. Enjoy the Anker Advantage now!",
+                "title": null
+              },
+              "title": "Charging Pad for iPhone",
+              "updatedAt": "2026-11-08T12:26:23Z"
+            }
+          },
+          {
+            "cursor": "eyJsYXN0X2lkIjo1MTE0ODkzNzY1MDcsImxhc3RfdmFsdWUiOiIyMDI2LTA5LTI4IDExOjA3OjQxLjUzMjI5NCIsIm9mZnNldCI6NDh9",
+            "node": {
+              "__typename": "Collection",
+              "description": "",
+              "descriptionHtml": "",
+              "handle": "portable-charger-for-macbook",
+              "id": "gid://shopify/Collection/511489376507",
+              "image": null,
+              "onlineStoreUrl": "https://au.store.anker.com/collections/portable-charger-for-macbook",
+              "seo": {
+                "__typename": "SEO",
+                "description": "Anker Portable Charger for MacBook provides convenient on-the-go power. With USB-C Power Delivery support, it offers compact and high-wattage power solutions.",
+                "title": null
+              },
+              "title": "Portable Charger for MacBook",
+              "updatedAt": "2026-11-08T12:26:23Z"
+            }
+          },
+          {
+            "cursor": "eyJsYXN0X2lkIjo1MTE0ODk2NzE0MTksImxhc3RfdmFsdWUiOiIyMDI2LTA5LTI4IDExOjA4OjIxLjA4NzYwNyIsIm9mZnNldCI6NDl9",
+            "node": {
+              "__typename": "Collection",
+              "description": "",
+              "descriptionHtml": "",
+              "handle": "iphone-13-charger",
+              "id": "gid://shopify/Collection/511489671419",
+              "image": null,
+              "onlineStoreUrl": "https://au.store.anker.com/collections/iphone-13-charger",
+              "seo": {
+                "__typename": "SEO",
+                "description": null,
+                "title": null
+              },
+              "title": "iphone 13 charger",
+              "updatedAt": "2026-11-08T12:26:23Z"
+            }
+          }
+        ]
+      }
+    }
+  },
+  "extensions": {
+    "context": {
+      "country": "AU",
+      "language": "EN"
+    },
+    "cost": {
+      "requestedQueryCost": 68
+    }
+  }
+}

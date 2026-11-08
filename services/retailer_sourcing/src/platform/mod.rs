@@ -6,6 +6,8 @@ pub mod bus;
 pub mod bus_api;
 pub mod db;
 pub mod http;
+#[allow(unused_imports)]
+pub use retailer_sourcing::graphql;
 pub mod logging;
 pub mod offers_publisher;
 pub mod outbox;

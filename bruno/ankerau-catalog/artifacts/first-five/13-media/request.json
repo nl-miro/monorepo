@@ -1,0 +1,7 @@
+{
+  "query": "query CatalogContinuation($id0: ID!,$after0: String) @inContext(country:AU, language:EN) { p0: product(id:$id0) { id media(first:10,after:$after0) { pageInfo { hasNextPage endCursor } edges { cursor node { __typename ... on ExternalVideo { alt embedUrl host id mediaContentType originUrl presentation { __typename } previewImage { __typename altText height id thumbhash url width } } ... on MediaImage { alt id image { __typename altText height id thumbhash url width } mediaContentType presentation { __typename } previewImage { __typename altText height id thumbhash url width } } ... on Model3d { alt id mediaContentType presentation { __typename } previewImage { __typename altText height id thumbhash url width } sources { __typename filesize format mimeType url } } ... on Video { alt id mediaContentType presentation { __typename } previewImage { __typename altText height id thumbhash url width } sources { __typename format height mimeType url width } } } } } } }",
+  "variables": {
+    "id0": "gid://shopify/Product/15395172516091",
+    "after0": "eyJsYXN0X2lkIjo0NjE5ODI3NTkzMjQxMSwibGFzdF92YWx1ZSI6MjAsIm9mZnNldCI6MTl9"
+  }
+}

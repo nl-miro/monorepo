@@ -1,0 +1,15 @@
+{
+  "query": "query CatalogContinuation($id0: ID!,$after0: String,$id1: ID!,$after1: String,$id2: ID!,$after2: String,$id3: ID!,$after3: String,$id4: ID!,$after4: String) @inContext(country:AU, language:EN) { p0: product(id:$id0) { id collections(first:10,after:$after0) { pageInfo { hasNextPage endCursor } edges { cursor node { __typename description descriptionHtml handle id image { __typename altText height id thumbhash url width } onlineStoreUrl seo { __typename description title } title updatedAt } } } } p1: product(id:$id1) { id collections(first:10,after:$after1) { pageInfo { hasNextPage endCursor } edges { cursor node { __typename description descriptionHtml handle id image { __typename altText height id thumbhash url width } onlineStoreUrl seo { __typename description title } title updatedAt } } } } p2: product(id:$id2) { id collections(first:10,after:$after2) { pageInfo { hasNextPage endCursor } edges { cursor node { __typename description descriptionHtml handle id image { __typename altText height id thumbhash url width } onlineStoreUrl seo { __typename description title } title updatedAt } } } } p3: product(id:$id3) { id collections(first:10,after:$after3) { pageInfo { hasNextPage endCursor } edges { cursor node { __typename description descriptionHtml handle id image { __typename altText height id thumbhash url width } onlineStoreUrl seo { __typename description title } title updatedAt } } } } p4: product(id:$id4) { id collections(first:10,after:$after4) { pageInfo { hasNextPage endCursor } edges { cursor node { __typename description descriptionHtml handle id image { __typename altText height id thumbhash url width } onlineStoreUrl seo { __typename description title } title updatedAt } } } } }",
+  "variables": {
+    "id0": "gid://shopify/Product/15395172450555",
+    "after0": "eyJsYXN0X2lkIjo1MTE0ODE2MTA0OTEsImxhc3RfdmFsdWUiOiIyMDI2LTA5LTI4IDExOjAwOjAwLjQ5NTgzOCIsIm9mZnNldCI6OX0=",
+    "id1": "gid://shopify/Product/15395172516091",
+    "after1": "eyJsYXN0X2lkIjo1MTE0Nzk3MDk5NDcsImxhc3RfdmFsdWUiOiIyMDI2LTA5LTI4IDEwOjU4OjM0LjgxMTE0NiIsIm9mZnNldCI6OX0=",
+    "id2": "gid://shopify/Product/15395172581627",
+    "after2": "eyJsYXN0X2lkIjo1MTE0ODAyMDE0NjcsImxhc3RfdmFsdWUiOiIyMDI2LTA5LTI4IDEwOjU4OjU1LjE0MzExNyIsIm9mZnNldCI6OX0=",
+    "id3": "gid://shopify/Product/15395172647163",
+    "after3": "eyJsYXN0X2lkIjo1MTE0ODAyMDE0NjcsImxhc3RfdmFsdWUiOiIyMDI2LTA5LTI4IDEwOjU4OjU1LjE0MzExNyIsIm9mZnNldCI6OX0=",
+    "id4": "gid://shopify/Product/15395172712699",
+    "after4": "eyJsYXN0X2lkIjo1MTE0ODAyMDE0NjcsImxhc3RfdmFsdWUiOiIyMDI2LTA5LTI4IDEwOjU4OjU1LjE0MzExNyIsIm9mZnNldCI6OX0="
+  }
+}

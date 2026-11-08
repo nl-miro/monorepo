@@ -1,0 +1,166 @@
+{
+  "data": {
+    "products": {
+      "pageInfo": {
+        "hasNextPage": true,
+        "endCursor": "eyJsYXN0X2lkIjoxNTM5NTE3MjcxMjY5OSwibGFzdF92YWx1ZSI6MTUzOTUxNzI3MTI2OTksIm9mZnNldCI6NH0="
+      },
+      "nodes": [
+        {
+          "id": "gid://shopify/Product/15395172450555",
+          "compareAtPriceRange": {
+            "__typename": "ProductPriceRange",
+            "maxVariantPrice": {
+              "__typename": "MoneyV2",
+              "amount": "0.0",
+              "currencyCode": "AUD"
+            },
+            "minVariantPrice": {
+              "__typename": "MoneyV2",
+              "amount": "0.0",
+              "currencyCode": "AUD"
+            }
+          },
+          "priceRange": {
+            "__typename": "ProductPriceRange",
+            "maxVariantPrice": {
+              "__typename": "MoneyV2",
+              "amount": "169.95",
+              "currencyCode": "AUD"
+            },
+            "minVariantPrice": {
+              "__typename": "MoneyV2",
+              "amount": "169.95",
+              "currencyCode": "AUD"
+            }
+          }
+        },
+        {
+          "id": "gid://shopify/Product/15395172516091",
+          "compareAtPriceRange": {
+            "__typename": "ProductPriceRange",
+            "maxVariantPrice": {
+              "__typename": "MoneyV2",
+              "amount": "0.0",
+              "currencyCode": "AUD"
+            },
+            "minVariantPrice": {
+              "__typename": "MoneyV2",
+              "amount": "0.0",
+              "currencyCode": "AUD"
+            }
+          },
+          "priceRange": {
+            "__typename": "ProductPriceRange",
+            "maxVariantPrice": {
+              "__typename": "MoneyV2",
+              "amount": "139.95",
+              "currencyCode": "AUD"
+            },
+            "minVariantPrice": {
+              "__typename": "MoneyV2",
+              "amount": "139.95",
+              "currencyCode": "AUD"
+            }
+          }
+        },
+        {
+          "id": "gid://shopify/Product/15395172581627",
+          "compareAtPriceRange": {
+            "__typename": "ProductPriceRange",
+            "maxVariantPrice": {
+              "__typename": "MoneyV2",
+              "amount": "0.0",
+              "currencyCode": "AUD"
+            },
+            "minVariantPrice": {
+              "__typename": "MoneyV2",
+              "amount": "0.0",
+              "currencyCode": "AUD"
+            }
+          },
+          "priceRange": {
+            "__typename": "ProductPriceRange",
+            "maxVariantPrice": {
+              "__typename": "MoneyV2",
+              "amount": "39.95",
+              "currencyCode": "AUD"
+            },
+            "minVariantPrice": {
+              "__typename": "MoneyV2",
+              "amount": "39.95",
+              "currencyCode": "AUD"
+            }
+          }
+        },
+        {
+          "id": "gid://shopify/Product/15395172647163",
+          "compareAtPriceRange": {
+            "__typename": "ProductPriceRange",
+            "maxVariantPrice": {
+              "__typename": "MoneyV2",
+              "amount": "0.0",
+              "currencyCode": "AUD"
+            },
+            "minVariantPrice": {
+              "__typename": "MoneyV2",
+              "amount": "0.0",
+              "currencyCode": "AUD"
+            }
+          },
+          "priceRange": {
+            "__typename": "ProductPriceRange",
+            "maxVariantPrice": {
+              "__typename": "MoneyV2",
+              "amount": "469.95",
+              "currencyCode": "AUD"
+            },
+            "minVariantPrice": {
+              "__typename": "MoneyV2",
+              "amount": "469.95",
+              "currencyCode": "AUD"
+            }
+          }
+        },
+        {
+          "id": "gid://shopify/Product/15395172712699",
+          "compareAtPriceRange": {
+            "__typename": "ProductPriceRange",
+            "maxVariantPrice": {
+              "__typename": "MoneyV2",
+              "amount": "59.99",
+              "currencyCode": "AUD"
+            },
+            "minVariantPrice": {
+              "__typename": "MoneyV2",
+              "amount": "59.99",
+              "currencyCode": "AUD"
+            }
+          },
+          "priceRange": {
+            "__typename": "ProductPriceRange",
+            "maxVariantPrice": {
+              "__typename": "MoneyV2",
+              "amount": "59.99",
+              "currencyCode": "AUD"
+            },
+            "minVariantPrice": {
+              "__typename": "MoneyV2",
+              "amount": "59.99",
+              "currencyCode": "AUD"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "extensions": {
+    "context": {
+      "country": "AU",
+      "language": "EN"
+    },
+    "cost": {
+      "requestedQueryCost": 43
+    }
+  }
+}

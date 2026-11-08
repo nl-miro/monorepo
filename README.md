@@ -334,3 +334,5 @@ The smoke job in .github/workflows/ci.yml documents the distinct ports, test
 databases and explicit queue runners. Its shell blocks can be syntax-checked
 with bash -n; full execution requires PostgreSQL and permission to open sockets.
 A workflow definition is not evidence of a passing Actions run.
+
+The Bruno workspace also includes [Anker AU catalogue queries](bruno/ankerau-catalog/README.md), fetching five products per page with separate field groups, per-product connection pagination and query-cost assertions.

@@ -13,6 +13,9 @@ collections:
   - name: "customer_facing"
     path: "customer_facing"
 
+  - name: "ankerau_catalog"
+    path: "ankerau-catalog"
+
 specs:
 
 docs: ''

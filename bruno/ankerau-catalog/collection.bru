@@ -1,0 +1,310 @@
+meta {
+  type: collection
+}
+
+script:pre-request {
+  const name = req.getName();
+  if (name === "single" || name === "08 availability and prices") {
+    bru.setVar("ankerCatalogValidated", false);
+    if (name === "single") {
+      const body = req.getBody();
+      const input = String(bru.getEnvVar("productId") || bru.getVar("productId") || bru.getRequestVar("productId") || body.variables.id).trim();
+      const id = /^\d+$/.test(input) ? "gid://shopify/Product/" + input : input;
+      if (!/^gid:\/\/shopify\/Product\/\d+$/.test(id)) {
+        throw new Error("Set productId to a numeric Shopify product ID or gid://shopify/Product/...");
+      }
+      req.setBody({ ...body, variables: { id } });
+    }
+  } else {
+    const group = name.split(" ")[1];
+    const key = "ankerCatalog." + group;
+    bru.setVar("ankerCatalogValidated", false);
+    const limit = Number(bru.getEnvVar("catalogPageLimit") || 0);
+    if (!Number.isSafeInteger(limit) || limit < 0) {
+      bru.setVar(key, null);
+      bru.runner.stopExecution();
+      throw new Error("catalogPageLimit must be a non-negative integer (0 = full catalogue)");
+    }
+    const state = bru.getVar(key) || {
+      after: null, pages: 0, pending: [], seenCursors: [], seenIds: [], nextPage: null
+    };
+    const template = req.getBody();
+    if (state.pending.length) {
+      const fields = template.query.split("fragment ProductFields on Product ")[1];
+      const declarations = [];
+      const selections = [];
+      const variables = {};
+      state.pending.forEach((item, index) => {
+        declarations.push("$id" + index + ": ID!", "$after" + index + ": String");
+        variables["id" + index] = item.id;
+        variables["after" + index] = item.after;
+        selections.push("p" + index + ": product(id:$id" + index + ") " +
+          fields.replace(/\$itemAfter\b/g, "$after" + index));
+      });
+      req.setBody({
+        query: "query CatalogContinuation(" + declarations.join(",") +
+          ") @inContext(country:AU, language:EN) { " + selections.join(" ") + " }",
+        variables
+      });
+    } else {
+      req.setBody({ ...template, variables: { ...template.variables, after: state.after } });
+    }
+    bru.setVar(key, state);
+  }
+}
+
+script:post-response {
+  const name = req.getName();
+  if (name === "single" || name === "08 availability and prices") {
+    // Follow connections during Send as well as in the collection runner, then
+    // expose the merged product(s) in the response pane.
+    const template = req.getBody();
+    const fields = {};
+    const pattern = /(\w+)\(first:(\d+)(?:,after:[^)]*)?\)\s*\{/g;
+    let match;
+    while ((match = pattern.exec(template.query))) {
+      let end = pattern.lastIndex, depth = 1;
+      const start = end;
+      while (depth && end < template.query.length) {
+        if (template.query[end] === "{") depth++;
+        if (template.query[end] === "}") depth--;
+        end++;
+      }
+      fields[match[1]] = { size: Number(match[2]), selection: template.query.slice(start, end - 1) };
+    }
+    let requests = 0, maxCost = 0;
+    function validate(status, body) {
+      const cost = body.extensions?.cost?.requestedQueryCost;
+      if (status !== 200 || body.errors?.length || !body.data) {
+        throw new Error("Product query failed; inspect the response");
+      }
+      if (!Number.isFinite(cost) || cost < 0 || cost > 1000) {
+        throw new Error("Missing or excessive requested query cost");
+      }
+      requests++;
+      maxCost = Math.max(maxCost, cost);
+      return body.data;
+    }
+    function pageInfo(connection) {
+      const info = connection?.pageInfo;
+      if (!info || typeof info.hasNextPage !== "boolean" || !Array.isArray(connection.edges) ||
+          (info.hasNextPage && (!connection.edges.length || typeof info.endCursor !== "string" || !info.endCursor))) {
+        throw new Error("Missing connection edges or pagination cursor");
+      }
+      return info;
+    }
+    async function completeObject(object, wrap, extract, productId) {
+      for (const [field, connection] of Object.entries(object)) {
+        if (!connection || typeof connection !== "object" || !connection.pageInfo) continue;
+        const definition = fields[field];
+        if (!definition) throw new Error("Missing query selection for " + field);
+        const seen = new Set();
+        while (pageInfo(connection).hasNextPage) {
+          const cursor = connection.pageInfo.endCursor;
+          if (seen.has(cursor)) throw new Error("Repeated pagination cursor for " + field);
+          seen.add(cursor);
+          const selection = field + "(first:" + definition.size + ",after:" + JSON.stringify(cursor) +
+            ") { " + definition.selection + " }";
+          const response = await bru.sendRequest({
+            method: "POST", url: req.getUrl(), headers: { "Content-Type": "application/json" },
+            data: {
+              query: "query Continuation($id:ID!) @inContext(country:AU, language:EN) { product(id:$id) { id " + wrap(selection) + " } }",
+              variables: { id: productId }
+            }
+          });
+          const data = validate(response.status, response.data);
+          if (data.product?.id !== productId) throw new Error("Missing or mismatched continuation product");
+          const parent = extract(data.product);
+          if (!parent || (object.id && parent.id !== object.id)) {
+            throw new Error("Missing or mismatched connection parent");
+          }
+          const next = parent[field];
+          pageInfo(next);
+          if (!next.edges.length) throw new Error("Empty continuation page for " + field);
+          connection.edges.push(...next.edges);
+          connection.pageInfo = next.pageInfo;
+        }
+        let previous = null;
+        for (const edge of connection.edges) {
+          if (!edge.node || typeof edge.cursor !== "string" || !edge.cursor) {
+            throw new Error("Missing edge node or cursor for " + field);
+          }
+          // Re-select this parent by its preceding cursor for nested connections
+          // (selling-plan groups have no ID in the existing field selection).
+          const after = JSON.stringify(previous);
+          await completeObject(edge.node,
+            child => wrap(field + "(first:1,after:" + after + ") { edges { node { " +
+              (edge.node.id ? "id " : "") + child + " } } }"),
+            product => extract(product)?.[field]?.edges?.[0]?.node, productId);
+          previous = edge.cursor;
+        }
+      }
+    }
+    try {
+      const body = res.getBody();
+      const data = validate(res.getStatus(), body);
+      if (name === "08 availability and prices") {
+        function checkCatalogPage(page) {
+          const info = page?.pageInfo;
+          if (!Array.isArray(page?.nodes) || page.nodes.length > 250 ||
+              !info || typeof info.hasNextPage !== "boolean" ||
+              (info.hasNextPage && (page.nodes.length !== 250 ||
+                typeof info.endCursor !== "string" || !info.endCursor))) {
+            throw new Error("Invalid availability and prices catalogue page");
+          }
+        }
+        const catalog = data.products;
+        checkCatalogPage(catalog);
+        const cursors = new Set();
+        while (catalog.nodes.length < 500 && catalog.pageInfo.hasNextPage) {
+          const cursor = catalog.pageInfo.endCursor;
+          cursors.add(cursor);
+          const response = await bru.sendRequest({
+            method: "POST", url: req.getUrl(), headers: { "Content-Type": "application/json" },
+            data: { ...template, variables: { ...template.variables, after: cursor } }
+          });
+          const next = validate(response.status, response.data).products;
+          checkCatalogPage(next);
+          if (!next.nodes.length || cursors.has(next.pageInfo.endCursor)) {
+            throw new Error("Empty catalogue continuation or repeated cursor");
+          }
+          catalog.nodes.push(...next.nodes);
+          catalog.pageInfo = next.pageInfo;
+        }
+      }
+      const products = name === "single" ? [data.product] : data.products?.nodes;
+      const ids = new Set();
+      for (const product of products) {
+        if (!product?.id || ids.has(product.id) ||
+            (name === "single" && product.id !== template.variables.id)) {
+          throw new Error("Missing, repeated or mismatched product");
+        }
+        ids.add(product.id);
+        await completeObject(product, selection => selection, value => value, product.id);
+      }
+      body.extensions.pagination = { requests, maxRequestedQueryCost: maxCost, connectionsComplete: true };
+      res.setBody(body);
+      bru.setVar("ankerCatalogValidated", true);
+    } catch (error) {
+      bru.setNextRequest(null);
+      bru.runner.stopExecution();
+      throw error;
+    }
+  } else {
+    const group = name.split(" ")[1];
+    const key = "ankerCatalog." + group;
+    const state = bru.getVar(key);
+    const isConnection = !["details", "removedFields"].includes(group);
+    try {
+      const body = res.getBody();
+      if (res.getStatus() !== 200 || body.errors?.length || !body.data) {
+        throw new Error("Product query failed; inspect the response");
+      }
+      const cost = body.extensions?.cost?.requestedQueryCost;
+      if (!Number.isFinite(cost) || cost < 0 || cost > 1000) {
+        throw new Error("Missing or excessive requested query cost");
+      }
+      function pageInfo(connection) {
+        const info = connection?.pageInfo;
+        if (!info || typeof info.hasNextPage !== "boolean" ||
+            (info.hasNextPage && (typeof info.endCursor !== "string" || !info.endCursor))) {
+          throw new Error("Missing pagination information or cursor");
+        }
+        return info;
+      }
+      function checkNested(value) {
+        if (!value || typeof value !== "object") return;
+        if (value.pageInfo?.hasNextPage) {
+          throw new Error("Nested connection needs additional pagination; export is incomplete");
+        }
+        Object.entries(value).forEach(([key, child]) => {
+          if (key !== "pageInfo") checkNested(child);
+        });
+      }
+      let products;
+      const previous = state.pending;
+      if (previous.length) {
+        products = previous.map((item, index) => {
+          const product = body.data["p" + index];
+          if (product?.id !== item.id) throw new Error("Missing or mismatched continuation product");
+          return product;
+        });
+      } else {
+        const catalog = body.data.products;
+        const info = pageInfo(catalog);
+        products = catalog.nodes;
+        const pageSize = group === "details" ? 50 : 5;
+        if (!Array.isArray(products) || products.length > pageSize ||
+            (info.hasNextPage && products.length !== pageSize)) {
+          throw new Error("Invalid catalogue page size");
+        }
+        products.forEach(product => {
+          if (!product?.id || state.seenIds.includes(product.id)) {
+            throw new Error("Missing or repeated catalogue product");
+          }
+          state.seenIds.push(product.id);
+        });
+        if (info.hasNextPage) {
+          if (state.seenCursors.includes(info.endCursor)) throw new Error("Repeated catalogue cursor");
+          state.seenCursors.push(info.endCursor);
+        }
+        state.nextPage = info;
+        state.pages += 1;
+      }
+      const pending = [];
+      products.forEach((product, index) => {
+        if (!isConnection) {
+          checkNested(product);
+          return;
+        }
+        const connection = product[group];
+        const info = pageInfo(connection);
+        if (!Array.isArray(connection.edges)) throw new Error("Missing connection edges");
+        checkNested(connection.edges);
+        if (info.hasNextPage) {
+          const seen = previous[index]?.seen || [];
+          if (!connection.edges.length || seen.includes(info.endCursor)) {
+            throw new Error("Empty connection page or repeated per-product cursor");
+          }
+          pending.push({ id: product.id, after: info.endCursor, seen: [...seen, info.endCursor] });
+        }
+      });
+      state.pending = pending;
+      const limit = Number(bru.getEnvVar("catalogPageLimit") || 0);
+      if (pending.length) {
+        bru.setVar(key, state);
+        bru.setNextRequest(name);
+      } else if (state.nextPage.hasNextPage && (!limit || state.pages < limit)) {
+        state.after = state.nextPage.endCursor;
+        bru.setVar(key, state);
+        bru.setNextRequest(name);
+      } else {
+        bru.setVar(key + ".result", {
+          pages: state.pages, products: state.seenIds.length,
+          complete: !state.nextPage.hasNextPage
+        });
+        console.log(group + ": " + state.seenIds.length + " products; " +
+          (state.nextPage.hasNextPage ? "stopped at catalogPageLimit (partial catalogue)" : "catalogue complete"));
+        bru.setVar(key, null);
+      }
+      bru.setVar("ankerCatalogValidated", true);
+    } catch (error) {
+      bru.setVar(key, null);
+      bru.setNextRequest(null);
+      bru.runner.stopExecution();
+      throw error;
+    }
+  }
+}
+
+tests {
+  test("Successful product data within Shopify tokenless cost limit", function () {
+    expect(res.getStatus()).to.equal(200);
+    const body = res.getBody();
+    expect(body.errors || []).to.have.length(0);
+    expect(body.extensions.cost.requestedQueryCost).to.be.at.most(1000);
+  });
+  test("Catalogue and connection pages validated", function () {
+    expect(bru.getVar("ankerCatalogValidated")).to.equal(true);
+  });
+}

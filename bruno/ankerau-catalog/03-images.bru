@@ -1,0 +1,25 @@
+meta {
+  name: 03 images
+  type: http
+  seq: 3
+}
+
+post {
+  url: https://oneanker-au.myshopify.com/api/2026-10/graphql.json
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "query": "query CatalogImages($after: String, $itemAfter: String) @inContext(country:AU, language:EN) { products(first:5,after:$after,sortKey:ID) { pageInfo { hasNextPage endCursor } nodes { ...ProductFields } } } fragment ProductFields on Product { id images(first:10,after:$itemAfter) { pageInfo { hasNextPage endCursor } edges { cursor node { __typename altText height id thumbhash url width } } } }",
+    "variables": {
+      "after": null,
+      "itemAfter": null
+    }
+  }
+}

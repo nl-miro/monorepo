@@ -1,0 +1,72 @@
+{
+  "data": {
+    "p0": {
+      "id": "gid://shopify/Product/15395172516091",
+      "images": {
+        "pageInfo": {
+          "hasNextPage": false,
+          "endCursor": "eyJsYXN0X2lkIjo1MDcyNzg3MTYxMTEzMSwibGFzdF92YWx1ZSI6MjQsIm9mZnNldCI6MjN9"
+        },
+        "edges": [
+          {
+            "cursor": "eyJsYXN0X2lkIjo1MDcyNzg3MTUxMjgyNywibGFzdF92YWx1ZSI6MjEsIm9mZnNldCI6MjB9",
+            "node": {
+              "__typename": "Image",
+              "altText": null,
+              "height": 2000,
+              "id": "gid://shopify/ProductImage/50727871512827",
+              "thumbhash": "cbcJFQZniIB2qJh3h3eGiEiQiASJ",
+              "url": "https://cdn.shopify.com/s/files/1/0831/7042/7131/files/A1664H61_Rich_image_TD03_US_V1.jpg?v=1790582265",
+              "width": 1600
+            }
+          },
+          {
+            "cursor": "eyJsYXN0X2lkIjo1MDcyNzg3MTU0NTU5NSwibGFzdF92YWx1ZSI6MjIsIm9mZnNldCI6MjF9",
+            "node": {
+              "__typename": "Image",
+              "altText": null,
+              "height": 2000,
+              "id": "gid://shopify/ProductImage/50727871545595",
+              "thumbhash": "cLcJFQanlmCG12eIiHZJqEdwdQVn",
+              "url": "https://cdn.shopify.com/s/files/1/0831/7042/7131/files/A1664H61_Rich_image_TD04_US_V1.jpg?v=1790582265",
+              "width": 1600
+            }
+          },
+          {
+            "cursor": "eyJsYXN0X2lkIjo1MDcyNzg3MTU3ODM2MywibGFzdF92YWx1ZSI6MjMsIm9mZnNldCI6MjJ9",
+            "node": {
+              "__typename": "Image",
+              "altText": null,
+              "height": 2000,
+              "id": "gid://shopify/ProductImage/50727871578363",
+              "thumbhash": "sucNDQL4d3h350hnh3iHaIhzj0n3",
+              "url": "https://cdn.shopify.com/s/files/1/0831/7042/7131/files/A1664H61_Rich_image_TD05_US_V1.jpg?v=1790582265",
+              "width": 1600
+            }
+          },
+          {
+            "cursor": "eyJsYXN0X2lkIjo1MDcyNzg3MTYxMTEzMSwibGFzdF92YWx1ZSI6MjQsIm9mZnNldCI6MjN9",
+            "node": {
+              "__typename": "Image",
+              "altText": null,
+              "height": 2000,
+              "id": "gid://shopify/ProductImage/50727871611131",
+              "thumbhash": "LJcFDQLJVbOKZ2b5Vn90SQhkkEAX",
+              "url": "https://cdn.shopify.com/s/files/1/0831/7042/7131/files/A1664H61_Rich_image_TD06_US_V1.jpg?v=1790582265",
+              "width": 1600
+            }
+          }
+        ]
+      }
+    }
+  },
+  "extensions": {
+    "context": {
+      "country": "AU",
+      "language": "EN"
+    },
+    "cost": {
+      "requestedQueryCost": 18
+    }
+  }
+}

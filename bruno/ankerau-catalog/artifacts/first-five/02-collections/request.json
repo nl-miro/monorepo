@@ -1,0 +1,7 @@
+{
+  "query": "query CatalogCollections($after: String, $itemAfter: String) @inContext(country:AU, language:EN) { products(first:5,after:$after,sortKey:ID) { pageInfo { hasNextPage endCursor } nodes { ...ProductFields } } } fragment ProductFields on Product { id collections(first:10,after:$itemAfter) { pageInfo { hasNextPage endCursor } edges { cursor node { __typename description descriptionHtml handle id image { __typename altText height id thumbhash url width } onlineStoreUrl seo { __typename description title } title updatedAt } } } }",
+  "variables": {
+    "after": null,
+    "itemAfter": null
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "query": "query CatalogContinuation($id0: ID!,$after0: String) @inContext(country:AU, language:EN) { p0: product(id:$id0) { id images(first:10,after:$after0) { pageInfo { hasNextPage endCursor } edges { cursor node { __typename altText height id thumbhash url width } } } } }",
+  "variables": {
+    "id0": "gid://shopify/Product/15395172516091",
+    "after0": "eyJsYXN0X2lkIjo1MDcyNzg3MTQ4MDA1OSwibGFzdF92YWx1ZSI6MjAsIm9mZnNldCI6MTl9"
+  }
+}

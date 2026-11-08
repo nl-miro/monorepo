@@ -1,0 +1,1 @@
+query Catalogue($first: Int!, $after: String) @inContext(country: AU, language: EN) { products(first: $first, after: $after, sortKey: ID) { pageInfo { hasNextPage endCursor } edges { cursor node { id handle title } } } }
