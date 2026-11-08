@@ -1,5 +1,5 @@
 
-GOAL:
+GOAL: Switching Shopify retailers to use Shopify API
 
 
 
