@@ -16,7 +16,8 @@ fn catalog_offers_and_offer_details_all_clients() {
         .map(PathBuf::from)
         .unwrap_or_else(|| {
             Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/artifacts/graphql-operations")
-        });
+        })
+        .join("ankerau");
     let clients: [(&str, Catalog, Details); 3] = [
         (
             "custom",

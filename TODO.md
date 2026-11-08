@@ -1,6 +1,7 @@
 
 GOAL: Switching Shopify retailers to use Shopify API
 
+- [x] Group GraphQL test artifacts under `graphql-operations/ankerau` and update the live test output path.
 - [x] Move the three GraphQL documents into an `ankerau` subfolder and update all client references.
 - [x] Pretty-print saved GraphQL JSON responses in all three clients and format existing artifacts.
 - [x] Sync both Bruno requests with all three Rust clients and overwrite the six saved request/response pairs.

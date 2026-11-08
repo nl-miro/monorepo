@@ -937,17 +937,19 @@ are saved unchanged.
 
 ```text
 tests/artifacts/graphql-operations/
-  custom/catalog_offers/
-  custom/offer_details/
-  graphql_client/catalog_offers/
-  graphql_client/offer_details/
-  cynic/catalog_offers/
-  cynic/offer_details/
+  ankerau/
+    custom/catalog_offers/
+    custom/offer_details/
+    graphql_client/catalog_offers/
+    graphql_client/offer_details/
+    cynic/catalog_offers/
+    cynic/offer_details/
 ```
 
 Rerunning replaces those files. `GRAPHQL_OPERATIONS_OUTPUT_DIR` can override
-the output directory. There are no retries, pagination requests, run IDs or
-merged results. Responses retain the server's `pageInfo`: the catalogue query
+the output root; the test adds `ankerau/` beneath it. There are no retries,
+pagination requests, run IDs or merged results. Responses retain the server's
+`pageInfo`: the catalogue query
 requests one page of up to 250 products with up to 20 variants per product, and
 the details query returns the initial connection pages. The live test uses
 product `15395172516091`, matching Bruno's
