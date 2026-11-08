@@ -1809,6 +1809,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "retailer_platform_shopify"
+version = "0.1.0"
+
+[[package]]
 name = "retailer_sauce"
 version = "0.1.0"
 dependencies = [

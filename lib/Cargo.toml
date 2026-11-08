@@ -17,6 +17,7 @@ members = [
     "everyday",
     "everyday_infra",
     "inbox_client",
+    "retailer_platform_shopify",
 ]
 
 [workspace.dependencies]
