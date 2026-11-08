@@ -1,6 +1,7 @@
 
 GOAL: Switching Shopify retailers to use Shopify API
 
+[ ] prepare offer details versioning 
 
 
 Status follows the [TODO workflow](AGENTS.md#todo-workflow):
