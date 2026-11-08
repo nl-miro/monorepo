@@ -1,7 +1,0 @@
-{
-  "query": "query CatalogMedia($after: String, $itemAfter: String) @inContext(country:AU, language:EN) { products(first:5,after:$after,sortKey:ID) { pageInfo { hasNextPage endCursor } nodes { ...ProductFields } } } fragment ProductFields on Product { id media(first:10,after:$itemAfter) { pageInfo { hasNextPage endCursor } edges { cursor node { __typename ... on ExternalVideo { alt embedUrl host id mediaContentType originUrl presentation { __typename } previewImage { __typename altText height id thumbhash url width } } ... on MediaImage { alt id image { __typename altText height id thumbhash url width } mediaContentType presentation { __typename } previewImage { __typename altText height id thumbhash url width } } ... on Model3d { alt id mediaContentType presentation { __typename } previewImage { __typename altText height id thumbhash url width } sources { __typename filesize format mimeType url } } ... on Video { alt id mediaContentType presentation { __typename } previewImage { __typename altText height id thumbhash url width } sources { __typename format height mimeType url width } } } } } }",
-  "variables": {
-    "after": null,
-    "itemAfter": null
-  }
-}

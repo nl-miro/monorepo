@@ -2,35 +2,54 @@
 use serde_json::Value;
 
 #[test]
+fn offer_details_token_matches_bruno() {
+    let bruno = include_str!("../../../../../bruno/ankerau-catalog/offer-details.bru");
+    let token = bruno
+        .lines()
+        .find_map(|line| {
+            line.trim()
+                .strip_prefix("X-Shopify-Storefront-Access-Token: ")
+        })
+        .unwrap();
+    assert_eq!(super::STOREFRONT_TOKEN, token);
+}
+
+fn normalized_query(query: &str) -> Value {
+    fn remove_positions(value: &mut Value) {
+        match value {
+            Value::Object(fields) => {
+                fields.remove("pos");
+                fields.values_mut().for_each(remove_positions);
+            }
+            Value::Array(items) => items.iter_mut().for_each(remove_positions),
+            _ => (),
+        }
+    }
+    let document = async_graphql::parser::parse_query(query).unwrap();
+    let mut value = serde_json::to_value(document).unwrap();
+    remove_positions(&mut value);
+    value
+}
+
+#[test]
 fn fixed_queries_match_bruno() {
-    for (bruno, document, original_name, name) in [
+    for (bruno, document) in [
         (
-            include_str!("../../../../../bruno/ankerau-catalog/08-availability-prices.bru"),
-            include_str!("catalog_offers.graphql"),
-            "CatalogAvailabilityPrices",
-            "CatalogOffers",
+            include_str!("../../../../../bruno/ankerau-catalog/catalog-offers.bru"),
+            include_str!("ankerau/catalog_offers.graphql"),
         ),
         (
-            include_str!("../../../../../bruno/ankerau-catalog/single.bru"),
-            include_str!("offer_details.graphql"),
-            "Single",
-            "OfferDetails",
+            include_str!("../../../../../bruno/ankerau-catalog/offer-details.bru"),
+            include_str!("ankerau/offer_details.graphql"),
         ),
     ] {
         let body = bruno
-            .split("body:json {\n")
+            .split("body:graphql {\n")
             .nth(1)
             .unwrap()
-            .rsplit_once("\n}")
+            .split_once("\n}")
             .unwrap()
             .0;
-        let request: Value = serde_json::from_str(body).unwrap();
-        assert_eq!(
-            document.trim(),
-            request["query"]
-                .as_str()
-                .unwrap()
-                .replace(original_name, name)
-        );
+        assert_eq!(normalized_query(document), normalized_query(body));
     }
 }

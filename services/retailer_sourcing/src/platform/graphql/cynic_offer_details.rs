@@ -1,7 +1,7 @@
-// Generated from offer_details.graphql with cynic-querygen 3.14.0.
+// Generated from ankerau/offer_details.graphql with cynic-querygen 3.14.0.
 // The operation directive is applied by the caller.
 #![allow(dead_code)]
-use super::super::schema;
+use super::schema;
 
 #[derive(cynic::QueryVariables, Debug)]
 pub struct OfferDetailsVariables<'a> {
@@ -9,7 +9,7 @@ pub struct OfferDetailsVariables<'a> {
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 #[cynic(graphql_type = "QueryRoot", variables = "OfferDetailsVariables")]
 pub struct OfferDetails {
     #[arguments(id: $id)]
@@ -17,7 +17,7 @@ pub struct OfferDetails {
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 pub struct Product {
     pub __typename: String,
     pub available_for_sale: bool,
@@ -42,22 +42,22 @@ pub struct Product {
     pub updated_at: DateTime,
     pub variants_count: Option<Count>,
     pub vendor: String,
-    #[arguments(first: 10, after: null)]
+    #[arguments(first: 25, after: null)]
     pub collections: CollectionConnection,
-    #[arguments(first: 10, after: null)]
+    #[arguments(first: 25, after: null)]
     pub images: ImageConnection,
-    #[arguments(first: 10, after: null)]
+    #[arguments(first: 25, after: null)]
     pub media: MediaConnection,
-    #[arguments(first: 5, after: null)]
+    #[arguments(first: 20, after: null)]
     pub variants: ProductVariantConnection,
-    #[arguments(first: 10, after: null)]
+    #[arguments(first: 20, after: null)]
     pub selling_plan_groups: SellingPlanGroupConnection,
     pub compare_at_price_range: ProductPriceRange,
     pub price_range: ProductPriceRange2,
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 #[cynic(graphql_type = "ProductPriceRange")]
 pub struct ProductPriceRange2 {
     pub __typename: String,
@@ -66,7 +66,7 @@ pub struct ProductPriceRange2 {
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 #[cynic(graphql_type = "MoneyV2")]
 pub struct MoneyV22 {
     pub __typename: String,
@@ -75,7 +75,7 @@ pub struct MoneyV22 {
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 pub struct MoneyV2 {
     pub __typename: String,
     pub amount: Decimal,
@@ -83,7 +83,7 @@ pub struct MoneyV2 {
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 pub struct ProductPriceRange {
     pub __typename: String,
     pub max_variant_price: MoneyV23,
@@ -91,7 +91,7 @@ pub struct ProductPriceRange {
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 #[cynic(graphql_type = "MoneyV2")]
 pub struct MoneyV24 {
     pub __typename: String,
@@ -100,7 +100,7 @@ pub struct MoneyV24 {
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 #[cynic(graphql_type = "MoneyV2")]
 pub struct MoneyV23 {
     pub __typename: String,
@@ -109,46 +109,46 @@ pub struct MoneyV23 {
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 pub struct SellingPlanGroupConnection {
     pub page_info: PageInfo,
     pub edges: Vec<SellingPlanGroupEdge>,
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 pub struct SellingPlanGroupEdge {
     pub cursor: String,
     pub node: SellingPlanGroup,
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 pub struct SellingPlanGroup {
     pub __typename: String,
     pub app_name: Option<String>,
     pub name: String,
     pub options: Vec<SellingPlanGroupOption>,
-    #[arguments(first: 1)]
+    #[arguments(first: 5)]
     pub selling_plans: SellingPlanConnection,
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 pub struct SellingPlanConnection {
     pub page_info: PageInfo2,
     pub edges: Vec<SellingPlanEdge>,
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 pub struct SellingPlanEdge {
     pub cursor: String,
     pub node: SellingPlan,
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 pub struct SellingPlan {
     pub __typename: String,
     pub billing_policy: Option<SellingPlanBillingPolicy>,
@@ -163,7 +163,7 @@ pub struct SellingPlan {
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 pub struct SellingPlanPriceAdjustment {
     pub __typename: String,
     pub adjustment_value: SellingPlanPriceAdjustmentValue,
@@ -171,19 +171,19 @@ pub struct SellingPlanPriceAdjustment {
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 pub struct SellingPlanPercentagePriceAdjustment {
     pub adjustment_percentage: f64,
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 pub struct SellingPlanFixedPriceAdjustment {
     pub price: MoneyV25,
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 #[cynic(graphql_type = "MoneyV2")]
 pub struct MoneyV25 {
     pub __typename: String,
@@ -192,13 +192,13 @@ pub struct MoneyV25 {
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 pub struct SellingPlanFixedAmountPriceAdjustment {
     pub adjustment_amount: MoneyV26,
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 #[cynic(graphql_type = "MoneyV2")]
 pub struct MoneyV26 {
     pub __typename: String,
@@ -207,7 +207,7 @@ pub struct MoneyV26 {
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 pub struct SellingPlanOption {
     pub __typename: String,
     pub name: Option<String>,
@@ -215,14 +215,14 @@ pub struct SellingPlanOption {
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 pub struct SellingPlanRecurringDeliveryPolicy {
     pub interval: SellingPlanInterval,
     pub interval_count: i32,
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 pub struct SellingPlanCheckoutCharge {
     pub __typename: String,
     #[cynic(rename = "type")]
@@ -231,13 +231,13 @@ pub struct SellingPlanCheckoutCharge {
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 pub struct SellingPlanCheckoutChargePercentageValue {
     pub percentage: f64,
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 #[cynic(graphql_type = "MoneyV2")]
 pub struct MoneyV27 {
     pub amount: Decimal,
@@ -245,14 +245,14 @@ pub struct MoneyV27 {
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 pub struct SellingPlanRecurringBillingPolicy {
     pub interval: SellingPlanInterval,
     pub interval_count: i32,
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 #[cynic(graphql_type = "PageInfo")]
 pub struct PageInfo2 {
     pub has_next_page: bool,
@@ -260,7 +260,7 @@ pub struct PageInfo2 {
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 pub struct SellingPlanGroupOption {
     pub __typename: String,
     pub name: String,
@@ -268,51 +268,51 @@ pub struct SellingPlanGroupOption {
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 pub struct PageInfo {
     pub has_next_page: bool,
     pub end_cursor: Option<String>,
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 pub struct ProductVariantConnection {
     pub page_info: PageInfo3,
     pub edges: Vec<ProductVariantEdge>,
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 pub struct ProductVariantEdge {
     pub cursor: String,
     pub node: ProductVariant,
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 pub struct ProductVariant {
     pub __typename: String,
     pub available_for_sale: bool,
     pub barcode: Option<String>,
     pub compare_at_price: Option<MoneyV28>,
-    #[arguments(first: 1)]
+    #[arguments(first: 5)]
     pub components: ProductVariantComponentConnection,
     pub currently_not_in_stock: bool,
-    #[arguments(first: 1)]
+    #[arguments(first: 5)]
     pub grouped_by: ProductVariantConnection2,
     pub id: cynic::Id,
     pub image: Option<Image>,
     pub price: MoneyV29,
-    #[arguments(first: 1)]
+    #[arguments(first: 5)]
     pub quantity_price_breaks: QuantityPriceBreakConnection,
     pub quantity_rule: QuantityRule,
     pub requires_components: bool,
     pub requires_shipping: bool,
     pub selected_options: Vec<SelectedOption>,
-    #[arguments(first: 1)]
+    #[arguments(first: 5)]
     pub selling_plan_allocations: SellingPlanAllocationConnection,
     pub sku: Option<String>,
-    #[arguments(first: 1)]
+    #[arguments(first: 5)]
     pub store_availability: StoreAvailabilityConnection,
     pub taxable: bool,
     pub title: String,
@@ -323,7 +323,7 @@ pub struct ProductVariant {
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 pub struct UnitPriceMeasurement {
     pub __typename: String,
     pub measured_type: Option<UnitPriceMeasurementMeasuredType>,
@@ -334,7 +334,7 @@ pub struct UnitPriceMeasurement {
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 #[cynic(graphql_type = "MoneyV2")]
 pub struct MoneyV210 {
     pub __typename: String,
@@ -343,21 +343,21 @@ pub struct MoneyV210 {
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 pub struct StoreAvailabilityConnection {
     pub page_info: PageInfo4,
     pub edges: Vec<StoreAvailabilityEdge>,
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 pub struct StoreAvailabilityEdge {
     pub cursor: String,
     pub node: StoreAvailability,
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 pub struct StoreAvailability {
     pub __typename: String,
     pub available: bool,
@@ -367,7 +367,7 @@ pub struct StoreAvailability {
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 pub struct Location {
     pub __typename: String,
     pub address: LocationAddress,
@@ -376,7 +376,7 @@ pub struct Location {
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 pub struct LocationAddress {
     pub __typename: String,
     pub address1: Option<String>,
@@ -394,7 +394,7 @@ pub struct LocationAddress {
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 #[cynic(graphql_type = "PageInfo")]
 pub struct PageInfo4 {
     pub has_next_page: bool,
@@ -402,21 +402,21 @@ pub struct PageInfo4 {
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 pub struct SellingPlanAllocationConnection {
     pub page_info: PageInfo5,
     pub edges: Vec<SellingPlanAllocationEdge>,
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 pub struct SellingPlanAllocationEdge {
     pub cursor: String,
     pub node: SellingPlanAllocation,
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 pub struct SellingPlanAllocation {
     pub __typename: String,
     pub checkout_charge_amount: MoneyV211,
@@ -426,7 +426,7 @@ pub struct SellingPlanAllocation {
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 #[cynic(graphql_type = "SellingPlan")]
 pub struct SellingPlan2 {
     pub __typename: String,
@@ -442,7 +442,7 @@ pub struct SellingPlan2 {
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 #[cynic(graphql_type = "SellingPlanPriceAdjustment")]
 pub struct SellingPlanPriceAdjustment2 {
     pub __typename: String,
@@ -451,21 +451,21 @@ pub struct SellingPlanPriceAdjustment2 {
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 #[cynic(graphql_type = "SellingPlanPercentagePriceAdjustment")]
 pub struct SellingPlanPercentagePriceAdjustment2 {
     pub adjustment_percentage: f64,
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 #[cynic(graphql_type = "SellingPlanFixedPriceAdjustment")]
 pub struct SellingPlanFixedPriceAdjustment2 {
     pub price: MoneyV213,
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 #[cynic(graphql_type = "MoneyV2")]
 pub struct MoneyV213 {
     pub __typename: String,
@@ -474,14 +474,14 @@ pub struct MoneyV213 {
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 #[cynic(graphql_type = "SellingPlanFixedAmountPriceAdjustment")]
 pub struct SellingPlanFixedAmountPriceAdjustment2 {
     pub adjustment_amount: MoneyV214,
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 #[cynic(graphql_type = "MoneyV2")]
 pub struct MoneyV214 {
     pub __typename: String,
@@ -490,7 +490,7 @@ pub struct MoneyV214 {
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 #[cynic(graphql_type = "SellingPlanOption")]
 pub struct SellingPlanOption2 {
     pub __typename: String,
@@ -499,7 +499,7 @@ pub struct SellingPlanOption2 {
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 #[cynic(graphql_type = "SellingPlanRecurringDeliveryPolicy")]
 pub struct SellingPlanRecurringDeliveryPolicy2 {
     pub interval: SellingPlanInterval,
@@ -507,7 +507,7 @@ pub struct SellingPlanRecurringDeliveryPolicy2 {
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 #[cynic(graphql_type = "SellingPlanCheckoutCharge")]
 pub struct SellingPlanCheckoutCharge2 {
     pub __typename: String,
@@ -517,14 +517,14 @@ pub struct SellingPlanCheckoutCharge2 {
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 #[cynic(graphql_type = "SellingPlanCheckoutChargePercentageValue")]
 pub struct SellingPlanCheckoutChargePercentageValue2 {
     pub percentage: f64,
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 #[cynic(graphql_type = "MoneyV2")]
 pub struct MoneyV215 {
     pub amount: Decimal,
@@ -532,7 +532,7 @@ pub struct MoneyV215 {
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 #[cynic(graphql_type = "SellingPlanRecurringBillingPolicy")]
 pub struct SellingPlanRecurringBillingPolicy2 {
     pub interval: SellingPlanInterval,
@@ -540,7 +540,7 @@ pub struct SellingPlanRecurringBillingPolicy2 {
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 #[cynic(graphql_type = "MoneyV2")]
 pub struct MoneyV212 {
     pub __typename: String,
@@ -549,7 +549,7 @@ pub struct MoneyV212 {
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 pub struct SellingPlanAllocationPriceAdjustment {
     pub __typename: String,
     pub compare_at_price: MoneyV216,
@@ -559,7 +559,7 @@ pub struct SellingPlanAllocationPriceAdjustment {
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 #[cynic(graphql_type = "MoneyV2")]
 pub struct MoneyV219 {
     pub __typename: String,
@@ -568,7 +568,7 @@ pub struct MoneyV219 {
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 #[cynic(graphql_type = "MoneyV2")]
 pub struct MoneyV218 {
     pub __typename: String,
@@ -577,7 +577,7 @@ pub struct MoneyV218 {
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 #[cynic(graphql_type = "MoneyV2")]
 pub struct MoneyV217 {
     pub __typename: String,
@@ -586,7 +586,7 @@ pub struct MoneyV217 {
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 #[cynic(graphql_type = "MoneyV2")]
 pub struct MoneyV216 {
     pub __typename: String,
@@ -595,7 +595,7 @@ pub struct MoneyV216 {
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 #[cynic(graphql_type = "MoneyV2")]
 pub struct MoneyV211 {
     pub __typename: String,
@@ -604,7 +604,7 @@ pub struct MoneyV211 {
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 #[cynic(graphql_type = "PageInfo")]
 pub struct PageInfo5 {
     pub has_next_page: bool,
@@ -612,7 +612,7 @@ pub struct PageInfo5 {
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 pub struct SelectedOption {
     pub __typename: String,
     pub name: String,
@@ -620,7 +620,7 @@ pub struct SelectedOption {
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 pub struct QuantityRule {
     pub __typename: String,
     pub increment: i32,
@@ -629,21 +629,21 @@ pub struct QuantityRule {
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 pub struct QuantityPriceBreakConnection {
     pub page_info: PageInfo6,
     pub edges: Vec<QuantityPriceBreakEdge>,
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 pub struct QuantityPriceBreakEdge {
     pub cursor: String,
     pub node: QuantityPriceBreak,
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 pub struct QuantityPriceBreak {
     pub __typename: String,
     pub minimum_quantity: i32,
@@ -651,7 +651,7 @@ pub struct QuantityPriceBreak {
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 #[cynic(graphql_type = "MoneyV2")]
 pub struct MoneyV220 {
     pub __typename: String,
@@ -660,7 +660,7 @@ pub struct MoneyV220 {
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 #[cynic(graphql_type = "PageInfo")]
 pub struct PageInfo6 {
     pub has_next_page: bool,
@@ -668,7 +668,7 @@ pub struct PageInfo6 {
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 #[cynic(graphql_type = "MoneyV2")]
 pub struct MoneyV29 {
     pub __typename: String,
@@ -677,7 +677,7 @@ pub struct MoneyV29 {
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 #[cynic(graphql_type = "ProductVariantConnection")]
 pub struct ProductVariantConnection2 {
     pub page_info: PageInfo7,
@@ -685,7 +685,7 @@ pub struct ProductVariantConnection2 {
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 #[cynic(graphql_type = "ProductVariantEdge")]
 pub struct ProductVariantEdge2 {
     pub cursor: String,
@@ -693,7 +693,7 @@ pub struct ProductVariantEdge2 {
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 #[cynic(graphql_type = "ProductVariant")]
 pub struct ProductVariant2 {
     pub __typename: String,
@@ -702,7 +702,7 @@ pub struct ProductVariant2 {
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 #[cynic(graphql_type = "PageInfo")]
 pub struct PageInfo7 {
     pub has_next_page: bool,
@@ -710,21 +710,21 @@ pub struct PageInfo7 {
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 pub struct ProductVariantComponentConnection {
     pub page_info: PageInfo8,
     pub edges: Vec<ProductVariantComponentEdge>,
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 pub struct ProductVariantComponentEdge {
     pub cursor: String,
     pub node: ProductVariantComponent,
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 pub struct ProductVariantComponent {
     pub __typename: String,
     pub product_variant: ProductVariant3,
@@ -732,7 +732,7 @@ pub struct ProductVariantComponent {
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 #[cynic(graphql_type = "ProductVariant")]
 pub struct ProductVariant3 {
     pub __typename: String,
@@ -741,7 +741,7 @@ pub struct ProductVariant3 {
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 #[cynic(graphql_type = "PageInfo")]
 pub struct PageInfo8 {
     pub has_next_page: bool,
@@ -749,7 +749,7 @@ pub struct PageInfo8 {
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 #[cynic(graphql_type = "MoneyV2")]
 pub struct MoneyV28 {
     pub __typename: String,
@@ -758,7 +758,7 @@ pub struct MoneyV28 {
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 #[cynic(graphql_type = "PageInfo")]
 pub struct PageInfo3 {
     pub has_next_page: bool,
@@ -766,21 +766,21 @@ pub struct PageInfo3 {
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 pub struct MediaConnection {
     pub page_info: PageInfo9,
     pub edges: Vec<MediaEdge>,
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 pub struct MediaEdge {
     pub cursor: String,
     pub node: Media,
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 pub struct Video {
     pub alt: Option<String>,
     pub media_content_type: MediaContentType,
@@ -790,7 +790,7 @@ pub struct Video {
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 pub struct VideoSource {
     pub __typename: String,
     pub format: String,
@@ -801,13 +801,13 @@ pub struct VideoSource {
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 pub struct MediaPresentation {
     pub __typename: String,
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 pub struct Model3d {
     pub alt: Option<String>,
     pub media_content_type: MediaContentType,
@@ -817,7 +817,7 @@ pub struct Model3d {
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 pub struct Model3dSource {
     pub __typename: String,
     pub filesize: i32,
@@ -827,14 +827,14 @@ pub struct Model3dSource {
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 #[cynic(graphql_type = "MediaPresentation")]
 pub struct MediaPresentation2 {
     pub __typename: String,
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 pub struct MediaImage {
     pub alt: Option<String>,
     pub id: cynic::Id,
@@ -845,14 +845,14 @@ pub struct MediaImage {
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 #[cynic(graphql_type = "MediaPresentation")]
 pub struct MediaPresentation3 {
     pub __typename: String,
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 pub struct ExternalVideo {
     pub alt: Option<String>,
     pub embed_url: Url,
@@ -864,14 +864,14 @@ pub struct ExternalVideo {
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 #[cynic(graphql_type = "MediaPresentation")]
 pub struct MediaPresentation4 {
     pub __typename: String,
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 #[cynic(graphql_type = "PageInfo")]
 pub struct PageInfo9 {
     pub has_next_page: bool,
@@ -879,21 +879,21 @@ pub struct PageInfo9 {
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 pub struct ImageConnection {
     pub page_info: PageInfo10,
     pub edges: Vec<ImageEdge>,
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 pub struct ImageEdge {
     pub cursor: String,
     pub node: Image,
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 #[cynic(graphql_type = "PageInfo")]
 pub struct PageInfo10 {
     pub has_next_page: bool,
@@ -901,21 +901,21 @@ pub struct PageInfo10 {
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 pub struct CollectionConnection {
     pub page_info: PageInfo11,
     pub edges: Vec<CollectionEdge>,
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 pub struct CollectionEdge {
     pub cursor: String,
     pub node: Collection,
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 pub struct Collection {
     pub __typename: String,
     pub description: String,
@@ -930,7 +930,7 @@ pub struct Collection {
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 #[cynic(graphql_type = "SEO")]
 pub struct SEO2 {
     pub __typename: String,
@@ -939,7 +939,7 @@ pub struct SEO2 {
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 #[cynic(graphql_type = "PageInfo")]
 pub struct PageInfo11 {
     pub has_next_page: bool,
@@ -947,7 +947,7 @@ pub struct PageInfo11 {
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 pub struct Count {
     pub __typename: String,
     pub count: i32,
@@ -955,7 +955,7 @@ pub struct Count {
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 #[cynic(graphql_type = "SEO")]
 pub struct Seo {
     pub __typename: String,
@@ -964,7 +964,7 @@ pub struct Seo {
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 pub struct ProductOption {
     pub __typename: String,
     pub id: cynic::Id,
@@ -973,7 +973,7 @@ pub struct ProductOption {
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 pub struct ProductOptionValue {
     pub __typename: String,
     pub id: cynic::Id,
@@ -982,7 +982,7 @@ pub struct ProductOptionValue {
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 pub struct ProductOptionValueSwatch {
     pub __typename: String,
     pub color: Option<Color>,
@@ -990,7 +990,7 @@ pub struct ProductOptionValueSwatch {
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 #[cynic(graphql_type = "Video")]
 pub struct Video2 {
     pub alt: Option<String>,
@@ -1001,7 +1001,7 @@ pub struct Video2 {
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 #[cynic(graphql_type = "VideoSource")]
 pub struct VideoSource2 {
     pub __typename: String,
@@ -1013,14 +1013,14 @@ pub struct VideoSource2 {
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 #[cynic(graphql_type = "MediaPresentation")]
 pub struct MediaPresentation5 {
     pub __typename: String,
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 #[cynic(graphql_type = "Model3d")]
 pub struct Model3d2 {
     pub alt: Option<String>,
@@ -1031,7 +1031,7 @@ pub struct Model3d2 {
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 #[cynic(graphql_type = "Model3dSource")]
 pub struct Model3dSource2 {
     pub __typename: String,
@@ -1042,14 +1042,14 @@ pub struct Model3dSource2 {
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 #[cynic(graphql_type = "MediaPresentation")]
 pub struct MediaPresentation6 {
     pub __typename: String,
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 #[cynic(graphql_type = "MediaImage")]
 pub struct MediaImage2 {
     pub alt: Option<String>,
@@ -1061,14 +1061,14 @@ pub struct MediaImage2 {
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 #[cynic(graphql_type = "MediaPresentation")]
 pub struct MediaPresentation7 {
     pub __typename: String,
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 #[cynic(graphql_type = "ExternalVideo")]
 pub struct ExternalVideo2 {
     pub alt: Option<String>,
@@ -1081,7 +1081,7 @@ pub struct ExternalVideo2 {
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 pub struct Image {
     pub __typename: String,
     pub alt_text: Option<String>,
@@ -1093,14 +1093,14 @@ pub struct Image {
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 #[cynic(graphql_type = "MediaPresentation")]
 pub struct MediaPresentation8 {
     pub __typename: String,
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 pub struct TaxonomyCategory {
     pub __typename: String,
     pub ancestors: Vec<TaxonomyCategory2>,
@@ -1109,7 +1109,7 @@ pub struct TaxonomyCategory {
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 #[cynic(graphql_type = "TaxonomyCategory")]
 pub struct TaxonomyCategory2 {
     pub __typename: String,
@@ -1118,7 +1118,7 @@ pub struct TaxonomyCategory2 {
 }
 
 #[derive(cynic::InlineFragments, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 #[cynic(graphql_type = "Media")]
 pub enum Media2 {
     ExternalVideo2(ExternalVideo2),
@@ -1130,7 +1130,7 @@ pub enum Media2 {
 }
 
 #[derive(cynic::InlineFragments, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 pub enum Media {
     ExternalVideo(ExternalVideo),
     MediaImage(MediaImage),
@@ -1141,7 +1141,7 @@ pub enum Media {
 }
 
 #[derive(cynic::InlineFragments, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 #[cynic(graphql_type = "SellingPlanBillingPolicy")]
 pub enum SellingPlanBillingPolicy2 {
     SellingPlanRecurringBillingPolicy2(SellingPlanRecurringBillingPolicy2),
@@ -1150,7 +1150,7 @@ pub enum SellingPlanBillingPolicy2 {
 }
 
 #[derive(cynic::InlineFragments, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 #[cynic(graphql_type = "SellingPlanCheckoutChargeValue")]
 pub enum SellingPlanCheckoutChargeValue2 {
     MoneyV215(MoneyV215),
@@ -1160,7 +1160,7 @@ pub enum SellingPlanCheckoutChargeValue2 {
 }
 
 #[derive(cynic::InlineFragments, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 #[cynic(graphql_type = "SellingPlanDeliveryPolicy")]
 pub enum SellingPlanDeliveryPolicy2 {
     SellingPlanRecurringDeliveryPolicy2(SellingPlanRecurringDeliveryPolicy2),
@@ -1169,7 +1169,7 @@ pub enum SellingPlanDeliveryPolicy2 {
 }
 
 #[derive(cynic::InlineFragments, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 #[cynic(graphql_type = "SellingPlanPriceAdjustmentValue")]
 pub enum SellingPlanPriceAdjustmentValue2 {
     SellingPlanFixedAmountPriceAdjustment2(SellingPlanFixedAmountPriceAdjustment2),
@@ -1180,7 +1180,7 @@ pub enum SellingPlanPriceAdjustmentValue2 {
 }
 
 #[derive(cynic::InlineFragments, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 pub enum SellingPlanBillingPolicy {
     SellingPlanRecurringBillingPolicy(SellingPlanRecurringBillingPolicy),
     #[cynic(fallback)]
@@ -1188,7 +1188,7 @@ pub enum SellingPlanBillingPolicy {
 }
 
 #[derive(cynic::InlineFragments, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 pub enum SellingPlanCheckoutChargeValue {
     MoneyV27(MoneyV27),
     SellingPlanCheckoutChargePercentageValue(SellingPlanCheckoutChargePercentageValue),
@@ -1197,7 +1197,7 @@ pub enum SellingPlanCheckoutChargeValue {
 }
 
 #[derive(cynic::InlineFragments, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 pub enum SellingPlanDeliveryPolicy {
     SellingPlanRecurringDeliveryPolicy(SellingPlanRecurringDeliveryPolicy),
     #[cynic(fallback)]
@@ -1205,7 +1205,7 @@ pub enum SellingPlanDeliveryPolicy {
 }
 
 #[derive(cynic::InlineFragments, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 pub enum SellingPlanPriceAdjustmentValue {
     SellingPlanFixedAmountPriceAdjustment(SellingPlanFixedAmountPriceAdjustment),
     SellingPlanFixedPriceAdjustment(SellingPlanFixedPriceAdjustment),
@@ -1215,14 +1215,14 @@ pub enum SellingPlanPriceAdjustmentValue {
 }
 
 #[derive(cynic::Enum, Clone, Copy, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 pub enum CountPrecision {
     Exact,
     AtLeast,
 }
 
 #[derive(cynic::Enum, Clone, Copy, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 pub enum CurrencyCode {
     Usd,
     Eur,
@@ -1389,7 +1389,7 @@ pub enum CurrencyCode {
 }
 
 #[derive(cynic::Enum, Clone, Copy, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 pub enum MediaContentType {
     ExternalVideo,
     Image,
@@ -1399,21 +1399,21 @@ pub enum MediaContentType {
 }
 
 #[derive(cynic::Enum, Clone, Copy, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 pub enum MediaHost {
     Youtube,
     Vimeo,
 }
 
 #[derive(cynic::Enum, Clone, Copy, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 pub enum SellingPlanCheckoutChargeType {
     Percentage,
     Price,
 }
 
 #[derive(cynic::Enum, Clone, Copy, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 pub enum SellingPlanInterval {
     Day,
     Month,
@@ -1422,7 +1422,7 @@ pub enum SellingPlanInterval {
 }
 
 #[derive(cynic::Enum, Clone, Copy, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 pub enum UnitPriceMeasurementMeasuredType {
     Volume,
     Weight,
@@ -1433,7 +1433,7 @@ pub enum UnitPriceMeasurementMeasuredType {
 }
 
 #[derive(cynic::Enum, Clone, Copy, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 pub enum UnitPriceMeasurementMeasuredUnit {
     Ml,
     Cl,
@@ -1461,7 +1461,7 @@ pub enum UnitPriceMeasurementMeasuredUnit {
 }
 
 #[derive(cynic::Enum, Clone, Copy, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 pub enum WeightUnit {
     Kilograms,
     Grams,

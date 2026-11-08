@@ -1,6 +1,22 @@
 
 GOAL: Switching Shopify retailers to use Shopify API
 
+- [x] Move the three GraphQL documents into an `ankerau` subfolder and update all client references.
+- [x] Pretty-print saved GraphQL JSON responses in all three clients and format existing artifacts.
+- [x] Sync both Bruno requests with all three Rust clients and overwrite the six saved request/response pairs.
+- [x] Use Anker AU's public Storefront token for Bruno's offer details request and verify the response.
+- [x] Fix the Bruno request type so catalog offers and offer details display their GraphQL bodies.
+- [x] Replace the Anker AU catalog collection with only `catalog offers` and `offer details`, removing the duplicate offers collection and obsolete pagination files.
+- [x] Increase offer-details connection limits across all clients and matching Bruno requests.
+  Live validation rejects the requested query with MAX_COMPLEXITY_EXCEEDED:
+  cost 1,525 exceeds the public endpoint's 1,000 limit in all three clients.
+- [x] Increase catalog offers to 20 variants per product across Bruno and all three Rust clients.
+- [x] Pretty-print `schema.graphql` and `offer_details.graphql` without changing their meaning.
+- [x] Add single-call `catalog offers` and `offer details` Bruno requests matching the Rust clients.
+- [x] Pretty-print `catalog_offers.graphql` and keep its Bruno parity check insensitive to formatting.
+- [x] Remove the old GraphQL `Field`/`Dump` downloader and its obsolete entry points, keeping the two fixed operations in all three clients.
+  Move the fixed operations into the client modules; remove the old download
+  APIs, CLI, comparison tests and schema-discovery fixtures. Supersede ADR 46.
 - [x] Implement Bruno's catalog offers and offer details operations in the custom, graphql_client and Cynic clients, with separate live-test request/response evidence for each implementation and operation.
   Execute each query once per implementation. Save exactly one request.json and
   response.json per operation in stable implementation/operation folders.

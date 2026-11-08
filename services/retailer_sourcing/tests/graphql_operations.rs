@@ -53,13 +53,26 @@ fn catalog_offers_and_offer_details_all_clients() {
                         serde_json::from_slice(&fs::read(folder.join("response.json")).unwrap())
                             .unwrap();
                     assert!(request["query"].is_string());
+                    let result_present = match operation {
+                        "catalog_offers" => {
+                            response["data"]["products"]["nodes"].is_array()
+                                && response["extensions"]["cost"]["requestedQueryCost"]
+                                    .as_u64()
+                                    .is_some_and(|cost| cost <= 1000)
+                        }
+                        "offer_details" => {
+                            response["data"]["product"]["id"] == request["variables"]["id"]
+                                && response["data"]["product"].is_object()
+                        }
+                        _ => unreachable!(),
+                    };
                     if response["errors"]
                         .as_array()
                         .is_some_and(|errors| !errors.is_empty())
-                        || !response["data"].is_object()
+                        || !result_present
                     {
                         failures.push(format!(
-                            "{implementation}/{operation}: {}",
+                            "{implementation}/{operation}: valid result: {result_present}; errors: {}",
                             response["errors"]
                         ));
                     }

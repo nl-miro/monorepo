@@ -901,49 +901,7 @@ across workers within one process and starts direct. Failed attempts use normal
 queue retries. The six-second delay and sitemap routing remain unchanged.
 See ADR 45.
 
-## Experimental Anker AU GraphQL dump
-
-Run `cargo run --bin download_ankerau -- /tmp/ankerau-dumps` from this folder.
-The blocking Rust downloader uses reqwest and embedded metafield identifiers.
-Each invocation creates a UUID run directory and downloads the AU/EN catalogue;
-no database or Python runtime is required.
-
-Each HTTP attempt saves separate `request.json`, `response.json` and
-`metadata.json` files under `http/` (catalogue requests use `AU-EN/http/`).
-Non-JSON bodies use `response.txt`; transport failures also produce `error.json`.
-`summary.json` records completion or failure. `AU-EN` contains assembled product
-snapshots, effective context and checkpoints. The CLI starts a fresh run each time.
-
-Schema-driven queries paginate selected nested connections and expand public
-metaobject references. Unknown metafield keys, private fields, recursive
-backreferences and media binaries are outside coverage; gaps and graph boundaries
-qualify a complete run. This remains a standalone experiment without offer-pipeline
-integration. Existing sitemap and offer-page clients are unaffected.
-
-Run `make fmt` and `make ci`; Rust tests include the schema fixture and a local
-HTTP server. Live validation uses the CLI above and is not part of CI.
-
-### Alternative GraphQL clients
-
-The library exposes `graphql::download_ankerau_graphql_client(output_dir)` and
-`graphql::download_ankerau_cynic(output_dir)`, with the same return type as
-`download_ankerau`. The CLI continues to call the custom implementation.
-
-Each alternative independently owns transport, retries, persistence and pagination.
-Its library builds and decodes typed catalogue queries against the checked-in
-Shopify 2026-10 schema. Live introspection and dynamic queries enrich the same
-pages with exhaustive public fields, including fields absent from the compiled
-queries. Product IDs and page cursors must match between traversal and enrichment;
-a changing catalogue fails the run rather than silently mixing different pages.
-This uses extra requests compared with the custom downloader. Raw evidence is
-saved before typed decoding. Summaries identify the implementation.
-
-Run both full live downloads explicitly with
-`cargo test --lib live_catalogue -- --ignored --nocapture`. These tests write
-UUID run directories beneath the system temporary directory. Ordinary `make ci`
-uses local fixtures and mock servers. See ADR 46 for the comparison design.
-
-### Run catalog offers and offer details once
+## Anker AU GraphQL queries
 
 The `catalog_offers_custom`, `catalog_offers_graphql_client` and
 `catalog_offers_cynic` functions execute the catalogue query once. Their
@@ -952,13 +910,30 @@ Shopify product GID. The custom client sends the checked-in GraphQL documents;
 graphql_client builds them from those documents; Cynic builds them from Rust
 fragments generated with cynic-querygen 3.14.0. All use AU/EN context.
 
+The query documents `catalog_offers.graphql`, `offer_details.graphql` and
+`schema.graphql` live together in `src/platform/graphql/ankerau/`.
+
+The same two requests are available in the
+[Anker AU catalog Bruno collection](../../bruno/ankerau-catalog/README.md).
+
+The current offer-details limits request 25 collections/images/media, 20
+variants/selling-plan groups, and 5 items in the selected nested connections.
+All three clients send Anker AU's public browser Storefront token in the
+`X-Shopify-Storefront-Access-Token` header for offer details, matching Bruno.
+This permits the 1,525-point details query, which exceeds the tokenless
+1,000-point limit. Catalog offers remains tokenless. If Anker rotates the
+public token, update `STOREFRONT_TOKEN` in `src/platform/graphql.rs` and the
+Bruno header together; an offline test checks that they match.
+
 Run the six requests from this folder:
 
 ```sh
 cargo test --test graphql_operations -- --ignored --nocapture
 ```
 
-The output is exactly one `request.json` and one `response.json` in each folder:
+The output is exactly one `request.json` and one `response.json` in each folder.
+JSON is pretty-printed with two-space indentation; non-JSON error responses
+are saved unchanged.
 
 ```text
 tests/artifacts/graphql-operations/
@@ -973,37 +948,10 @@ tests/artifacts/graphql-operations/
 Rerunning replaces those files. `GRAPHQL_OPERATIONS_OUTPUT_DIR` can override
 the output directory. There are no retries, pagination requests, run IDs or
 merged results. Responses retain the server's `pageInfo`: the catalogue query
-requests one page of up to 250 products and the details query returns the initial
-connection pages. The live test uses product `15395172516091`, matching Bruno's
-`single` default. Normal CI compiles the test and skips its external calls.
+requests one page of up to 250 products with up to 20 variants per product, and
+the details query returns the initial connection pages. The live test uses
+product `15395172516091`, matching Bruno's
+`offer details` default. Normal CI compiles the test and skips its external calls.
 
-### Compare the first five products
-
-Run the live Rust integration test from this folder:
-
-```sh
-cargo test --test graphql_clients -- --ignored --nocapture
-```
-
-It downloads the first five products in Shopify ID order through each of the
-three implementations, including their nested connections. It verifies the same
-five IDs, product counts and separate request/response artifacts. Normal CI
-compiles this test but skips its external requests.
-
-Evidence is retained under `services/retailer_sourcing/tests/artifacts/graphql-first-five/<comparison-id>/`,
-with separate `custom/`, `graphql_client/` and `cynic/` directories. Each contains
-a client run directory with the existing HTTP attempt folders and product files.
-`manifest.json` links each implementation to its run using relative paths and lists
-product IDs. These artifacts are intended to be checked into Git. The test
-prints the comparison directory; `GRAPHQL_TEST_OUTPUT_DIR` overrides its parent.
-Each run summary records its implementation, limit and completion reason, so a
-five-product sample is distinguishable from an exhausted catalogue.
-
-The first-five comparison retains only successful exhaustive-data requests
-(`Dump` operations with HTTP 200, a data object and no GraphQL errors). It removes
-schema discovery, preliminary typed catalogue queries, and failed attempts from
-the comparison artifacts. Successful nested pagination requests remain separate.
-Numbered request folders retain their original IDs, so gaps are expected.
-Assembled products and summaries, including coverage gaps, remain available.
-This filtering applies to the comparison test; standalone downloads retain their
-full diagnostic evidence.
+The fixed operations replace the former schema-driven catalogue downloader.
+See [ADR 47](../../docs/adr/0047-fixed-graphql-operations.md).

@@ -1,6 +1,0 @@
-{
-  "query": "query CatalogRemovedFields($after: String) @inContext(country:AU, language:EN) { products(first:5,after:$after,sortKey:ID) { pageInfo { hasNextPage endCursor } nodes { ...ProductFields } } } fragment ProductFields on Product { id compareAtPriceRange { __typename maxVariantPrice { __typename amount currencyCode } minVariantPrice { __typename amount currencyCode } } priceRange { __typename maxVariantPrice { __typename amount currencyCode } minVariantPrice { __typename amount currencyCode } } }",
-  "variables": {
-    "after": null
-  }
-}

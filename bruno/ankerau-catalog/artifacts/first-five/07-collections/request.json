@@ -1,9 +1,0 @@
-{
-  "query": "query CatalogContinuation($id0: ID!,$after0: String,$id1: ID!,$after1: String) @inContext(country:AU, language:EN) { p0: product(id:$id0) { id collections(first:10,after:$after0) { pageInfo { hasNextPage endCursor } edges { cursor node { __typename description descriptionHtml handle id image { __typename altText height id thumbhash url width } onlineStoreUrl seo { __typename description title } title updatedAt } } } } p1: product(id:$id1) { id collections(first:10,after:$after1) { pageInfo { hasNextPage endCursor } edges { cursor node { __typename description descriptionHtml handle id image { __typename altText height id thumbhash url width } onlineStoreUrl seo { __typename description title } title updatedAt } } } } }",
-  "variables": {
-    "id0": "gid://shopify/Product/15395172516091",
-    "after0": "eyJsYXN0X2lkIjo1MTE0ODc5MzQ3MTUsImxhc3RfdmFsdWUiOiIyMDI2LTA5LTI4IDExOjA1OjUwLjUzMDY0OSIsIm9mZnNldCI6NDl9",
-    "id1": "gid://shopify/Product/15395172581627",
-    "after1": "eyJsYXN0X2lkIjo1MTE0ODk2NzE0MTksImxhc3RfdmFsdWUiOiIyMDI2LTA5LTI4IDExOjA4OjIxLjA4NzYwNyIsIm9mZnNldCI6NDl9"
-  }
-}

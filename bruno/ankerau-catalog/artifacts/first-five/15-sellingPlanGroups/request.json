@@ -1,7 +1,0 @@
-{
-  "query": "query CatalogSellingPlanGroups($after: String, $itemAfter: String) @inContext(country:AU, language:EN) { products(first:5,after:$after,sortKey:ID) { pageInfo { hasNextPage endCursor } nodes { ...ProductFields } } } fragment ProductFields on Product { id sellingPlanGroups(first:10,after:$itemAfter) { pageInfo { hasNextPage endCursor } edges { cursor node { __typename appName name options { __typename name values } sellingPlans(first:1) { pageInfo { hasNextPage endCursor } edges { cursor node { __typename billingPolicy { __typename ... on SellingPlanRecurringBillingPolicy { interval intervalCount } } checkoutCharge { __typename type value { __typename ... on MoneyV2 { amount currencyCode } ... on SellingPlanCheckoutChargePercentageValue { percentage } } } deliveryPolicy { __typename ... on SellingPlanRecurringDeliveryPolicy { interval intervalCount } } description id name options { __typename name value } priceAdjustments { __typename adjustmentValue { __typename ... on SellingPlanFixedAmountPriceAdjustment { adjustmentAmount { __typename amount currencyCode } } ... on SellingPlanFixedPriceAdjustment { price { __typename amount currencyCode } } ... on SellingPlanPercentagePriceAdjustment { adjustmentPercentage } } orderCount } recurringDeliveries } } } } } } }",
-  "variables": {
-    "after": null,
-    "itemAfter": null
-  }
-}

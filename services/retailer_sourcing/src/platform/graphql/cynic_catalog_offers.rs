@@ -1,7 +1,7 @@
-// Generated from catalog_offers.graphql with cynic-querygen 3.14.0.
+// Generated from ankerau/catalog_offers.graphql with cynic-querygen 3.14.0.
 // The operation directive is applied by the caller.
 #![allow(dead_code)]
-use super::super::schema;
+use super::schema;
 
 #[derive(cynic::QueryVariables, Debug)]
 pub struct CatalogOffersVariables<'a> {
@@ -9,7 +9,7 @@ pub struct CatalogOffersVariables<'a> {
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 #[cynic(graphql_type = "QueryRoot", variables = "CatalogOffersVariables")]
 pub struct CatalogOffers {
     #[arguments(first: 250, after: $after, sortKey: ID)]
@@ -17,38 +17,38 @@ pub struct CatalogOffers {
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 pub struct ProductConnection {
     pub page_info: PageInfo,
     pub nodes: Vec<Product>,
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 pub struct Product {
     pub id: cynic::Id,
     pub available_for_sale: bool,
     pub price_range: ProductPriceRange,
-    #[arguments(first: 5)]
+    #[arguments(first: 20)]
     pub variants: ProductVariantConnection,
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 pub struct ProductVariantConnection {
     pub page_info: PageInfo,
     pub edges: Vec<ProductVariantEdge>,
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 pub struct ProductVariantEdge {
     pub cursor: String,
     pub node: ProductVariant,
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 pub struct ProductVariant {
     pub id: cynic::Id,
     pub price: MoneyV2,
@@ -56,28 +56,28 @@ pub struct ProductVariant {
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 pub struct MoneyV2 {
     pub amount: Decimal,
     pub currency_code: CurrencyCode,
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 pub struct PageInfo {
     pub has_next_page: bool,
     pub end_cursor: Option<String>,
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 pub struct ProductPriceRange {
     pub min_variant_price: MoneyV22,
     pub max_variant_price: MoneyV23,
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 #[cynic(graphql_type = "MoneyV2")]
 pub struct MoneyV23 {
     pub amount: Decimal,
@@ -85,7 +85,7 @@ pub struct MoneyV23 {
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 #[cynic(graphql_type = "MoneyV2")]
 pub struct MoneyV22 {
     pub amount: Decimal,
@@ -93,7 +93,7 @@ pub struct MoneyV22 {
 }
 
 #[derive(cynic::Enum, Clone, Copy, Debug)]
-#[cynic(schema_path = "src/platform/graphql/schema.graphql")]
+#[cynic(schema_path = "src/platform/graphql/ankerau/schema.graphql")]
 pub enum CurrencyCode {
     Usd,
     Eur,

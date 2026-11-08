@@ -63,3 +63,5 @@ Decision, Consequences) and give it the next number.
 - [45: Hardcoded offer proxies](0045-hardcoded-offer-proxies.md)
 
 - [46: Independent GraphQL client experiments](0046-independent-graphql-clients.md)
+
+- [47: Fixed GraphQL operations](0047-fixed-graphql-operations.md)

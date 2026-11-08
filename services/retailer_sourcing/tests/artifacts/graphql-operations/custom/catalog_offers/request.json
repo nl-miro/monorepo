@@ -1,6 +1,6 @@
 {
   "operationName": "CatalogOffers",
-  "query": "query CatalogOffers($after: String) @inContext(country:AU, language:EN) { products(first:250,after:$after,sortKey:ID) { pageInfo { hasNextPage endCursor } nodes { id availableForSale priceRange { minVariantPrice { amount currencyCode } maxVariantPrice { amount currencyCode } } variants(first:5) { pageInfo { hasNextPage endCursor } edges { cursor node { id price { amount currencyCode } availableForSale } } } } } }\n",
+  "query": "query CatalogOffers($after: String) @inContext(country: AU, language: EN) {\n  products(first: 250, after: $after, sortKey: ID) {\n    pageInfo {\n      hasNextPage\n      endCursor\n    }\n    nodes {\n      id\n      availableForSale\n      priceRange {\n        minVariantPrice {\n          amount\n          currencyCode\n        }\n        maxVariantPrice {\n          amount\n          currencyCode\n        }\n      }\n      variants(first: 20) {\n        pageInfo {\n          hasNextPage\n          endCursor\n        }\n        edges {\n          cursor\n          node {\n            id\n            price {\n              amount\n              currencyCode\n            }\n            availableForSale\n          }\n        }\n      }\n    }\n  }\n}\n",
   "variables": {
     "after": null
   }
