@@ -3,6 +3,12 @@ pub use super::offer_details::v1::{
     normalize as offer_detail_normalize_v1,
     structuralize as offer_detail_structuralize_v1, //
 };
+#[allow(unused_imports)] // Stubs awaiting v2 pipeline integration.
+pub use super::offer_details::v2::{
+    architecture as offer_detail_architecture_v2,
+    normalize as offer_detail_normalize_v2,
+    structuralize as offer_detail_structuralize_v2, //
+};
 pub use super::sitemap::v1::{
     classify_link as classify_link_v1,
     sitemap_config as sitemap_config_v1,
