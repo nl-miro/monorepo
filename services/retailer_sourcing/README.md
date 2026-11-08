@@ -901,59 +901,86 @@ across workers within one process and starts direct. Failed attempts use normal
 queue retries. The six-second delay and sitemap routing remain unchanged.
 See ADR 45.
 
-## Anker AU GraphQL queries
+## Anker GraphQL queries
 
-The `catalog_offers_custom`, `catalog_offers_graphql_client` and
-`catalog_offers_cynic` functions execute the catalogue query once. Their
-`offer_details_*` counterparts execute the single-product query once for a
-Shopify product GID. The custom client sends the checked-in GraphQL documents;
-graphql_client builds them from those documents; Cynic builds them from Rust
-fragments generated with cynic-querygen 3.14.0. All use AU/EN context.
+The six public operation functions take `Storefront::AnkerAu` or
+`Storefront::AnkerCa` as their first argument, followed by an output root and,
+for offer details, the product GID. For example:
 
-The query documents `catalog_offers.graphql`, `offer_details.graphql` and
-`schema.graphql` live together in `src/platform/graphql/ankerau/`.
+```rust,ignore
+use retailer_sourcing::graphql::{self, Storefront};
+let root = std::path::Path::new("tests/artifacts/graphql-operations");
+graphql::catalog_offers_custom(Storefront::AnkerCa, root)?;
+graphql::offer_details_custom(Storefront::AnkerCa, root, "gid://shopify/Product/8302268514493")?;
+```
 
-The same two requests are available in the
-[Anker AU catalog Bruno collection](../../bruno/ankerau-catalog/README.md).
+The same signatures apply to `catalog_offers_graphql_client`,
+`offer_details_graphql_client`, `catalog_offers_cynic`, and `offer_details_cynic`.
+Each implementation builds and sends its requests independently. The custom
+client embeds the documents, graphql_client derives operations from them, and
+Cynic builds operations from fragments generated with cynic-querygen 3.14.0.
+Queries and schemas are compiled into the binary; no runtime GraphQL files
+are needed. The documents are grouped in `src/platform/graphql/ankerau/` and
+`src/platform/graphql/ankerca/`.
 
-The current offer-details limits request 25 collections/images/media, 20
-variants/selling-plan groups, and 5 items in the selected nested connections.
-All three clients send Anker AU's public browser Storefront token in the
-`X-Shopify-Storefront-Access-Token` header for offer details, matching Bruno.
-This permits the 1,525-point details query, which exceeds the tokenless
-1,000-point limit. Catalog offers remains tokenless. If Anker rotates the
-public token, update `STOREFRONT_TOKEN` in `src/platform/graphql.rs` and the
-Bruno header together; an offline test checks that they match.
+| Storefront | Shopify domain | Context | Currency | Bruno collection |
+| --- | --- | --- | --- | --- |
+| `AnkerAu` | `oneanker-au.myshopify.com` | AU/EN | AUD | [Anker AU](../../bruno/ankerau-catalog/README.md) |
+| `AnkerCa` | `anker-canada.myshopify.com` | CA/EN | CAD | [Anker Canada](../../bruno/ankerca-catalog/README.md) |
 
-Run the six requests from this folder:
+Both use API version 2026-10. Catalog offers requests one page of 250 products
+and 20 variants per product. Offer details requests 25 collections/images/media,
+20 variants/selling-plan groups, and 5 components, grouped variants, quantity
+price breaks, selling-plan allocations, store availabilities and selling plans.
+The selected retailer's public browser token is sent in
+`X-Shopify-Storefront-Access-Token` for offer details; catalog offers is tokenless.
+The AU details query costs 1,525 points and succeeds with its token, exceeding
+the tokenless 1,000-point limit. Update `Storefront::token` in
+`src/platform/graphql.rs` and the corresponding Bruno header together when
+Anker rotates a token. Offline tests compare each client's actual query and
+HTTP request with Bruno for both retailers.
+
+Canada currently uses a schema copied from the same checked-in 2026-10
+Storefront schema. Its token and endpoint come from the public browser
+configuration fetched on 2026-11-08 (`storeTokens.ca` and `storeDomains.ca`).
+Network restrictions prevented refreshing the configuration or validating
+Canada live. Product `8302268514493` is a provisional existing Canada fixture,
+not yet the live-verified first available catalog product. Once network access
+is available, run the catalog, select the first available product in ID order,
+and update the Canadian Bruno variables and live test fixture together before
+accepting the Canadian artifacts. Do not substitute AU response data.
+The six Canadian request files are saved from the failed live run; Canadian
+response files are not present because no HTTP response was received. Existing
+AU artifacts remain unchanged.
+
+Run six requests for one retailer, or twelve for both, from this folder:
 
 ```sh
+cargo test --test graphql_operations ankerca_ -- --ignored --nocapture
+cargo test --test graphql_operations ankerau_ -- --ignored --nocapture
 cargo test --test graphql_operations -- --ignored --nocapture
 ```
 
-The output is exactly one `request.json` and one `response.json` in each folder.
-JSON is pretty-printed with two-space indentation; non-JSON error responses
-are saved unchanged.
+Each function appends its retailer slug to the supplied output root exactly
+once. The live tests use `tests/artifacts/graphql-operations` by default;
+`GRAPHQL_OPERATIONS_OUTPUT_DIR` overrides that root. Successful runs save:
 
 ```text
 tests/artifacts/graphql-operations/
-  ankerau/
-    custom/catalog_offers/
-    custom/offer_details/
-    graphql_client/catalog_offers/
-    graphql_client/offer_details/
-    cynic/catalog_offers/
-    cynic/offer_details/
+  {ankerau,ankerca}/
+    {custom,graphql_client,cynic}/
+      catalog_offers/{request,response}.json
+      offer_details/{request,response}.json
 ```
 
-Rerunning replaces those files. `GRAPHQL_OPERATIONS_OUTPUT_DIR` can override
-the output root; the test adds `ankerau/` beneath it. There are no retries,
-pagination requests, run IDs or merged results. Responses retain the server's
-`pageInfo`: the catalogue query
-requests one page of up to 250 products with up to 20 variants per product, and
-the details query returns the initial connection pages. The live test uses
-product `15395172516091`, matching Bruno's
-`offer details` default. Normal CI compiles the test and skips its external calls.
+There are exactly twelve files per retailer; reruns overwrite them. JSON is
+pretty-printed with two-space indentation. Non-JSON error responses are saved
+unchanged; network failures cannot produce a response artifact. Calls use a
+60-second timeout, no redirects, retries or automatic pagination. Responses
+retain `pageInfo`; no results are merged. AU's fixed product is
+`15395172516091`. Both test cases collect failures across implementations.
+Normal CI skips live calls and does not require network access for GraphQL tests.
 
-The fixed operations replace the former schema-driven catalogue downloader.
-See [ADR 47](../../docs/adr/0047-fixed-graphql-operations.md).
+This remains separate from the production offer pipeline and the existing
+Canada HTML integration. French requests are not included. See
+[ADR 48](../../docs/adr/0048-multi-retailer-graphql-operations.md).

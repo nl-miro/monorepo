@@ -16,6 +16,9 @@ collections:
   - name: "ankerau_catalog"
     path: "ankerau-catalog"
 
+  - name: "ankerca_catalog"
+    path: "ankerca-catalog"
+
 specs:
 
 docs: ''

@@ -1,0 +1,9 @@
+{
+  "version": "1",
+  "name": "Anker Canada catalog",
+  "type": "collection",
+  "ignore": [
+    "node_modules",
+    ".git"
+  ]
+}

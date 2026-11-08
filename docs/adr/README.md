@@ -65,3 +65,5 @@ Decision, Consequences) and give it the next number.
 - [46: Independent GraphQL client experiments](0046-independent-graphql-clients.md)
 
 - [47: Fixed GraphQL operations](0047-fixed-graphql-operations.md)
+
+- [48: Multi-retailer fixed GraphQL operations](0048-multi-retailer-graphql-operations.md)

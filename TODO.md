@@ -1,6 +1,15 @@
 
 GOAL: Switching Shopify retailers to use Shopify API
 
+- [x] Add Canadian query documents, storefront selection, and all three GraphQL clients.
+- [x] Add Canadian Bruno requests and offline/live parity checks.
+- [~] Validate Canada and AU live requests and save retailer-specific artifacts.
+  Blocked by DNS/socket restrictions: both live suites and Canadian Bruno calls
+  fail before receiving responses. Six Canadian request artifacts are saved;
+  response artifacts, token refresh and live product selection remain pending.
+  Offline GraphQL checks and Clippy pass. Full CI and health startup encounter
+  sandbox socket permission errors.
+- [x] Document multi-retailer GraphQL support and its API decision.
 - [x] Group GraphQL test artifacts under `graphql-operations/ankerau` and update the live test output path.
 - [x] Move the three GraphQL documents into an `ankerau` subfolder and update all client references.
 - [x] Pretty-print saved GraphQL JSON responses in all three clients and format existing artifacts.

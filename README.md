@@ -335,6 +335,9 @@ databases and explicit queue runners. Its shell blocks can be syntax-checked
 with bash -n; full execution requires PostgreSQL and permission to open sockets.
 A workflow definition is not evidence of a passing Actions run.
 
-The [Anker AU catalog collection](bruno/ankerau-catalog/README.md) contains
-only the single-call `catalog offers` and `offer details` requests used by the
-three Rust clients.
+The [Anker AU](bruno/ankerau-catalog/README.md) and
+[Anker Canada](bruno/ankerca-catalog/README.md) catalog collections contain
+the single-call `catalog offers` and `offer details` requests used by the three
+Rust clients. Callers select `Storefront::AnkerAu` or `Storefront::AnkerCa`;
+artifacts are grouped by retailer. Canada live validation is pending network
+access; see the [GraphQL setup](services/retailer_sourcing/README.md#anker-graphql-queries).

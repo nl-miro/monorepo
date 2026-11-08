@@ -1,0 +1,73 @@
+meta {
+  name: catalog offers
+  type: graphql
+  seq: 1
+}
+
+post {
+  url: https://anker-canada.myshopify.com/api/2026-10/graphql.json
+  body: graphql
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:graphql {
+  query CatalogOffers($after: String) @inContext(country: CA, language: EN) {
+    products(first: 250, after: $after, sortKey: ID) {
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+      nodes {
+        id
+        availableForSale
+        priceRange {
+          minVariantPrice {
+            amount
+            currencyCode
+          }
+          maxVariantPrice {
+            amount
+            currencyCode
+          }
+        }
+        variants(first: 20) {
+          pageInfo {
+            hasNextPage
+            endCursor
+          }
+          edges {
+            cursor
+            node {
+              id
+              price {
+                amount
+                currencyCode
+              }
+              availableForSale
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+body:graphql:vars {
+  {
+    "after": null
+  }
+}
+
+tests {
+  test("Successful public product query", function () {
+    expect(res.getStatus()).to.equal(200);
+    const body = res.getBody();
+    expect(body.errors || []).to.have.length(0);
+    expect(body.data.products).to.be.an("object");
+    expect(body.extensions.cost.requestedQueryCost).to.be.at.most(1000);
+  });
+}
