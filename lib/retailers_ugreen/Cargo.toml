@@ -8,6 +8,7 @@ publish = ["null-labs-hq"]
 bodul_shared.workspace = true
 html-extractor.workspace = true
 money.workspace = true
+retailer_platform_shopify.workspace = true
 retailer_sauce.workspace = true
 serde.workspace = true
 thiserror.workspace = true

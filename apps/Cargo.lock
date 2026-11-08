@@ -1848,6 +1848,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "retailer_platform_shopify"
+version = "0.1.0"
+
+[[package]]
 name = "retailer_sauce"
 version = "0.1.0"
 dependencies = [
@@ -1867,6 +1871,7 @@ dependencies = [
  "chrono",
  "html-extractor",
  "money",
+ "retailer_platform_shopify",
  "retailer_sauce",
  "serde",
  "thiserror",
@@ -1878,6 +1883,7 @@ version = "0.1.0"
 dependencies = [
  "bodul_shared",
  "html-extractor",
+ "retailer_platform_shopify",
  "retailer_sauce",
  "serde",
 ]
@@ -1889,6 +1895,7 @@ dependencies = [
  "bodul_shared",
  "html-extractor",
  "money",
+ "retailer_platform_shopify",
  "retailer_sauce",
  "serde",
  "thiserror",
@@ -1901,6 +1908,7 @@ dependencies = [
  "bodul_shared",
  "html-extractor",
  "money",
+ "retailer_platform_shopify",
  "retailer_sauce",
  "serde",
  "thiserror",

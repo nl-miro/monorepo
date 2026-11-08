@@ -1833,6 +1833,7 @@ dependencies = [
  "chrono",
  "html-extractor",
  "money",
+ "retailer_platform_shopify",
  "retailer_sauce",
  "serde",
  "serde_json",
@@ -1845,6 +1846,7 @@ version = "0.1.0"
 dependencies = [
  "bodul_shared",
  "html-extractor",
+ "retailer_platform_shopify",
  "retailer_sauce",
  "serde",
 ]
@@ -1856,6 +1858,7 @@ dependencies = [
  "bodul_shared",
  "html-extractor",
  "money",
+ "retailer_platform_shopify",
  "retailer_sauce",
  "serde",
  "serde_json",
@@ -1869,6 +1872,7 @@ dependencies = [
  "bodul_shared",
  "html-extractor",
  "money",
+ "retailer_platform_shopify",
  "retailer_sauce",
  "serde",
  "serde_json",
