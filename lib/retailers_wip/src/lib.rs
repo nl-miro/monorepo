@@ -1,5 +1,7 @@
 //! Workspace for future experimental retailer integrations.
 
+pub mod retailers;
+
 #[cfg(test)]
 mod tests {
     #[test]

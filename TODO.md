@@ -14,6 +14,12 @@
 
 ### IN PROGRESS
 
+- [x] Model retailers_wip inventory and brand factories from docs/retailer.md.
+  Includes bidirectional documentation links and inventory consistency tests; crate CI passes.
+
+- [x] Add retailers_wip retailer modules and empty Retailer/SupportedLocales entities.
+  Crate formatting and CI pass.
+
 - [~] Enable all advertised market contexts for all 17 Anker initial fills.
 
 - [x] Move product SEO title/description into content with seo_ prefixes across all brands.

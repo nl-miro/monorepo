@@ -1,5 +1,7 @@
 ## Anker Australia
 
+Implementation: [`anker::get_retailer("ankerau")`](../lib/retailers_wip/src/retailers/anker.rs). Keep this table and the factory data synchronized.
+
 | Field                  | Value                                                      |
 | ---------------------- | ---------------------------------------------------------- |
 | Retailer code          | `ankerau`                                                  |
@@ -16,6 +18,8 @@
 | en-AU             | https://www.anker.com/au | AU             | EN       |
 
 ## Anker Canada
+
+Implementation: [`anker::get_retailer("ankerca")`](../lib/retailers_wip/src/retailers/anker.rs). Keep this table and the factory data synchronized.
 
 | Field                  | Value                                                       |
 | ---------------------- | ----------------------------------------------------------- |
@@ -34,6 +38,8 @@
 | fr-CA             | https://www.anker.com/ca-fr | CA             | FR       |
 
 ## Anker Germany
+
+Implementation: [`anker::get_retailer("ankerde")`](../lib/retailers_wip/src/retailers/anker.rs). Keep this table and the factory data synchronized.
 
 | Field                  | Value                                                                                   |
 | ---------------------- | --------------------------------------------------------------------------------------- |
@@ -56,6 +62,8 @@ Note: https://www.anker.com/eu-de redirects to https://www.anker.com/de and uses
 GraphQL context (verified live on 2026-11-09): `@inContext(country: DE, language: DE)`. The API rejects `country: EU` as an invalid `CountryCode`.
 
 ## Anker Europe
+
+Implementation: [`anker::get_retailer("ankereu")`](../lib/retailers_wip/src/retailers/anker.rs). Keep this table and the factory data synchronized.
 
 | Field                  | Value                                                                                                                                          |
 | ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -88,6 +96,8 @@ The Country/region and Language columns specify the intended collection context;
 
 ## Anker South Korea
 
+Implementation: [`anker::get_retailer("ankerkr")`](../lib/retailers_wip/src/retailers/anker.rs). Keep this table and the factory data synchronized.
+
 | Field                  | Value                                            |
 | ---------------------- | ------------------------------------------------ |
 | Retailer code          | `ankerkr`                                        |
@@ -109,6 +119,8 @@ The Country/region and Language columns specify the intended collection context;
 
 ## Anker United States
 
+Implementation: [`anker::get_retailer("ankercom")`](../lib/retailers_wip/src/retailers/anker.rs). Keep this table and the factory data synchronized.
+
 | Field                  | Value                                                  |
 | ---------------------- | ------------------------------------------------------ |
 | Retailer code          | `ankercom`                                             |
@@ -126,6 +138,8 @@ The Country/region and Language columns specify the intended collection context;
 | en-US             | https://www.anker.com/ | US             | EN       |
 
 ## Anker Poland
+
+Implementation: [`anker::get_retailer("ankerpl")`](../lib/retailers_wip/src/retailers/anker.rs). Keep this table and the factory data synchronized.
 
 | Field                  | Value                                                                                          |
 | ---------------------- | ---------------------------------------------------------------------------------------------- |
@@ -145,6 +159,8 @@ The Country/region and Language columns specify the intended collection context;
 
 ## Anker France
 
+Implementation: [`anker::get_retailer("ankerfr")`](../lib/retailers_wip/src/retailers/anker.rs). Keep this table and the factory data synchronized.
+
 | Field                  | Value                                                   |
 | ---------------------- | ------------------------------------------------------- |
 | Retailer code          | `ankerfr`                                               |
@@ -161,6 +177,8 @@ The Country/region and Language columns specify the intended collection context;
 | fr-FR             | https://www.anker.com/fr | FR             | FR       |
 
 ## Anker New Zealand
+
+Implementation: [`anker::get_retailer("ankernz")`](../lib/retailers_wip/src/retailers/anker.rs). Keep this table and the factory data synchronized.
 
 | Field                  | Value                                                  |
 | ---------------------- | ------------------------------------------------------ |
@@ -183,6 +201,8 @@ The Country/region and Language columns specify the intended collection context;
 
 ## Anker United Kingdom
 
+Implementation: [`anker::get_retailer("ankeruk")`](../lib/retailers_wip/src/retailers/anker.rs). Keep this table and the factory data synchronized.
+
 | Field                  | Value                                                               |
 | ---------------------- | ------------------------------------------------------------------- |
 | Retailer code          | `ankeruk`                                                           |
@@ -200,6 +220,8 @@ The Country/region and Language columns specify the intended collection context;
 | en-GB             | https://www.anker.com/uk | GB             | EN       |
 
 ## Anker Vietnam
+
+Implementation: [`anker::get_retailer("ankervn")`](../lib/retailers_wip/src/retailers/anker.rs). Keep this table and the factory data synchronized.
 
 | Field                  | Value                                                         |
 | ---------------------- | ------------------------------------------------------------- |
@@ -223,6 +245,8 @@ The Country/region and Language columns specify the intended collection context;
 
 ## Anker Italy
 
+Implementation: [`anker::get_retailer("ankeritalycom")`](../lib/retailers_wip/src/retailers/anker.rs). Keep this table and the factory data synchronized.
+
 | Field                  | Value                                                      |
 | ---------------------- | ---------------------------------------------------------- |
 | Retailer code          | `ankeritalycom`                                            |
@@ -242,6 +266,8 @@ The Country/region and Language columns specify the intended collection context;
 
 ## Anker Japan
 
+Implementation: [`anker::get_retailer("ankerjapancom")`](../lib/retailers_wip/src/retailers/anker.rs). Keep this table and the factory data synchronized.
+
 | Field                  | Value                                                                    |
 | ---------------------- | ------------------------------------------------------------------------ |
 | Retailer code          | `ankerjapancom`                                                          |
@@ -259,6 +285,8 @@ The Country/region and Language columns specify the intended collection context;
 | ja                | https://www.ankerjapan.com/ | JP             | JA       |
 
 ## Anker Nordics
+
+Implementation: [`anker::get_retailer("ankernordicscom")`](../lib/retailers_wip/src/retailers/anker.rs). Keep this table and the factory data synchronized.
 
 | Field                  | Value                                                              |
 | ---------------------- | ------------------------------------------------------------------ |
@@ -282,6 +310,8 @@ The Country/region and Language columns specify the intended collection context;
 
 ## Minisforum Australia
 
+Implementation: [`minisforum::get_retailer("minisforumau")`](../lib/retailers_wip/src/retailers/minisforum.rs). Keep this table and the factory data synchronized.
+
 | Field                  | Value                                                    |
 | ---------------------- | -------------------------------------------------------- |
 | Retailer code          | `minisforumau`                                           |
@@ -302,6 +332,8 @@ The Country/region and Language columns specify the intended collection context;
 **Research notes:** Official Primary Market / Language table; not inferred from Shopify.country. Source: docs/research/retailer-localization-2026-11-09.json (2026-11-09). Target markets above retain the source-declared storefront markets; they are not an API country enumeration or a shipping-derived market list. Country/region and Language are intended collection contexts, not verified API combinations. No catalog-price comparison has been performed for this retailer in this extension. The research verified the GraphQL QueryRoot only; available country/language combinations still need a localization query.
 
 ## Minisforum Canada
+
+Implementation: [`minisforum::get_retailer("minisforumca")`](../lib/retailers_wip/src/retailers/minisforum.rs). Keep this table and the factory data synchronized.
 
 | Field                  | Value                                                        |
 | ---------------------- | ------------------------------------------------------------ |
@@ -324,6 +356,8 @@ The Country/region and Language columns specify the intended collection context;
 
 ## Minisforum Hong Kong
 
+Implementation: [`minisforum::get_retailer("minisforumhk")`](../lib/retailers_wip/src/retailers/minisforum.rs). Keep this table and the factory data synchronized.
+
 | Field                  | Value                                                       |
 | ---------------------- | ----------------------------------------------------------- |
 | Retailer code          | `minisforumhk`                                              |
@@ -344,6 +378,8 @@ The Country/region and Language columns specify the intended collection context;
 **Research notes:** Official Primary Market / Language table; not inferred from Shopify.country. html[lang]=zh-TW identifies a language variety, not a Taiwan target market. Source: docs/research/retailer-localization-2026-11-09.json (2026-11-09). Target markets above retain the source-declared storefront markets; they are not an API country enumeration or a shipping-derived market list. Country/region and Language are intended collection contexts, not verified API combinations. No catalog-price comparison has been performed for this retailer in this extension. The research verified the GraphQL QueryRoot only; available country/language combinations still need a localization query. The intended language code ZH_TW corresponds to the observed zh-TW locale; the reviewed language is Traditional Chinese (zh-Hant).
 
 ## Minisforum South Korea
+
+Implementation: [`minisforum::get_retailer("minisforumkr")`](../lib/retailers_wip/src/retailers/minisforum.rs). Keep this table and the factory data synchronized.
 
 | Field                  | Value                                                       |
 | ---------------------- | ----------------------------------------------------------- |
@@ -366,6 +402,8 @@ The Country/region and Language columns specify the intended collection context;
 
 ## Minisforum Russia
 
+Implementation: [`minisforum::get_retailer("minisforumru")`](../lib/retailers_wip/src/retailers/minisforum.rs). Keep this table and the factory data synchronized.
+
 | Field                  | Value                                                              |
 | ---------------------- | ------------------------------------------------------------------ |
 | Retailer code          | `minisforumru`                                                     |
@@ -386,6 +424,8 @@ The Country/region and Language columns specify the intended collection context;
 **Research notes:** Official Primary Market / Language table; not inferred from Shopify.country. html[lang] conflicts with the reviewed language declaration; retained as raw evidence only. Shopify.country=US and locale=en conflict with official Russia/Russian table; not accepted as target-market or English-language evidence. Source: docs/research/retailer-localization-2026-11-09.json (2026-11-09). Target markets above retain the source-declared storefront markets; they are not an API country enumeration or a shipping-derived market list. Country/region and Language are intended collection contexts, not verified API combinations. No catalog-price comparison has been performed for this retailer in this extension. The research verified the GraphQL QueryRoot only; available country/language combinations still need a localization query.
 
 ## Minisforum Europe
+
+Implementation: [`minisforum::get_retailer("minisforumeu")`](../lib/retailers_wip/src/retailers/minisforum.rs). Keep this table and the factory data synchronized.
 
 | Field                  | Value                                                                                                                                      |
 | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -409,6 +449,8 @@ The Country/region and Language columns specify the intended collection context;
 
 ## Minisforum France
 
+Implementation: [`minisforum::get_retailer("minisforumfr")`](../lib/retailers_wip/src/retailers/minisforum.rs). Keep this table and the factory data synchronized.
+
 | Field                  | Value                                                        |
 | ---------------------- | ------------------------------------------------------------ |
 | Retailer code          | `minisforumfr`                                               |
@@ -430,6 +472,8 @@ The Country/region and Language columns specify the intended collection context;
 **Research notes:** Official Primary Market / Language table; not inferred from Shopify.country. Shopify.country=HK on France store; not accepted as target market. Source: docs/research/retailer-localization-2026-11-09.json (2026-11-09). Target markets above retain the source-declared storefront markets; they are not an API country enumeration or a shipping-derived market list. Country/region and Language are intended collection contexts, not verified API combinations. No catalog-price comparison has been performed for this retailer in this extension. The research verified the GraphQL QueryRoot only; available country/language combinations still need a localization query. Rows marked advertised only are alternate links, not verified locale pages or confirmed extra content requests. Their country contexts remain unselected, and the base Shopify backend has not been established for those URLs.
 
 ## Minisforum United States
+
+Implementation: [`minisforum::get_retailer("minisforumus")`](../lib/retailers_wip/src/retailers/minisforum.rs). Keep this table and the factory data synchronized.
 
 | Field                  | Value                                                                                                                                                      |
 | ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -455,6 +499,8 @@ The Country/region and Language columns specify the intended collection context;
 
 ## Minisforum Japan
 
+Implementation: [`minisforum::get_retailer("minisforumjp")`](../lib/retailers_wip/src/retailers/minisforum.rs). Keep this table and the factory data synchronized.
+
 | Field                  | Value                                                        |
 | ---------------------- | ------------------------------------------------------------ |
 | Retailer code          | `minisforumjp`                                               |
@@ -476,6 +522,8 @@ The Country/region and Language columns specify the intended collection context;
 
 ## Minisforum United Kingdom
 
+Implementation: [`minisforum::get_retailer("minisforumuk")`](../lib/retailers_wip/src/retailers/minisforum.rs). Keep this table and the factory data synchronized.
+
 | Field                  | Value                                                        |
 | ---------------------- | ------------------------------------------------------------ |
 | Retailer code          | `minisforumuk`                                               |
@@ -496,6 +544,8 @@ The Country/region and Language columns specify the intended collection context;
 **Research notes:** Official Primary Market / Language table; not inferred from Shopify.country. Source: docs/research/retailer-localization-2026-11-09.json (2026-11-09). Target markets above retain the source-declared storefront markets; they are not an API country enumeration or a shipping-derived market list. Country/region and Language are intended collection contexts, not verified API combinations. No catalog-price comparison has been performed for this retailer in this extension. The research verified the GraphQL QueryRoot only; available country/language combinations still need a localization query.
 
 ## Ugreen Canada
+
+Implementation: [`ugreen::get_retailer("ugreenca")`](../lib/retailers_wip/src/retailers/ugreen.rs). Keep this table and the factory data synchronized.
 
 | Field                  | Value                                                    |
 | ---------------------- | -------------------------------------------------------- |
@@ -519,6 +569,8 @@ The Country/region and Language columns specify the intended collection context;
 
 ## Ugreen Germany
 
+Implementation: [`ugreen::get_retailer("ugreende")`](../lib/retailers_wip/src/retailers/ugreen.rs). Keep this table and the factory data synchronized.
+
 | Field                  | Value                                                    |
 | ---------------------- | -------------------------------------------------------- |
 | Retailer code          | `ugreende`                                               |
@@ -539,6 +591,8 @@ The Country/region and Language columns specify the intended collection context;
 **Research notes:** Source: docs/research/retailer-localization-2026-11-09.json (2026-11-09). Target markets above retain the source-declared storefront markets; they are not an API country enumeration or a shipping-derived market list. Country/region and Language are intended collection contexts, not verified API combinations. No catalog-price comparison has been performed for this retailer in this extension. The research verified the GraphQL QueryRoot only; available country/language combinations still need a localization query.
 
 ## Ugreen Europe
+
+Implementation: [`ugreen::get_retailer("ugreeneu")`](../lib/retailers_wip/src/retailers/ugreen.rs). Keep this table and the factory data synchronized.
 
 | Field                  | Value                                                                                                  |
 | ---------------------- | ------------------------------------------------------------------------------------------------------ |
@@ -626,6 +680,8 @@ The Country/region and Language columns specify the intended collection context;
 
 ## Ugreen France
 
+Implementation: [`ugreen::get_retailer("ugreenfr")`](../lib/retailers_wip/src/retailers/ugreen.rs). Keep this table and the factory data synchronized.
+
 | Field                  | Value                                                    |
 | ---------------------- | -------------------------------------------------------- |
 | Retailer code          | `ugreenfr`                                               |
@@ -646,6 +702,8 @@ The Country/region and Language columns specify the intended collection context;
 **Research notes:** Source: docs/research/retailer-localization-2026-11-09.json (2026-11-09). Target markets above retain the source-declared storefront markets; they are not an API country enumeration or a shipping-derived market list. Country/region and Language are intended collection contexts, not verified API combinations. No catalog-price comparison has been performed for this retailer in this extension. The research verified the GraphQL QueryRoot only; available country/language combinations still need a localization query.
 
 ## Ugreen South Korea
+
+Implementation: [`ugreen::get_retailer("ugreenkr")`](../lib/retailers_wip/src/retailers/ugreen.rs). Keep this table and the factory data synchronized.
 
 | Field                  | Value                                                    |
 | ---------------------- | -------------------------------------------------------- |
@@ -668,6 +726,8 @@ The Country/region and Language columns specify the intended collection context;
 
 ## Ugreen NAS Australia
 
+Implementation: [`ugreen::get_retailer("ugreennasau")`](../lib/retailers_wip/src/retailers/ugreen.rs). Keep this table and the factory data synchronized.
+
 | Field                  | Value                                                        |
 | ---------------------- | ------------------------------------------------------------ |
 | Retailer code          | `ugreennasau`                                                |
@@ -688,6 +748,8 @@ The Country/region and Language columns specify the intended collection context;
 **Research notes:** Source: docs/research/retailer-localization-2026-11-09.json (2026-11-09). Target markets above retain the source-declared storefront markets; they are not an API country enumeration or a shipping-derived market list. Country/region and Language are intended collection contexts, not verified API combinations. No catalog-price comparison has been performed for this retailer in this extension. The research verified the GraphQL QueryRoot only; available country/language combinations still need a localization query. Related selector URL: https://ai-au.ugreen.com/. Retained here as notes rather than separate retailer tables.
 
 ## Ugreen NAS Canada
+
+Implementation: [`ugreen::get_retailer("ugreennasca")`](../lib/retailers_wip/src/retailers/ugreen.rs). Keep this table and the factory data synchronized.
 
 | Field                  | Value                                                        |
 | ---------------------- | ------------------------------------------------------------ |
@@ -710,6 +772,8 @@ The Country/region and Language columns specify the intended collection context;
 
 ## Ugreen NAS Germany
 
+Implementation: [`ugreen::get_retailer("ugreennasde")`](../lib/retailers_wip/src/retailers/ugreen.rs). Keep this table and the factory data synchronized.
+
 | Field                  | Value                                                        |
 | ---------------------- | ------------------------------------------------------------ |
 | Retailer code          | `ugreennasde`                                                |
@@ -730,6 +794,8 @@ The Country/region and Language columns specify the intended collection context;
 **Research notes:** Source: docs/research/retailer-localization-2026-11-09.json (2026-11-09). Target markets above retain the source-declared storefront markets; they are not an API country enumeration or a shipping-derived market list. Country/region and Language are intended collection contexts, not verified API combinations. No catalog-price comparison has been performed for this retailer in this extension. The research verified the GraphQL QueryRoot only; available country/language combinations still need a localization query. The base language is declared by the storefront selector; direct page-language confirmation is unavailable in the research. Related selector URL: https://ai-de.ugreen.com/. Retained here as notes rather than separate retailer tables.
 
 ## Ugreen NAS Spain
+
+Implementation: [`ugreen::get_retailer("ugreennases")`](../lib/retailers_wip/src/retailers/ugreen.rs). Keep this table and the factory data synchronized.
 
 | Field                  | Value                                                        |
 | ---------------------- | ------------------------------------------------------------ |
@@ -752,6 +818,8 @@ The Country/region and Language columns specify the intended collection context;
 
 ## Ugreen NAS Europe
 
+Implementation: [`ugreen::get_retailer("ugreennaseu")`](../lib/retailers_wip/src/retailers/ugreen.rs). Keep this table and the factory data synchronized.
+
 | Field                  | Value                                                              |
 | ---------------------- | ------------------------------------------------------------------ |
 | Retailer code          | `ugreennaseu`                                                      |
@@ -772,6 +840,8 @@ The Country/region and Language columns specify the intended collection context;
 **Research notes:** Source: docs/research/retailer-localization-2026-11-09.json (2026-11-09). Target markets above retain the source-declared storefront markets; they are not an API country enumeration or a shipping-derived market list. Country/region and Language are intended collection contexts, not verified API combinations. No catalog-price comparison has been performed for this retailer in this extension. The research verified the GraphQL QueryRoot only; available country/language combinations still need a localization query. A collection country has not been selected. EU labels the regional storefront and is not a Shopify CountryCode; the Anker Europe AT pricing decision does not apply here. The base language is declared by the storefront selector; direct page-language confirmation is unavailable in the research. Related selector URL: https://ai-eu.ugreen.com/. Retained here as notes rather than separate retailer tables. Additional paths with unverified language support: https://nas-eu.ugreen.com/de, https://nas-eu.ugreen.com/en-be, https://nas-eu.ugreen.com/en-es, https://nas-eu.ugreen.com/en-fr, https://nas-eu.ugreen.com/en-it, https://nas-eu.ugreen.com/en-nl, https://nas-eu.ugreen.com/en-pt, https://nas-eu.ugreen.com/en-ro, https://nas-eu.ugreen.com/en-se, https://nas-eu.ugreen.com/es-es, https://nas-eu.ugreen.com/fr-be, https://nas-eu.ugreen.com/fr-fr, https://nas-eu.ugreen.com/it-it, https://nas-eu.ugreen.com/nl-be, https://nas-eu.ugreen.com/nl-nl, https://nas-eu.ugreen.com/pt-pt, https://nas-eu.ugreen.com/ro-ro, https://nas-eu.ugreen.com/sv-se. Their path names are not treated as confirmed locales.
 
 ## Ugreen NAS France
+
+Implementation: [`ugreen::get_retailer("ugreennasfr")`](../lib/retailers_wip/src/retailers/ugreen.rs). Keep this table and the factory data synchronized.
 
 | Field                  | Value                                                        |
 | ---------------------- | ------------------------------------------------------------ |
@@ -794,6 +864,8 @@ The Country/region and Language columns specify the intended collection context;
 
 ## Ugreen NAS Italy
 
+Implementation: [`ugreen::get_retailer("ugreennasit")`](../lib/retailers_wip/src/retailers/ugreen.rs). Keep this table and the factory data synchronized.
+
 | Field                  | Value                                                        |
 | ---------------------- | ------------------------------------------------------------ |
 | Retailer code          | `ugreennasit`                                                |
@@ -814,6 +886,8 @@ The Country/region and Language columns specify the intended collection context;
 **Research notes:** Source: docs/research/retailer-localization-2026-11-09.json (2026-11-09). Target markets above retain the source-declared storefront markets; they are not an API country enumeration or a shipping-derived market list. Country/region and Language are intended collection contexts, not verified API combinations. No catalog-price comparison has been performed for this retailer in this extension. The research verified the GraphQL QueryRoot only; available country/language combinations still need a localization query. The base language is declared by the storefront selector; direct page-language confirmation is unavailable in the research. Related selector URL: https://ai-it.ugreen.com/. Retained here as notes rather than separate retailer tables.
 
 ## Ugreen NAS United Kingdom
+
+Implementation: [`ugreen::get_retailer("ugreennasuk")`](../lib/retailers_wip/src/retailers/ugreen.rs). Keep this table and the factory data synchronized.
 
 | Field                  | Value                                                        |
 | ---------------------- | ------------------------------------------------------------ |
@@ -836,6 +910,8 @@ The Country/region and Language columns specify the intended collection context;
 
 ## Ugreen NAS United States
 
+Implementation: [`ugreen::get_retailer("ugreennas")`](../lib/retailers_wip/src/retailers/ugreen.rs). Keep this table and the factory data synchronized.
+
 | Field                  | Value                                                     |
 | ---------------------- | --------------------------------------------------------- |
 | Retailer code          | `ugreennas`                                               |
@@ -856,6 +932,8 @@ The Country/region and Language columns specify the intended collection context;
 **Research notes:** Source: docs/research/retailer-localization-2026-11-09.json (2026-11-09). Target markets above retain the source-declared storefront markets; they are not an API country enumeration or a shipping-derived market list. Country/region and Language are intended collection contexts, not verified API combinations. No catalog-price comparison has been performed for this retailer in this extension. The research verified the GraphQL QueryRoot only; available country/language combinations still need a localization query. Related selector URL: https://ai.ugreen.com/. Retained here as notes rather than separate retailer tables.
 
 ## Ugreen NAS Japan
+
+Implementation: [`ugreen::get_retailer("ugreennasjp")`](../lib/retailers_wip/src/retailers/ugreen.rs). Keep this table and the factory data synchronized.
 
 | Field                  | Value                                                        |
 | ---------------------- | ------------------------------------------------------------ |
@@ -878,6 +956,8 @@ The Country/region and Language columns specify the intended collection context;
 
 ## Ugreen Netherlands
 
+Implementation: [`ugreen::get_retailer("ugreennl")`](../lib/retailers_wip/src/retailers/ugreen.rs). Keep this table and the factory data synchronized.
+
 | Field                  | Value                                                    |
 | ---------------------- | -------------------------------------------------------- |
 | Retailer code          | `ugreennl`                                               |
@@ -899,6 +979,8 @@ The Country/region and Language columns specify the intended collection context;
 
 ## Ugreen Japan
 
+Implementation: [`ugreen::get_retailer("ugreenjp")`](../lib/retailers_wip/src/retailers/ugreen.rs). Keep this table and the factory data synchronized.
+
 | Field                  | Value                                                    |
 | ---------------------- | -------------------------------------------------------- |
 | Retailer code          | `ugreenjp`                                               |
@@ -919,6 +1001,8 @@ The Country/region and Language columns specify the intended collection context;
 **Research notes:** Source: docs/research/retailer-localization-2026-11-09.json (2026-11-09). Target markets above retain the source-declared storefront markets; they are not an API country enumeration or a shipping-derived market list. Country/region and Language are intended collection contexts, not verified API combinations. No catalog-price comparison has been performed for this retailer in this extension. The research verified the GraphQL QueryRoot only; available country/language combinations still need a localization query.
 
 ## Ugreen United Kingdom
+
+Implementation: [`ugreen::get_retailer("ugreenuk")`](../lib/retailers_wip/src/retailers/ugreen.rs). Keep this table and the factory data synchronized.
 
 | Field                  | Value                                            |
 | ---------------------- | ------------------------------------------------ |
@@ -942,6 +1026,8 @@ The Country/region and Language columns specify the intended collection context;
 
 ## Ugreen United States
 
+Implementation: [`ugreen::get_retailer("ugreenus")`](../lib/retailers_wip/src/retailers/ugreen.rs). Keep this table and the factory data synchronized.
+
 | Field                  | Value                                            |
 | ---------------------- | ------------------------------------------------ |
 | Retailer code          | `ugreenus`                                       |
@@ -963,6 +1049,8 @@ The Country/region and Language columns specify the intended collection context;
 **Research notes:** No Shopify shop domain was verified for this URL in the reviewed sources. This does not establish whether the storefront uses Shopify. No backend is inherited from a parent retailer or inferred from a URL, language or market. Source: docs/research/retailer-localization-2026-11-09.json (2026-11-09). Target markets above retain the source-declared storefront markets; they are not an API country enumeration or a shipping-derived market list. Country/region and Language are intended collection contexts, not verified API combinations. No catalog-price comparison has been performed for this retailer in this extension. The base language is declared by the storefront selector; direct page-language confirmation is unavailable in the research.
 
 ## Ugreen Main Site
+
+Implementation: [`ugreen::get_retailer("ugreencom")`](../lib/retailers_wip/src/retailers/ugreen.rs). Keep this table and the factory data synchronized.
 
 | Field                  | Value                                                           |
 | ---------------------- | --------------------------------------------------------------- |
@@ -1039,6 +1127,8 @@ The Country/region and Language columns specify the intended collection context;
 **Research notes:** Source: docs/research/retailer-localization-2026-11-09.json (2026-11-09). Target markets above retain the source-declared storefront markets; they are not an API country enumeration or a shipping-derived market list. Country/region and Language are intended collection contexts, not verified API combinations. No catalog-price comparison has been performed for this retailer in this extension. The research verified the GraphQL QueryRoot only; available country/language combinations still need a localization query. Rows marked advertised only are alternate links, not verified locale pages or confirmed extra content requests. Their country contexts remain unselected, and the base Shopify backend has not been established for those URLs.
 
 ## Ugreen India
+
+Implementation: [`ugreen::get_retailer("ugreenin")`](../lib/retailers_wip/src/retailers/ugreen.rs). Keep this table and the factory data synchronized.
 
 | Field                  | Value                                                    |
 | ---------------------- | -------------------------------------------------------- |
