@@ -8,10 +8,8 @@ publish = ["null-labs-hq"]
 html-extractor.workspace = true
 retailer_sauce.workspace = true
 retailers_anker = { path = "../retailers_anker" }
-retailers_mi = { path = "../retailers_mi" }
 retailers_minisforum = { path = "../retailers_minisforum" }
 retailers_ugreen = { path = "../retailers_ugreen" }
-retailers_wip = { path = "../retailers_wip" }
 scraper.workspace = true
 serde.workspace = true
 serde_json.workspace = true

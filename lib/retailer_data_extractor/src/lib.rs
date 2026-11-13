@@ -1,5 +1,7 @@
+mod v2;
+pub use v2::extract_v2_for;
 mod initial_fill_process;
-mod localization;
+pub mod localization;
 mod pretty;
 
 use std::time::Duration;
@@ -37,7 +39,6 @@ pub fn initial_fill_config_for(
 /// Returns an I/O error with kind `NotFound` when no architecture is registered.
 pub fn architecture_for(retailer_code: RetailerCode) -> Result<Architecture, std::io::Error> {
     let architecture = retailers_anker::prelude::architecture_for(retailer_code)
-        .or_else(|| retailers_mi::prelude::architecture_for(retailer_code))
         .or_else(|| retailers_minisforum::prelude::architecture_for(retailer_code))
         .or_else(|| retailers_ugreen::prelude::architecture_for(retailer_code))
         .ok_or_else(|| {
@@ -75,13 +76,15 @@ pub fn normalize_for(
     if let Some(market) = retailers_anker::prelude::NordicMarket::for_retailer(retailer_code) {
         return Some(market.normalize(json));
     }
+    if retailer_code == RetailerCode::MiCom {
+        return None;
+    }
     let (json, evidence) = match localization::split(json) {
         Ok(value) => value,
         Err(error) => return Some(Err(error)),
     };
     let json = json.as_str();
     retailers_anker::prelude::normalize_for(retailer_code, json)
-        .or_else(|| retailers_mi::prelude::normalize_for(retailer_code, json))
         .or_else(|| retailers_minisforum::prelude::normalize_for(retailer_code, json))
         .or_else(|| retailers_ugreen::prelude::normalize_for(retailer_code, json))
         .map(|result| {
@@ -99,6 +102,9 @@ pub fn structuralize_for(
 ) -> Option<Result<StructuralizedData, String>> {
     if let Some(market) = retailers_anker::prelude::NordicMarket::for_retailer(retailer_code) {
         return Some(market.structuralize(json));
+    }
+    if retailer_code == RetailerCode::MiCom {
+        return None;
     }
     let (json, evidence) = match localization::split(json) {
         Ok(value) => value,
@@ -118,7 +124,6 @@ pub fn structuralize_for(
 
 pub fn sitemap_config_for(retailer_code: &RetailerCode) -> Option<SitemapConfig> {
     retailers_anker::prelude::sitemap_config_for(retailer_code)
-        .or_else(|| retailers_mi::prelude::sitemap_config_for(retailer_code))
         .or_else(|| retailers_minisforum::prelude::sitemap_config_for(retailer_code))
         .or_else(|| retailers_ugreen::prelude::sitemap_config_for(retailer_code))
 }
@@ -127,7 +132,6 @@ pub fn sitemap_config_for(retailer_code: &RetailerCode) -> Option<SitemapConfig>
 /// Returns `None` for a retailer this crate doesn't know.
 pub fn sitemap_greylisted_for(retailer_code: RetailerCode, url: &str) -> Option<bool> {
     retailers_anker::prelude::sitemap_greylisted_for(retailer_code, url)
-        .or_else(|| retailers_mi::prelude::sitemap_greylisted_for(retailer_code, url))
         .or_else(|| retailers_minisforum::prelude::sitemap_greylisted_for(retailer_code, url))
         .or_else(|| retailers_ugreen::prelude::sitemap_greylisted_for(retailer_code, url))
 }
@@ -136,7 +140,6 @@ pub fn sitemap_greylisted_for(retailer_code: RetailerCode, url: &str) -> Option<
 /// downloads. Returns `None` for a retailer this crate doesn't know.
 pub fn sitemap_pause_for(retailer_code: RetailerCode) -> Option<Duration> {
     retailers_anker::prelude::sitemap_pause_for(retailer_code)
-        .or_else(|| retailers_mi::prelude::sitemap_pause_for(retailer_code))
         .or_else(|| retailers_minisforum::prelude::sitemap_pause_for(retailer_code))
         .or_else(|| retailers_ugreen::prelude::sitemap_pause_for(retailer_code))
 }
@@ -148,9 +151,6 @@ pub fn classify_link_for(
     image_count: usize,
 ) -> Option<LinkKind> {
     retailers_anker::prelude::classify_link_for(retailer_code, url, source, image_count)
-        .or_else(|| {
-            retailers_mi::prelude::classify_link_for(retailer_code, url, source, image_count)
-        })
         .or_else(|| {
             retailers_minisforum::prelude::classify_link_for(
                 retailer_code,
@@ -215,37 +215,27 @@ mod tests {
             (
                 RetailerCode::AnkerSe,
                 "SE",
-                include_str!(
-                    "../../retailers_anker/src/ankerse/offer_details/v1/graphql/response.json"
-                ),
+                include_str!("../tests/fixtures/anker/ankerse_response.json"),
             ),
             (
                 RetailerCode::AnkerNo,
                 "NO",
-                include_str!(
-                    "../../retailers_anker/src/ankerno/offer_details/v1/graphql/response.json"
-                ),
+                include_str!("../tests/fixtures/anker/ankerno_response.json"),
             ),
             (
                 RetailerCode::AnkerFi,
                 "FI",
-                include_str!(
-                    "../../retailers_anker/src/ankerfi/offer_details/v1/graphql/response.json"
-                ),
+                include_str!("../tests/fixtures/anker/ankerfi_response.json"),
             ),
             (
                 RetailerCode::AnkerIs,
                 "IS",
-                include_str!(
-                    "../../retailers_anker/src/ankeris/offer_details/v1/graphql/response.json"
-                ),
+                include_str!("../tests/fixtures/anker/ankeris_response.json"),
             ),
             (
                 RetailerCode::AnkerDk,
                 "DK",
-                include_str!(
-                    "../../retailers_anker/src/ankerdk/offer_details/v1/graphql/response.json"
-                ),
+                include_str!("../tests/fixtures/anker/ankerdk_response.json"),
             ),
         ] {
             let url = "https://www.ankernordics.com/products/t90r0121";
@@ -342,7 +332,6 @@ mod tests {
     fn every_retailer_with_sitemaps_downloads_every_child_by_default() {
         for retailer_code in [
             RetailerCode::AnkerAu,
-            RetailerCode::MiCom,
             RetailerCode::MinisForumAu,
             RetailerCode::UgreenCa,
         ] {
@@ -366,7 +355,6 @@ mod tests {
         }
         for retailer_code in [
             RetailerCode::AnkerAu,
-            RetailerCode::MiCom,
             RetailerCode::MinisForumAu,
             RetailerCode::UgreenCa,
         ] {
@@ -413,5 +401,73 @@ mod tests {
 
             assert!(result.is_err(), "{retailer_code:?}");
         }
+    }
+}
+
+#[cfg(test)]
+mod migrated_wip_tests {
+    use super::*;
+
+    #[test]
+    fn experimental_ankerau_hooks_are_connected() {
+        let code = RetailerCode::AnkerAu;
+        assert!(initial_fill_integration_for(code).is_some());
+        assert!(architecture_for(code).is_ok());
+        assert!(sitemap_config_for(&code).is_some());
+        assert!(normalize_for(code, "{}").is_some());
+        assert!(structuralize_for(code, "{}").is_some());
+        assert!(!initial_fill_process(code).steps.is_empty());
+        let product: serde_json::Value =
+            serde_json::from_str(include_str!("../tests/fixtures/v2/ankerau.json")).unwrap();
+        let artifact = serde_json::json!({"schema_version":1,"acquired_at":"2026-11-10T00:00:00Z","product":product,"pages":[]});
+        assert!(extract_v2_for(code, &artifact.to_string()).is_ok());
+    }
+
+    #[test]
+    fn experimental_ankerca_hooks_are_connected() {
+        let code = RetailerCode::AnkerCa;
+        let config = initial_fill_config_for(code).unwrap();
+        assert_eq!(
+            (config.country, config.language, config.currency),
+            ("CA", "EN", "CAD")
+        );
+        assert!(!all_market_contexts(code));
+        assert_eq!(
+            initial_fill_process(code).steps,
+            vec![
+                Step::AcquireStorefrontToken,
+                Step::ProductCatalogIdentifiers,
+                Step::OfferDetails
+            ]
+        );
+        assert!(architecture_for(code).is_ok());
+        assert!(sitemap_config_for(&code).is_some());
+        assert!(sitemap_pause_for(code).is_some());
+        assert!(sitemap_greylisted_for(code, "https://www.anker.com/ca/products/test").is_some());
+        assert_eq!(
+            classify_link_for(
+                code,
+                "https://www.anker.com/ca/products/test",
+                "https://www.anker.com/ca/server-sitemap-index-products.xml",
+                0
+            ),
+            Some(LinkKind::Product)
+        );
+        assert!(normalize_for(code, "{}").unwrap().is_err());
+        assert!(structuralize_for(code, "{}").unwrap().is_err());
+        let product: serde_json::Value = serde_json::from_str(include_str!(
+            "../../retailers_anker/src/ankerca/offer_details/v2/fixtures/product.json"
+        ))
+        .unwrap();
+        let source = serde_json::json!({"schema_version":1,"acquired_at":"2026-11-11T00:00:00Z","product":product,"pages":[{"request":{"query":"query Test { product { id } }","operationName":"Test","variables":{}},"response":{"extensions":{"context":{"country":"CA","language":"EN"}}}}]});
+        let result: serde_json::Value =
+            serde_json::from_str(&extract_v2_for(code, &source.to_string()).unwrap()).unwrap();
+        // Extraction is a one-to-one copy of the raw artifact, recorded pages included.
+        let raw = serde_json::to_value(
+            serde_json::from_value::<retailers_anker::graphql::raw::RawOfferDetails>(source)
+                .unwrap(),
+        )
+        .unwrap();
+        assert_eq!(result, raw);
     }
 }

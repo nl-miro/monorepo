@@ -38,12 +38,16 @@ service.
 
 ## Offer details v2 sources
 
-`make dump-offer-details-v2 DATA_DIR=../data` from the root lists
+`make dump-offer-details-v2 DATA_DIR=../data RETAILERS="ankerau"` from the root lists
 `/api/development/offer-details-v2/sources`, then downloads complete GraphQL
-artifacts from object storage with the same environment settings as v1. Files
+artifacts from object storage with the same environment settings as v1. Omit
+`RETAILERS` to dump all retailers. Files
 are `<DATA_DIR>/<retailer>/offer_details_v2/sources/<numeric Shopify product ID>.json`.
-Each file preserves the stored JSON bytes: artifact schema version 1, merged
-product, and original request/response pages. V2 is the pipeline version, not a
+Each v2 dump adds `acquired_at` from the source event’s `fetched_at`. Extraction
+requires this timestamp; older dumps without it must be re-dumped before
+extraction.
+Each file pretty-prints the stored JSON, retaining the artifact schema version,
+merged product, context when present, and original request/response pages. V2 is the pipeline version, not a
 change to the stored artifact version. The newest successfully downloaded copy
 per retailer/product wins; older copies are skipped before fetching. Unsafe
 product IDs and mismatched storage records are rejected.
@@ -197,3 +201,21 @@ Multi-market v2 sources include context metadata. The same
 `<retailer>/offer_details_v2/sources/<COUNTRY>-<LANGUAGE>/<product-id>.json`.
 Historical context-free sources retain their flat paths. Contextual artifacts
 have schema version 2 and preserve all original request/response evidence.
+
+### Extracting v2 offer dumps
+
+Run `make extract-offer-details-v2` to parse GraphQL initial-fill JSON dumps
+into the connected retailer's extracted v2 model. Anker AU uses its WIP-owned
+raw-to-extracted conversion; output contains snake_case fields and market
+context, while request/response pages remain in the source artifact. Set `DATA_DIR` to override the
+usual data directory and `RETAILERS="ankerau ugreenca"` to select retailers.
+The command reads `<DATA_DIR>/<retailer>/offer_details_v2/sources/**/*.json`
+and writes pretty-printed artifacts beneath `offer_details_v2/extracted`,
+preserving country/language subdirectories. Product data, context and recorded
+pages remain in the output; normalization and structuralization are separate
+stages and are not yet wired for v2. Failed inputs remove their stale output
+and produce a nonzero exit status while other files continue.
+
+Both offer dump commands pretty-print valid JSON payloads with a trailing
+newline, retaining key order and numeric spelling. HTML payloads are unchanged.
+Object-storage identity and original payload size are checked before formatting.

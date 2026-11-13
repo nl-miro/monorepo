@@ -23,7 +23,7 @@ const MAX_LIMIT: u32 = 1000;
 const SOURCES_QUERY: &str = "
     SELECT id, (payload::jsonb ->> 'run_id')::uuid AS run_id,
            payload::jsonb #>> '{source,GraphQl,product_id}' AS product_id,
-           payload::jsonb -> 'retailer_code' AS retailer_code,
+           (payload::jsonb -> 'retailer_code')::text AS retailer_code,
            payload::jsonb ->> 'fetched_at' AS fetched_at,
            NULLIF(payload::jsonb -> 'context', 'null'::jsonb) AS context,
            payload::jsonb -> 'storage' AS storage
@@ -83,8 +83,10 @@ struct SourceRecord {
     run_id: Uuid,
     #[diesel(sql_type = Text)]
     product_id: String,
-    #[diesel(sql_type = Jsonb)]
-    retailer_code: DbJson<RetailerCode>,
+    // Retailer codes are JSON strings, not metadata objects. Keep their JSON
+    // encoding so Serde also handles historical enum spellings.
+    #[diesel(sql_type = Text)]
+    retailer_code: String,
     #[diesel(sql_type = Text)]
     fetched_at: String,
     #[diesel(sql_type = Jsonb)]
@@ -138,18 +140,22 @@ fn load_sources(db: &DbPool, page: &PageV2) -> Result<Vec<OfferSourceV2>, String
         .load::<SourceRecord>(&mut connection)
         .map_err(|error| error.to_string())?;
     drop(connection);
-    Ok(records
+    records
         .into_iter()
-        .map(|record| OfferSourceV2 {
-            id: record.id,
-            run_id: record.run_id,
-            product_id: record.product_id,
-            retailer_code: record.retailer_code.0,
-            fetched_at: record.fetched_at,
-            storage: record.storage.0,
-            context: record.context.map(|v| v.0),
+        .map(|record| {
+            Ok(OfferSourceV2 {
+                id: record.id,
+                run_id: record.run_id,
+                product_id: record.product_id,
+                retailer_code: serde_json::from_str(&record.retailer_code).map_err(|error| {
+                    format!("Invalid retailer code in event {}: {error}", record.id)
+                })?,
+                fetched_at: record.fetched_at,
+                storage: record.storage.0,
+                context: record.context.map(|v| v.0),
+            })
         })
-        .collect())
+        .collect()
 }
 
 fn error(status: StatusCode, error: String) -> Response {

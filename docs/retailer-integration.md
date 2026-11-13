@@ -4,8 +4,13 @@ How to build, or finish, the integration for one retailer storefront: the code
 that tells the pipeline where a store's sitemaps are, which of their URLs are
 products, and how to turn a product page into structured offer data.
 
-The reference implementation is `ankerau` (`lib/retailers_anker/src/ankerau/`).
+The reference implementation is `ankerau` (`lib_retailers_anker/src/ankerau/`).
 Every step below shows the matching ankerau code. Open it next to this document.
+
+The Anker, Minisforum and Ugreen crates live under `lib/retailers_<brand>`.
+Edit and test them locally; no retailer package publication is required.
+`retailer_sauce` and other supporting crates remain registry dependencies.
+Legacy `lib_retailers_<brand>` references below identify the corresponding local crate.
 
 ## How to use this document
 
@@ -27,8 +32,8 @@ This document is written so an agent can carry it out end to end.
 | Input               | Where to find it                                                             | ankerau                                  |
 | ------------------- | ---------------------------------------------------------------------------- | ---------------------------------------- |
 | Retailer slug       | `RetailerCode` in `shared` (see below)                                       | `ankerau` (`RetailerCode::AnkerAu`)      |
-| Crate               | `lib/retailers_<brand>/`                                                     | `lib/retailers_anker/`                   |
-| Storefront folder   | `lib/retailers_<brand>/src/<slug>/`                                          | `lib/retailers_anker/src/ankerau/`       |
+| Crate               | `lib_retailers_<brand>/`                                                     | `lib_retailers_anker/`                   |
+| Storefront folder   | `lib_retailers_<brand>/src/<slug>/`                                          | `lib_retailers_anker/src/ankerau/`       |
 | Platform            | Page source of a product page                                                | Next.js Pages Router (Shopify behind it) |
 | Root sitemap URLs   | `robots.txt` (`Sitemap:` lines) or `/sitemap.xml`                            | `https://www.anker.com/sitemap.xml`      |
 | Saved product pages | `../data/<slug>/offer_details/sources/*.html`, next to the monorepo checkout | `../data/ankerau/offer_details/sources/` |
@@ -89,7 +94,7 @@ The five Nordic Anker markets use country-context Storefront JSON rather than
 HTML. Their facade path validates and extracts that JSON directly; an HTML
 architecture is not used to obtain market prices. Raw exports still use `.html`
 filenames. For these markets, follow the source contract and fixtures in
-[`retailers_anker`](../lib/retailers_anker/README.md) and
+[`retailers_anker`](https://github.com/bodul-hq/lib_retailers_anker) and
 [ADR 47](adr/0047-nordic-retailer-markets.md), then run the same offline stages.
 
 ### How a call reaches the storefront
@@ -105,13 +110,13 @@ lib/retailer_data_extractor/src/lib.rs          facade: <hook>_for(code, …)
   with `or_else`; the first crate that knows the code answers
         │
         ▼
-lib/retailers_<brand>/src/registry.rs           <hook>_for: one `match RetailerCode` arm per storefront
+lib_retailers_<brand>/src/registry.rs           <hook>_for: one `match RetailerCode` arm per storefront
         │
         ▼
-lib/retailers_<brand>/src/<slug>/prelude.rs     re-exports the v1 functions as <hook>_v1
+lib_retailers_<brand>/src/<slug>/prelude.rs     re-exports the v1 functions as <hook>_v1
         │
         ▼
-lib/retailers_<brand>/src/<slug>/{sitemap,offer_details}/v1/   the implementation
+lib_retailers_<brand>/src/<slug>/{sitemap,offer_details}/v1/   the implementation
 ```
 
 The service and the facade never name a storefront. A storefront is reachable
@@ -130,7 +135,7 @@ once its crate's registry has an arm for it.
 ## 3. Storefront module layout
 
 ```
-lib/retailers_anker/src/ankerau/
+lib_retailers_anker/src/ankerau/
 ├── mod.rs                      private stage modules plus `pub mod prelude`
 ├── prelude.rs                  the storefront's only public surface: v1 functions renamed to *_v1
 ├── sitemap/
@@ -193,7 +198,7 @@ middle one the prelude name the registry calls.
 | `offer_details::v1::structuralize(json: &str)`         | `offer_detail_structuralize_v1` | `Result<StructuralizedData, String>`       |
 
 The registry functions wrap each in `Option`, `None` meaning "not my
-storefront". See `lib/retailers_anker/src/registry.rs`.
+storefront". See `lib_retailers_anker/src/registry.rs`.
 
 ## 5. Implementation steps
 
@@ -212,7 +217,7 @@ are expected until step 3.
 
 ### Step 2. Sitemap rules (`sitemap/v1/mod.rs`)
 
-ankerau, `lib/retailers_anker/src/ankerau/sitemap/v1/mod.rs`:
+ankerau, `lib_retailers_anker/src/ankerau/sitemap/v1/mod.rs`:
 
 ```rust
 pub fn sitemap_config() -> SitemapConfig {
@@ -297,7 +302,7 @@ Rules:
   - On Shopify, fall back to `retailer_sauce::shopify::shopify_from_location`
     (`/products/`, `/collections/`, `/pages/`, `/blogs/`) after the
     storefront-specific exclusions. See
-    `lib/retailers_minisforum/src/minisforumau/sitemap/v1/mod.rs` for that
+    `lib_retailers_minisforum/src/minisforumau/sitemap/v1/mod.rs` for that
     pattern.
 
 Tests in the same file, at least one per rule: one test per `LinkKind` with real
@@ -312,7 +317,7 @@ For each hook in section 4 that the storefront implements:
 
 1. Re-export it in the storefront's `prelude.rs` under its `_v1` name.
 2. Add an arm to the matching `*_for` function in
-   `lib/retailers_<brand>/src/registry.rs`, in the same position as the other
+   `lib_retailers_<brand>/src/registry.rs`, in the same position as the other
    storefronts:
 
    ```rust
@@ -716,14 +721,4 @@ Don't copy these:
 
 ## GraphQL initial fills
 
-Each supported retailer owns `initial_fill/v1` and `offer_details/v2/raw.rs` in
-its existing brand crate. Queries, schema snapshots, token discovery, market
-parsing, validation and pagination must be local to that retailer. Do not import
-another retailer's integration or raw types, even when their Shopify origins
-match. Keep source fixtures and regression tests beside the implementation.
-
-Register the local `InitialFillIntegration` in the brand's `initial_fill`
-registry. The facade supplies that integration to the sourcing service through
-neutral HTTP and durable contracts. Preserve command/event and artifact formats
-when modifying existing behavior. Run the retailer crate CI and the extractor's
-`initial_fill_isolation` test. See [ADR 61](adr/0061-independent-retailer-graphql-integrations.md).
+Each brand owns one `src/graphql` engine, schema, query set and raw model. Storefronts configure endpoints, markets and token policies through thin initial-fill adapters and retain their source fixtures. Add known optional source fields to the brand model; keep unknown-field rejection. HTML models remain storefront-specific. Anker has one complete shared extracted model; see ADR 65. Preserve artifact and command/event formats and test all storefront configurations when changing shared operations. See ADR 64.

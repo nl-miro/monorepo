@@ -1,4 +1,4 @@
-//! Shared v1 HTML and v2 GraphQL source dumping. Payloads are written unchanged.
+//! Shared v1 HTML and v2 GraphQL source dumping. JSON payloads are pretty-printed; HTML is written unchanged.
 
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
@@ -77,15 +77,20 @@ impl Version {
 #[derive(Deserialize)]
 #[serde(untagged)]
 enum Location {
-    Html { url: String },
-    GraphQl { product_id: String },
+    Html {
+        url: String,
+    },
+    GraphQl {
+        product_id: String,
+        fetched_at: String,
+    },
 }
 
 impl Location {
     fn destination(&self) -> Result<(&'static str, String, &str), String> {
         match self {
             Self::Html { url } => Ok(("offer_details", file_name(url)?, url)),
-            Self::GraphQl { product_id } => {
+            Self::GraphQl { product_id, .. } => {
                 let id = product_id
                     .strip_prefix("gid://shopify/Product/")
                     .filter(|id| !id.is_empty() && id.bytes().all(|c| c.is_ascii_digit()))
@@ -105,6 +110,10 @@ pub async fn run(version: Version) -> Result<(), String> {
         .nth(1)
         .map(PathBuf::from)
         .ok_or_else(|| format!("usage: dump-{} <data_dir>", version.name()))?;
+    let retailers: Vec<String> = env::args()
+        .skip(2)
+        .map(|name| name.to_ascii_lowercase())
+        .collect();
     let base_url = env::var("RETAILER_SOURCING_URL").unwrap_or_else(|_| DEFAULT_URL.to_string());
     let token = env::var("RETAILER_SOURCING_TOKEN").unwrap_or_else(|_| DEFAULT_TOKEN.to_string());
     let endpoint = format!(
@@ -140,6 +149,11 @@ pub async fn run(version: Version) -> Result<(), String> {
     loop {
         let page = fetch_page(&client, &endpoint, &token, offset).await?;
         for source in &page {
+            if !retailers.is_empty()
+                && !retailers.contains(&source.retailer_code.to_ascii_lowercase())
+            {
+                continue;
+            }
             match write_source(&data_dir, source, &mut written_urls, &objects).await {
                 Ok(Written::Newest(path)) => {
                     println!("{}", path.display());
@@ -252,9 +266,31 @@ async fn write_source(
         return Err("object storage record does not match its source reference".into());
     }
     fs::create_dir_all(&dir).map_err(|e| format!("{}: {e}", dir.display()))?;
-    fs::write(&path, &record.payload).map_err(|e| format!("{}: {e}", path.display()))?;
+    let payload = source_payload(source, &record.payload)?;
+    fs::write(&path, formatted_payload(payload.as_bytes()))
+        .map_err(|e| format!("{}: {e}", path.display()))?;
     written_urls.insert(path.clone(), identity.to_owned());
     Ok(Written::Newest(path))
+}
+
+/// Carry event metadata into v2 dumps without rewriting source numeric values.
+fn source_payload(source: &Source, payload: &str) -> Result<String, String> {
+    let Location::GraphQl { fetched_at, .. } = &source.location else {
+        return Ok(payload.to_owned());
+    };
+    let fetched_at = fetched_at.as_str();
+    chrono::DateTime::parse_from_rfc3339(fetched_at)
+        .map_err(|e| format!("invalid fetched_at: {e}"))?;
+    let document: serde_json::Value = serde_json::from_str(payload).map_err(|e| e.to_string())?;
+    let object = document
+        .as_object()
+        .ok_or("source artifact must be an object")?;
+    if object.contains_key("acquired_at") {
+        return Err("source artifact already contains acquired_at".into());
+    }
+    let timestamp = serde_json::to_string(fetched_at).map_err(|e| e.to_string())?;
+    let separator = if object.is_empty() { "" } else { "," };
+    Ok(payload.replacen('{', &format!("{{\"acquired_at\":{timestamp}{separator}"), 1))
 }
 
 /// The decoded URL path with `/` replaced by `-`, as `export_offer_sources`
@@ -323,9 +359,20 @@ mod tests {
     }
 
     #[test]
+    fn graphql_sources_require_fetch_time() {
+        for value in [
+            serde_json::json!({"product_id": "gid://shopify/Product/123"}),
+            serde_json::json!({"product_id": "gid://shopify/Product/123", "fetched_at": null}),
+        ] {
+            assert!(serde_json::from_value::<Location>(value).is_err());
+        }
+    }
+
+    #[test]
     fn graphql_product_ids_have_safe_stable_json_names() {
         let source = Location::GraphQl {
             product_id: "gid://shopify/Product/123".into(),
+            fetched_at: "2026-11-10T00:00:00Z".into(),
         };
         assert_eq!(
             source.destination().unwrap(),
@@ -345,7 +392,8 @@ mod tests {
         ] {
             assert!(
                 Location::GraphQl {
-                    product_id: id.into()
+                    product_id: id.into(),
+                    fetched_at: "2026-11-10T00:00:00Z".into()
                 }
                 .destination()
                 .is_err()
@@ -394,3 +442,30 @@ mod tests {
 #[cfg(test)]
 #[path = "bin/dump-offer-details/tests.rs"]
 mod download_tests;
+
+/// Format valid JSON without changing key order or numeric spelling.
+fn formatted_payload(payload: &[u8]) -> Vec<u8> {
+    if let Ok(text) = std::str::from_utf8(payload)
+        && serde_json::from_str::<serde_json::Value>(text).is_ok()
+    {
+        let mut pretty = retailer_data_extractor::pretty_json(text);
+        pretty.push('\n');
+        return pretty.into_bytes();
+    }
+    payload.to_vec()
+}
+
+#[cfg(test)]
+mod formatting_tests {
+    use super::formatted_payload;
+
+    #[test]
+    fn formats_json_and_preserves_html() {
+        assert_eq!(
+            formatted_payload(br#"{"z":1.2300,"a":[true]}"#),
+            b"{\n  \"z\": 1.2300,\n  \"a\": [\n    true\n  ]\n}\n"
+        );
+        let html = b"<html><body>offer</body></html>";
+        assert_eq!(formatted_payload(html), html);
+    }
+}

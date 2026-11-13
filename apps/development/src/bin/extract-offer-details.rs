@@ -13,6 +13,7 @@ use shared::retailer::RetailerCode;
 fn main() {
     offer_details::main(&Stage {
         name: "extract-offer-details",
+        directory: "offer_details",
         input: "sources",
         input_extension: "html",
         output: "extracted",

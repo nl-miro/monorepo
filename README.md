@@ -17,22 +17,18 @@ top-level folder is its own Cargo workspace, with its own `Cargo.lock`.
 
 ### lib
 
+Anker, Minisforum and Ugreen integrations are maintained locally in `lib`.
+Anker storefronts share one complete v2 extracted model; AU/CA retain their existing v1 integrations. Mi remains disconnected.
+
 | Crate                     | Purpose                                                                 |
 | ------------------------- | ----------------------------------------------------------------------- |
-| `shared`                  | Shared retailer/extraction types, liveness, and image URL validation                 |
 | `object_storage_client`   | Async object storage client using REST or GraphQL                       |
 | `inbox_client`            | Blocking HTTP client for a durable inbox, used by HTTP outbox delivery  |
-| `money`                   | Money handling                                                          |
-| `everyday`                | Common business, date/time, country, and geographic value types         |
-| `everyday_infra`          | Serialization and chrono adapters for everyday value types              |
-| `retailer_sauce`          | Retailer integrations                                                   |
 | `retailer_data_extractor` | Extracting data from retailers                                          |
-| `retailers_anker`         | Integration for the Anker retailer                                      |
-| `retailers_mi`            | Integration for the Mi retailer                                         |
-| `retailers_minisforum`    | Integration for the Minisforum retailer                                 |
-| `retailers_ugreen`        | Integration for the Ugreen retailer                                     |
-| `retailers_wip`           | Integration for the WIP retailer                                        |
-| `sitemap`                 | Parsing sitemap XML and building a crawl's sitemap tree                 |
+| `retailers_anker` | Anker integrations, including AU/CA |
+| `retailers_minisforum` | Minisforum integrations |
+| `retailers_ugreen` | Ugreen integrations |
+| `retailers_wip` | Reserved for future experimental integrations |
 | `testimony`               | Event sourcing abstractions, aggregate repositories, and query dispatch |
 | `testimony_infra`         | In-memory and PostgreSQL event stores for testimony                     |
 
@@ -337,6 +333,15 @@ versions retain their original readers and encodings.
 
 ## GitHub Actions verification
 
+All Rust CI jobs use sccache 0.19.0 with the GitHub Actions cache backend.
+CI disables incremental compilation so library compilations can be cached;
+local builds retain their own settings. The setup action prints cache statistics
+in its post-job step. Compare warm-run job durations and cache hits to assess
+whether transfer overhead is worthwhile. Cold caches still compile normally,
+and tests and final linking still run. Cache entries consume the repository's
+Actions cache storage. No extra cache credentials are required.
+
+
 The Rust CI workflow runs portable checks for the region-code pipeline, separate
 PostgreSQL tests, and a live pipeline smoke job. It checks out the pinned public
 Mulac repository beside this repository. PostgreSQL tests use disposable databases
@@ -359,3 +364,27 @@ GraphQL initial fills use an independent integration for each of the 48 supporte
 retailer codes. The retailer owns token policy, queries, schema, raw types and
 pagination; sourcing shares only HTTP pacing, durable orchestration and storage.
 See [ADR 61](docs/adr/0061-independent-retailer-graphql-integrations.md).
+
+### Extracting v2 offer dumps
+
+Run `make extract-offer-details-v2` to parse GraphQL initial-fill JSON dumps
+into the connected retailer's v2 representation. All supported Anker storefronts
+use one complete extracted model with AU/CA-style grouping and every modeled raw
+field retained, including request/response pages. Minisforum and Ugreen retain
+typed raw parsing. Set `DATA_DIR` to override the
+usual data directory and `RETAILERS="ankerau ugreenca"` to select retailers.
+The command reads `<DATA_DIR>/<retailer>/offer_details_v2/sources/**/*.json`
+and writes pretty-printed artifacts beneath `offer_details_v2/extracted`,
+preserving country/language subdirectories. Product data, context and recorded
+pages remain in the output; normalization and structuralization are separate
+stages and are not yet wired for v2. Failed inputs remove their stale output
+and produce a nonzero exit status while other files continue.
+
+Both offer dump commands pretty-print valid JSON payloads with a trailing
+newline, retaining key order and numeric spelling. HTML payloads are unchanged.
+Object-storage identity and original payload size are checked before formatting.
+
+Anker v2 extraction retains optional acquisition time, source timestamps and decimal
+strings without normalization. Root variants, collections and images keep their
+connection metadata; image references include root index and optional source ID.
+See the [shared extracted model](lib/retailers_anker/README.md#shared-complete-extracted-model).

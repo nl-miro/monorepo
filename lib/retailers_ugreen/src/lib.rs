@@ -36,3 +36,7 @@ mod tests {
         assert_eq!(env!("CARGO_PKG_NAME"), "retailers_ugreen");
     }
 }
+
+pub mod graphql;
+
+pub mod extracted;

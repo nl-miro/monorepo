@@ -1,5 +1,8 @@
 # retailer_sourcing
 
+Anker, Minisforum and Ugreen integrations run from local library crates through
+`retailer_data_extractor`. All supported Anker storefronts share one complete v2 extracted model. Mi remains disconnected.
+
 Anker's Nordic markets use `ankerse`, `ankerno`, `ankerfi`, `ankeris` and
 `ankerdk`. Set `ANKER_NORDICS_STOREFRONT_TOKEN` to the public Storefront token
 used by the Anker Nordics browser application. It can be supplied through the
@@ -61,9 +64,9 @@ of their tables holds one row per offer, replaced when the step runs again.
 
 Implemented extraction, normalization and structuralization pipelines span
 Anker, Minisforum and Ugreen storefronts. Support is storefront-specific; see
-the [Anker](../../lib/retailers_anker/README.md),
-[Minisforum](../../lib/retailers_minisforum/README.md) and
-[Ugreen](../../lib/retailers_ugreen/README.md) READMEs for coverage and limitations.
+the [Anker](https://github.com/bodul-hq/lib_retailers_anker),
+[Minisforum](https://github.com/bodul-hq/lib_retailers_minisforum) and
+[Ugreen](https://github.com/bodul-hq/lib_retailers_ugreen) READMEs for coverage and limitations.
 
 All seven pipeline tables keep metadata in PostgreSQL and payloads in object
 storage. Raw bodies are uploaded unchanged; JSON documents are uploaded as

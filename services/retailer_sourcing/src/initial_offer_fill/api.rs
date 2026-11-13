@@ -225,6 +225,24 @@ mod tests {
     use super::*;
     use serde_json::json;
 
+    #[test]
+    fn disconnected_retailers_cannot_be_queued_for_initial_fill() {
+        {
+            let code = "micom";
+            assert_eq!(
+                prepare(&[code.to_owned()]).unwrap_err(),
+                format!("initial fill is not implemented for retailer {code}")
+            );
+        }
+    }
+
+    #[test]
+    fn experimental_ankerau_can_be_prepared() {
+        let fills = prepare(&["ankerau".to_owned()]).unwrap();
+        assert_eq!(fills.len(), 1);
+        assert!(matches!(fills[0].command, InitialCommand::Token(_)));
+    }
+
     fn prepare_codes(codes: &[&str]) -> Vec<PreparedFill> {
         prepare(
             &codes

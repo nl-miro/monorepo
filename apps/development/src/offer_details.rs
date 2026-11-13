@@ -29,7 +29,9 @@ const STACK_SIZE: usize = 64 * 1024 * 1024;
 pub struct Stage {
     /// The binary's name, for the usage message.
     pub name: &'static str,
-    /// The folder under `offer_details` it reads.
+    /// The artifact directory beneath the retailer.
+    pub directory: &'static str,
+    /// The folder under the artifact directory it reads.
     pub input: &'static str,
     /// The extension of the files it reads, such as `html`.
     pub input_extension: &'static str,
@@ -66,7 +68,8 @@ fn run(stage: &Stage) -> Result<bool, String> {
     let retailers = retailers(stage, &data_dir, &wanted)?;
     if retailers.is_empty() {
         return Err(format!(
-            "no offer_details/{} folders in {}",
+            "no {}/{} folders in {}",
+            stage.directory,
             stage.input,
             data_dir.display()
         ));
@@ -108,7 +111,7 @@ fn retailers(
             .map_err(|e| format!("{}: {e}", data_dir.display()))?
             .filter_map(|entry| entry.ok())
             .filter(|entry| {
-                let input = entry.path().join("offer_details").join(stage.input);
+                let input = entry.path().join(stage.directory).join(stage.input);
                 input.is_dir()
             })
             .filter_map(|entry| entry.file_name().into_string().ok())
@@ -129,7 +132,7 @@ fn retailers(
             }
             Err(e) => return Err(format!("{name}: {e}")),
         };
-        let dir = data_dir.join(&name).join("offer_details");
+        let dir = data_dir.join(&name).join(stage.directory);
         if !dir.join(stage.input).is_dir() {
             return Err(format!("{}: no {} folder", dir.display(), stage.input));
         }
@@ -189,12 +192,11 @@ fn process_retailer(stage: &Stage, name: &str, code: RetailerCode, dir: &Path) -
 
     for input in inputs {
         report.pages += 1;
-        let stem = input
-            .file_stem()
-            .expect("a file name")
-            .to_string_lossy()
-            .into_owned();
-        let output = output_dir.join(format!("{stem}.json"));
+        let relative = input
+            .strip_prefix(dir.join(stage.input))
+            .expect("input under source directory");
+        let stem = relative.with_extension("").to_string_lossy().into_owned();
+        let output = output_dir.join(relative).with_extension("json");
 
         match process_page(stage, code, &input, &output) {
             Ok(true) => {
@@ -229,6 +231,8 @@ fn process_page(
     serde_json::from_str::<serde_json::Value>(&json).map_err(|e| format!("output: {e}"))?;
     let mut pretty = pretty_json(&json);
     pretty.push('\n');
+    fs::create_dir_all(output.parent().expect("output directory"))
+        .map_err(|e| format!("create output directory: {e}"))?;
     fs::write(output, pretty).map_err(|e| format!("{}: {e}", output.display()))?;
     Ok(true)
 }
@@ -244,11 +248,17 @@ fn error_key(error: &str) -> String {
 
 /// The files in `dir` with `extension`, sorted by name.
 fn files(dir: &Path, extension: &str) -> Result<Vec<PathBuf>, String> {
-    let mut files: Vec<PathBuf> = fs::read_dir(dir)
-        .map_err(|e| format!("{}: {e}", dir.display()))?
-        .filter_map(|entry| entry.ok().map(|entry| entry.path()))
-        .filter(|path| path.extension().is_some_and(|ext| ext == extension))
-        .collect();
+    let mut files = Vec::new();
+    for entry in fs::read_dir(dir).map_err(|e| format!("{}: {e}", dir.display()))? {
+        let entry = entry.map_err(|e| e.to_string())?;
+        let kind = entry.file_type().map_err(|e| e.to_string())?;
+        let path = entry.path();
+        if kind.is_dir() {
+            files.extend(self::files(&path, extension)?);
+        } else if kind.is_file() && path.extension().is_some_and(|ext| ext == extension) {
+            files.push(path);
+        }
+    }
     files.sort();
     Ok(files)
 }
@@ -273,6 +283,7 @@ mod tests {
 
     const ECHO: Stage = Stage {
         name: "echo",
+        directory: "offer_details",
         input: "in",
         input_extension: "txt",
         output: "out",
@@ -304,6 +315,31 @@ mod tests {
         assert!(!dir.join("out/b.json").exists());
         assert!(!dir.join("out/c.json").exists());
         fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
+    fn preserves_market_directories_and_removes_only_failed_market_output() {
+        let root = temp_dir("markets");
+        let dir = root.join("ankerau/offer_details_v2");
+        for market in ["AU-EN", "CA-FR"] {
+            fs::create_dir_all(dir.join("in").join(market)).unwrap();
+            fs::write(dir.join("in").join(market).join("123.txt"), "{}").unwrap();
+        }
+        let stage = Stage {
+            directory: "offer_details_v2",
+            ..ECHO
+        };
+        assert_eq!(retailers(&stage, &root, &[]).unwrap().len(), 1);
+        assert_eq!(
+            process_retailer(&stage, "ankerau", RetailerCode::AnkerAu, &dir).written,
+            2
+        );
+        fs::write(dir.join("in/AU-EN/123.txt"), "fail").unwrap();
+        let report = process_retailer(&stage, "ankerau", RetailerCode::AnkerAu, &dir);
+        assert_eq!(report.written, 1);
+        assert!(!dir.join("out/AU-EN/123.json").exists());
+        assert!(dir.join("out/CA-FR/123.json").exists());
+        fs::remove_dir_all(root).unwrap();
     }
 
     #[test]

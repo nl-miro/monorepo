@@ -95,3 +95,11 @@ Decision, Consequences) and give it the next number.
 - [61: Independent retailer GraphQL integrations](0061-independent-retailer-graphql-integrations.md)
 
 - [62: Independent legacy Nordic GraphQL sources](0062-independent-legacy-nordic-graphql.md)
+
+- [63. Local retailer integrations](0063-local-retailer-integrations.md)
+
+- [64. Brand-shared GraphQL integrations](0064-brand-shared-graphql.md)
+
+- [65. Shared complete Anker extraction](0065-shared-complete-anker-extraction.md)
+
+| [66](0066-explicit-raw-to-extracted-conversions.md) | Explicit raw-to-extracted conversions | Accepted; supersedes ADR 65 field preservation |

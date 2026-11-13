@@ -45,4 +45,8 @@ consolidate-sitemap-sources:
 .PHONY: dump-offer-details-v2
 # Download complete GraphQL artifacts into offer_details_v2/sources.
 dump-offer-details-v2:
-	cargo run --release --bin dump-offer-details-v2 -- $(DATA_DIR)
+	cargo run --release --bin dump-offer-details-v2 -- $(DATA_DIR) $(RETAILERS)
+
+.PHONY: extract-offer-details-v2
+extract-offer-details-v2:
+	cargo run --release --bin extract-offer-details-v2 -- $(DATA_DIR) $(RETAILERS)

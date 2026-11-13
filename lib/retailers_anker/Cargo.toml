@@ -1,8 +1,8 @@
 [package]
 name = "retailers_anker"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2024"
-publish = ["null-labs-hq"]
+publish = ["bodul"]
 
 [dependencies]
 chrono.workspace = true
@@ -18,5 +18,4 @@ thiserror.workspace = true
 url.workspace = true
 
 [dev-dependencies]
-# Keeps keys in struct order when tests pretty-print documents to disk.
 serde_json = { workspace = true, features = ["preserve_order"] }

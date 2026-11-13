@@ -424,13 +424,14 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn sitemap_retrievals_need_the_workers() {
-        let response = post_json(
-            "/api/sitemap-retrievals",
-            json!({ "retailers": ["ugreenca"] }),
-        )
-        .await;
-        assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
+    async fn sitemap_retrievals_reject_disconnected_retailers() {
+        for (code, expected) in [
+            ("micom", StatusCode::BAD_REQUEST),
+            ("ugreenca", StatusCode::SERVICE_UNAVAILABLE),
+        ] {
+            let response = post_json("/api/sitemap-retrievals", json!({"retailers": [code]})).await;
+            assert_eq!(response.status(), expected);
+        }
     }
 
     #[tokio::test]

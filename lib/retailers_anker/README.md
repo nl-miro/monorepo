@@ -121,24 +121,73 @@ let title = &raw.product.title;
 let variants = &raw.product.variants.edges;
 ```
 
-All 17 configured Anker retailers own concrete types in their own
-`offer_details/v2/raw.rs`, exposed as `<retailer>_raw_v2` in the prelude. Every product
+All 17 configured Anker retailers share concrete types in `graphql/raw.rs`,
+re-exported through their `offer_details/v2/raw.rs` compatibility paths and prelude. Every product
 field is typed, including connections, images/media, variants, prices, quantity
 rules, selling plans and localization. Unknown fields fail rather than being
 silently dropped. Decimal amounts remain strings; other numeric scalars retain
 JSON numbers. Diagnostic metadata and recorded continuation response pages stay
 JSON evidence. Artifacts use schema 1 without context and schema 2 with context; v2 names the pipeline.
-Extracted representations and existing extraction behavior are unchanged.
+All supported storefronts now use the shared complete extracted model described below.
 
 Each retailer's fixtures preserve its own captured product data. Run
 `cargo test -p retailers_anker offer_details::v2` in `lib` for fixtures, or
 `cargo test -p retailers_anker saved_graphql_corpus -- --ignored` for the external
 `../data3` corpus. Nordic fixtures use the corresponding country context.
-See [ADR 61](../../docs/adr/0061-independent-retailer-graphql-integrations.md)
+See [ADR 64](../../docs/adr/0064-brand-shared-graphql.md)
 for ownership and [ADR 57](../../docs/adr/0057-offer-details-v2-raw-sources.md)
 for the dump contract.
 
 Regional US/EU/FR/NZ/PL/VN raw models also retain inventory, metafields and
 expanded variant-reference selections from their saved full-catalog captures.
 These optional source fields are local to those retailers; the initial-fill
-query documents and extracted representations are unchanged.
+query documents are unchanged; the shared extracted model retains these fields.
+
+## Shared GraphQL implementation
+
+`src/graphql` owns the brand’s queries, schema, raw types and integration engine. Storefront modules provide configuration, compatibility aliases and fixtures. HTML models remain storefront-specific; Anker extraction is shared as described below. See [ADR 64](../../docs/adr/0064-brand-shared-graphql.md).
+
+## Shared complete extracted model
+
+All 17 supported GraphQL Anker storefronts use `extracted::ExtractedOfferDetails`.
+AU/CA compatibility exports and the other storefront extraction modules re-export
+that same model. The former per-storefront converters are removed.
+
+The layout retains product identifiers/taxonomy/content and variant
+identifiers/flags/specials/pricing groups, with variants, collections and images
+at the artifact root. Every modeled raw field is retained, including schema
+version, pages, media, GraphQL tags, inventory, metafields, price ranges and count
+metadata. Root connection metadata retains cursors in node order and page info;
+nested connections remain complete. Image references carry a zero-based root
+array index and the optional source ID. Repeated or conflicting images are kept
+as separate observations, and media's nested images remain intact.
+
+This is an unfiltered starting point for later cleanup: money amounts and dates
+remain source strings, acquisition time remains optional, and extraction does
+not require exact variant counts, complete pagination or image IDs. Raw parsing
+still validates its source contract. Context is preserved as recorded at the
+artifact root; request/response contexts remain in pages without inference.
+
+The AU/CA output intentionally changes to this complete shared representation.
+Other Anker storefronts now return the grouped extracted representation rather
+than raw JSON. Minisforum, Ugreen and HTML v1 behavior are unchanged.
+
+Run `make fmt` and `make ci`. Extracted fixture tests rebuild the source product
+from grouped output to check field preservation across all storefront fixtures.
+
+## V2 conversion ownership
+
+V2 raw models are defined in `src/graphql/raw.rs`. Extracted model definitions
+are in `src/extracted/extracted.rs`; explicit per-type `TryFrom` implementations
+are in `src/extracted/raw_to_extracted.rs`. These conversions use direct field
+assignments and inline ordered connection traversal, without conversion helpers
+or JSON round trips. The facade only parses raw, converts, and serializes.
+Acquisition time is required, optional extracted fields serialize as null, and
+all extracted connections are vectors. GraphQL page evidence, explicit type-name
+fields, and product price ranges are excluded. See ADR 66.
+
+The extracted artifact owns root `collections`, `images`, and `media` vectors.
+The product stores their ordered IDs (Anker collection IDs remain in taxonomy).
+Moved image and media entries must have IDs; conversion returns an error if an
+ID is absent or null. Anker retains its existing index references for featured,
+collection, and variant images, and requires IDs on all root image records.

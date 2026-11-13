@@ -13,6 +13,7 @@ use shared::retailer::RetailerCode;
 fn main() {
     offer_details::main(&Stage {
         name: "structuralize-offer-details",
+        directory: "offer_details",
         input: "normalized",
         input_extension: "json",
         output: "structuralized",

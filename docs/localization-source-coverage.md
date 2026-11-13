@@ -2,7 +2,7 @@
 
 The Nordic HTML results below remain historical. The five new country codes
 use the Storefront API's returned localization; portable market-specific
-fixtures and isolation tests live in `lib/retailers_anker/src/nordic`.
+fixtures and isolation tests live in `lib_retailers_anker/src/nordic`.
 See [ADR 47](adr/0047-nordic-retailer-markets.md).
 
 Surveyed the saved corpus on 2026-10-26 through the shared extraction,

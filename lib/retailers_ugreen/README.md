@@ -152,3 +152,18 @@ captures do not determine which live contexts are supported.
 New initial fills attempt public Storefront token acquisition before discovery.
 If none is found, public access continues. Optional overrides use
 `<UPPERCASE_RETAILER_CODE>_STOREFRONT_TOKEN`; query page sizes are unchanged.
+
+## Shared GraphQL implementation
+
+`src/graphql` owns the brand’s queries, schema, raw types and integration engine. Storefront modules provide configuration, compatibility aliases and fixtures. HTML and extracted models remain storefront-specific. See [ADR 64](../../docs/adr/0064-brand-shared-graphql.md).
+
+## V2 conversion ownership
+
+V2 raw models are defined in `src/graphql/raw.rs`. Extracted model definitions
+are in `src/extracted/extracted.rs`; explicit per-type `TryFrom` implementations
+are in `src/extracted/raw_to_extracted.rs`. These conversions use direct field
+assignments and inline ordered connection traversal, without conversion helpers
+or JSON round trips. The facade only parses raw, converts, and serializes.
+Acquisition time is required, optional extracted fields serialize as null, and
+all extracted connections are vectors. GraphQL page evidence, explicit type-name
+fields, and product price ranges are excluded. See ADR 66.

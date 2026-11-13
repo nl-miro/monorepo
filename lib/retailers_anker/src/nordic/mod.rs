@@ -1,5 +1,5 @@
 //! Compatibility routing for legacy Nordic downloads. Queries and raw source
-//! models belong to each retailer; normalized document formats remain unchanged.
+//! models are shared within Anker; normalized document formats remain unchanged.
 pub(crate) mod sitemap;
 #[cfg(test)]
 mod tests;

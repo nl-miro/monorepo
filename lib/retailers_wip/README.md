@@ -1,8 +1,5 @@
 # retailers_wip
 
-Integration for the WIP retailer.
+Reserved for future experimental retailer integrations. AU and CA now live in `retailers_anker`.
 
-It has no code yet; its only test is a placeholder.
-
-This crate is part of the `lib` workspace. See the
-[root README](../../README.md) for requirements and Make targets.
+Run `make fmt` and `make ci` to validate this crate.

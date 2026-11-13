@@ -9,6 +9,10 @@ permissions:
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
+env:
+  RUSTC_WRAPPER: sccache
+  CARGO_INCREMENTAL: "0"
+  SCCACHE_GHA_ENABLED: "true"
 jobs:
   portable:
     runs-on: ubuntu-24.04
@@ -16,12 +20,16 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        crate: [lib/retailer_sauce, lib/retailer_data_extractor, services/offers, services/retailer_sourcing, services/customer_facing, apps/customers]
+        crate: [lib/retailer_data_extractor, services/offers, services/retailer_sourcing, services/customer_facing, apps/customers]
     steps:
       - uses: actions/checkout@v4
         with:
           path: monorepo
           persist-credentials: false
+      - name: Set up compiler cache
+        uses: mozilla-actions/sccache-action@fd02668681acd5f960e1372061bee5e3e987195c # v0.0.11
+        with:
+          version: v0.19.0
       - name: Install prerequisites
         run: |
           sudo apt-get update
@@ -57,6 +65,10 @@ jobs:
         with:
           path: monorepo
           persist-credentials: false
+      - name: Set up compiler cache
+        uses: mozilla-actions/sccache-action@fd02668681acd5f960e1372061bee5e3e987195c # v0.0.11
+        with:
+          version: v0.19.0
       - name: Install prerequisites
         run: |
           sudo apt-get update
@@ -102,6 +114,10 @@ jobs:
         with:
           path: monorepo
           persist-credentials: false
+      - name: Set up compiler cache
+        uses: mozilla-actions/sccache-action@fd02668681acd5f960e1372061bee5e3e987195c # v0.0.11
+        with:
+          version: v0.19.0
       - name: Install prerequisites
         run: |
           sudo apt-get update

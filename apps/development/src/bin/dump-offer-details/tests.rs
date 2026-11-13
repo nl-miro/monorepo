@@ -156,7 +156,7 @@ async fn failed_or_mismatched_objects_do_not_write_files() {
 }
 
 #[tokio::test]
-async fn dumps_graphql_v2_verbatim_and_skips_older_product_copies() {
+async fn dumps_graphql_v2_pretty_printed_and_skips_older_product_copies() {
     let body = "{\n  \"schema_version\":1, \"product\":{\"id\":\"gid://shopify/Product/123\",\"title\":\"ž 🔎\"}, \"pages\":[]\n}";
     let (sourcing, sourcing_thread) = fixture(
         "/api/development/offer-details-v2/sources?limit=200&offset=0", "sourcing-token", 200,
@@ -192,7 +192,19 @@ async fn dumps_graphql_v2_verbatim_and_skips_older_product_copies() {
     };
     storage_thread.join().unwrap();
     assert!(path.ends_with("ankerca/offer_details_v2/sources/123.json"));
-    assert_eq!(fs::read_to_string(&path).unwrap(), body);
+    let dumped: Value = serde_json::from_str(&fs::read_to_string(&path).unwrap()).unwrap();
+    assert_eq!(dumped["acquired_at"], "2026-11-10T00:00:00Z");
+    assert_eq!(
+        dumped["product"],
+        serde_json::from_str::<Value>(body).unwrap()["product"]
+    );
+    assert_eq!(
+        fs::read_to_string(&path).unwrap(),
+        format!(
+            "{}\n",
+            retailer_data_extractor::pretty_json(&source_payload(&pages[0], body).unwrap())
+        )
+    );
     assert!(matches!(
         write_source(&dir, &pages[0], &mut written, &objects)
             .await

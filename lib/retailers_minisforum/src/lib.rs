@@ -24,3 +24,7 @@ mod tests {
         assert_eq!(env!("CARGO_PKG_NAME"), "retailers_minisforum");
     }
 }
+
+pub mod graphql;
+
+pub mod extracted;

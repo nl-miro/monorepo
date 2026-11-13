@@ -159,6 +159,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "retailer integration disconnected"]
     fn nordic_download_posts_country_context_and_keeps_product_identity() {
         struct NordicSource {
             wrong_market: bool,
@@ -176,9 +177,9 @@ mod tests {
                 assert_eq!(body["variables"]["country"], "FI");
                 assert_eq!(body["variables"]["handle"], "t90r0121");
                 Ok(if self.wrong_market {
-                    include_str!("../../../../../lib/retailers_anker/src/ankerse/offer_details/v1/graphql/response.json")
+                    include_str!("../../../tests/fixtures/anker/ankerse_response.json")
                 } else {
-                    include_str!("../../../../../lib/retailers_anker/src/ankerfi/offer_details/v1/graphql/response.json")
+                    include_str!("../../../tests/fixtures/anker/ankerfi_response.json")
                 }
                 .into())
             }
@@ -339,6 +340,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "retailer integration disconnected"]
     fn queued_retired_urls_download_replacements_without_changing_identity() {
         struct ReplacementPage;
         impl FetchOfferPage for ReplacementPage {

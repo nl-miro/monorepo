@@ -13,6 +13,7 @@ use shared::retailer::RetailerCode;
 fn main() {
     offer_details::main(&Stage {
         name: "normalize-offer-details",
+        directory: "offer_details",
         input: "extracted",
         input_extension: "json",
         output: "normalized",

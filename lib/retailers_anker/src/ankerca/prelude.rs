@@ -12,3 +12,10 @@ pub use super::offer_details::v2::raw::{
 };
 
 pub use super::offer_details::v2::raw as offer_details_raw_v2;
+
+pub use super::offer_details::v2::extract as offer_details_extracted_v2;
+pub use super::offer_details::v2::extract::{
+    AnkerCaExtractedOfferDetails,
+    AnkerCaExtractedProduct,
+    // AnkerCaExtractedResponse,
+};
