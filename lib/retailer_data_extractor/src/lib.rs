@@ -431,11 +431,12 @@ mod migrated_wip_tests {
             (config.country, config.language, config.currency),
             ("CA", "EN", "CAD")
         );
-        assert!(!all_market_contexts(code));
+        assert!(all_market_contexts(code));
         assert_eq!(
             initial_fill_process(code).steps,
             vec![
                 Step::AcquireStorefrontToken,
+                Step::DiscoverMarkets,
                 Step::ProductCatalogIdentifiers,
                 Step::OfferDetails
             ]

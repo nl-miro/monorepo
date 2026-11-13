@@ -3,7 +3,7 @@
 use retailer_sauce::shopify::initial_fill::{GraphqlRequest, StorefrontConfig};
 use serde_json::Value;
 const CODE: &str = "ankerse";
-const ALL_MARKETS: bool = false;
+const ALL_MARKETS: bool = true;
 pub const CONFIG: StorefrontConfig = StorefrontConfig {
     acquire_token: true,
     token_required: true,

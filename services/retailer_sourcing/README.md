@@ -1079,10 +1079,10 @@ paginates as needed; see
 [ADR 56](../../docs/adr/0056-anker-operation-specific-page-sizes.md).
 GraphQL/access failures fail the command rather than silently omit fields.
 
-## Minisforum and Ugreen multi-market initial fills
+## Anker, Minisforum and Ugreen multi-market initial fills
 
-The existing bulk initial-fill endpoint accepts all ten Minisforum and 21 Ugreen
-codes, including NAS. Each run queues market discovery and fans out independent
+The existing bulk initial-fill endpoint accepts all 17 Anker, ten Minisforum and
+21 Ugreen codes, including NAS. Each run queues market discovery and fans out independent
 catalog/detail work for every country's advertised languages. Run both commands
 and events to advance the workflow. Bruno includes brand-wide bulk requests.
 Commands and events carry context; explicit context mismatches and wrong monetary
@@ -1091,8 +1091,7 @@ currencies fail rather than being saved under the requested market.
 Contextual artifacts use schema version 2 with `context` (country, language,
 currency). `/api/development/offer-details-v2/sources` includes that context and
 continues returning historical records without it. No migration is required;
-deploy updated readers/workers before starting these fills. Anker runs retain
-their existing fixed contexts. See [ADR 59](../../docs/adr/0059-multi-market-shopify-initial-fills.md).
+deploy updated readers/workers before starting these fills. Anker uses the same discovery flow. See [ADR 68](../../docs/adr/0068-anker-multi-market-initial-fills.md).
 
 ## Optional public token acquisition
 
@@ -1114,3 +1113,9 @@ GraphQL initial fills use an independent integration for each of the 48 supporte
 retailer codes. The retailer owns token policy, queries, schema, raw types and
 pagination; sourcing shares only HTTP pacing, durable orchestration and storage.
 See [ADR 61](../../docs/adr/0061-independent-retailer-graphql-integrations.md).
+
+All 17 supported Anker storefronts now discover every advertised country/language
+context using their existing access policy. Catalog and detail continuations
+retain context; new dumps use schema 2 and country-language directories.
+Historical dumps remain readable. Drain existing Anker fills before deploying,
+then validate one new fill before broad rollout. See ADR 68 in docs/adr.

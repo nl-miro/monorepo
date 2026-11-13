@@ -105,3 +105,5 @@ Decision, Consequences) and give it the next number.
 | [66](0066-explicit-raw-to-extracted-conversions.md) | Explicit raw-to-extracted conversions | Accepted; supersedes ADR 65 field preservation |
 
 - [67: Recover Anker extraction context from recorded evidence](0067-anker-context-recovery.md)
+
+- [68: Anker multi-market initial fills](0068-anker-multi-market-initial-fills.md)

@@ -14,6 +14,8 @@
 
 ### IN PROGRESS
 
+- [~] Enable all advertised market contexts for all 17 Anker initial fills.
+
 - [x] Move product SEO title/description into content with seo_ prefixes across all brands.
   Source values/nulls are preserved; lib CI passes.
 

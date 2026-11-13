@@ -259,7 +259,9 @@ mod tests {
         let mut dispatched = Vec::new();
         let fills = queue(prepared, |command, run_id| {
             match command {
-                InitialCommand::Markets(_) => panic!("Anker must retain its fixed context"),
+                InitialCommand::Markets(_) => {
+                    panic!("token resolution must precede market discovery")
+                }
                 InitialCommand::Token(command) => {
                     assert!(matches!(
                         command.retailer_code,
@@ -361,9 +363,9 @@ mod market_tests {
             .filter(|r| retailer_data_extractor::all_market_contexts(*r))
             .map(|r| r.as_str())
             .collect();
-        assert_eq!(codes.len(), 31);
+        assert_eq!(codes.len(), 48);
         let fills = prepare(&codes).unwrap();
-        assert_eq!(fills.len(), 31);
+        assert_eq!(fills.len(), 48);
         for fill in fills {
             assert!(matches!(fill.command, InitialCommand::Token(_)));
         }

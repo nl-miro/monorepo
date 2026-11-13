@@ -357,7 +357,7 @@ A workflow definition is not evidence of a passing Actions run.
 Minisforum and Ugreen (including NAS) also support GraphQL initial fills through
 `POST /api/initial-offer-fills`, discovering every advertised country/language
 context per retailer. Their v2 dumps separate markets into country-language
-subdirectories; existing Anker configurations remain fixed-context. See
+subdirectories; Anker now uses the same all-market discovery flow. See
 [ADR 59](docs/adr/0059-multi-market-shopify-initial-fills.md).
 
 GraphQL initial fills use an independent integration for each of the 48 supported
@@ -390,3 +390,9 @@ consistent recorded response and price evidence; other brands require explicit
 context. Raw historical artifacts remain unchanged. Root variants, collections and images keep their
 connection metadata; image references include root index and optional source ID.
 See the [shared extracted model](lib/retailers_anker/README.md#shared-complete-extracted-model).
+
+All 17 supported Anker storefronts now discover every advertised country/language
+context using their existing access policy. Catalog and detail continuations
+retain context; new dumps use schema 2 and country-language directories.
+Historical dumps remain readable. Drain existing Anker fills before deploying,
+then validate one new fill before broad rollout. See ADR 68 in docs/adr.

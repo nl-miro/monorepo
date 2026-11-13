@@ -100,6 +100,29 @@ fn acquired(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn every_anker_token_event_starts_discovery_instead_of_fixed_catalog() {
+        for retailer_code in shared::retailer::RetailerCode::ALL {
+            if !retailer_code.as_str().starts_with("anker")
+                || retailer_data_extractor::initial_fill_integration_for(retailer_code).is_none()
+            {
+                continue;
+            }
+            let event = super::super::acquire_storefront_token::prelude::StorefrontTokenAcquired {
+                run_id: Uuid::now_v7(),
+                retailer_code,
+                storefront_token: None,
+                url: "https://example.test".into(),
+                acquired_at: chrono::Utc::now(),
+            };
+            assert!(super::super::product_catalog_ids::reacts_to::acquired(&event).is_empty());
+            let commands = acquired(&event);
+            assert_eq!(commands.len(), 1);
+            assert_eq!(commands[0].id, acquired(&event)[0].id);
+            assert_eq!(commands[0].command.retailer_code, retailer_code);
+        }
+    }
     #[test]
     fn contexts_have_distinct_replay_safe_catalog_and_detail_commands() {
         let event = StorefrontMarketsDiscovered {
@@ -149,22 +172,24 @@ mod token_tests {
     use super::super::tests::{FakeHttp, token_value};
     use super::*;
     #[test]
-    #[ignore = "retailer integration disconnected"]
     fn acquired_token_survives_discovery_and_catalog_fanout() {
         let event = super::super::acquire_storefront_token::prelude::StorefrontTokenAcquired {
             run_id: Uuid::now_v7(),
-            retailer_code: RetailerCode::UgreenEu,
+            retailer_code: RetailerCode::AnkerAu,
             storefront_token: Some(token_value()),
-            url: "https://eu.ugreen.com".into(),
+            url: "https://www.anker.com/au".into(),
             acquired_at: chrono::Utc::now(),
         };
         let command = acquired(&event).remove(0).command;
         assert_eq!(command.storefront_token, event.storefront_token);
-        let handler = Handler(FakeHttp::from(vec![
-            serde_json::json!({"data":{"localization":{"availableCountries":[
-                {"isoCode":"DE","currency":{"isoCode":"EUR"},"availableLanguages":[{"isoCode":"DE"},{"isoCode":"EN"}]}
-            ]}}}),
-        ]));
+        let handler = Handler(FakeHttp {
+            expected_token: event.storefront_token.clone(),
+            ..FakeHttp::from(vec![
+                serde_json::json!({"data":{"localization":{"availableCountries":[
+                    {"isoCode":"DE","currency":{"isoCode":"EUR"},"availableLanguages":[{"isoCode":"DE"},{"isoCode":"EN"}]}
+                ]}}}),
+            ])
+        });
         let result = handler.handle(command).unwrap().remove(0);
         for command in on(&result) {
             assert_eq!(command.command.storefront_token, event.storefront_token);

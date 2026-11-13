@@ -203,3 +203,9 @@ older extracted checkout values must be regenerated from raw artifacts.
 Variant extraction rejects a compare-at price in a different currency, including
 when the current price is zero. Errors identify the variant and both currencies.
 Same-currency comparisons at or below the current price are omitted as before.
+
+All 17 supported Anker storefronts now discover every advertised country/language
+context using their existing access policy. Catalog and detail continuations
+retain context; new dumps use schema 2 and country-language directories.
+Historical dumps remain readable. Drain existing Anker fills before deploying,
+then validate one new fill before broad rollout. See ADR 68 in docs/adr.

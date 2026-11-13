@@ -43,7 +43,19 @@ fn operation_documents_and_variables_are_local() {
             after: Some("cursor".into()),
         });
     }
+    assert!(Integration.all_market_contexts());
     for op in operations {
+        let contextual = Operation::InContext {
+            context: MarketContext {
+                country: "CA".into(),
+                language: "FR".into(),
+                currency: "CAD".into(),
+            },
+            operation: Box::new(op.clone()),
+        };
+        let contextual_request = request(&contextual).unwrap();
+        assert_eq!(contextual_request.variables["country"], "CA");
+        assert_eq!(contextual_request.variables["language"], "FR");
         let query = request(&op).unwrap();
         assert_eq!(query.variables["country"], CONFIG.country);
         assert_eq!(query.variables["language"], CONFIG.language);
