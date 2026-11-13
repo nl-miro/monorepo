@@ -107,3 +107,5 @@ Decision, Consequences) and give it the next number.
 - [67: Recover Anker extraction context from recorded evidence](0067-anker-context-recovery.md)
 
 - [68: Anker multi-market initial fills](0068-anker-multi-market-initial-fills.md)
+
+- [69: Inventory-backed initial-fill contexts](0069-inventory-initial-fill-contexts.md)

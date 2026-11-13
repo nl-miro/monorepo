@@ -42,17 +42,25 @@ impl Http for Source {
         operation: &GraphqlRequest,
         _: Option<&StorefrontToken>,
     ) -> Result<Value, String> {
+        let context = json!({"country": operation.variables.get("country").cloned().unwrap_or(json!("DE")), "language": operation.variables["language"]});
         match operation.operation_name.as_str() {
             "CatalogIdentifiers" => Ok(
-                json!({"data":{"products":connection((1..=3).map(|i|json!({"cursor":format!("c{i}"),"node":{"id":format!("gid://shopify/Product/{i}")}})).collect(),false,Some("c3"))}}),
+                json!({"data":{"products":connection((1..=3).map(|i|json!({"cursor":format!("c{i}"),"node":{"id":format!("gid://shopify/Product/{i}")}})).collect(),false,Some("c3"))},"extensions":{"context":context}}),
             ),
             "OfferDetails" => {
                 let id = operation.variables["id"].as_str().unwrap();
                 let retailer = RetailerCode::ALL
                     .into_iter()
-                    .find(|r| {
+                    .filter(|r| {
                         retailer_data_extractor::initial_fill_config_for(*r)
                             .is_some_and(|c| c.graphql_url == url)
+                    })
+                    .min_by_key(|r| {
+                        let c = retailer_data_extractor::initial_fill_config_for(*r).unwrap();
+                        u8::from(
+                            operation.variables.get("country").and_then(Value::as_str)
+                                != Some(c.country),
+                        )
                     })
                     .unwrap();
                 let mut value = product(id);
@@ -66,7 +74,7 @@ impl Http for Source {
                     .currency;
                 let value: Value =
                     serde_json::from_str(&value.to_string().replace("AUD", currency)).unwrap();
-                Ok(json!({"data":{"product":value}}))
+                Ok(json!({"data":{"product":value},"extensions":{"context":context}}))
             }
             _ => Err("unexpected continuation".into()),
         }
@@ -114,7 +122,7 @@ fn postgres_canadian_initial_fill_reaches_terminal_stored_events_without_downstr
 
 #[test]
 #[ignore = "requires DATABASE_URL_TEST; run make test-postgres"]
-fn postgres_remaining_anker_markets_preserve_terminal_event_contract() {
+fn postgres_remaining_inventory_locales_preserve_terminal_event_contract() {
     for retailer in RetailerCode::ALL {
         if !matches!(retailer, RetailerCode::AnkerAu | RetailerCode::AnkerCa)
             && retailer_data_extractor::initial_fill_config_for(retailer).is_some()
@@ -189,14 +197,11 @@ fn postgres_bulk_initial_fill_validates_before_dispatch_and_preserves_run_identi
 }
 
 fn run_initial_fill(retailer: RetailerCode) {
-    let expected_commands = if retailer_data_extractor::initial_fill_config_for(retailer)
+    let contexts = retailers_wip::retailers::get_retailer(retailer)
         .unwrap()
-        .requires_token()
-    {
-        5
-    } else {
-        4
-    };
+        .initial_fill_contexts()
+        .unwrap();
+    let expected_commands = 2 + contexts.len() * 4;
     let db = Database::new();
     let server = Server::new();
     let mut bus = Bus::default();
@@ -206,6 +211,7 @@ fn run_initial_fill(retailer: RetailerCode) {
         fetcher: Source,
         store: server.client(),
     });
+    super::discover_markets::register_inventory(&mut bus);
     bus.on_many_keyed(catalog::reacts_to::acquired);
     bus.on_many_keyed(catalog::reacts_to::next_batch);
     bus.on_many_keyed(details::reacts_to::on);
@@ -224,7 +230,7 @@ fn run_initial_fill(retailer: RetailerCode) {
     );
     assert_eq!(status, StatusCode::ACCEPTED);
     let run_id = response["fills"][0]["run_id"].as_str().unwrap();
-    for _ in 0..3 {
+    for _ in 0..4 {
         run(&server, &app, "/api/commands/run");
         run(&server, &app, "/api/events/run");
     }
@@ -251,11 +257,11 @@ fn run_initial_fill(retailer: RetailerCode) {
         .iter()
         .filter(|e| e["event_type"] == "OfferDetailsFetched")
         .collect();
-    assert_eq!(terminal.len(), 3);
+    assert_eq!(terminal.len(), contexts.len() * 3);
     // Check the actual upload destination against object storage's existing
     // contract, independently of the handler's bucket constant.
     let data = server.data.lock().unwrap();
-    assert_eq!(data.uploads.len(), 3);
+    assert_eq!(data.uploads.len(), contexts.len() * 3);
     assert!(
         data.uploads
             .iter()
@@ -272,11 +278,20 @@ fn run_initial_fill(retailer: RetailerCode) {
             .get_offer(details::handler::BUCKET, &event.storage)
             .unwrap();
         let artifact: Value = serde_json::from_str(&artifact).unwrap();
-        assert_eq!(artifact["schema_version"], 1);
+        assert_eq!(artifact["schema_version"], 2);
         let config = retailer_data_extractor::initial_fill_config_for(retailer).unwrap();
+        let requested = &artifact["pages"][0]["request"]["variables"];
+        assert!(
+            contexts
+                .iter()
+                .any(
+                    |c| serde_json::to_value(&c.country).unwrap() == requested["country"]
+                        && c.language == requested["language"]
+                )
+        );
         assert_eq!(
-            artifact["pages"][0]["request"]["variables"]["country"],
-            config.country
+            artifact["context"],
+            serde_json::to_value(&event.context).unwrap()
         );
         assert!(
             artifact["pages"][0]["request"]["query"]

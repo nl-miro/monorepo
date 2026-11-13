@@ -1,3 +1,18 @@
+- [x] Preserve actionable Shopify GraphQL errors in initial fill.
+  All three brands retain operation, messages, codes, paths, locations and scope/cost
+  diagnostics before typed decoding; missing data is distinct and tokens are redacted.
+  Library CI checks pass (final crate retried without sccache after a cache reset);
+  sourcing initial-fill tests pass.
+
+- [x] Use Retailer supported locales as initial-fill discovered markets.
+  Main-table locales only; optional country and response-derived currency. ADR 69.
+  Library, sourcing and app CI pass; five PostgreSQL fixture tests cover all 48
+  integrations. Sourcing health and development page return 200. Audits show no
+  new advisories; yanked-crate checks are limited by the read-only registry cache.
+  Live Shopify fills remain a deployment acceptance check.
+- [x] Restrict retailer entity locales to main inventory tables.
+  Common lookup and locale accessor added; retailers_wip make ci passes.
+
 
 ### DONE
 
@@ -13,6 +28,66 @@
 
 
 ### IN PROGRESS
+
+- [x] Add and use Retailer::new.
+  All 50 retailer definitions use the constructor; formatting and crate CI pass.
+
+- [x] Add and use SupportedLocales::new.
+  Constructor used throughout retailer definitions and inventory tests; crate formatting and CI pass.
+
+- [x] Replace SupportedLocales annotation fields with construction comments.
+  Evidence notes preserved beside definitions; inventory checks and crate CI pass.
+
+- [x] Rename Locale variants to language_REGION notation.
+  All 106 variants and their uses updated; canonical tags unchanged. Crate CI passes.
+
+- [x] Use the shared RetailerCode enum in WIP retailer definitions.
+  All 50 definitions are typed; crate CI passes. Audit reports no new advisories.
+
+- [x] Represent inventory locale tags with a canonical Locale enum.
+  All factories use 106 variants; casing aliases normalize. Crate CI passes.
+
+- [x] Use country mapping only for shipping lists longer than four entries.
+  Shorter lists use direct Market values; crate CI passes.
+
+- [x] Simplify shipping-country lists by mapping Country arrays into Market values.
+  All brand factories updated; crate CI passes.
+
+- [x] Represent retailer countries and regions with Market, Country and Region enums.
+  Factories use typed markets and locale contexts; code conversion and inventory checks pass.
+
+- [x] Use plain vectors for retailer target markets and shipping countries.
+  Unknown values use empty vectors; factories and checks updated. Crate CI passes.
+
+- [x] Remove target-market annotations, shipping restrictions and configured shipping countries from retailer entities.
+  Factories, inventory tables and checks updated; research evidence retained. Crate CI passes.
+
+- [x] Verify shipping-country configuration for every retailer using shop.shipsToCountries.
+  Saved 48 lists across 50 entries; Vietnam is locked and Korea has no Shopify endpoint.
+  Configuration is separate from documented coverage; crate CI passes.
+
+- [x] Correct Anker EU shipping destinations from storefront and GraphQL shipping configuration.
+  Both sources report 24 countries; evidence saved and WIP factory synchronized. Crate CI passes.
+
+- [x] Make catalog and product GraphQL country optional across all three brands.
+  Missing market context omits country; explicit context checks remain. Library CI passes.
+
+- [x] Prefix locale context column headers with GraphQL.
+  Crate formatting and CI pass.
+
+- [x] Remove redundant advertised-only annotations from locale table rows.
+  Inventory checks infer annotations from headers; crate CI passes.
+
+- [x] Use locale table column headers instead of separate section labels.
+  Crate formatting and CI pass.
+
+- [x] Split retailer locale tables into main and advertised-only entries.
+  Inventory consistency checks account for grouping; crate CI passes.
+
+- [~] Verify advertised retailer locale contexts against live storefront evidence.
+  Eight contexts verified and synchronized; crate CI passes. Eight language pages
+  still need country policy, one country mismatch remains, and 113 rows are
+  unresolved after HTTP 429/network failures. Evidence: docs/research/retailer-context-verification-2026-11-13.json.
 
 - [x] Add missing split Nordic retailers to the inventory and WIP factories.
   All five country contexts and legacy compatibility covered; crate CI passes.
@@ -118,3 +193,6 @@
 - [x] Expose extracted types through prelude modules and update consumers across all brands.
   Type re-exports now live in extracted/prelude.rs; converters, tests and storefront
   exports use the prelude. Formatting and Clippy pass; lib CI retains the three extractor contract failures.
+
+- [x] Add a Language enum for GraphQL language codes in retailer definitions.
+  All brand definitions use typed languages; formatting and crate CI pass.

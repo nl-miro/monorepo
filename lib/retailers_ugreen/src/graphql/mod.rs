@@ -1,12 +1,19 @@
 pub(crate) mod operations;
 pub mod raw;
 use retailer_sauce::shopify::markets::MarketContext;
+use retailers_wip::initial_fill::{
+    FetchedDetails, LocaleCatalogBatch, LocaleInitialFillIntegration, RequestedContext,
+};
 /// Continuations identify the owning product/variant, never a translated label.
 #[derive(Debug, Clone)]
 pub enum Operation {
     Markets,
     InContext {
         context: MarketContext,
+        operation: Box<Operation>,
+    },
+    InLocale {
+        context: RequestedContext,
         operation: Box<Operation>,
     },
     Catalog {
@@ -77,7 +84,14 @@ impl InitialFillIntegration for Engine {
         context: Option<&MarketContext>,
         after: Option<String>,
     ) -> Result<CatalogBatch, String> {
-        catalog::fetch(self, http, token, context, after)
+        catalog::fetch(
+            self,
+            http,
+            token,
+            context.map(RequestedContext::from).as_ref(),
+            after,
+        )
+        .map(|result| result.batch)
     }
     fn details(
         &self,
@@ -86,8 +100,38 @@ impl InitialFillIntegration for Engine {
         context: Option<&MarketContext>,
         id: &str,
     ) -> Result<String, String> {
-        serde_json::to_string(&fetch::fetch_in_context(self, http, token, id, context)?)
-            .map_err(|e| e.to_string())
+        serde_json::to_string(&fetch::fetch_in_context(
+            self,
+            http,
+            token,
+            id,
+            context.map(RequestedContext::from).as_ref(),
+        )?)
+        .map_err(|e| e.to_string())
+    }
+}
+impl LocaleInitialFillIntegration for Engine {
+    fn catalog_for_locale(
+        &self,
+        http: &dyn Http,
+        token: Option<&StorefrontToken>,
+        context: Option<&RequestedContext>,
+        after: Option<String>,
+    ) -> Result<LocaleCatalogBatch, String> {
+        catalog::fetch(self, http, token, context, after)
+    }
+    fn details_for_locale(
+        &self,
+        http: &dyn Http,
+        token: Option<&StorefrontToken>,
+        context: Option<&RequestedContext>,
+        id: &str,
+    ) -> Result<FetchedDetails, String> {
+        let artifact = fetch::fetch_in_context(self, http, token, id, context)?;
+        Ok(FetchedDetails {
+            body: serde_json::to_string(&artifact).map_err(|e| e.to_string())?,
+            context: artifact.context,
+        })
     }
 }
 impl Engine {
@@ -109,13 +153,24 @@ impl Engine {
         }
         let request = self.request(operation)?;
         let response = http.post(config.graphql_url, &request, token)?;
-        self.validate_response(operation, &response)?;
+        self.validate_response(operation, &response)
+            .map_err(|error| {
+                // Redact the active credential if Shopify echoes it in diagnostics.
+                match token {
+                    Some(token) => error.replace(token.as_str(), "[redacted]"),
+                    None => error,
+                }
+            })?;
+        if let Operation::InLocale { context, .. } = operation {
+            context.clone().observe(&response)?;
+            return Ok(response);
+        }
         let expected = match operation {
             Operation::InContext { context, .. } => {
-                Some((context.country.as_str(), context.language.as_str()))
+                Some((Some(context.country.as_str()), context.language.as_str()))
             }
             Operation::Markets => None,
-            _ => Some((config.country, config.language)),
+            _ => Some((None, config.language)),
         };
         if matches!(operation, Operation::InContext { .. })
             && response.pointer("/extensions/context").is_none()
@@ -136,7 +191,8 @@ impl Engine {
         }
         if let Some((country, language)) = expected
             && let Some(context) = response.pointer("/extensions/context")
-            && (context.get("country").is_some_and(|c| c != country)
+            && (country
+                .is_some_and(|expected| context.get("country").is_some_and(|c| c != expected))
                 || context.get("language").is_some_and(|l| l != language))
         {
             return Err("Storefront response context does not match retailer market".into());
@@ -261,3 +317,6 @@ mod sharing_tests {
         );
     }
 }
+
+#[cfg(test)]
+mod optional_country_tests;

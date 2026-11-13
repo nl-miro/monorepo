@@ -8,7 +8,7 @@ use uuid::Uuid;
 pub struct ProductCatalogIdsRetrieved {
     pub run_id: Uuid,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub context: Option<retailer_sauce::shopify::markets::MarketContext>,
+    pub context: Option<retailers_wip::initial_fill::RequestedContext>,
     pub retailer_code: RetailerCode,
     pub storefront_token: Option<StorefrontToken>,
     pub after: Option<String>,

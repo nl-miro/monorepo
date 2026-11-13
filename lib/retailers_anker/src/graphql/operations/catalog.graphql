@@ -1,4 +1,4 @@
-query CatalogIdentifiers($country: CountryCode!, $language: LanguageCode!, $first: Int!, $after: String) @inContext(country: $country, language: $language) {
+query CatalogIdentifiers($country: CountryCode, $language: LanguageCode!, $first: Int!, $after: String) @inContext(country: $country, language: $language) {
   products(first: $first, after: $after, sortKey: ID) {
     edges { cursor node { id } }
     pageInfo { hasNextPage endCursor }

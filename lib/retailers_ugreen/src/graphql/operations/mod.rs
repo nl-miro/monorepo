@@ -125,25 +125,32 @@ fn build<Q: GraphQLQuery>(
 where
     Q::Variables: DeserializeOwned,
 {
-    variables["country"] = json!(config.country);
     variables["language"] = json!(config.language);
     for size in [1, 5, 10, 20, 25] {
         variables[format!("pageSize{size}")] = json!(size);
     }
     let request = Q::build_query(serde_json::from_value(variables).map_err(|e| e.to_string())?);
+    let mut variables = serde_json::to_value(request.variables).map_err(|e| e.to_string())?;
+    variables
+        .as_object_mut()
+        .ok_or("query variables must be an object")?
+        .remove("country");
     Ok(GraphqlRequest {
         operation_name: request.operation_name.into(),
         query: request.query.into(),
-        variables: serde_json::to_value(request.variables).map_err(|e| e.to_string())?,
+        variables,
     })
 }
-fn validate<Q: GraphQLQuery>(body: &Value) -> Result<(), String> {
+fn validate<Q: GraphQLQuery>(operation: &str, body: &Value) -> Result<(), String> {
+    retailers_wip::graphql_errors::check(operation, body)?;
     let response: Response<Q::ResponseData> =
         serde_json::from_value(body.clone()).map_err(|error| {
-            format!("Storefront response does not match the selected GraphQL operation: {error}")
+            format!("Storefront {operation} response does not match the selected GraphQL operation: {error}")
         })?;
-    if response.errors.as_ref().is_some_and(|e| !e.is_empty()) || response.data.is_none() {
-        return Err("Storefront returned GraphQL errors or missing data".into());
+    if response.data.is_none() {
+        return Err(format!(
+            "Storefront {operation} returned missing or null data without GraphQL errors"
+        ));
     }
     Ok(())
 }
@@ -151,6 +158,14 @@ fn validate<Q: GraphQLQuery>(body: &Value) -> Result<(), String> {
 pub fn request(operation: &Operation, config: &StorefrontConfig) -> Result<GraphqlRequest, String> {
     match operation {
         Operation::Markets => Ok(super::markets::request()),
+        Operation::InLocale { context, operation } => {
+            let mut request = request(operation, config)?;
+            if let Some(country) = &context.country {
+                request.variables["country"] = json!(country);
+            }
+            request.variables["language"] = json!(context.language);
+            Ok(request)
+        }
         Operation::InContext { context, operation } => {
             let mut request = request(operation, config)?;
             request.variables["country"] = json!(context.country);
@@ -205,24 +220,26 @@ pub fn validate_response(
     if let Operation::Markets = operation {
         return super::markets::contexts(body).map(|_| ());
     }
-    if let Operation::InContext { operation, .. } = operation {
+    if let Operation::InContext { operation, .. } | Operation::InLocale { operation, .. } =
+        operation
+    {
         return validate_response(operation, body, config);
     }
     let name = request(operation, config)?.operation_name;
     match name.as_str() {
-        "CatalogIdentifiers" => validate::<CatalogIdentifiers>(body),
-        "OfferDetails" => validate::<OfferDetails>(body),
-        "ProductCollections" => validate::<ProductCollections>(body),
-        "ProductImages" => validate::<ProductImages>(body),
-        "ProductMedia" => validate::<ProductMedia>(body),
-        "ProductVariants" => validate::<ProductVariants>(body),
-        "ProductSellingPlanGroups" => validate::<ProductSellingPlanGroups>(body),
-        "VariantComponents" => validate::<VariantComponents>(body),
-        "VariantGroupedBy" => validate::<VariantGroupedBy>(body),
-        "VariantQuantityPriceBreaks" => validate::<VariantQuantityPriceBreaks>(body),
-        "VariantSellingPlanAllocations" => validate::<VariantSellingPlanAllocations>(body),
-        "VariantStoreAvailability" => validate::<VariantStoreAvailability>(body),
-        "SellingPlans" => validate::<SellingPlans>(body),
+        "CatalogIdentifiers" => validate::<CatalogIdentifiers>(&name, body),
+        "OfferDetails" => validate::<OfferDetails>(&name, body),
+        "ProductCollections" => validate::<ProductCollections>(&name, body),
+        "ProductImages" => validate::<ProductImages>(&name, body),
+        "ProductMedia" => validate::<ProductMedia>(&name, body),
+        "ProductVariants" => validate::<ProductVariants>(&name, body),
+        "ProductSellingPlanGroups" => validate::<ProductSellingPlanGroups>(&name, body),
+        "VariantComponents" => validate::<VariantComponents>(&name, body),
+        "VariantGroupedBy" => validate::<VariantGroupedBy>(&name, body),
+        "VariantQuantityPriceBreaks" => validate::<VariantQuantityPriceBreaks>(&name, body),
+        "VariantSellingPlanAllocations" => validate::<VariantSellingPlanAllocations>(&name, body),
+        "VariantStoreAvailability" => validate::<VariantStoreAvailability>(&name, body),
+        "SellingPlans" => validate::<SellingPlans>(&name, body),
         _ => Err("unsupported GraphQL operation".into()),
     }
 }

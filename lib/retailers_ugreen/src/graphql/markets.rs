@@ -17,8 +17,6 @@ pub fn request() -> GraphqlRequest {
 #[derive(Deserialize)]
 struct Envelope {
     data: Data,
-    #[serde(default)]
-    errors: Vec<Value>,
 }
 #[derive(Deserialize)]
 struct Data {
@@ -43,11 +41,9 @@ struct Code {
 }
 
 pub fn contexts(response: &Value) -> Result<Vec<MarketContext>, String> {
+    retailers_wip::graphql_errors::check("StorefrontMarkets", response)?;
     let response: Envelope = serde_json::from_value(response.clone())
         .map_err(|e| format!("invalid market discovery response: {e}"))?;
-    if !response.errors.is_empty() {
-        return Err("market discovery returned GraphQL errors".into());
-    }
     let mut contexts = BTreeMap::new();
     for country in response.data.localization.available_countries {
         if country.available_languages.is_empty() {

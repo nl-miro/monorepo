@@ -1,4 +1,4 @@
-use retailer_sauce::initial_fill::InitialFillIntegration;
+use retailers_wip::initial_fill::LocaleInitialFillIntegration as InitialFillIntegration;
 use shared::retailer::RetailerCode;
 pub fn integration(retailer: RetailerCode) -> Option<&'static dyn InitialFillIntegration> {
     Some(match retailer.as_str().as_str() {

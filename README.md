@@ -25,10 +25,10 @@ Anker storefronts share one complete v2 extracted model; AU/CA retain their exis
 | `object_storage_client`   | Async object storage client using REST or GraphQL                       |
 | `inbox_client`            | Blocking HTTP client for a durable inbox, used by HTTP outbox delivery  |
 | `retailer_data_extractor` | Extracting data from retailers                                          |
-| `retailers_anker` | Anker integrations, including AU/CA |
-| `retailers_minisforum` | Minisforum integrations |
-| `retailers_ugreen` | Ugreen integrations |
-| `retailers_wip` | Reserved for future experimental integrations |
+| `retailers_anker`         | Anker integrations, including AU/CA                                     |
+| `retailers_minisforum`    | Minisforum integrations                                                 |
+| `retailers_ugreen`        | Ugreen integrations                                                     |
+| `retailers_wip`           | Retailer inventory and initial-fill locale contracts                           |
 | `testimony`               | Event sourcing abstractions, aggregate repositories, and query dispatch |
 | `testimony_infra`         | In-memory and PostgreSQL event stores for testimony                     |
 
@@ -184,7 +184,7 @@ More targets run only from the root, against `DATA_DIR`, which defaults to the
 | `export-sitemaps`             | Write each retailer's latest sitemap crawl, its sources, processed tree and consolidated links, to `<DATA_DIR>/<retailer>/sitemap` (needs `DATABASE_URL`)                                                                                                                                                                                                                                                     |
 | `dump-sitemap-sources`        | Download every fetched sitemap file from `retailer_sourcing`'s `/api/development/sitemaps/sources` to `<DATA_DIR>/<retailer>/sitemaps/sources/<retrieval id>/<url slug>.xml`; set `RETAILER_SOURCING_URL` (default `http://localhost:3000`) and, to override the hardcoded bearer token, `RETAILER_SOURCING_TOKEN`                                                                                            |
 | `dump-offer-details`          | List offer metadata from `retailer_sourcing`'s `/api/development/offer-details/sources`, then download the newest HTML from `object_storage` to `<DATA_DIR>/<retailer>/offer_details/sources/<url path>.html`; set `RETAILER_SOURCING_URL` and `RETAILER_SOURCING_TOKEN` as for `dump-sitemap-sources`, plus `OBJECT_STORAGE_URL` (default `http://172.28.100.43:3000`) and optionally `OBJECT_STORAGE_TOKEN` |
-| `dump-offer-details-v2` | Download the newest complete GraphQL artifact per retailer/product to `<DATA_DIR>/<retailer>/offer_details_v2/sources/<product ID>.json`; uses the same sourcing/object-storage settings as `dump-offer-details` |
+| `dump-offer-details-v2`       | Download the newest complete GraphQL artifact per retailer/product to `<DATA_DIR>/<retailer>/offer_details_v2/sources/<product ID>.json`; uses the same sourcing/object-storage settings as `dump-offer-details`                                                                                                                                                                                              |
 | `extract-offer-details`       | Extract each page in `<DATA_DIR>/<retailer>/offer_details/sources` into `offer_details/extracted/<page>.json`; set `RETAILERS` to limit them                                                                                                                                                                                                                                                                  |
 | `normalize-offer-details`     | Normalize each page in `offer_details/extracted` into `offer_details/normalized/<page>.json`; set `RETAILERS` to limit them                                                                                                                                                                                                                                                                                   |
 | `structuralize-offer-details` | Structuralize each page in `offer_details/normalized` into `offer_details/structuralized/<page>.json`; set `RETAILERS` to limit them                                                                                                                                                                                                                                                                          |
@@ -354,16 +354,13 @@ databases and explicit queue runners. Its shell blocks can be syntax-checked
 with bash -n; full execution requires PostgreSQL and permission to open sockets.
 A workflow definition is not evidence of a passing Actions run.
 
-Minisforum and Ugreen (including NAS) also support GraphQL initial fills through
-`POST /api/initial-offer-fills`, discovering every advertised country/language
-context per retailer. Their v2 dumps separate markets into country-language
-subdirectories; Anker now uses the same all-market discovery flow. See
-[ADR 59](docs/adr/0059-multi-market-shopify-initial-fills.md).
-
-GraphQL initial fills use an independent integration for each of the 48 supported
-retailer codes. The retailer owns token policy, queries, schema, raw types and
-pagination; sourcing shares only HTTP pacing, durable orchestration and storage.
-See [ADR 61](docs/adr/0061-independent-retailer-graphql-integrations.md).
+All 48 supported Anker, Minisforum and Ugreen (including NAS) initial fills use
+`Retailer.supported_locales` as their discovered markets. The entity contains only
+main-table entries from `docs/retailer.md`; advertised-only entries remain research.
+Country is optional and currency comes from responses. Token policies and brand
+GraphQL engines are unchanged. Stored v2 artifacts retain observed market context
+and country-language dump directories. See
+[ADR 69](docs/adr/0069-inventory-initial-fill-contexts.md).
 
 ### Extracting v2 offer dumps
 
@@ -391,8 +388,6 @@ context. Raw historical artifacts remain unchanged. Root variants, collections a
 connection metadata; image references include root index and optional source ID.
 See the [shared extracted model](lib/retailers_anker/README.md#shared-complete-extracted-model).
 
-All 17 supported Anker storefronts now discover every advertised country/language
-context using their existing access policy. Catalog and detail continuations
-retain context; new dumps use schema 2 and country-language directories.
-Historical dumps remain readable. Drain existing Anker fills before deploying,
-then validate one new fill before broad rollout. See ADR 68 in docs/adr.
+Drain existing initial fills before deploying the inventory-backed flow. Historical
+artifacts remain readable. Validate one explicit-country fill and one countryless
+fill before broader collection; see ADR 69.

@@ -20,7 +20,7 @@ pub use pretty::pretty_json;
 /// Retailer-owned GraphQL integration; source interpretation stays behind this boundary.
 pub fn initial_fill_integration_for(
     retailer: RetailerCode,
-) -> Option<&'static dyn retailer_sauce::initial_fill::InitialFillIntegration> {
+) -> Option<&'static dyn retailers_wip::initial_fill::LocaleInitialFillIntegration> {
     retailers_anker::initial_fill::integration(retailer)
         .or_else(|| retailers_minisforum::initial_fill::integration(retailer))
         .or_else(|| retailers_ugreen::initial_fill::integration(retailer))

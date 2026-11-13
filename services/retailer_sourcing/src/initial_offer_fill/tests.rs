@@ -256,8 +256,7 @@ fn downloaded_au_storefront_emits_the_expected_token() {
         .remove(0);
     assert_eq!(event.storefront_token, Some(expected.clone()));
     assert_eq!(event.retailer_code, RetailerCode::AnkerAu);
-    let queued = catalog::reacts_to::acquired(&event).remove(0);
-    assert_eq!(queued.command.storefront_token, Some(expected));
+    assert!(catalog::reacts_to::acquired(&event).is_empty());
 }
 
 #[test]
@@ -337,9 +336,8 @@ fn token_handler_fetches_assets_and_emits_market_token_and_timestamp() {
     let event = handler.handle(command).unwrap().remove(0);
     assert_eq!(event.storefront_token, Some(token_value()));
     assert!(event.acquired_at >= start);
-    let queued = catalog::reacts_to::acquired(&event).remove(0);
-    assert_eq!(queued.command.run_id, run_id);
-    assert!(queued.command.after.is_none());
+    assert_eq!(event.run_id, run_id);
+    assert!(catalog::reacts_to::acquired(&event).is_empty());
 }
 #[test]
 fn token_handler_rejects_missing_token_failed_assets_and_arbitrary_urls() {
@@ -550,7 +548,7 @@ fn every_product_variant_and_selling_plan_connection_is_exhausted() {
         assert_eq!(result.pages.len(), 13);
         let config = retailer_data_extractor::initial_fill_config_for(retailer).unwrap();
         for page in &result.pages {
-            assert_eq!(page.request.variables["country"], config.country);
+            assert!(page.request.variables.get("country").is_none());
             assert_eq!(page.request.variables["language"], config.language);
             assert!(page.request.query.contains("language: $language"));
         }
@@ -1187,4 +1185,86 @@ fn fetch_details<F: Http>(
         http, retailer, token, id, None,
     )?)
     .map_err(|e| e.to_string())
+}
+
+#[test]
+fn countryless_inventory_context_survives_catalog_batches_and_detail_pagination() {
+    let run_id = Uuid::now_v7();
+    let retailer = retailers_wip::retailers::get_retailer(RetailerCode::MinisForumEu).unwrap();
+    let context = retailer.initial_fill_contexts().unwrap().remove(0);
+    assert_eq!(context.language, "EN");
+    assert_eq!(context.country, None);
+    let with_context = |mut value: Value| {
+        value["extensions"] = json!({"context":{"country":"DE","language":"EN"}});
+        value
+    };
+    let handler = catalog::handler::Handler(FakeHttp {
+        expected_token: None,
+        ..FakeHttp::from(vec![
+            with_context(catalog_page(1, 250, true, "a")),
+            with_context(catalog_page(251, 250, true, "b")),
+            with_context(catalog_page(501, 1, false, "c")),
+        ])
+    });
+    let first = handler
+        .handle(catalog::command::FetchProductCatalogIdentifiers {
+            context: Some(context),
+            run_id,
+            retailer_code: RetailerCode::MinisForumEu,
+            storefront_token: None,
+            after: None,
+        })
+        .unwrap()
+        .remove(0);
+    assert_eq!(
+        first.context.as_ref().unwrap().observed_country.as_deref(),
+        Some("DE")
+    );
+    let next = catalog::reacts_to::next_batch(&first).remove(0);
+    let last = handler.handle(next.command).unwrap().remove(0);
+    assert_eq!(last.context, first.context);
+    let command = details::reacts_to::on(&last).remove(0).command;
+    let id = "gid://shopify/Product/501";
+    let mut p = product(id);
+    p["images"] = connection(vec![], true, Some("next"));
+    let details = details::handler::Handler {
+        fetcher: FakeHttp {
+            expected_token: None,
+            ..FakeHttp::from(vec![
+                with_context(json!({"data":{"product":p}})),
+                with_context(
+                    json!({"data":{"product":{"id":id,"images":connection(vec![],false,None)}}}),
+                ),
+            ])
+        },
+        store: FakeStore {
+            bodies: Mutex::new(vec![]),
+            fail: false,
+        },
+    };
+    let result = details.handle(command).unwrap().remove(0);
+    let observed = result.context.unwrap();
+    assert_eq!(
+        (
+            observed.country.as_str(),
+            observed.language.as_str(),
+            observed.currency.as_str()
+        ),
+        ("DE", "EN", "AUD")
+    );
+    let artifact: Value = serde_json::from_str(&details.store.bodies.lock().unwrap()[0]).unwrap();
+    assert_eq!(artifact["schema_version"], 2);
+    assert_eq!(artifact["context"], serde_json::to_value(observed).unwrap());
+    assert_eq!(artifact["pages"].as_array().unwrap().len(), 2);
+    for request in handler
+        .0
+        .calls
+        .lock()
+        .unwrap()
+        .iter()
+        .chain(details.fetcher.calls.lock().unwrap().iter())
+    {
+        assert!(request.variables.get("country").is_none());
+        assert_eq!(request.variables["language"], "EN");
+    }
 }

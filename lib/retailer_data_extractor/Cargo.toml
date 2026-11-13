@@ -7,6 +7,7 @@ publish = ["null-labs-hq"]
 [dependencies]
 html-extractor.workspace = true
 retailer_sauce.workspace = true
+retailers_wip.workspace = true
 retailers_anker = { path = "../retailers_anker" }
 retailers_minisforum = { path = "../retailers_minisforum" }
 retailers_ugreen = { path = "../retailers_ugreen" }

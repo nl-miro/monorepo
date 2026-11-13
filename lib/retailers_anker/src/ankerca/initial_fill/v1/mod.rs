@@ -92,7 +92,8 @@ mod tests {
                     .query
                     .contains("@inContext(country: $country, language: $language)")
             );
-            assert_eq!(request.variables["country"], "CA");
+            assert!(request.variables.get("country").is_none());
+            assert_eq!(request.variables["language"], "EN");
             assert!(!request.query.contains("language: FR"));
         }
     }

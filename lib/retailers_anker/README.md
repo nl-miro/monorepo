@@ -204,8 +204,20 @@ Variant extraction rejects a compare-at price in a different currency, including
 when the current price is zero. Errors identify the variant and both currencies.
 Same-currency comparisons at or below the current price are omitted as before.
 
-All 17 supported Anker storefronts now discover every advertised country/language
-context using their existing access policy. Catalog and detail continuations
-retain context; new dumps use schema 2 and country-language directories.
-Historical dumps remain readable. Drain existing Anker fills before deploying,
-then validate one new fill before broad rollout. See ADR 68 in docs/adr.
+All 17 supported Anker storefronts use inventory main-table locales for initial
+fills. Country is optional; currency is observed in responses. See ADR 69 in docs/adr.
+
+Catalog and product GraphQL queries accept an optional country, including all
+continuation queries. Calls without an explicit `MarketContext` omit the country
+variable and use Shopify's default country while retaining the configured
+language. Returned prices must use a consistent observed currency; they are not
+forced to the configured country's currency. Explicit contexts still enforce
+country, language and currency. The recorded responses retain Shopify's context
+evidence. Initial fill now obtains requested contexts from the retailer inventory; see ADR 69.
+
+Initial-fill collection loads `Retailer.supported_locales` through the existing
+`StorefrontMarketsDiscovered` stage. It does not query advertised markets.
+Advertised-only locales stay in the documentation. The local
+`LocaleInitialFillIntegration` interface accepts optional countries and retains
+response-derived country/language/currency in schema-2 artifacts. Historical
+concrete-context integrations remain available as compatibility adapters.

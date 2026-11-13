@@ -93,7 +93,7 @@ mod tests {
         let request = request(&op).unwrap();
         assert_eq!(
             request.variables,
-            json!({"country":"AU","language":"EN","first":250,"after":"cursor"})
+            json!({"language":"EN","first":250,"after":"cursor"})
         );
         assert!(!request.query.contains("variants"));
         let body = json!({"data":{"products":{"edges":[{"cursor":"c","node":{"id":"gid://shopify/Product/1"}}],"pageInfo":{"hasNextPage":false,"endCursor":"c"}}}});

@@ -267,7 +267,7 @@ contract:
 | `400`, plain text                                                                                | Invalid JSON or limit, including missing, null, negative, fractional, or wrongly typed values.                                |
 | `413`, plain text                                                                                | Body exceeds Axum's configured size limit.                                                                                    |
 | `415`, plain text                                                                                | Missing or non-JSON content type.                                                                                             |
-| `500`, plain text error UUID                                                 | The blocking task failed; internal panic/join details are hidden.                                                             |
+| `500`, plain text error UUID                                                                     | The blocking task failed; internal panic/join details are hidden.                                                             |
 | `503`, JSON `{ "error": "the command bus is not running; start the service with DATABASE_URL" }` | A valid request reached an unconfigured bus.                                                                                  |
 
 Request validation runs before the unavailable-bus check. This changes the old
@@ -966,8 +966,7 @@ run ID, in first-occurrence request order. Duplicates within a request are
 ignored. The old singular `retailer` request format is no longer accepted;
 use a one-element `retailers` array to start a single store.
 
-All 17 active Anker storefronts below are configured. The complete list is
-validated before anything is queued. An empty list, unknown or unsupported
+The complete retailer list is validated before anything is queued. An empty list, unknown or unsupported
 code, Korea, or the retired `ankernordicscom` aggregate returns `400` without
 starting any runs; an unavailable bus returns `503`.
 
@@ -980,31 +979,29 @@ service logs and queue before retrying. Internal error details are logged under
 the error ID. This flow is independent of sitemap retrieval and does not start
 automatically. See [ADR 53](../../docs/adr/0053-anker-storefront-initial-fill-markets.md).
 
-| Code | Country | Language | Currency | Authentication |
-| --- | --- | --- | --- | --- |
-| ankerau | AU | EN | AUD | `storeTokens.au` |
-| ankerca | CA | EN | CAD | `storeTokens.ca` |
-| ankercom | US | EN | USD | `storeTokens.us` |
-| ankerde | DE | DE | EUR | `storeTokens.de` |
-| ankeruk | GB | EN | GBP | `storeTokens.uk` |
-| ankereu | NL | EN | EUR | `storeTokens.eu-en` |
-| ankerpl | PL | PL | PLN | `storeTokens.eu-pl` |
-| ankerfr | FR | FR | EUR | `storeTokens.fr` |
-| ankernz | NZ | EN | NZD | `storeTokens.nz` |
-| ankervn | VN | VI | VND | `storeTokens.vn` |
-| ankeritalycom | IT | IT | EUR | Optional public token |
-| ankerjapancom | JP | JA | JPY | Optional public token |
-| ankerse | SE | EN | SEK | Browser discovery; optional environment override |
-| ankerno | NO | EN | NOK | Browser discovery; optional environment override |
-| ankerfi | FI | EN | EUR | Browser discovery; optional environment override |
-| ankeris | IS | EN | ISK | Browser discovery; optional environment override |
-| ankerdk | DK | EN | DKK | Browser discovery; optional environment override |
+Initial fill supports 48 retailer codes: 17 Anker, ten Minisforum and 21 Ugreen
+(including NAS). After token acquisition, `DiscoverStorefrontMarkets` loads the
+`Retailer` entity and snapshots its `supported_locales` into
+`StorefrontMarketsDiscovered`. It makes no market-discovery HTTP request.
+Only the main tables in `docs/retailer.md` populate the entity; advertised-only
+entries remain documentation. Countryless main entries remain eligible.
 
-Canada remains English-only; `/ca-fr` token acquisition is rejected. Every
-operation explicitly requests its configured language, including pagination.
-Responses reporting a different context and product prices in another currency
-are rejected. `ankereu` uses its recorded NL/EUR default; it does not fan out to
-all European countries. Nordic codes preserve the existing headless catalog via
+Each unique optional-country/language pair starts one catalog traversal, in
+inventory order. Country is sent only when explicitly selected; it is never
+inferred from locale tags, URLs, target markets or shipping destinations.
+Canada collects EN and FR; Anker Europe requests AT/EN. Minisforum EU collects
+EN with country omitted; its advertised-only DE entry is excluded. Missing
+inventory, empty locale lists or regional codes in the country field fail
+rather than falling back to API discovery.
+
+Every request and continuation explicitly retains the selected language.
+Responses must report matching language and any requested country. For requests
+without country, the observed default country is carried between catalog batches
+and into details for consistency checks, while the country variable stays omitted.
+Currency comes from product responses; inconsistent prices fail. Historical
+queued contexts retain their expected currency checks.
+
+Nordic codes preserve the existing headless catalog via
 their public browser token. Initial fill discovers it automatically from the Nordic storefront unless
 `ANKER_NORDICS_STOREFRONT_TOKEN` supplies an override. An invalid override fails
 explicitly; discovery never falls back to anonymous access. The separate sitemap
@@ -1025,11 +1022,14 @@ an explicit network check. No public token is hardcoded in production.
 1. Where configured, `AcquireStorefrontToken` reads the selected token from the
    storefront/scripts or the Nordic environment override when configured.
    `StorefrontTokenAcquired` carries the real public token, retailer/run identity and UTC acquisition time.
-2. `FetchProductCatalogIdentifiers` collects up to 500 product GIDs using pages
+2. `DiscoverStorefrontMarkets` snapshots the entity locales and queues one catalog
+   command per unique optional-country/language pair. Replaying its persisted event
+   uses the same snapshot, even if the inventory later changes.
+3. `FetchProductCatalogIdentifiers` collects up to 500 product GIDs using pages
    of at most 250. `ProductCatalogIdsRetrieved` queues one detail command per
    product and the next batch when a continuation cursor exists. All batches
    retain the same run ID. The full catalog is traversed, not capped at 500.
-3. `FetchOfferDetails` uses `SourceType::GraphQl` and the acquired token. It
+4. `FetchOfferDetails` uses `SourceType::GraphQl` and the acquired token. It
    fetches the full WIP AU field selection, including every selected nested
    connection page. The assembled product and raw request/response pages are
    written as one JSON artifact to the existing `offer_details_raw` bucket.
@@ -1037,9 +1037,11 @@ an explicit network check. No public token is hardcoded in production.
 `OfferDetailsFetched` includes retailer, run ID, source, fetched time, and
 `OfferStorageMetadata` (`object_storage_id`, `external_id`, `content_size`,
 `scraped_at`). Its bucket is `offer_details_raw` (see
-[ADR 51](../../docs/adr/0051-initial-fill-raw-offer-bucket.md)). The artifact has
-`schema_version: 1`, `product`, and `pages`, each containing `request` and
-`response`. Authentication is excluded. No listener, normalization, export,
+[ADR 51](../../docs/adr/0051-initial-fill-raw-offer-bucket.md)). New artifacts have
+`schema_version: 2`, observed `context` (country, language, currency), `product`,
+and `pages`, each containing `request` and `response`. The terminal event carries
+the same observed context. Historical context-free schema-1 data remains readable.
+Authentication is excluded. No listener, normalization, export,
 or outbox delivery follows this terminal event.
 
 Command workers run as configured. Advance reactions with `/api/events/run`;
@@ -1081,17 +1083,14 @@ GraphQL/access failures fail the command rather than silently omit fields.
 
 ## Anker, Minisforum and Ugreen multi-market initial fills
 
-The existing bulk initial-fill endpoint accepts all 17 Anker, ten Minisforum and
-21 Ugreen codes, including NAS. Each run queues market discovery and fans out independent
-catalog/detail work for every country's advertised languages. Run both commands
-and events to advance the workflow. Bruno includes brand-wide bulk requests.
-Commands and events carry context; explicit context mismatches and wrong monetary
-currencies fail rather than being saved under the requested market.
-
-Contextual artifacts use schema version 2 with `context` (country, language,
-currency). `/api/development/offer-details-v2/sources` includes that context and
-continues returning historical records without it. No migration is required;
-deploy updated readers/workers before starting these fills. Anker uses the same discovery flow. See [ADR 68](../../docs/adr/0068-anker-multi-market-initial-fills.md).
+All three brands use the inventory-backed discovery stage described above.
+Contextual artifacts and the development source listing retain the existing
+resolved country/language/currency format and country-language dump directories.
+The start API and object-storage bucket are unchanged. No database migration is
+required. Drain existing fills before deploying all updated workers; do not replay
+old token events to migrate runs. Then validate a new explicit-country fill and a
+countryless fill before broader collection. See
+[ADR 69](../../docs/adr/0069-inventory-initial-fill-contexts.md).
 
 ## Optional public token acquisition
 
@@ -1109,13 +1108,8 @@ workers before starting new fills; already queued public commands remain public.
 Page sizes remain unchanged pending live authenticated cost checks. See
 [ADR 60](../../docs/adr/0060-optional-public-storefront-token-acquisition.md).
 
-GraphQL initial fills use an independent integration for each of the 48 supported
-retailer codes. The retailer owns token policy, queries, schema, raw types and
-pagination; sourcing shares only HTTP pacing, durable orchestration and storage.
-See [ADR 61](../../docs/adr/0061-independent-retailer-graphql-integrations.md).
-
-All 17 supported Anker storefronts now discover every advertised country/language
-context using their existing access policy. Catalog and detail continuations
-retain context; new dumps use schema 2 and country-language directories.
-Historical dumps remain readable. Drain existing Anker fills before deploying,
-then validate one new fill before broad rollout. See ADR 68 in docs/adr.
+Each retailer retains its configured access policy and endpoint. The three brand
+engines implement a local optional-country interface alongside the published
+integration interface; source queries and parsing remain in the brand crates.
+See [ADR 64](../../docs/adr/0064-brand-shared-graphql.md) and
+[ADR 69](../../docs/adr/0069-inventory-initial-fill-contexts.md).

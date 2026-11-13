@@ -1,4 +1,4 @@
-query VariantSellingPlanAllocations($pageSize5: Int!, $country: CountryCode!, $language: LanguageCode!, $id: ID!, $after: String) @inContext(country: $country, language: $language) { node(id: $id) { __typename ... on ProductVariant { id sellingPlanAllocations(first: $pageSize5, after: $after) {
+query VariantSellingPlanAllocations($pageSize5: Int!, $country: CountryCode, $language: LanguageCode!, $id: ID!, $after: String) @inContext(country: $country, language: $language) { node(id: $id) { __typename ... on ProductVariant { id sellingPlanAllocations(first: $pageSize5, after: $after) {
             pageInfo {
               hasNextPage
               endCursor

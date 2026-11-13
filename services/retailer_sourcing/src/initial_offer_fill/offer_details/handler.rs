@@ -36,7 +36,7 @@ impl<F: Http + Send + Sync + 'static, S: Store> Handle for Handler<F, S> {
         let SourceType::GraphQl { product_id } = &command.source else {
             return Err("HTML initial-fill details are not implemented".into());
         };
-        let body = fetch::fetch_in_context(
+        let details = fetch::fetch_for_locale(
             &self.fetcher,
             command.retailer_code,
             command.storefront_token.as_ref(),
@@ -44,10 +44,10 @@ impl<F: Http + Send + Sync + 'static, S: Store> Handle for Handler<F, S> {
             command.context.as_ref(),
         )?;
         let fetched_at = chrono::Utc::now();
-        let storage = self.store.store(&body, fetched_at)?;
+        let storage = self.store.store(&details.body, fetched_at)?;
         tracing::info!(run_id = %command.run_id, context = ?command.context, product_id, object_storage_id = %storage.object_storage_id, "complete offer details stored");
         Ok(vec![OfferDetailsFetched {
-            context: command.context,
+            context: details.context,
             run_id: command.run_id,
             retailer_code: command.retailer_code,
             source: command.source,

@@ -1,3 +1,30 @@
+Shipping data: `Shipping countries` retains the existing documented coverage.
+The separate Shopify shipping-configuration survey remains in the
+[research evidence](research/retailer-shipping-countries-2026-11-13.json), rather
+than in the retailer entity or inventory tables. Configured countries do not
+guarantee checkout eligibility or delivery for every product/address.
+The Anker EU shipping row was previously reconciled with this configuration and
+retains its explicit policy-conflict note. Dated checks supersede older claims of
+unknown Ugreen UK/US endpoints; older research prose remains historical evidence.
+
+Main locale tables contain existing storefront locales and explicitly verified
+contexts. Advertised-only tables identify unconfirmed entries through their header;
+they are shown only when nonempty. Main does not imply a selected collection
+country or verified pricing. Both tables retain their evidence annotations.
+
+Verification update (2026-11-13): [per-locale evidence and results](research/retailer-context-verification-2026-11-13.json).
+Eight previously unselected rows have matching page language, Shopify backend,
+page country and explicit Storefront API context responses. They are marked
+`context verified 2026-11-13`. This verifies localization, not shipping eligibility,
+price uniqueness, complete translation, or collection priority. Other rows remain
+unselected: blocked requests are not evidence that a locale is unsupported.
+Earlier research notes below describe the original survey; the dated evidence
+supersedes them only for rows explicitly verified here. Runtime initial-fill collection uses only the main-table locales through
+`Retailer.supported_locales`; advertised-only entries remain research. A main-table
+locale without a country is collected with country omitted, using its declared
+GraphQL language. Currency is observed in responses. See
+[ADR 69](adr/0069-inventory-initial-fill-contexts.md).
+
 ## Anker Australia
 
 Implementation: [`anker::get_retailer("ankerau")`](../lib/retailers_wip/src/retailers/anker.rs). Keep this table and the factory data synchronized.
@@ -13,9 +40,11 @@ Implementation: [`anker::get_retailer("ankerau")`](../lib/retailers_wip/src/reta
 |                        |                                                            |
 |                        |                                                            |
 
-| Supported locales | URL                      | Country/region | Language |
-| ----------------- | ------------------------ | -------------- | -------- |
-| en-AU             | https://www.anker.com/au | AU             | EN       |
+**Shipping configuration checked 2026-11-13:** Shop configuration retrieved successfully. [Recorded result](research/retailer-shipping-countries-2026-11-13.json).
+
+| Supported locales | URL                      | GraphQL country/region | GraphQL language |
+| ----------------- | ------------------------ | ---------------------- | ---------------- |
+| en-AU             | https://www.anker.com/au | AU                     | EN               |
 
 ## Anker Canada
 
@@ -32,30 +61,33 @@ Implementation: [`anker::get_retailer("ankerca")`](../lib/retailers_wip/src/reta
 |                        |                                                             |
 |                        |                                                             |
 
-| Supported locales | URL                         | Country/region | Language |
-| ----------------- | --------------------------- | -------------- | -------- |
-| en-CA             | https://www.anker.com/ca    | CA             | EN       |
-| fr-CA             | https://www.anker.com/ca-fr | CA             | FR       |
+**Shipping configuration checked 2026-11-13:** Shop configuration retrieved successfully. [Recorded result](research/retailer-shipping-countries-2026-11-13.json).
+
+| Supported locales | URL                         | GraphQL country/region | GraphQL language |
+| ----------------- | --------------------------- | ---------------------- | ---------------- |
+| en-CA             | https://www.anker.com/ca    | CA                     | EN               |
+| fr-CA             | https://www.anker.com/ca-fr | CA                     | FR               |
 
 ## Anker Germany
 
 Implementation: [`anker::get_retailer("ankerde")`](../lib/retailers_wip/src/retailers/anker.rs). Keep this table and the factory data synchronized.
 
-| Field                  | Value                                                                                   |
-| ---------------------- | --------------------------------------------------------------------------------------- |
-| Retailer code          | `ankerde`                                                                               |
-| Storefront website     | https://www.anker.com/de                                                                |
-| Shopify shop value     | oneanker-de.myshopify.com                                                               |
-| Storefront GraphQL API | https://oneanker-de.myshopify.com/api/2026-10/graphql.json                              |
-| Target markets         | Germany (DE)                                                                            |
-| Shipping countries     | DE                                                                                      |
-| Shipping restrictions  | Excludes standard delivery to postcodes 27498 and 78266; additional express exclusions. |
-|                        |                                                                                         |
-|                        |                                                                                         |
+| Field                  | Value                                                      |
+| ---------------------- | ---------------------------------------------------------- |
+| Retailer code          | `ankerde`                                                  |
+| Storefront website     | https://www.anker.com/de                                   |
+| Shopify shop value     | oneanker-de.myshopify.com                                  |
+| Storefront GraphQL API | https://oneanker-de.myshopify.com/api/2026-10/graphql.json |
+| Target markets         | Germany (DE)                                               |
+| Shipping countries     | DE                                                         |
+|                        |                                                            |
+|                        |                                                            |
 
-| Supported locales                 | URL                      | Country/region | Language |
-| --------------------------------- | ------------------------ | -------------- | -------- |
-| de (HTML), de-DE (alternate link) | https://www.anker.com/de | DE             | DE       |
+**Shipping configuration checked 2026-11-13:** Shop configuration retrieved successfully. [Recorded result](research/retailer-shipping-countries-2026-11-13.json).
+
+| Supported locales                 | URL                      | GraphQL country/region | GraphQL language |
+| --------------------------------- | ------------------------ | ---------------------- | ---------------- |
+| de (HTML), de-DE (alternate link) | https://www.anker.com/de | DE                     | DE               |
 
 Note: https://www.anker.com/eu-de redirects to https://www.anker.com/de and uses the same Shopify shop, oneanker-de.myshopify.com. It is an alias of `ankerde`, not a separate retailer.
 
@@ -65,21 +97,22 @@ GraphQL context (verified live on 2026-11-09): `@inContext(country: DE, language
 
 Implementation: [`anker::get_retailer("ankereu")`](../lib/retailers_wip/src/retailers/anker.rs). Keep this table and the factory data synchronized.
 
-| Field                  | Value                                                                                                                                          |
-| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| Retailer code          | `ankereu`                                                                                                                                      |
-| Storefront website     | https://www.anker.com/eu-en                                                                                                                    |
-| Shopify shop value     | ankereu.myshopify.com                                                                                                                          |
-| Storefront GraphQL API | https://ankereu.myshopify.com/api/2026-10/graphql.json                                                                                         |
-| Target markets         | Europe (EU)                                                                                                                                    |
-| Shipping countries     | AT, BE, CZ, HU, LU, PL, PT, NL                                                                                                                 |
-| Shipping restrictions  | Power banks excluded for Portugal; Solarbank 2 AC limited to Austria. Negative exclusions elsewhere on the page do not add delivery countries. |
-|                        |                                                                                                                                                |
-|                        |                                                                                                                                                |
+| Field                  | Value                                                                                          |
+| ---------------------- | ---------------------------------------------------------------------------------------------- |
+| Retailer code          | `ankereu`                                                                                      |
+| Storefront website     | https://www.anker.com/eu-en                                                                    |
+| Shopify shop value     | ankereu.myshopify.com                                                                          |
+| Storefront GraphQL API | https://ankereu.myshopify.com/api/2026-10/graphql.json                                         |
+| Target markets         | Europe (EU)                                                                                    |
+| Shipping countries     | AT, BE, BG, CZ, DE, DK, EE, ES, FI, FR, GR, HR, HU, IT, LT, LU, LV, NL, PL, PT, RO, SE, SI, SK |
+|                        |                                                                                                |
+|                        |                                                                                                |
 
-| Supported locales | URL                         | Country/region | Language |
-| ----------------- | --------------------------- | -------------- | -------- |
-| en-EU             | https://www.anker.com/eu-en | AT             | EN       |
+**Shipping configuration checked 2026-11-13:** Shop configuration retrieved successfully. [Recorded result](research/retailer-shipping-countries-2026-11-13.json).
+
+| Supported locales | URL                         | GraphQL country/region | GraphQL language |
+| ----------------- | --------------------------- | ---------------------- | ---------------- |
+| en-EU             | https://www.anker.com/eu-en | AT                     | EN               |
 
 **Pricing decision:** Use Austria's country code (`AT`) to retrieve all Anker
 Europe catalog prices from `ankereu.myshopify.com`, with
@@ -92,7 +125,19 @@ Polish złoty (`PLN`); those prices will be handled separately, outside this
 Austria-based EUR feed. This is our chosen collection policy, not a claim that
 every country's actual prices are identical.
 
-The Country/region and Language columns specify the intended collection context; Supported locales retains the website locale tags. Here, `AT` / `EN` is the selected pricing context for the `en-EU` storefront. Contexts elsewhere in this inventory are not claimed to be live-verified unless explicitly noted.
+The GraphQL country/region and GraphQL language columns specify the intended collection context; Supported locales retains the website locale tags. Here, `AT` / `EN` is the selected pricing context for the `en-EU` storefront. Contexts elsewhere in this inventory are not claimed to be live-verified unless explicitly noted.
+
+
+**Shipping verification (2026-11-13):** The storefront's embedded
+`props.pageProps.shop.shipsToCountries` and a direct Storefront API
+`shop { shipsToCountries }` query both return the 24 destinations above.
+[Saved response](research/ankereu-shipping-countries-2026-11-13.json).
+The [English shipping policy](https://www.anker.com/eu-en/policies/shipping-policy)
+still lists only eight countries; it conflicts with the structured shipping
+configuration. The list above uses that configuration rather than expanding
+localization markets or interpreting product exclusions as shipping coverage.
+It does not guarantee delivery of every product to every address. The Austria
+pricing-context decision is independent and remains unchanged.
 
 ## Anker South Korea
 
@@ -110,10 +155,12 @@ Implementation: [`anker::get_retailer("ankerkr")`](../lib/retailers_wip/src/reta
 |                        |                                                  |
 |                        |                                                  |
 
-| Supported locales      | URL                       | Country/region | Language |
-| ---------------------- | ------------------------- | -------------- | -------- |
-| ko                     | https://ankerkorea.co.kr/ | KR             | KO       |
-| ko-KR (alternate link) | https://ankerkorea.co.kr/ | KR             | KO       |
+**Shipping configuration checked 2026-11-13:** Cafe24 platform indicators found; no Shopify endpoint established. [Recorded result](research/retailer-shipping-countries-2026-11-13.json).
+
+| Supported locales      | URL                       | GraphQL country/region | GraphQL language |
+| ---------------------- | ------------------------- | ---------------------- | ---------------- |
+| ko                     | https://ankerkorea.co.kr/ | KR                     | KO               |
+| ko-KR (alternate link) | https://ankerkorea.co.kr/ | KR                     | KO               |
 
 **Shipping evidence:** No reliable enumerated shipping-country definition established in the reviewed sources.
 
@@ -129,13 +176,14 @@ Implementation: [`anker::get_retailer("ankercom")`](../lib/retailers_wip/src/ret
 | Storefront GraphQL API | https://ankerus.myshopify.com/api/2026-10/graphql.json |
 | Target markets         | United States (US)                                     |
 | Shipping countries     | US                                                     |
-| Shipping restrictions  | Product/address restrictions apply.                    |
 |                        |                                                        |
 |                        |                                                        |
 
-| Supported locales | URL                    | Country/region | Language |
-| ----------------- | ---------------------- | -------------- | -------- |
-| en-US             | https://www.anker.com/ | US             | EN       |
+**Shipping configuration checked 2026-11-13:** Shop configuration retrieved successfully. [Recorded result](research/retailer-shipping-countries-2026-11-13.json).
+
+| Supported locales | URL                    | GraphQL country/region | GraphQL language |
+| ----------------- | ---------------------- | ---------------------- | ---------------- |
+| en-US             | https://www.anker.com/ | US                     | EN               |
 
 ## Anker Poland
 
@@ -149,13 +197,14 @@ Implementation: [`anker::get_retailer("ankerpl")`](../lib/retailers_wip/src/reta
 | Storefront GraphQL API | https://ankereu.myshopify.com/api/2026-10/graphql.json                                         |
 | Target markets         | Poland (PL)                                                                                    |
 | Shipping countries     | AT, BE, BG, HR, CZ, DK, EE, FI, FR, GR, ES, NL, LT, LU, DE, PL, PT, RO, SE, SK, SI, HU, IT, LV |
-| Shipping restrictions  | Destinations explicitly listed in Polish; not inferred from the eu-pl code.                    |
 |                        |                                                                                                |
 |                        |                                                                                                |
 
-| Supported locales | URL                         | Country/region | Language |
-| ----------------- | --------------------------- | -------------- | -------- |
-| pl-PL             | https://www.anker.com/eu-pl | PL             | PL       |
+**Shipping configuration checked 2026-11-13:** Shop configuration retrieved successfully. [Recorded result](research/retailer-shipping-countries-2026-11-13.json).
+
+| Supported locales | URL                         | GraphQL country/region | GraphQL language |
+| ----------------- | --------------------------- | ---------------------- | ---------------- |
+| pl-PL             | https://www.anker.com/eu-pl | PL                     | PL               |
 
 ## Anker France
 
@@ -172,9 +221,11 @@ Implementation: [`anker::get_retailer("ankerfr")`](../lib/retailers_wip/src/reta
 |                        |                                                         |
 |                        |                                                         |
 
-| Supported locales | URL                      | Country/region | Language |
-| ----------------- | ------------------------ | -------------- | -------- |
-| fr-FR             | https://www.anker.com/fr | FR             | FR       |
+**Shipping configuration checked 2026-11-13:** Shop configuration retrieved successfully. [Recorded result](research/retailer-shipping-countries-2026-11-13.json).
+
+| Supported locales | URL                      | GraphQL country/region | GraphQL language |
+| ----------------- | ------------------------ | ---------------------- | ---------------- |
+| fr-FR             | https://www.anker.com/fr | FR                     | FR               |
 
 ## Anker New Zealand
 
@@ -191,9 +242,11 @@ Implementation: [`anker::get_retailer("ankernz")`](../lib/retailers_wip/src/reta
 |                        |                                                        |
 |                        |                                                        |
 
-| Supported locales | URL                      | Country/region | Language |
-| ----------------- | ------------------------ | -------------- | -------- |
-| en-NZ             | https://www.anker.com/nz | NZ             | EN       |
+**Shipping configuration checked 2026-11-13:** Shop configuration retrieved successfully. [Recorded result](research/retailer-shipping-countries-2026-11-13.json).
+
+| Supported locales | URL                      | GraphQL country/region | GraphQL language |
+| ----------------- | ------------------------ | ---------------------- | ---------------- |
+| en-NZ             | https://www.anker.com/nz | NZ                     | EN               |
 
 **Shipping evidence:** No reliable enumerated shipping-country definition established in the reviewed sources.
 
@@ -203,21 +256,22 @@ Implementation: [`anker::get_retailer("ankernz")`](../lib/retailers_wip/src/reta
 
 Implementation: [`anker::get_retailer("ankeruk")`](../lib/retailers_wip/src/retailers/anker.rs). Keep this table and the factory data synchronized.
 
-| Field                  | Value                                                               |
-| ---------------------- | ------------------------------------------------------------------- |
-| Retailer code          | `ankeruk`                                                           |
-| Storefront website     | https://www.anker.com/uk                                            |
-| Shopify shop value     | oneanker-uk.myshopify.com                                           |
-| Storefront GraphQL API | https://oneanker-uk.myshopify.com/api/2026-10/graphql.json          |
-| Target markets         | United Kingdom (GB)                                                 |
-| Shipping countries     | GB                                                                  |
-| Shipping restrictions  | Some postcodes and PO boxes excluded; express coverage is narrower. |
-|                        |                                                                     |
-|                        |                                                                     |
+| Field                  | Value                                                      |
+| ---------------------- | ---------------------------------------------------------- |
+| Retailer code          | `ankeruk`                                                  |
+| Storefront website     | https://www.anker.com/uk                                   |
+| Shopify shop value     | oneanker-uk.myshopify.com                                  |
+| Storefront GraphQL API | https://oneanker-uk.myshopify.com/api/2026-10/graphql.json |
+| Target markets         | United Kingdom (GB)                                        |
+| Shipping countries     | GB                                                         |
+|                        |                                                            |
+|                        |                                                            |
 
-| Supported locales | URL                      | Country/region | Language |
-| ----------------- | ------------------------ | -------------- | -------- |
-| en-GB             | https://www.anker.com/uk | GB             | EN       |
+**Shipping configuration checked 2026-11-13:** Shop configuration retrieved successfully. [Recorded result](research/retailer-shipping-countries-2026-11-13.json).
+
+| Supported locales | URL                      | GraphQL country/region | GraphQL language |
+| ----------------- | ------------------------ | ---------------------- | ---------------- |
+| en-GB             | https://www.anker.com/uk | GB                     | EN               |
 
 ## Anker Vietnam
 
@@ -235,9 +289,11 @@ Implementation: [`anker::get_retailer("ankervn")`](../lib/retailers_wip/src/reta
 |                        |                                                               |
 |                        |                                                               |
 
-| Supported locales | URL                      | Country/region | Language |
-| ----------------- | ------------------------ | -------------- | -------- |
-| vi-VN             | https://www.anker.com/vn | VN             | VI       |
+**Shipping configuration checked 2026-11-13:** Online Store channel is locked; shipping configuration unavailable. [Recorded result](research/retailer-shipping-countries-2026-11-13.json).
+
+| Supported locales | URL                      | GraphQL country/region | GraphQL language |
+| ----------------- | ------------------------ | ---------------------- | ---------------- |
+| vi-VN             | https://www.anker.com/vn | VN                     | VI               |
 
 **Shipping evidence:** No reliable enumerated shipping-country definition established in the reviewed sources.
 
@@ -258,9 +314,11 @@ Implementation: [`anker::get_retailer("ankeritalycom")`](../lib/retailers_wip/sr
 |                        |                                                            |
 |                        |                                                            |
 
-| Supported locales | URL                         | Country/region | Language |
-| ----------------- | --------------------------- | -------------- | -------- |
-| it-IT             | https://www.ankeritaly.com/ | IT             | IT       |
+**Shipping configuration checked 2026-11-13:** Shop configuration retrieved successfully. [Recorded result](research/retailer-shipping-countries-2026-11-13.json).
+
+| Supported locales | URL                         | GraphQL country/region | GraphQL language |
+| ----------------- | --------------------------- | ---------------------- | ---------------- |
+| it-IT             | https://www.ankeritaly.com/ | IT                     | IT               |
 
 **Research notes:** Italian html[lang] and storefront title conflict with English label in some cross-site selectors; English support is not confirmed.
 
@@ -276,13 +334,14 @@ Implementation: [`anker::get_retailer("ankerjapancom")`](../lib/retailers_wip/sr
 | Storefront GraphQL API | https://anker-japan-official-site.myshopify.com/api/2026-10/graphql.json |
 | Target markets         | Japan (JP)                                                               |
 | Shipping countries     | JP                                                                       |
-| Shipping restrictions  | Some Okinawa addresses excluded; forwarding services not accepted.       |
 |                        |                                                                          |
 |                        |                                                                          |
 
-| Supported locales | URL                         | Country/region | Language |
-| ----------------- | --------------------------- | -------------- | -------- |
-| ja                | https://www.ankerjapan.com/ | JP             | JA       |
+**Shipping configuration checked 2026-11-13:** Shop configuration retrieved successfully. [Recorded result](research/retailer-shipping-countries-2026-11-13.json).
+
+| Supported locales | URL                         | GraphQL country/region | GraphQL language |
+| ----------------- | --------------------------- | ---------------------- | ---------------- |
+| ja                | https://www.ankerjapan.com/ | JP                     | JA               |
 
 ## Anker Nordics
 
@@ -299,35 +358,37 @@ Implementation: [`anker::get_retailer("ankernordicscom")`](../lib/retailers_wip/
 | Storefront GraphQL API | https://ankerneu.myshopify.com/api/2026-10/graphql.json            |
 | Target markets         | Denmark (DK), Finland (FI), Iceland (IS), Norway (NO), Sweden (SE) |
 | Shipping countries     | SE, NO, DK, FI, IS                                                 |
-| Shipping restrictions  | Iceland import clearance and product-specific exclusions apply.    |
 |                        |                                                                    |
 |                        |                                                                    |
 
-| Supported locales      | URL                           | Country/region | Language |
-| ---------------------- | ----------------------------- | -------------- | -------- |
-| en-SE                  | https://www.ankernordics.com/ | SE             | EN       |
-| en-dk (alternate link) | https://www.ankernordics.com/ | DK             | EN       |
-| en-fi (alternate link) | https://www.ankernordics.com/ | FI             | EN       |
-| en-is (alternate link) | https://www.ankernordics.com/ | IS             | EN       |
-| en-no (alternate link) | https://www.ankernordics.com/ | NO             | EN       |
+**Shipping configuration checked 2026-11-13:** Shop configuration retrieved successfully. [Recorded result](research/retailer-shipping-countries-2026-11-13.json).
+
+| Supported locales      | URL                           | GraphQL country/region | GraphQL language |
+| ---------------------- | ----------------------------- | ---------------------- | ---------------- |
+| en-SE                  | https://www.ankernordics.com/ | SE                     | EN               |
+| en-dk (alternate link) | https://www.ankernordics.com/ | DK                     | EN               |
+| en-fi (alternate link) | https://www.ankernordics.com/ | FI                     | EN               |
+| en-is (alternate link) | https://www.ankernordics.com/ | IS                     | EN               |
+| en-no (alternate link) | https://www.ankernordics.com/ | NO                     | EN               |
 
 ## Anker Sweden
 
 Implementation: [`anker::get_retailer("ankerse")`](../lib/retailers_wip/src/retailers/anker.rs). Keep this table and the factory data synchronized.
 
-| Field | Value |
-| ----- | ----- |
-| Retailer code | `ankerse` |
-| Storefront website | https://www.ankernordics.com/ |
-| Shopify shop value | ankerneu.myshopify.com |
+| Field                  | Value                                                   |
+| ---------------------- | ------------------------------------------------------- |
+| Retailer code          | `ankerse`                                               |
+| Storefront website     | https://www.ankernordics.com/                           |
+| Shopify shop value     | ankerneu.myshopify.com                                  |
 | Storefront GraphQL API | https://ankerneu.myshopify.com/api/2026-10/graphql.json |
-| Target markets | Sweden (SE) |
-| Shipping countries | SE, NO, DK, FI, IS |
-| Shipping restrictions | Iceland import clearance and product-specific exclusions apply. |
+| Target markets         | Sweden (SE)                                             |
+| Shipping countries     | SE, NO, DK, FI, IS                                      |
 
-| Supported locales | URL | Country/region | Language |
-| ----------------- | --- | -------------- | -------- |
-| en-SE | https://www.ankernordics.com/ | SE | EN |
+**Shipping configuration checked 2026-11-13:** Shop configuration retrieved successfully. [Recorded result](research/retailer-shipping-countries-2026-11-13.json).
+
+| Supported locales | URL                           | GraphQL country/region | GraphQL language |
+| ----------------- | ----------------------------- | ---------------------- | ---------------- |
+| en-SE             | https://www.ankernordics.com/ | SE                     | EN               |
 
 This is the Sweden market of the shared Nordic store, using explicit `SE` / `EN`
 collection context. Shipping countries describe the shared store's documented
@@ -340,19 +401,20 @@ See [ADR 47](adr/0047-nordic-retailer-markets.md) and the
 
 Implementation: [`anker::get_retailer("ankerno")`](../lib/retailers_wip/src/retailers/anker.rs). Keep this table and the factory data synchronized.
 
-| Field | Value |
-| ----- | ----- |
-| Retailer code | `ankerno` |
-| Storefront website | https://www.ankernordics.com/ |
-| Shopify shop value | ankerneu.myshopify.com |
+| Field                  | Value                                                   |
+| ---------------------- | ------------------------------------------------------- |
+| Retailer code          | `ankerno`                                               |
+| Storefront website     | https://www.ankernordics.com/                           |
+| Shopify shop value     | ankerneu.myshopify.com                                  |
 | Storefront GraphQL API | https://ankerneu.myshopify.com/api/2026-10/graphql.json |
-| Target markets | Norway (NO) |
-| Shipping countries | SE, NO, DK, FI, IS |
-| Shipping restrictions | Iceland import clearance and product-specific exclusions apply. |
+| Target markets         | Norway (NO)                                             |
+| Shipping countries     | SE, NO, DK, FI, IS                                      |
 
-| Supported locales | URL | Country/region | Language |
-| ----------------- | --- | -------------- | -------- |
-| en-no (alternate link) | https://www.ankernordics.com/ | NO | EN |
+**Shipping configuration checked 2026-11-13:** Shop configuration retrieved successfully. [Recorded result](research/retailer-shipping-countries-2026-11-13.json).
+
+| Supported locales      | URL                           | GraphQL country/region | GraphQL language |
+| ---------------------- | ----------------------------- | ---------------------- | ---------------- |
+| en-no (alternate link) | https://www.ankernordics.com/ | NO                     | EN               |
 
 This is the Norway market of the shared Nordic store, using explicit `NO` / `EN`
 collection context. Shipping countries describe the shared store's documented
@@ -365,19 +427,20 @@ See [ADR 47](adr/0047-nordic-retailer-markets.md) and the
 
 Implementation: [`anker::get_retailer("ankerfi")`](../lib/retailers_wip/src/retailers/anker.rs). Keep this table and the factory data synchronized.
 
-| Field | Value |
-| ----- | ----- |
-| Retailer code | `ankerfi` |
-| Storefront website | https://www.ankernordics.com/ |
-| Shopify shop value | ankerneu.myshopify.com |
+| Field                  | Value                                                   |
+| ---------------------- | ------------------------------------------------------- |
+| Retailer code          | `ankerfi`                                               |
+| Storefront website     | https://www.ankernordics.com/                           |
+| Shopify shop value     | ankerneu.myshopify.com                                  |
 | Storefront GraphQL API | https://ankerneu.myshopify.com/api/2026-10/graphql.json |
-| Target markets | Finland (FI) |
-| Shipping countries | SE, NO, DK, FI, IS |
-| Shipping restrictions | Iceland import clearance and product-specific exclusions apply. |
+| Target markets         | Finland (FI)                                            |
+| Shipping countries     | SE, NO, DK, FI, IS                                      |
 
-| Supported locales | URL | Country/region | Language |
-| ----------------- | --- | -------------- | -------- |
-| en-fi (alternate link) | https://www.ankernordics.com/ | FI | EN |
+**Shipping configuration checked 2026-11-13:** Shop configuration retrieved successfully. [Recorded result](research/retailer-shipping-countries-2026-11-13.json).
+
+| Supported locales      | URL                           | GraphQL country/region | GraphQL language |
+| ---------------------- | ----------------------------- | ---------------------- | ---------------- |
+| en-fi (alternate link) | https://www.ankernordics.com/ | FI                     | EN               |
 
 This is the Finland market of the shared Nordic store, using explicit `FI` / `EN`
 collection context. Shipping countries describe the shared store's documented
@@ -390,19 +453,20 @@ See [ADR 47](adr/0047-nordic-retailer-markets.md) and the
 
 Implementation: [`anker::get_retailer("ankeris")`](../lib/retailers_wip/src/retailers/anker.rs). Keep this table and the factory data synchronized.
 
-| Field | Value |
-| ----- | ----- |
-| Retailer code | `ankeris` |
-| Storefront website | https://www.ankernordics.com/ |
-| Shopify shop value | ankerneu.myshopify.com |
+| Field                  | Value                                                   |
+| ---------------------- | ------------------------------------------------------- |
+| Retailer code          | `ankeris`                                               |
+| Storefront website     | https://www.ankernordics.com/                           |
+| Shopify shop value     | ankerneu.myshopify.com                                  |
 | Storefront GraphQL API | https://ankerneu.myshopify.com/api/2026-10/graphql.json |
-| Target markets | Iceland (IS) |
-| Shipping countries | SE, NO, DK, FI, IS |
-| Shipping restrictions | Iceland import clearance and product-specific exclusions apply. |
+| Target markets         | Iceland (IS)                                            |
+| Shipping countries     | SE, NO, DK, FI, IS                                      |
 
-| Supported locales | URL | Country/region | Language |
-| ----------------- | --- | -------------- | -------- |
-| en-is (alternate link) | https://www.ankernordics.com/ | IS | EN |
+**Shipping configuration checked 2026-11-13:** Shop configuration retrieved successfully. [Recorded result](research/retailer-shipping-countries-2026-11-13.json).
+
+| Supported locales      | URL                           | GraphQL country/region | GraphQL language |
+| ---------------------- | ----------------------------- | ---------------------- | ---------------- |
+| en-is (alternate link) | https://www.ankernordics.com/ | IS                     | EN               |
 
 This is the Iceland market of the shared Nordic store, using explicit `IS` / `EN`
 collection context. Shipping countries describe the shared store's documented
@@ -415,19 +479,20 @@ See [ADR 47](adr/0047-nordic-retailer-markets.md) and the
 
 Implementation: [`anker::get_retailer("ankerdk")`](../lib/retailers_wip/src/retailers/anker.rs). Keep this table and the factory data synchronized.
 
-| Field | Value |
-| ----- | ----- |
-| Retailer code | `ankerdk` |
-| Storefront website | https://www.ankernordics.com/ |
-| Shopify shop value | ankerneu.myshopify.com |
+| Field                  | Value                                                   |
+| ---------------------- | ------------------------------------------------------- |
+| Retailer code          | `ankerdk`                                               |
+| Storefront website     | https://www.ankernordics.com/                           |
+| Shopify shop value     | ankerneu.myshopify.com                                  |
 | Storefront GraphQL API | https://ankerneu.myshopify.com/api/2026-10/graphql.json |
-| Target markets | Denmark (DK) |
-| Shipping countries | SE, NO, DK, FI, IS |
-| Shipping restrictions | Iceland import clearance and product-specific exclusions apply. |
+| Target markets         | Denmark (DK)                                            |
+| Shipping countries     | SE, NO, DK, FI, IS                                      |
 
-| Supported locales | URL | Country/region | Language |
-| ----------------- | --- | -------------- | -------- |
-| en-dk (alternate link) | https://www.ankernordics.com/ | DK | EN |
+**Shipping configuration checked 2026-11-13:** Shop configuration retrieved successfully. [Recorded result](research/retailer-shipping-countries-2026-11-13.json).
+
+| Supported locales      | URL                           | GraphQL country/region | GraphQL language |
+| ---------------------- | ----------------------------- | ---------------------- | ---------------- |
+| en-dk (alternate link) | https://www.ankernordics.com/ | DK                     | EN               |
 
 This is the Denmark market of the shared Nordic store, using explicit `DK` / `EN`
 collection context. Shipping countries describe the shared store's documented
@@ -451,13 +516,15 @@ Implementation: [`minisforum::get_retailer("minisforumau")`](../lib/retailers_wi
 |                        |                                                          |
 |                        |                                                          |
 
-| Supported locales | URL                        | Country/region | Language |
-| ----------------- | -------------------------- | -------------- | -------- |
-| en                | https://au.minisforum.com/ | AU             | EN       |
+**Shipping configuration checked 2026-11-13:** Shop configuration retrieved successfully. [Recorded result](research/retailer-shipping-countries-2026-11-13.json).
+
+| Supported locales | URL                        | GraphQL country/region | GraphQL language |
+| ----------------- | -------------------------- | ---------------------- | ---------------- |
+| en                | https://au.minisforum.com/ | AU                     | EN               |
 
 **Shipping evidence:** Status: published. Official Where to Buy table explicitly lists supported destinations. Source: https://minisforumpc.eu/pages/faqs.
 
-**Research notes:** Official Primary Market / Language table; not inferred from Shopify.country. Source: docs/research/retailer-localization-2026-11-09.json (2026-11-09). Target markets above retain the source-declared storefront markets; they are not an API country enumeration or a shipping-derived market list. Country/region and Language are intended collection contexts, not verified API combinations. No catalog-price comparison has been performed for this retailer in this extension. The research verified the GraphQL QueryRoot only; available country/language combinations still need a localization query.
+**Research notes:** Official Primary Market / Language table; not inferred from Shopify.country. Source: docs/research/retailer-localization-2026-11-09.json (2026-11-09). Target markets above retain the source-declared storefront markets; they are not an API country enumeration or a shipping-derived market list. GraphQL country/region and GraphQL language are intended collection contexts, not verified API combinations. No catalog-price comparison has been performed for this retailer in this extension. The research verified the GraphQL QueryRoot only; available country/language combinations still need a localization query.
 
 ## Minisforum Canada
 
@@ -474,13 +541,15 @@ Implementation: [`minisforum::get_retailer("minisforumca")`](../lib/retailers_wi
 |                        |                                                              |
 |                        |                                                              |
 
-| Supported locales | URL                        | Country/region | Language |
-| ----------------- | -------------------------- | -------------- | -------- |
-| en                | https://ca.minisforum.com/ | CA             | EN       |
+**Shipping configuration checked 2026-11-13:** Shop configuration retrieved successfully. [Recorded result](research/retailer-shipping-countries-2026-11-13.json).
+
+| Supported locales | URL                        | GraphQL country/region | GraphQL language |
+| ----------------- | -------------------------- | ---------------------- | ---------------- |
+| en                | https://ca.minisforum.com/ | CA                     | EN               |
 
 **Shipping evidence:** Status: published. Official Where to Buy table explicitly lists supported destinations. Source: https://minisforumpc.eu/pages/faqs.
 
-**Research notes:** Official Primary Market / Language table; not inferred from Shopify.country. Source: docs/research/retailer-localization-2026-11-09.json (2026-11-09). Target markets above retain the source-declared storefront markets; they are not an API country enumeration or a shipping-derived market list. Country/region and Language are intended collection contexts, not verified API combinations. No catalog-price comparison has been performed for this retailer in this extension. The research verified the GraphQL QueryRoot only; available country/language combinations still need a localization query.
+**Research notes:** Official Primary Market / Language table; not inferred from Shopify.country. Source: docs/research/retailer-localization-2026-11-09.json (2026-11-09). Target markets above retain the source-declared storefront markets; they are not an API country enumeration or a shipping-derived market list. GraphQL country/region and GraphQL language are intended collection contexts, not verified API combinations. No catalog-price comparison has been performed for this retailer in this extension. The research verified the GraphQL QueryRoot only; available country/language combinations still need a localization query.
 
 ## Minisforum Hong Kong
 
@@ -497,13 +566,15 @@ Implementation: [`minisforum::get_retailer("minisforumhk")`](../lib/retailers_wi
 |                        |                                                             |
 |                        |                                                             |
 
-| Supported locales | URL                    | Country/region | Language |
-| ----------------- | ---------------------- | -------------- | -------- |
-| zh-TW             | https://minisforum.hk/ | HK             | ZH_TW    |
+**Shipping configuration checked 2026-11-13:** Shop configuration retrieved successfully. [Recorded result](research/retailer-shipping-countries-2026-11-13.json).
+
+| Supported locales | URL                    | GraphQL country/region | GraphQL language |
+| ----------------- | ---------------------- | ---------------------- | ---------------- |
+| zh-TW             | https://minisforum.hk/ | HK                     | ZH_TW            |
 
 **Shipping evidence:** Status: published partial. Homepage explicitly offers Hong Kong delivery, excluding outlying islands/remote areas. Other destinations not established. Source: https://minisforum.hk/.
 
-**Research notes:** Official Primary Market / Language table; not inferred from Shopify.country. html[lang]=zh-TW identifies a language variety, not a Taiwan target market. Source: docs/research/retailer-localization-2026-11-09.json (2026-11-09). Target markets above retain the source-declared storefront markets; they are not an API country enumeration or a shipping-derived market list. Country/region and Language are intended collection contexts, not verified API combinations. No catalog-price comparison has been performed for this retailer in this extension. The research verified the GraphQL QueryRoot only; available country/language combinations still need a localization query. The intended language code ZH_TW corresponds to the observed zh-TW locale; the reviewed language is Traditional Chinese (zh-Hant).
+**Research notes:** Official Primary Market / Language table; not inferred from Shopify.country. html[lang]=zh-TW identifies a language variety, not a Taiwan target market. Source: docs/research/retailer-localization-2026-11-09.json (2026-11-09). Target markets above retain the source-declared storefront markets; they are not an API country enumeration or a shipping-derived market list. GraphQL country/region and GraphQL language are intended collection contexts, not verified API combinations. No catalog-price comparison has been performed for this retailer in this extension. The research verified the GraphQL QueryRoot only; available country/language combinations still need a localization query. The intended language code ZH_TW corresponds to the observed zh-TW locale; the reviewed language is Traditional Chinese (zh-Hant).
 
 ## Minisforum South Korea
 
@@ -520,13 +591,15 @@ Implementation: [`minisforum::get_retailer("minisforumkr")`](../lib/retailers_wi
 |                        |                                                             |
 |                        |                                                             |
 
-| Supported locales | URL                    | Country/region | Language |
-| ----------------- | ---------------------- | -------------- | -------- |
-| ko                | https://minisforum.kr/ | KR             | KO       |
+**Shipping configuration checked 2026-11-13:** Shop configuration retrieved successfully. [Recorded result](research/retailer-shipping-countries-2026-11-13.json).
+
+| Supported locales | URL                    | GraphQL country/region | GraphQL language |
+| ----------------- | ---------------------- | ---------------------- | ---------------- |
+| ko                | https://minisforum.kr/ | KR                     | KO               |
 
 **Shipping evidence:** Status: published. Official Where to Buy table explicitly lists supported destinations. Source: https://minisforumpc.eu/pages/faqs.
 
-**Research notes:** Official Primary Market / Language table; not inferred from Shopify.country. Source: docs/research/retailer-localization-2026-11-09.json (2026-11-09). Target markets above retain the source-declared storefront markets; they are not an API country enumeration or a shipping-derived market list. Country/region and Language are intended collection contexts, not verified API combinations. No catalog-price comparison has been performed for this retailer in this extension. The research verified the GraphQL QueryRoot only; available country/language combinations still need a localization query.
+**Research notes:** Official Primary Market / Language table; not inferred from Shopify.country. Source: docs/research/retailer-localization-2026-11-09.json (2026-11-09). Target markets above retain the source-declared storefront markets; they are not an API country enumeration or a shipping-derived market list. GraphQL country/region and GraphQL language are intended collection contexts, not verified API combinations. No catalog-price comparison has been performed for this retailer in this extension. The research verified the GraphQL QueryRoot only; available country/language combinations still need a localization query.
 
 ## Minisforum Russia
 
@@ -543,13 +616,15 @@ Implementation: [`minisforum::get_retailer("minisforumru")`](../lib/retailers_wi
 |                        |                                                                    |
 |                        |                                                                    |
 
-| Supported locales | URL                    | Country/region | Language |
-| ----------------- | ---------------------- | -------------- | -------- |
-| ru                | https://minisforum.ru/ | RU             | RU       |
+**Shipping configuration checked 2026-11-13:** Shop configuration retrieved successfully. [Recorded result](research/retailer-shipping-countries-2026-11-13.json).
+
+| Supported locales | URL                    | GraphQL country/region | GraphQL language |
+| ----------------- | ---------------------- | ---------------------- | ---------------- |
+| ru                | https://minisforum.ru/ | RU                     | RU               |
 
 **Shipping evidence:** Status: unbounded claim. FAQ claims worldwide shipping without an enumerated country list; do not expand to all ISO countries. Source: https://minisforum.ru/pages/faqs.
 
-**Research notes:** Official Primary Market / Language table; not inferred from Shopify.country. html[lang] conflicts with the reviewed language declaration; retained as raw evidence only. Shopify.country=US and locale=en conflict with official Russia/Russian table; not accepted as target-market or English-language evidence. Source: docs/research/retailer-localization-2026-11-09.json (2026-11-09). Target markets above retain the source-declared storefront markets; they are not an API country enumeration or a shipping-derived market list. Country/region and Language are intended collection contexts, not verified API combinations. No catalog-price comparison has been performed for this retailer in this extension. The research verified the GraphQL QueryRoot only; available country/language combinations still need a localization query.
+**Research notes:** Official Primary Market / Language table; not inferred from Shopify.country. html[lang] conflicts with the reviewed language declaration; retained as raw evidence only. Shopify.country=US and locale=en conflict with official Russia/Russian table; not accepted as target-market or English-language evidence. Source: docs/research/retailer-localization-2026-11-09.json (2026-11-09). Target markets above retain the source-declared storefront markets; they are not an API country enumeration or a shipping-derived market list. GraphQL country/region and GraphQL language are intended collection contexts, not verified API combinations. No catalog-price comparison has been performed for this retailer in this extension. The research verified the GraphQL QueryRoot only; available country/language combinations still need a localization query.
 
 ## Minisforum Europe
 
@@ -566,14 +641,19 @@ Implementation: [`minisforum::get_retailer("minisforumeu")`](../lib/retailers_wi
 |                        |                                                                                                                                            |
 |                        |                                                                                                                                            |
 
-| Supported locales    | URL                        | Country/region | Language |
-| -------------------- | -------------------------- | -------------- | -------- |
-| en                   | https://minisforumpc.eu/   | Not selected   | EN       |
-| de (advertised only) | https://minisforumpc.eu/de | Not selected   | DE       |
+**Shipping configuration checked 2026-11-13:** Shop configuration retrieved successfully. [Recorded result](research/retailer-shipping-countries-2026-11-13.json).
+
+| Supported locales | URL                      | GraphQL country/region | GraphQL language |
+| ----------------- | ------------------------ | ---------------------- | ---------------- |
+| en                | https://minisforumpc.eu/ | Not selected           | EN               |
+
+| Advertised-only locales | URL                        | GraphQL country/region | GraphQL language |
+| ----------------------- | -------------------------- | ---------------------- | ---------------- |
+| de                      | https://minisforumpc.eu/de | Not selected           | DE               |
 
 **Shipping evidence:** Status: conflicting lists. Where to Buy table; Spanish island exclusions. Another shipping section additionally lists NO and GB: retain conflict instead of merging. Source: https://minisforumpc.eu/pages/faqs.
 
-**Research notes:** Official Primary Market / Language table; not inferred from Shopify.country. Source: docs/research/retailer-localization-2026-11-09.json (2026-11-09). Target markets above retain the source-declared storefront markets; they are not an API country enumeration or a shipping-derived market list. Country/region and Language are intended collection contexts, not verified API combinations. No catalog-price comparison has been performed for this retailer in this extension. The research verified the GraphQL QueryRoot only; available country/language combinations still need a localization query. A collection country has not been selected. EU labels the regional storefront and is not a Shopify CountryCode; the Anker Europe AT pricing decision does not apply here. Rows marked advertised only are alternate links, not verified locale pages or confirmed extra content requests. Their country contexts remain unselected, and the base Shopify backend has not been established for those URLs.
+**Research notes:** Official Primary Market / Language table; not inferred from Shopify.country. Source: docs/research/retailer-localization-2026-11-09.json (2026-11-09). Target markets above retain the source-declared storefront markets; they are not an API country enumeration or a shipping-derived market list. GraphQL country/region and GraphQL language are intended collection contexts, not verified API combinations. No catalog-price comparison has been performed for this retailer in this extension. The research verified the GraphQL QueryRoot only; available country/language combinations still need a localization query. A collection country has not been selected. EU labels the regional storefront and is not a Shopify CountryCode; the Anker Europe AT pricing decision does not apply here. Rows in the advertised-only tables are alternate links, not verified locale pages or confirmed extra content requests. Their country contexts remain unselected, and the base Shopify backend has not been established for those URLs.
 
 ## Minisforum France
 
@@ -590,14 +670,19 @@ Implementation: [`minisforum::get_retailer("minisforumfr")`](../lib/retailers_wi
 |                        |                                                              |
 |                        |                                                              |
 
-| Supported locales    | URL                        | Country/region | Language |
-| -------------------- | -------------------------- | -------------- | -------- |
-| fr                   | https://minisforumpc.fr/   | FR             | FR       |
-| en (advertised only) | https://minisforumpc.fr/en | Not selected   | EN       |
+**Shipping configuration checked 2026-11-13:** Shop configuration retrieved successfully. [Recorded result](research/retailer-shipping-countries-2026-11-13.json).
+
+| Supported locales | URL                      | GraphQL country/region | GraphQL language |
+| ----------------- | ------------------------ | ---------------------- | ---------------- |
+| fr                | https://minisforumpc.fr/ | FR                     | FR               |
+
+| Advertised-only locales | URL                        | GraphQL country/region | GraphQL language |
+| ----------------------- | -------------------------- | ---------------------- | ---------------- |
+| en                      | https://minisforumpc.fr/en | Not selected           | EN               |
 
 **Shipping evidence:** Status: published. Official Where to Buy table explicitly lists supported destinations. Source: https://minisforumpc.eu/pages/faqs.
 
-**Research notes:** Official Primary Market / Language table; not inferred from Shopify.country. Shopify.country=HK on France store; not accepted as target market. Source: docs/research/retailer-localization-2026-11-09.json (2026-11-09). Target markets above retain the source-declared storefront markets; they are not an API country enumeration or a shipping-derived market list. Country/region and Language are intended collection contexts, not verified API combinations. No catalog-price comparison has been performed for this retailer in this extension. The research verified the GraphQL QueryRoot only; available country/language combinations still need a localization query. Rows marked advertised only are alternate links, not verified locale pages or confirmed extra content requests. Their country contexts remain unselected, and the base Shopify backend has not been established for those URLs.
+**Research notes:** Official Primary Market / Language table; not inferred from Shopify.country. Shopify.country=HK on France store; not accepted as target market. Source: docs/research/retailer-localization-2026-11-09.json (2026-11-09). Target markets above retain the source-declared storefront markets; they are not an API country enumeration or a shipping-derived market list. GraphQL country/region and GraphQL language are intended collection contexts, not verified API combinations. No catalog-price comparison has been performed for this retailer in this extension. The research verified the GraphQL QueryRoot only; available country/language combinations still need a localization query. Rows in the advertised-only tables are alternate links, not verified locale pages or confirmed extra content requests. Their country contexts remain unselected, and the base Shopify backend has not been established for those URLs.
 
 ## Minisforum United States
 
@@ -614,16 +699,21 @@ Implementation: [`minisforum::get_retailer("minisforumus")`](../lib/retailers_wi
 |                        |                                                                                                                                                            |
 |                        |                                                                                                                                                            |
 
-| Supported locales       | URL                                | Country/region | Language |
-| ----------------------- | ---------------------------------- | -------------- | -------- |
-| en                      | https://store.minisforum.com/      | US             | EN       |
-| en-CA (advertised only) | https://store.minisforum.com/en-ca | Not selected   | EN       |
-| en-CL (advertised only) | https://store.minisforum.com/en-os | Not selected   | EN       |
-| en-PE (advertised only) | https://store.minisforum.com/en-os | Not selected   | EN       |
+**Shipping configuration checked 2026-11-13:** Shop configuration retrieved successfully. [Recorded result](research/retailer-shipping-countries-2026-11-13.json).
+
+| Supported locales                   | URL                                | GraphQL country/region | GraphQL language |
+| ----------------------------------- | ---------------------------------- | ---------------------- | ---------------- |
+| en                                  | https://store.minisforum.com/      | US                     | EN               |
+| en-CA (context verified 2026-11-13) | https://store.minisforum.com/en-ca | CA                     | EN               |
+| en-PE (context verified 2026-11-13) | https://store.minisforum.com/en-os | PE                     | EN               |
+
+| Advertised-only locales | URL                                | GraphQL country/region | GraphQL language |
+| ----------------------- | ---------------------------------- | ---------------------- | ---------------- |
+| en-CL                   | https://store.minisforum.com/en-os | Not selected           | EN               |
 
 **Shipping evidence:** Status: published. Official supported-region table; US territories and military addresses excluded. Source: https://minisforumpc.eu/pages/faqs.
 
-**Research notes:** Official Primary Market / Language table; not inferred from Shopify.country. Source: docs/research/retailer-localization-2026-11-09.json (2026-11-09). Target markets above retain the source-declared storefront markets; they are not an API country enumeration or a shipping-derived market list. Country/region and Language are intended collection contexts, not verified API combinations. No catalog-price comparison has been performed for this retailer in this extension. The research verified the GraphQL QueryRoot only; available country/language combinations still need a localization query. Rows marked advertised only are alternate links, not verified locale pages or confirmed extra content requests. Their country contexts remain unselected, and the base Shopify backend has not been established for those URLs.
+**Research notes:** Official Primary Market / Language table; not inferred from Shopify.country. Source: docs/research/retailer-localization-2026-11-09.json (2026-11-09). Target markets above retain the source-declared storefront markets; they are not an API country enumeration or a shipping-derived market list. GraphQL country/region and GraphQL language are intended collection contexts, not verified API combinations. No catalog-price comparison has been performed for this retailer in this extension. The research verified the GraphQL QueryRoot only; available country/language combinations still need a localization query. Rows in the advertised-only tables are alternate links, not verified locale pages or confirmed extra content requests. Their country contexts remain unselected, and the base Shopify backend has not been established for those URLs.
 
 ## Minisforum Japan
 
@@ -640,13 +730,15 @@ Implementation: [`minisforum::get_retailer("minisforumjp")`](../lib/retailers_wi
 |                        |                                                              |
 |                        |                                                              |
 
-| Supported locales | URL                        | Country/region | Language |
-| ----------------- | -------------------------- | -------------- | -------- |
-| ja                | https://www.minisforum.jp/ | JP             | JA       |
+**Shipping configuration checked 2026-11-13:** Shop configuration retrieved successfully. [Recorded result](research/retailer-shipping-countries-2026-11-13.json).
+
+| Supported locales | URL                        | GraphQL country/region | GraphQL language |
+| ----------------- | -------------------------- | ---------------------- | ---------------- |
+| ja                | https://www.minisforum.jp/ | JP                     | JA               |
 
 **Shipping evidence:** Status: published. Official Where to Buy table explicitly lists supported destinations. Source: https://minisforumpc.eu/pages/faqs.
 
-**Research notes:** Official Primary Market / Language table; not inferred from Shopify.country. Source: docs/research/retailer-localization-2026-11-09.json (2026-11-09). Target markets above retain the source-declared storefront markets; they are not an API country enumeration or a shipping-derived market list. Country/region and Language are intended collection contexts, not verified API combinations. No catalog-price comparison has been performed for this retailer in this extension. The research verified the GraphQL QueryRoot only; available country/language combinations still need a localization query.
+**Research notes:** Official Primary Market / Language table; not inferred from Shopify.country. Source: docs/research/retailer-localization-2026-11-09.json (2026-11-09). Target markets above retain the source-declared storefront markets; they are not an API country enumeration or a shipping-derived market list. GraphQL country/region and GraphQL language are intended collection contexts, not verified API combinations. No catalog-price comparison has been performed for this retailer in this extension. The research verified the GraphQL QueryRoot only; available country/language combinations still need a localization query.
 
 ## Minisforum United Kingdom
 
@@ -663,13 +755,15 @@ Implementation: [`minisforum::get_retailer("minisforumuk")`](../lib/retailers_wi
 |                        |                                                              |
 |                        |                                                              |
 
-| Supported locales | URL                        | Country/region | Language |
-| ----------------- | -------------------------- | -------------- | -------- |
-| en                | https://www.minisforum.uk/ | GB             | EN       |
+**Shipping configuration checked 2026-11-13:** Shop configuration retrieved successfully. [Recorded result](research/retailer-shipping-countries-2026-11-13.json).
+
+| Supported locales | URL                        | GraphQL country/region | GraphQL language |
+| ----------------- | -------------------------- | ---------------------- | ---------------- |
+| en                | https://www.minisforum.uk/ | GB                     | EN               |
 
 **Shipping evidence:** Status: published. Official Where to Buy table explicitly lists supported destinations. Source: https://minisforumpc.eu/pages/faqs.
 
-**Research notes:** Official Primary Market / Language table; not inferred from Shopify.country. Source: docs/research/retailer-localization-2026-11-09.json (2026-11-09). Target markets above retain the source-declared storefront markets; they are not an API country enumeration or a shipping-derived market list. Country/region and Language are intended collection contexts, not verified API combinations. No catalog-price comparison has been performed for this retailer in this extension. The research verified the GraphQL QueryRoot only; available country/language combinations still need a localization query.
+**Research notes:** Official Primary Market / Language table; not inferred from Shopify.country. Source: docs/research/retailer-localization-2026-11-09.json (2026-11-09). Target markets above retain the source-declared storefront markets; they are not an API country enumeration or a shipping-derived market list. GraphQL country/region and GraphQL language are intended collection contexts, not verified API combinations. No catalog-price comparison has been performed for this retailer in this extension. The research verified the GraphQL QueryRoot only; available country/language combinations still need a localization query.
 
 ## Ugreen Canada
 
@@ -686,14 +780,16 @@ Implementation: [`ugreen::get_retailer("ugreenca")`](../lib/retailers_wip/src/re
 |                        |                                                          |
 |                        |                                                          |
 
-| Supported locales    | URL                      | Country/region | Language |
-| -------------------- | ------------------------ | -------------- | -------- |
-| en                   | https://ca.ugreen.com/   | CA             | EN       |
-| fr (advertised only) | https://ca.ugreen.com/fr | Not selected   | FR       |
+**Shipping configuration checked 2026-11-13:** Shop configuration retrieved successfully. [Recorded result](research/retailer-shipping-countries-2026-11-13.json).
+
+| Supported locales                | URL                      | GraphQL country/region | GraphQL language |
+| -------------------------------- | ------------------------ | ---------------------- | ---------------- |
+| en                               | https://ca.ugreen.com/   | CA                     | EN               |
+| fr (context verified 2026-11-13) | https://ca.ugreen.com/fr | CA                     | FR               |
 
 **Shipping evidence:** Status: conflict. Canada-branded storefront policy instead says United States. Do not accept US or infer CA as verified delivery coverage. Source: https://ca.ugreen.com/policies/shipping-policy.
 
-**Research notes:** Source: docs/research/retailer-localization-2026-11-09.json (2026-11-09). Target markets above retain the source-declared storefront markets; they are not an API country enumeration or a shipping-derived market list. Country/region and Language are intended collection contexts, not verified API combinations. No catalog-price comparison has been performed for this retailer in this extension. The research verified the GraphQL QueryRoot only; available country/language combinations still need a localization query. Rows marked advertised only are alternate links, not verified locale pages or confirmed extra content requests. Their country contexts remain unselected, and the base Shopify backend has not been established for those URLs.
+**Research notes:** Source: docs/research/retailer-localization-2026-11-09.json (2026-11-09). Target markets above retain the source-declared storefront markets; they are not an API country enumeration or a shipping-derived market list. GraphQL country/region and GraphQL language are intended collection contexts, not verified API combinations. No catalog-price comparison has been performed for this retailer in this extension. The research verified the GraphQL QueryRoot only; available country/language combinations still need a localization query. Rows in the advertised-only tables are alternate links, not verified locale pages or confirmed extra content requests. Their country contexts remain unselected, and the base Shopify backend has not been established for those URLs.
 
 ## Ugreen Germany
 
@@ -710,13 +806,15 @@ Implementation: [`ugreen::get_retailer("ugreende")`](../lib/retailers_wip/src/re
 |                        |                                                          |
 |                        |                                                          |
 
-| Supported locales | URL                    | Country/region | Language |
-| ----------------- | ---------------------- | -------------- | -------- |
-| de                | https://de.ugreen.com/ | DE             | DE       |
+**Shipping configuration checked 2026-11-13:** Shop configuration retrieved successfully. [Recorded result](research/retailer-shipping-countries-2026-11-13.json).
+
+| Supported locales | URL                    | GraphQL country/region | GraphQL language |
+| ----------------- | ---------------------- | ---------------------- | ---------------- |
+| de                | https://de.ugreen.com/ | DE                     | DE               |
 
 **Shipping evidence:** Status: published.  Source: https://us.ugreen.com/pages/shipping-policy.
 
-**Research notes:** Source: docs/research/retailer-localization-2026-11-09.json (2026-11-09). Target markets above retain the source-declared storefront markets; they are not an API country enumeration or a shipping-derived market list. Country/region and Language are intended collection contexts, not verified API combinations. No catalog-price comparison has been performed for this retailer in this extension. The research verified the GraphQL QueryRoot only; available country/language combinations still need a localization query.
+**Research notes:** Source: docs/research/retailer-localization-2026-11-09.json (2026-11-09). Target markets above retain the source-declared storefront markets; they are not an API country enumeration or a shipping-derived market list. GraphQL country/region and GraphQL language are intended collection contexts, not verified API combinations. No catalog-price comparison has been performed for this retailer in this extension. The research verified the GraphQL QueryRoot only; available country/language combinations still need a localization query.
 
 ## Ugreen Europe
 
@@ -733,78 +831,83 @@ Implementation: [`ugreen::get_retailer("ugreeneu")`](../lib/retailers_wip/src/re
 |                        |                                                                                                        |
 |                        |                                                                                                        |
 
-| Supported locales       | URL                         | Country/region | Language |
-| ----------------------- | --------------------------- | -------------- | -------- |
-| en                      | https://eu.ugreen.com/      | Not selected   | EN       |
-| bg (advertised only)    | https://eu.ugreen.com/bg    | Not selected   | BG       |
-| bg-BG (advertised only) | https://eu.ugreen.com/bg-bg | Not selected   | BG       |
-| cs (advertised only)    | https://eu.ugreen.com/cs    | Not selected   | CS       |
-| cs-CZ (advertised only) | https://eu.ugreen.com/cs-cz | Not selected   | CS       |
-| da (advertised only)    | https://eu.ugreen.com/da    | Not selected   | DA       |
-| da-DK (advertised only) | https://eu.ugreen.com/da-dk | Not selected   | DA       |
-| de (advertised only)    | https://eu.ugreen.com/de    | Not selected   | DE       |
-| de-AT (advertised only) | https://eu.ugreen.com/de-at | Not selected   | DE       |
-| de-BE (advertised only) | https://eu.ugreen.com/de-be | Not selected   | DE       |
-| de-CH (advertised only) | https://eu.ugreen.com/de-ch | Not selected   | DE       |
-| el (advertised only)    | https://eu.ugreen.com/el    | Not selected   | EL       |
-| el-GR (advertised only) | https://eu.ugreen.com/el-gr | Not selected   | EL       |
-| en-AT (advertised only) | https://eu.ugreen.com/en-at | Not selected   | EN       |
-| en-BE (advertised only) | https://eu.ugreen.com/en-be | Not selected   | EN       |
-| en-BG (advertised only) | https://eu.ugreen.com/en-bg | Not selected   | EN       |
-| en-CH (advertised only) | https://eu.ugreen.com/en-ch | Not selected   | EN       |
-| en-CZ (advertised only) | https://eu.ugreen.com/en-cz | Not selected   | EN       |
-| en-DK (advertised only) | https://eu.ugreen.com/en-dk | Not selected   | EN       |
-| en-EE (advertised only) | https://eu.ugreen.com/en-ee | Not selected   | EN       |
-| en-ES (advertised only) | https://eu.ugreen.com/en-es | Not selected   | EN       |
-| en-FI (advertised only) | https://eu.ugreen.com/en-fi | Not selected   | EN       |
-| en-FR (advertised only) | https://eu.ugreen.com/en-fr | Not selected   | EN       |
-| en-GR (advertised only) | https://eu.ugreen.com/en-gr | Not selected   | EN       |
-| en-HR (advertised only) | https://eu.ugreen.com/en-hr | Not selected   | EN       |
-| en-HU (advertised only) | https://eu.ugreen.com/en-hu | Not selected   | EN       |
-| en-IT (advertised only) | https://eu.ugreen.com/en-it | Not selected   | EN       |
-| en-LV (advertised only) | https://eu.ugreen.com/en-lv | Not selected   | EN       |
-| en-NL (advertised only) | https://eu.ugreen.com/en-nl | Not selected   | EN       |
-| en-PL (advertised only) | https://eu.ugreen.com/en-pl | Not selected   | EN       |
-| en-PT (advertised only) | https://eu.ugreen.com/en-pt | Not selected   | EN       |
-| en-RO (advertised only) | https://eu.ugreen.com/en-ro | Not selected   | EN       |
-| en-SE (advertised only) | https://eu.ugreen.com/en-se | Not selected   | EN       |
-| en-SI (advertised only) | https://eu.ugreen.com/en-si | Not selected   | EN       |
-| en-SK (advertised only) | https://eu.ugreen.com/en-sk | Not selected   | EN       |
-| es (advertised only)    | https://eu.ugreen.com/es    | Not selected   | ES       |
-| es-ES (advertised only) | https://eu.ugreen.com/es-es | Not selected   | ES       |
-| et (advertised only)    | https://eu.ugreen.com/et    | Not selected   | ET       |
-| et-EE (advertised only) | https://eu.ugreen.com/et-ee | Not selected   | ET       |
-| fi (advertised only)    | https://eu.ugreen.com/fi    | Not selected   | FI       |
-| fr (advertised only)    | https://eu.ugreen.com/fr    | Not selected   | FR       |
-| fr-BE (advertised only) | https://eu.ugreen.com/fr-be | Not selected   | FR       |
-| fr-FR (advertised only) | https://eu.ugreen.com/fr-fr | Not selected   | FR       |
-| hr (advertised only)    | https://eu.ugreen.com/hr    | Not selected   | HR       |
-| hr-HR (advertised only) | https://eu.ugreen.com/hr-hr | Not selected   | HR       |
-| hu (advertised only)    | https://eu.ugreen.com/hu    | Not selected   | HU       |
-| hu-HU (advertised only) | https://eu.ugreen.com/hu-hu | Not selected   | HU       |
-| it (advertised only)    | https://eu.ugreen.com/it    | Not selected   | IT       |
-| it-IT (advertised only) | https://eu.ugreen.com/it-it | Not selected   | IT       |
-| lv (advertised only)    | https://eu.ugreen.com/lv    | Not selected   | LV       |
-| lv-LV (advertised only) | https://eu.ugreen.com/lv-lv | Not selected   | LV       |
-| nl (advertised only)    | https://eu.ugreen.com/nl    | Not selected   | NL       |
-| nl-BE (advertised only) | https://eu.ugreen.com/nl-be | Not selected   | NL       |
-| nl-NL (advertised only) | https://eu.ugreen.com/nl-nl | Not selected   | NL       |
-| pl (advertised only)    | https://eu.ugreen.com/pl    | Not selected   | PL       |
-| pl-PL (advertised only) | https://eu.ugreen.com/pl-pl | Not selected   | PL       |
-| pt (advertised only)    | https://eu.ugreen.com/pt    | Not selected   | PT       |
-| pt-PT (advertised only) | https://eu.ugreen.com/pt-pt | Not selected   | PT       |
-| ro (advertised only)    | https://eu.ugreen.com/ro    | Not selected   | RO       |
-| ro-RO (advertised only) | https://eu.ugreen.com/ro-ro | Not selected   | RO       |
-| sk (advertised only)    | https://eu.ugreen.com/sk    | Not selected   | SK       |
-| sk-SK (advertised only) | https://eu.ugreen.com/sk-sk | Not selected   | SK       |
-| sl (advertised only)    | https://eu.ugreen.com/sl    | Not selected   | SL       |
-| sl-SI (advertised only) | https://eu.ugreen.com/sl-si | Not selected   | SL       |
-| sv (advertised only)    | https://eu.ugreen.com/sv    | Not selected   | SV       |
-| sv-SE (advertised only) | https://eu.ugreen.com/sv-se | Not selected   | SV       |
+**Shipping configuration checked 2026-11-13:** Shop configuration retrieved successfully. [Recorded result](research/retailer-shipping-countries-2026-11-13.json).
+
+| Supported locales                   | URL                         | GraphQL country/region | GraphQL language |
+| ----------------------------------- | --------------------------- | ---------------------- | ---------------- |
+| en                                  | https://eu.ugreen.com/      | Not selected           | EN               |
+| bg-BG (context verified 2026-11-13) | https://eu.ugreen.com/bg-bg | BG                     | BG               |
+| cs-CZ (context verified 2026-11-13) | https://eu.ugreen.com/cs-cz | CZ                     | CS               |
+| da-DK (context verified 2026-11-13) | https://eu.ugreen.com/da-dk | DK                     | DA               |
+| de-AT (context verified 2026-11-13) | https://eu.ugreen.com/de-at | AT                     | DE               |
+
+| Advertised-only locales | URL                         | GraphQL country/region | GraphQL language |
+| ----------------------- | --------------------------- | ---------------------- | ---------------- |
+| bg                      | https://eu.ugreen.com/bg    | Not selected           | BG               |
+| cs                      | https://eu.ugreen.com/cs    | Not selected           | CS               |
+| da                      | https://eu.ugreen.com/da    | Not selected           | DA               |
+| de                      | https://eu.ugreen.com/de    | Not selected           | DE               |
+| de-BE                   | https://eu.ugreen.com/de-be | Not selected           | DE               |
+| de-CH                   | https://eu.ugreen.com/de-ch | Not selected           | DE               |
+| el                      | https://eu.ugreen.com/el    | Not selected           | EL               |
+| el-GR                   | https://eu.ugreen.com/el-gr | Not selected           | EL               |
+| en-AT                   | https://eu.ugreen.com/en-at | Not selected           | EN               |
+| en-BE                   | https://eu.ugreen.com/en-be | Not selected           | EN               |
+| en-BG                   | https://eu.ugreen.com/en-bg | Not selected           | EN               |
+| en-CH                   | https://eu.ugreen.com/en-ch | Not selected           | EN               |
+| en-CZ                   | https://eu.ugreen.com/en-cz | Not selected           | EN               |
+| en-DK                   | https://eu.ugreen.com/en-dk | Not selected           | EN               |
+| en-EE                   | https://eu.ugreen.com/en-ee | Not selected           | EN               |
+| en-ES                   | https://eu.ugreen.com/en-es | Not selected           | EN               |
+| en-FI                   | https://eu.ugreen.com/en-fi | Not selected           | EN               |
+| en-FR                   | https://eu.ugreen.com/en-fr | Not selected           | EN               |
+| en-GR                   | https://eu.ugreen.com/en-gr | Not selected           | EN               |
+| en-HR                   | https://eu.ugreen.com/en-hr | Not selected           | EN               |
+| en-HU                   | https://eu.ugreen.com/en-hu | Not selected           | EN               |
+| en-IT                   | https://eu.ugreen.com/en-it | Not selected           | EN               |
+| en-LV                   | https://eu.ugreen.com/en-lv | Not selected           | EN               |
+| en-NL                   | https://eu.ugreen.com/en-nl | Not selected           | EN               |
+| en-PL                   | https://eu.ugreen.com/en-pl | Not selected           | EN               |
+| en-PT                   | https://eu.ugreen.com/en-pt | Not selected           | EN               |
+| en-RO                   | https://eu.ugreen.com/en-ro | Not selected           | EN               |
+| en-SE                   | https://eu.ugreen.com/en-se | Not selected           | EN               |
+| en-SI                   | https://eu.ugreen.com/en-si | Not selected           | EN               |
+| en-SK                   | https://eu.ugreen.com/en-sk | Not selected           | EN               |
+| es                      | https://eu.ugreen.com/es    | Not selected           | ES               |
+| es-ES                   | https://eu.ugreen.com/es-es | Not selected           | ES               |
+| et                      | https://eu.ugreen.com/et    | Not selected           | ET               |
+| et-EE                   | https://eu.ugreen.com/et-ee | Not selected           | ET               |
+| fi                      | https://eu.ugreen.com/fi    | Not selected           | FI               |
+| fr                      | https://eu.ugreen.com/fr    | Not selected           | FR               |
+| fr-BE                   | https://eu.ugreen.com/fr-be | Not selected           | FR               |
+| fr-FR                   | https://eu.ugreen.com/fr-fr | Not selected           | FR               |
+| hr                      | https://eu.ugreen.com/hr    | Not selected           | HR               |
+| hr-HR                   | https://eu.ugreen.com/hr-hr | Not selected           | HR               |
+| hu                      | https://eu.ugreen.com/hu    | Not selected           | HU               |
+| hu-HU                   | https://eu.ugreen.com/hu-hu | Not selected           | HU               |
+| it                      | https://eu.ugreen.com/it    | Not selected           | IT               |
+| it-IT                   | https://eu.ugreen.com/it-it | Not selected           | IT               |
+| lv                      | https://eu.ugreen.com/lv    | Not selected           | LV               |
+| lv-LV                   | https://eu.ugreen.com/lv-lv | Not selected           | LV               |
+| nl                      | https://eu.ugreen.com/nl    | Not selected           | NL               |
+| nl-BE                   | https://eu.ugreen.com/nl-be | Not selected           | NL               |
+| nl-NL                   | https://eu.ugreen.com/nl-nl | Not selected           | NL               |
+| pl                      | https://eu.ugreen.com/pl    | Not selected           | PL               |
+| pl-PL                   | https://eu.ugreen.com/pl-pl | Not selected           | PL               |
+| pt                      | https://eu.ugreen.com/pt    | Not selected           | PT               |
+| pt-PT                   | https://eu.ugreen.com/pt-pt | Not selected           | PT               |
+| ro                      | https://eu.ugreen.com/ro    | Not selected           | RO               |
+| ro-RO                   | https://eu.ugreen.com/ro-ro | Not selected           | RO               |
+| sk                      | https://eu.ugreen.com/sk    | Not selected           | SK               |
+| sk-SK                   | https://eu.ugreen.com/sk-sk | Not selected           | SK               |
+| sl                      | https://eu.ugreen.com/sl    | Not selected           | SL               |
+| sl-SI                   | https://eu.ugreen.com/sl-si | Not selected           | SL               |
+| sv                      | https://eu.ugreen.com/sv    | Not selected           | SV               |
+| sv-SE                   | https://eu.ugreen.com/sv-se | Not selected           | SV               |
 
 **Shipping evidence:** Status: published. Portugal and Spain have named island/enclave exclusions. Source: https://us.ugreen.com/pages/shipping-policy.
 
-**Research notes:** Source: docs/research/retailer-localization-2026-11-09.json (2026-11-09). Target markets above retain the source-declared storefront markets; they are not an API country enumeration or a shipping-derived market list. Country/region and Language are intended collection contexts, not verified API combinations. No catalog-price comparison has been performed for this retailer in this extension. The research verified the GraphQL QueryRoot only; available country/language combinations still need a localization query. A collection country has not been selected. EU labels the regional storefront and is not a Shopify CountryCode; the Anker Europe AT pricing decision does not apply here. Rows marked advertised only are alternate links, not verified locale pages or confirmed extra content requests. Their country contexts remain unselected, and the base Shopify backend has not been established for those URLs.
+**Research notes:** Source: docs/research/retailer-localization-2026-11-09.json (2026-11-09). Target markets above retain the source-declared storefront markets; they are not an API country enumeration or a shipping-derived market list. GraphQL country/region and GraphQL language are intended collection contexts, not verified API combinations. No catalog-price comparison has been performed for this retailer in this extension. The research verified the GraphQL QueryRoot only; available country/language combinations still need a localization query. A collection country has not been selected. EU labels the regional storefront and is not a Shopify CountryCode; the Anker Europe AT pricing decision does not apply here. Rows in the advertised-only tables are alternate links, not verified locale pages or confirmed extra content requests. Their country contexts remain unselected, and the base Shopify backend has not been established for those URLs.
 
 ## Ugreen France
 
@@ -821,13 +924,15 @@ Implementation: [`ugreen::get_retailer("ugreenfr")`](../lib/retailers_wip/src/re
 |                        |                                                          |
 |                        |                                                          |
 
-| Supported locales | URL                    | Country/region | Language |
-| ----------------- | ---------------------- | -------------- | -------- |
-| fr                | https://fr.ugreen.com/ | FR             | FR       |
+**Shipping configuration checked 2026-11-13:** Shop configuration retrieved successfully. [Recorded result](research/retailer-shipping-countries-2026-11-13.json).
+
+| Supported locales | URL                    | GraphQL country/region | GraphQL language |
+| ----------------- | ---------------------- | ---------------------- | ---------------- |
+| fr                | https://fr.ugreen.com/ | FR                     | FR               |
 
 **Shipping evidence:** Status: published.  Source: https://us.ugreen.com/pages/shipping-policy.
 
-**Research notes:** Source: docs/research/retailer-localization-2026-11-09.json (2026-11-09). Target markets above retain the source-declared storefront markets; they are not an API country enumeration or a shipping-derived market list. Country/region and Language are intended collection contexts, not verified API combinations. No catalog-price comparison has been performed for this retailer in this extension. The research verified the GraphQL QueryRoot only; available country/language combinations still need a localization query.
+**Research notes:** Source: docs/research/retailer-localization-2026-11-09.json (2026-11-09). Target markets above retain the source-declared storefront markets; they are not an API country enumeration or a shipping-derived market list. GraphQL country/region and GraphQL language are intended collection contexts, not verified API combinations. No catalog-price comparison has been performed for this retailer in this extension. The research verified the GraphQL QueryRoot only; available country/language combinations still need a localization query.
 
 ## Ugreen South Korea
 
@@ -844,13 +949,15 @@ Implementation: [`ugreen::get_retailer("ugreenkr")`](../lib/retailers_wip/src/re
 |                        |                                                          |
 |                        |                                                          |
 
-| Supported locales | URL                    | Country/region | Language |
-| ----------------- | ---------------------- | -------------- | -------- |
-| ko                | https://kr.ugreen.com/ | KR             | KO       |
+**Shipping configuration checked 2026-11-13:** Shop configuration retrieved successfully. [Recorded result](research/retailer-shipping-countries-2026-11-13.json).
+
+| Supported locales | URL                    | GraphQL country/region | GraphQL language |
+| ----------------- | ---------------------- | ---------------------- | ---------------- |
+| ko                | https://kr.ugreen.com/ | KR                     | KO               |
 
 **Shipping evidence:** Status: unknown. No reliable enumerated shipping-country definition established in the reviewed sources.
 
-**Research notes:** Source: docs/research/retailer-localization-2026-11-09.json (2026-11-09). Target markets above retain the source-declared storefront markets; they are not an API country enumeration or a shipping-derived market list. Country/region and Language are intended collection contexts, not verified API combinations. No catalog-price comparison has been performed for this retailer in this extension. The research verified the GraphQL QueryRoot only; available country/language combinations still need a localization query.
+**Research notes:** Source: docs/research/retailer-localization-2026-11-09.json (2026-11-09). Target markets above retain the source-declared storefront markets; they are not an API country enumeration or a shipping-derived market list. GraphQL country/region and GraphQL language are intended collection contexts, not verified API combinations. No catalog-price comparison has been performed for this retailer in this extension. The research verified the GraphQL QueryRoot only; available country/language combinations still need a localization query.
 
 ## Ugreen NAS Australia
 
@@ -867,13 +974,15 @@ Implementation: [`ugreen::get_retailer("ugreennasau")`](../lib/retailers_wip/src
 |                        |                                                              |
 |                        |                                                              |
 
-| Supported locales | URL                        | Country/region | Language |
-| ----------------- | -------------------------- | -------------- | -------- |
-| en                | https://nas-au.ugreen.com/ | AU             | EN       |
+**Shipping configuration checked 2026-11-13:** Shop configuration retrieved successfully. [Recorded result](research/retailer-shipping-countries-2026-11-13.json).
+
+| Supported locales | URL                        | GraphQL country/region | GraphQL language |
+| ----------------- | -------------------------- | ---------------------- | ---------------- |
+| en                | https://nas-au.ugreen.com/ | AU                     | EN               |
 
 **Shipping evidence:** Status: conflict. Australia storefront policy instead says United States. Coverage unresolved. Source: https://ai-au.ugreen.com/pages/shipping.
 
-**Research notes:** Source: docs/research/retailer-localization-2026-11-09.json (2026-11-09). Target markets above retain the source-declared storefront markets; they are not an API country enumeration or a shipping-derived market list. Country/region and Language are intended collection contexts, not verified API combinations. No catalog-price comparison has been performed for this retailer in this extension. The research verified the GraphQL QueryRoot only; available country/language combinations still need a localization query. Related selector URL: https://ai-au.ugreen.com/. Retained here as notes rather than separate retailer tables.
+**Research notes:** Source: docs/research/retailer-localization-2026-11-09.json (2026-11-09). Target markets above retain the source-declared storefront markets; they are not an API country enumeration or a shipping-derived market list. GraphQL country/region and GraphQL language are intended collection contexts, not verified API combinations. No catalog-price comparison has been performed for this retailer in this extension. The research verified the GraphQL QueryRoot only; available country/language combinations still need a localization query. Related selector URL: https://ai-au.ugreen.com/. Retained here as notes rather than separate retailer tables.
 
 ## Ugreen NAS Canada
 
@@ -890,13 +999,15 @@ Implementation: [`ugreen::get_retailer("ugreennasca")`](../lib/retailers_wip/src
 |                        |                                                              |
 |                        |                                                              |
 
-| Supported locales | URL                        | Country/region | Language |
-| ----------------- | -------------------------- | -------------- | -------- |
-| en                | https://nas-ca.ugreen.com/ | CA             | EN       |
+**Shipping configuration checked 2026-11-13:** Shop configuration retrieved successfully. [Recorded result](research/retailer-shipping-countries-2026-11-13.json).
+
+| Supported locales | URL                        | GraphQL country/region | GraphQL language |
+| ----------------- | -------------------------- | ---------------------- | ---------------- |
+| en                | https://nas-ca.ugreen.com/ | CA                     | EN               |
 
 **Shipping evidence:** Status: published. Most areas; no exhaustive excluded-postcode list. Source: https://ai-ca.ugreen.com/pages/shipping.
 
-**Research notes:** Source: docs/research/retailer-localization-2026-11-09.json (2026-11-09). Target markets above retain the source-declared storefront markets; they are not an API country enumeration or a shipping-derived market list. Country/region and Language are intended collection contexts, not verified API combinations. No catalog-price comparison has been performed for this retailer in this extension. The research verified the GraphQL QueryRoot only; available country/language combinations still need a localization query. Related selector URL: https://ai-ca.ugreen.com/. Retained here as notes rather than separate retailer tables.
+**Research notes:** Source: docs/research/retailer-localization-2026-11-09.json (2026-11-09). Target markets above retain the source-declared storefront markets; they are not an API country enumeration or a shipping-derived market list. GraphQL country/region and GraphQL language are intended collection contexts, not verified API combinations. No catalog-price comparison has been performed for this retailer in this extension. The research verified the GraphQL QueryRoot only; available country/language combinations still need a localization query. Related selector URL: https://ai-ca.ugreen.com/. Retained here as notes rather than separate retailer tables.
 
 ## Ugreen NAS Germany
 
@@ -913,13 +1024,15 @@ Implementation: [`ugreen::get_retailer("ugreennasde")`](../lib/retailers_wip/src
 |                        |                                                              |
 |                        |                                                              |
 
-| Supported locales | URL                        | Country/region | Language |
-| ----------------- | -------------------------- | -------------- | -------- |
-| de (selector)     | https://nas-de.ugreen.com/ | DE             | DE       |
+**Shipping configuration checked 2026-11-13:** Shop configuration retrieved successfully. [Recorded result](research/retailer-shipping-countries-2026-11-13.json).
+
+| Supported locales | URL                        | GraphQL country/region | GraphQL language |
+| ----------------- | -------------------------- | ---------------------- | ---------------- |
+| de (selector)     | https://nas-de.ugreen.com/ | DE                     | DE               |
 
 **Shipping evidence:** Status: conflicting lists. Delivery-area section and product pages agree on DE/AT. Later legacy text lists additional European countries; do not merge. Source: https://ai-de.ugreen.com/pages/shipping.
 
-**Research notes:** Source: docs/research/retailer-localization-2026-11-09.json (2026-11-09). Target markets above retain the source-declared storefront markets; they are not an API country enumeration or a shipping-derived market list. Country/region and Language are intended collection contexts, not verified API combinations. No catalog-price comparison has been performed for this retailer in this extension. The research verified the GraphQL QueryRoot only; available country/language combinations still need a localization query. The base language is declared by the storefront selector; direct page-language confirmation is unavailable in the research. Related selector URL: https://ai-de.ugreen.com/. Retained here as notes rather than separate retailer tables.
+**Research notes:** Source: docs/research/retailer-localization-2026-11-09.json (2026-11-09). Target markets above retain the source-declared storefront markets; they are not an API country enumeration or a shipping-derived market list. GraphQL country/region and GraphQL language are intended collection contexts, not verified API combinations. No catalog-price comparison has been performed for this retailer in this extension. The research verified the GraphQL QueryRoot only; available country/language combinations still need a localization query. The base language is declared by the storefront selector; direct page-language confirmation is unavailable in the research. Related selector URL: https://ai-de.ugreen.com/. Retained here as notes rather than separate retailer tables.
 
 ## Ugreen NAS Spain
 
@@ -936,13 +1049,15 @@ Implementation: [`ugreen::get_retailer("ugreennases")`](../lib/retailers_wip/src
 |                        |                                                              |
 |                        |                                                              |
 
-| Supported locales | URL                        | Country/region | Language |
-| ----------------- | -------------------------- | -------------- | -------- |
-| es (selector)     | https://nas-es.ugreen.com/ | ES             | ES       |
+**Shipping configuration checked 2026-11-13:** Shop configuration retrieved successfully. [Recorded result](research/retailer-shipping-countries-2026-11-13.json).
+
+| Supported locales | URL                        | GraphQL country/region | GraphQL language |
+| ----------------- | -------------------------- | ---------------------- | ---------------- |
+| es (selector)     | https://nas-es.ugreen.com/ | ES                     | ES               |
 
 **Shipping evidence:** Status: published. Canary Islands excluded. Source: https://ai-es.ugreen.com/pages/shipping.
 
-**Research notes:** Source: docs/research/retailer-localization-2026-11-09.json (2026-11-09). Target markets above retain the source-declared storefront markets; they are not an API country enumeration or a shipping-derived market list. Country/region and Language are intended collection contexts, not verified API combinations. No catalog-price comparison has been performed for this retailer in this extension. The research verified the GraphQL QueryRoot only; available country/language combinations still need a localization query. The base language is declared by the storefront selector; direct page-language confirmation is unavailable in the research. Related selector URL: https://ai-es.ugreen.com/. Retained here as notes rather than separate retailer tables.
+**Research notes:** Source: docs/research/retailer-localization-2026-11-09.json (2026-11-09). Target markets above retain the source-declared storefront markets; they are not an API country enumeration or a shipping-derived market list. GraphQL country/region and GraphQL language are intended collection contexts, not verified API combinations. No catalog-price comparison has been performed for this retailer in this extension. The research verified the GraphQL QueryRoot only; available country/language combinations still need a localization query. The base language is declared by the storefront selector; direct page-language confirmation is unavailable in the research. Related selector URL: https://ai-es.ugreen.com/. Retained here as notes rather than separate retailer tables.
 
 ## Ugreen NAS Europe
 
@@ -959,13 +1074,15 @@ Implementation: [`ugreen::get_retailer("ugreennaseu")`](../lib/retailers_wip/src
 |                        |                                                                    |
 |                        |                                                                    |
 
-| Supported locales | URL                        | Country/region | Language |
-| ----------------- | -------------------------- | -------------- | -------- |
-| en (selector)     | https://nas-eu.ugreen.com/ | Not selected   | EN       |
+**Shipping configuration checked 2026-11-13:** Shop configuration retrieved successfully. [Recorded result](research/retailer-shipping-countries-2026-11-13.json).
+
+| Supported locales | URL                        | GraphQL country/region | GraphQL language |
+| ----------------- | -------------------------- | ---------------------- | ---------------- |
+| en (selector)     | https://nas-eu.ugreen.com/ | Not selected           | EN               |
 
 **Shipping evidence:** Status: published. France overseas territories and Spain Canary Islands excluded. Source: https://ai-eu.ugreen.com/en-es/pages/shipping.
 
-**Research notes:** Source: docs/research/retailer-localization-2026-11-09.json (2026-11-09). Target markets above retain the source-declared storefront markets; they are not an API country enumeration or a shipping-derived market list. Country/region and Language are intended collection contexts, not verified API combinations. No catalog-price comparison has been performed for this retailer in this extension. The research verified the GraphQL QueryRoot only; available country/language combinations still need a localization query. A collection country has not been selected. EU labels the regional storefront and is not a Shopify CountryCode; the Anker Europe AT pricing decision does not apply here. The base language is declared by the storefront selector; direct page-language confirmation is unavailable in the research. Related selector URL: https://ai-eu.ugreen.com/. Retained here as notes rather than separate retailer tables. Additional paths with unverified language support: https://nas-eu.ugreen.com/de, https://nas-eu.ugreen.com/en-be, https://nas-eu.ugreen.com/en-es, https://nas-eu.ugreen.com/en-fr, https://nas-eu.ugreen.com/en-it, https://nas-eu.ugreen.com/en-nl, https://nas-eu.ugreen.com/en-pt, https://nas-eu.ugreen.com/en-ro, https://nas-eu.ugreen.com/en-se, https://nas-eu.ugreen.com/es-es, https://nas-eu.ugreen.com/fr-be, https://nas-eu.ugreen.com/fr-fr, https://nas-eu.ugreen.com/it-it, https://nas-eu.ugreen.com/nl-be, https://nas-eu.ugreen.com/nl-nl, https://nas-eu.ugreen.com/pt-pt, https://nas-eu.ugreen.com/ro-ro, https://nas-eu.ugreen.com/sv-se. Their path names are not treated as confirmed locales.
+**Research notes:** Source: docs/research/retailer-localization-2026-11-09.json (2026-11-09). Target markets above retain the source-declared storefront markets; they are not an API country enumeration or a shipping-derived market list. GraphQL country/region and GraphQL language are intended collection contexts, not verified API combinations. No catalog-price comparison has been performed for this retailer in this extension. The research verified the GraphQL QueryRoot only; available country/language combinations still need a localization query. A collection country has not been selected. EU labels the regional storefront and is not a Shopify CountryCode; the Anker Europe AT pricing decision does not apply here. The base language is declared by the storefront selector; direct page-language confirmation is unavailable in the research. Related selector URL: https://ai-eu.ugreen.com/. Retained here as notes rather than separate retailer tables. Additional paths with unverified language support: https://nas-eu.ugreen.com/de, https://nas-eu.ugreen.com/en-be, https://nas-eu.ugreen.com/en-es, https://nas-eu.ugreen.com/en-fr, https://nas-eu.ugreen.com/en-it, https://nas-eu.ugreen.com/en-nl, https://nas-eu.ugreen.com/en-pt, https://nas-eu.ugreen.com/en-ro, https://nas-eu.ugreen.com/en-se, https://nas-eu.ugreen.com/es-es, https://nas-eu.ugreen.com/fr-be, https://nas-eu.ugreen.com/fr-fr, https://nas-eu.ugreen.com/it-it, https://nas-eu.ugreen.com/nl-be, https://nas-eu.ugreen.com/nl-nl, https://nas-eu.ugreen.com/pt-pt, https://nas-eu.ugreen.com/ro-ro, https://nas-eu.ugreen.com/sv-se. Their path names are not treated as confirmed locales.
 
 ## Ugreen NAS France
 
@@ -982,13 +1099,15 @@ Implementation: [`ugreen::get_retailer("ugreennasfr")`](../lib/retailers_wip/src
 |                        |                                                              |
 |                        |                                                              |
 
-| Supported locales | URL                        | Country/region | Language |
-| ----------------- | -------------------------- | -------------- | -------- |
-| fr (selector)     | https://nas-fr.ugreen.com/ | FR             | FR       |
+**Shipping configuration checked 2026-11-13:** Shop configuration retrieved successfully. [Recorded result](research/retailer-shipping-countries-2026-11-13.json).
+
+| Supported locales | URL                        | GraphQL country/region | GraphQL language |
+| ----------------- | -------------------------- | ---------------------- | ---------------- |
+| fr (selector)     | https://nas-fr.ugreen.com/ | FR                     | FR               |
 
 **Shipping evidence:** Status: published.  Source: https://ai-fr.ugreen.com/policies/shipping-policy.
 
-**Research notes:** Source: docs/research/retailer-localization-2026-11-09.json (2026-11-09). Target markets above retain the source-declared storefront markets; they are not an API country enumeration or a shipping-derived market list. Country/region and Language are intended collection contexts, not verified API combinations. No catalog-price comparison has been performed for this retailer in this extension. The research verified the GraphQL QueryRoot only; available country/language combinations still need a localization query. The base language is declared by the storefront selector; direct page-language confirmation is unavailable in the research. Related selector URL: https://ai-fr.ugreen.com/. Retained here as notes rather than separate retailer tables.
+**Research notes:** Source: docs/research/retailer-localization-2026-11-09.json (2026-11-09). Target markets above retain the source-declared storefront markets; they are not an API country enumeration or a shipping-derived market list. GraphQL country/region and GraphQL language are intended collection contexts, not verified API combinations. No catalog-price comparison has been performed for this retailer in this extension. The research verified the GraphQL QueryRoot only; available country/language combinations still need a localization query. The base language is declared by the storefront selector; direct page-language confirmation is unavailable in the research. Related selector URL: https://ai-fr.ugreen.com/. Retained here as notes rather than separate retailer tables.
 
 ## Ugreen NAS Italy
 
@@ -1005,13 +1124,15 @@ Implementation: [`ugreen::get_retailer("ugreennasit")`](../lib/retailers_wip/src
 |                        |                                                              |
 |                        |                                                              |
 
-| Supported locales | URL                        | Country/region | Language |
-| ----------------- | -------------------------- | -------------- | -------- |
-| it (selector)     | https://nas-it.ugreen.com/ | IT             | IT       |
+**Shipping configuration checked 2026-11-13:** Shop configuration retrieved successfully. [Recorded result](research/retailer-shipping-countries-2026-11-13.json).
+
+| Supported locales | URL                        | GraphQL country/region | GraphQL language |
+| ----------------- | -------------------------- | ---------------------- | ---------------- |
+| it (selector)     | https://nas-it.ugreen.com/ | IT                     | IT               |
 
 **Shipping evidence:** Status: published.  Source: https://ai-it.ugreen.com/policies/shipping-policy.
 
-**Research notes:** Source: docs/research/retailer-localization-2026-11-09.json (2026-11-09). Target markets above retain the source-declared storefront markets; they are not an API country enumeration or a shipping-derived market list. Country/region and Language are intended collection contexts, not verified API combinations. No catalog-price comparison has been performed for this retailer in this extension. The research verified the GraphQL QueryRoot only; available country/language combinations still need a localization query. The base language is declared by the storefront selector; direct page-language confirmation is unavailable in the research. Related selector URL: https://ai-it.ugreen.com/. Retained here as notes rather than separate retailer tables.
+**Research notes:** Source: docs/research/retailer-localization-2026-11-09.json (2026-11-09). Target markets above retain the source-declared storefront markets; they are not an API country enumeration or a shipping-derived market list. GraphQL country/region and GraphQL language are intended collection contexts, not verified API combinations. No catalog-price comparison has been performed for this retailer in this extension. The research verified the GraphQL QueryRoot only; available country/language combinations still need a localization query. The base language is declared by the storefront selector; direct page-language confirmation is unavailable in the research. Related selector URL: https://ai-it.ugreen.com/. Retained here as notes rather than separate retailer tables.
 
 ## Ugreen NAS United Kingdom
 
@@ -1028,13 +1149,15 @@ Implementation: [`ugreen::get_retailer("ugreennasuk")`](../lib/retailers_wip/src
 |                        |                                                              |
 |                        |                                                              |
 
-| Supported locales | URL                        | Country/region | Language |
-| ----------------- | -------------------------- | -------------- | -------- |
-| en (selector)     | https://nas-uk.ugreen.com/ | GB             | EN       |
+**Shipping configuration checked 2026-11-13:** Shop configuration retrieved successfully. [Recorded result](research/retailer-shipping-countries-2026-11-13.json).
+
+| Supported locales | URL                        | GraphQL country/region | GraphQL language |
+| ----------------- | -------------------------- | ---------------------- | ---------------- |
+| en (selector)     | https://nas-uk.ugreen.com/ | GB                     | EN               |
 
 **Shipping evidence:** Status: published.  Source: https://ai-uk.ugreen.com/pages/shipping.
 
-**Research notes:** Source: docs/research/retailer-localization-2026-11-09.json (2026-11-09). Target markets above retain the source-declared storefront markets; they are not an API country enumeration or a shipping-derived market list. Country/region and Language are intended collection contexts, not verified API combinations. No catalog-price comparison has been performed for this retailer in this extension. The research verified the GraphQL QueryRoot only; available country/language combinations still need a localization query. The base language is declared by the storefront selector; direct page-language confirmation is unavailable in the research. Related selector URL: https://ai-uk.ugreen.com/. Retained here as notes rather than separate retailer tables.
+**Research notes:** Source: docs/research/retailer-localization-2026-11-09.json (2026-11-09). Target markets above retain the source-declared storefront markets; they are not an API country enumeration or a shipping-derived market list. GraphQL country/region and GraphQL language are intended collection contexts, not verified API combinations. No catalog-price comparison has been performed for this retailer in this extension. The research verified the GraphQL QueryRoot only; available country/language combinations still need a localization query. The base language is declared by the storefront selector; direct page-language confirmation is unavailable in the research. Related selector URL: https://ai-uk.ugreen.com/. Retained here as notes rather than separate retailer tables.
 
 ## Ugreen NAS United States
 
@@ -1051,13 +1174,15 @@ Implementation: [`ugreen::get_retailer("ugreennas")`](../lib/retailers_wip/src/r
 |                        |                                                           |
 |                        |                                                           |
 
-| Supported locales | URL                     | Country/region | Language |
-| ----------------- | ----------------------- | -------------- | -------- |
-| en                | https://nas.ugreen.com/ | US             | EN       |
+**Shipping configuration checked 2026-11-13:** Shop configuration retrieved successfully. [Recorded result](research/retailer-shipping-countries-2026-11-13.json).
+
+| Supported locales | URL                     | GraphQL country/region | GraphQL language |
+| ----------------- | ----------------------- | ---------------------- | ---------------- |
+| en                | https://nas.ugreen.com/ | US                     | EN               |
 
 **Shipping evidence:** Status: published. Excludes Alaska, Hawaii, Rhode Island, listed territories and military addresses. Source: https://ai.ugreen.com/pages/shipping.
 
-**Research notes:** Source: docs/research/retailer-localization-2026-11-09.json (2026-11-09). Target markets above retain the source-declared storefront markets; they are not an API country enumeration or a shipping-derived market list. Country/region and Language are intended collection contexts, not verified API combinations. No catalog-price comparison has been performed for this retailer in this extension. The research verified the GraphQL QueryRoot only; available country/language combinations still need a localization query. Related selector URL: https://ai.ugreen.com/. Retained here as notes rather than separate retailer tables.
+**Research notes:** Source: docs/research/retailer-localization-2026-11-09.json (2026-11-09). Target markets above retain the source-declared storefront markets; they are not an API country enumeration or a shipping-derived market list. GraphQL country/region and GraphQL language are intended collection contexts, not verified API combinations. No catalog-price comparison has been performed for this retailer in this extension. The research verified the GraphQL QueryRoot only; available country/language combinations still need a localization query. Related selector URL: https://ai.ugreen.com/. Retained here as notes rather than separate retailer tables.
 
 ## Ugreen NAS Japan
 
@@ -1074,13 +1199,15 @@ Implementation: [`ugreen::get_retailer("ugreennasjp")`](../lib/retailers_wip/src
 |                        |                                                              |
 |                        |                                                              |
 
-| Supported locales | URL                    | Country/region | Language |
-| ----------------- | ---------------------- | -------------- | -------- |
-| ja (selector)     | https://nas.ugreen.jp/ | JP             | JA       |
+**Shipping configuration checked 2026-11-13:** Shop configuration retrieved successfully. [Recorded result](research/retailer-shipping-countries-2026-11-13.json).
+
+| Supported locales | URL                    | GraphQL country/region | GraphQL language |
+| ----------------- | ---------------------- | ---------------------- | ---------------- |
+| ja (selector)     | https://nas.ugreen.jp/ | JP                     | JA               |
 
 **Shipping evidence:** Status: published. Some Okinawa, outlying islands and restricted delivery areas excluded. Source: https://store.ugreen.jp/policies/shipping-policy.
 
-**Research notes:** Source: docs/research/retailer-localization-2026-11-09.json (2026-11-09). Target markets above retain the source-declared storefront markets; they are not an API country enumeration or a shipping-derived market list. Country/region and Language are intended collection contexts, not verified API combinations. No catalog-price comparison has been performed for this retailer in this extension. The research verified the GraphQL QueryRoot only; available country/language combinations still need a localization query. The base language is declared by the storefront selector; direct page-language confirmation is unavailable in the research. Related selector URL: https://store.ugreen.jp/. Retained here as notes rather than separate retailer tables.
+**Research notes:** Source: docs/research/retailer-localization-2026-11-09.json (2026-11-09). Target markets above retain the source-declared storefront markets; they are not an API country enumeration or a shipping-derived market list. GraphQL country/region and GraphQL language are intended collection contexts, not verified API combinations. No catalog-price comparison has been performed for this retailer in this extension. The research verified the GraphQL QueryRoot only; available country/language combinations still need a localization query. The base language is declared by the storefront selector; direct page-language confirmation is unavailable in the research. Related selector URL: https://store.ugreen.jp/. Retained here as notes rather than separate retailer tables.
 
 ## Ugreen Netherlands
 
@@ -1097,13 +1224,15 @@ Implementation: [`ugreen::get_retailer("ugreennl")`](../lib/retailers_wip/src/re
 |                        |                                                          |
 |                        |                                                          |
 
-| Supported locales | URL                    | Country/region | Language |
-| ----------------- | ---------------------- | -------------- | -------- |
-| nl (selector)     | https://nl.ugreen.com/ | NL             | NL       |
+**Shipping configuration checked 2026-11-13:** Shop configuration retrieved successfully. [Recorded result](research/retailer-shipping-countries-2026-11-13.json).
+
+| Supported locales | URL                    | GraphQL country/region | GraphQL language |
+| ----------------- | ---------------------- | ---------------------- | ---------------- |
+| nl (selector)     | https://nl.ugreen.com/ | NL                     | NL               |
 
 **Shipping evidence:** Status: published.  Source: https://us.ugreen.com/pages/shipping-policy.
 
-**Research notes:** Source: docs/research/retailer-localization-2026-11-09.json (2026-11-09). Target markets above retain the source-declared storefront markets; they are not an API country enumeration or a shipping-derived market list. Country/region and Language are intended collection contexts, not verified API combinations. No catalog-price comparison has been performed for this retailer in this extension. The research verified the GraphQL QueryRoot only; available country/language combinations still need a localization query. The base language is declared by the storefront selector; direct page-language confirmation is unavailable in the research.
+**Research notes:** Source: docs/research/retailer-localization-2026-11-09.json (2026-11-09). Target markets above retain the source-declared storefront markets; they are not an API country enumeration or a shipping-derived market list. GraphQL country/region and GraphQL language are intended collection contexts, not verified API combinations. No catalog-price comparison has been performed for this retailer in this extension. The research verified the GraphQL QueryRoot only; available country/language combinations still need a localization query. The base language is declared by the storefront selector; direct page-language confirmation is unavailable in the research.
 
 ## Ugreen Japan
 
@@ -1120,61 +1249,67 @@ Implementation: [`ugreen::get_retailer("ugreenjp")`](../lib/retailers_wip/src/re
 |                        |                                                          |
 |                        |                                                          |
 
-| Supported locales | URL                | Country/region | Language |
-| ----------------- | ------------------ | -------------- | -------- |
-| ja                | https://ugreen.jp/ | JP             | JA       |
+**Shipping configuration checked 2026-11-13:** Shop configuration retrieved successfully. [Recorded result](research/retailer-shipping-countries-2026-11-13.json).
+
+| Supported locales | URL                | GraphQL country/region | GraphQL language |
+| ----------------- | ------------------ | ---------------------- | ---------------- |
+| ja                | https://ugreen.jp/ | JP                     | JA               |
 
 **Shipping evidence:** Status: unknown. No reliable enumerated shipping-country definition established in the reviewed sources.
 
-**Research notes:** Source: docs/research/retailer-localization-2026-11-09.json (2026-11-09). Target markets above retain the source-declared storefront markets; they are not an API country enumeration or a shipping-derived market list. Country/region and Language are intended collection contexts, not verified API combinations. No catalog-price comparison has been performed for this retailer in this extension. The research verified the GraphQL QueryRoot only; available country/language combinations still need a localization query.
+**Research notes:** Source: docs/research/retailer-localization-2026-11-09.json (2026-11-09). Target markets above retain the source-declared storefront markets; they are not an API country enumeration or a shipping-derived market list. GraphQL country/region and GraphQL language are intended collection contexts, not verified API combinations. No catalog-price comparison has been performed for this retailer in this extension. The research verified the GraphQL QueryRoot only; available country/language combinations still need a localization query.
 
 ## Ugreen United Kingdom
 
 Implementation: [`ugreen::get_retailer("ugreenuk")`](../lib/retailers_wip/src/retailers/ugreen.rs). Keep this table and the factory data synchronized.
 
-| Field                  | Value                                            |
-| ---------------------- | ------------------------------------------------ |
-| Retailer code          | `ugreenuk`                                       |
-| Storefront website     | https://uk.ugreen.com/                           |
-| Shopify shop value     | Unknown                                          |
-| Storefront GraphQL API | Unknown                                          |
-| Target markets         | United Kingdom (GB)                              |
-| Shipping countries     | GB                                               |
-| GraphQL API status     | Unknown; no endpoint established in the research |
-|                        |                                                  |
-|                        |                                                  |
+| Field                  | Value                                                            |
+| ---------------------- | ---------------------------------------------------------------- |
+| Retailer code          | `ugreenuk`                                                       |
+| Storefront website     | https://uk.ugreen.com/                                           |
+| Shopify shop value     | ugreen-uk.myshopify.com                                          |
+| Storefront GraphQL API | https://ugreen-uk.myshopify.com/api/2026-10/graphql.json         |
+| Target markets         | United Kingdom (GB)                                              |
+| Shipping countries     | GB                                                               |
+| GraphQL API status     | Shipping query verified 2026-11-13; storefront confirms backend. |
+|                        |                                                                  |
+|                        |                                                                  |
 
-| Supported locales | URL                    | Country/region | Language |
-| ----------------- | ---------------------- | -------------- | -------- |
-| en (selector)     | https://uk.ugreen.com/ | GB             | EN       |
+**Shipping configuration checked 2026-11-13:** Shop configuration retrieved successfully. [Recorded result](research/retailer-shipping-countries-2026-11-13.json).
+
+| Supported locales | URL                    | GraphQL country/region | GraphQL language |
+| ----------------- | ---------------------- | ---------------------- | ---------------- |
+| en (selector)     | https://uk.ugreen.com/ | GB                     | EN               |
 
 **Shipping evidence:** Status: published. Northern Ireland is included with a separate delivery timeframe. Source: https://us.ugreen.com/pages/shipping-policy.
 
-**Research notes:** No Shopify shop domain was verified for this URL in the reviewed sources. This does not establish whether the storefront uses Shopify. No backend is inherited from a parent retailer or inferred from a URL, language or market. Source: docs/research/retailer-localization-2026-11-09.json (2026-11-09). Target markets above retain the source-declared storefront markets; they are not an API country enumeration or a shipping-derived market list. Country/region and Language are intended collection contexts, not verified API combinations. No catalog-price comparison has been performed for this retailer in this extension. The base language is declared by the storefront selector; direct page-language confirmation is unavailable in the research.
+**Research notes:** No Shopify shop domain was verified for this URL in the reviewed sources. This does not establish whether the storefront uses Shopify. No backend is inherited from a parent retailer or inferred from a URL, language or market. Source: docs/research/retailer-localization-2026-11-09.json (2026-11-09). Target markets above retain the source-declared storefront markets; they are not an API country enumeration or a shipping-derived market list. GraphQL country/region and GraphQL language are intended collection contexts, not verified API combinations. No catalog-price comparison has been performed for this retailer in this extension. The base language is declared by the storefront selector; direct page-language confirmation is unavailable in the research.
 
 ## Ugreen United States
 
 Implementation: [`ugreen::get_retailer("ugreenus")`](../lib/retailers_wip/src/retailers/ugreen.rs). Keep this table and the factory data synchronized.
 
-| Field                  | Value                                            |
-| ---------------------- | ------------------------------------------------ |
-| Retailer code          | `ugreenus`                                       |
-| Storefront website     | https://us.ugreen.com/                           |
-| Shopify shop value     | Unknown                                          |
-| Storefront GraphQL API | Unknown                                          |
-| Target markets         | United States (US)                               |
-| Shipping countries     | US                                               |
-| GraphQL API status     | Unknown; no endpoint established in the research |
-|                        |                                                  |
-|                        |                                                  |
+| Field                  | Value                                                            |
+| ---------------------- | ---------------------------------------------------------------- |
+| Retailer code          | `ugreenus`                                                       |
+| Storefront website     | https://us.ugreen.com/                                           |
+| Shopify shop value     | ugreenmall.myshopify.com                                         |
+| Storefront GraphQL API | https://ugreenmall.myshopify.com/api/2026-10/graphql.json        |
+| Target markets         | United States (US)                                               |
+| Shipping countries     | US                                                               |
+| GraphQL API status     | Shipping query verified 2026-11-13; storefront confirms backend. |
+|                        |                                                                  |
+|                        |                                                                  |
 
-| Supported locales | URL                    | Country/region | Language |
-| ----------------- | ---------------------- | -------------- | -------- |
-| en (selector)     | https://us.ugreen.com/ | US             | EN       |
+**Shipping configuration checked 2026-11-13:** Shop configuration retrieved successfully. [Recorded result](research/retailer-shipping-countries-2026-11-13.json).
+
+| Supported locales | URL                    | GraphQL country/region | GraphQL language |
+| ----------------- | ---------------------- | ---------------------- | ---------------- |
+| en (selector)     | https://us.ugreen.com/ | US                     | EN               |
 
 **Shipping evidence:** Status: published. Excludes Alaska, Hawaii, listed territories and military addresses. Source: https://us.ugreen.com/pages/shipping-policy.
 
-**Research notes:** No Shopify shop domain was verified for this URL in the reviewed sources. This does not establish whether the storefront uses Shopify. No backend is inherited from a parent retailer or inferred from a URL, language or market. Source: docs/research/retailer-localization-2026-11-09.json (2026-11-09). Target markets above retain the source-declared storefront markets; they are not an API country enumeration or a shipping-derived market list. Country/region and Language are intended collection contexts, not verified API combinations. No catalog-price comparison has been performed for this retailer in this extension. The base language is declared by the storefront selector; direct page-language confirmation is unavailable in the research.
+**Research notes:** No Shopify shop domain was verified for this URL in the reviewed sources. This does not establish whether the storefront uses Shopify. No backend is inherited from a parent retailer or inferred from a URL, language or market. Source: docs/research/retailer-localization-2026-11-09.json (2026-11-09). Target markets above retain the source-declared storefront markets; they are not an API country enumeration or a shipping-derived market list. GraphQL country/region and GraphQL language are intended collection contexts, not verified API combinations. No catalog-price comparison has been performed for this retailer in this extension. The base language is declared by the storefront selector; direct page-language confirmation is unavailable in the research.
 
 ## Ugreen Main Site
 
@@ -1191,68 +1326,73 @@ Implementation: [`ugreen::get_retailer("ugreencom")`](../lib/retailers_wip/src/r
 |                        |                                                                 |
 |                        |                                                                 |
 
-| Supported locales       | URL                          | Country/region | Language |
-| ----------------------- | ---------------------------- | -------------- | -------- |
-| en                      | https://www.ugreen.com/      | US             | EN       |
-| en-US                   | https://www.ugreen.com/      | US             | EN       |
-| ar (advertised only)    | https://www.ugreen.com/ar-ae | Not selected   | AR       |
-| ar-SA (advertised only) | https://www.ugreen.com/ar-sa | Not selected   | AR       |
-| de-DE (advertised only) | https://www.ugreen.com/de-de | Not selected   | DE       |
-| en (advertised only)    | https://www.ugreen.com/en-ae | Not selected   | EN       |
-| en-AU (advertised only) | https://www.ugreen.com/en-au | Not selected   | EN       |
-| en-CA (advertised only) | https://www.ugreen.com/en-ca | Not selected   | EN       |
-| en-DE (advertised only) | https://www.ugreen.com/en-de | Not selected   | EN       |
-| en-ES (advertised only) | https://www.ugreen.com/en-es | Not selected   | EN       |
-| en-AT (advertised only) | https://www.ugreen.com/en-eu | Not selected   | EN       |
-| en-BE (advertised only) | https://www.ugreen.com/en-eu | Not selected   | EN       |
-| en-BG (advertised only) | https://www.ugreen.com/en-eu | Not selected   | EN       |
-| en-CH (advertised only) | https://www.ugreen.com/en-eu | Not selected   | EN       |
-| en-CY (advertised only) | https://www.ugreen.com/en-eu | Not selected   | EN       |
-| en-CZ (advertised only) | https://www.ugreen.com/en-eu | Not selected   | EN       |
-| en-DK (advertised only) | https://www.ugreen.com/en-eu | Not selected   | EN       |
-| en-EE (advertised only) | https://www.ugreen.com/en-eu | Not selected   | EN       |
-| en-FI (advertised only) | https://www.ugreen.com/en-eu | Not selected   | EN       |
-| en-HR (advertised only) | https://www.ugreen.com/en-eu | Not selected   | EN       |
-| en-HU (advertised only) | https://www.ugreen.com/en-eu | Not selected   | EN       |
-| en-IS (advertised only) | https://www.ugreen.com/en-eu | Not selected   | EN       |
-| en-LT (advertised only) | https://www.ugreen.com/en-eu | Not selected   | EN       |
-| en-LU (advertised only) | https://www.ugreen.com/en-eu | Not selected   | EN       |
-| en-LV (advertised only) | https://www.ugreen.com/en-eu | Not selected   | EN       |
-| en-MT (advertised only) | https://www.ugreen.com/en-eu | Not selected   | EN       |
-| en-NO (advertised only) | https://www.ugreen.com/en-eu | Not selected   | EN       |
-| en-PL (advertised only) | https://www.ugreen.com/en-eu | Not selected   | EN       |
-| en-PT (advertised only) | https://www.ugreen.com/en-eu | Not selected   | EN       |
-| en-RO (advertised only) | https://www.ugreen.com/en-eu | Not selected   | EN       |
-| en-SE (advertised only) | https://www.ugreen.com/en-eu | Not selected   | EN       |
-| en-SI (advertised only) | https://www.ugreen.com/en-eu | Not selected   | EN       |
-| en-SK (advertised only) | https://www.ugreen.com/en-eu | Not selected   | EN       |
-| en-FR (advertised only) | https://www.ugreen.com/en-fr | Not selected   | EN       |
-| en-GB (advertised only) | https://www.ugreen.com/en-gb | Not selected   | EN       |
-| en-ID (advertised only) | https://www.ugreen.com/en-id | Not selected   | EN       |
-| en-IT (advertised only) | https://www.ugreen.com/en-it | Not selected   | EN       |
-| en-MY (advertised only) | https://www.ugreen.com/en-my | Not selected   | EN       |
-| en-NL (advertised only) | https://www.ugreen.com/en-nl | Not selected   | EN       |
-| en-PH (advertised only) | https://www.ugreen.com/en-ph | Not selected   | EN       |
-| en-SA (advertised only) | https://www.ugreen.com/en-sa | Not selected   | EN       |
-| en-SG (advertised only) | https://www.ugreen.com/en-sg | Not selected   | EN       |
-| en-TH (advertised only) | https://www.ugreen.com/en-th | Not selected   | EN       |
-| en-TR (advertised only) | https://www.ugreen.com/en-tr | Not selected   | EN       |
-| en-VN (advertised only) | https://www.ugreen.com/en-vn | Not selected   | EN       |
-| es-ES (advertised only) | https://www.ugreen.com/es-es | Not selected   | ES       |
-| fr-FR (advertised only) | https://www.ugreen.com/fr-fr | Not selected   | FR       |
-| id-ID (advertised only) | https://www.ugreen.com/id-id | Not selected   | ID       |
-| it-IT (advertised only) | https://www.ugreen.com/it-it | Not selected   | IT       |
-| nl-US (advertised only) | https://www.ugreen.com/nl    | Not selected   | NL       |
-| nl-NL (advertised only) | https://www.ugreen.com/nl-nl | Not selected   | NL       |
-| th-TH (advertised only) | https://www.ugreen.com/th-th | Not selected   | TH       |
-| tr-US (advertised only) | https://www.ugreen.com/tr    | Not selected   | TR       |
-| tr-TR (advertised only) | https://www.ugreen.com/tr-tr | Not selected   | TR       |
-| vi-US (advertised only) | https://www.ugreen.com/vi    | Not selected   | VI       |
-| vi-VN (advertised only) | https://www.ugreen.com/vi-vn | Not selected   | VI       |
+**Shipping configuration checked 2026-11-13:** Shop configuration retrieved successfully. [Recorded result](research/retailer-shipping-countries-2026-11-13.json).
+
+| Supported locales                   | URL                          | GraphQL country/region | GraphQL language |
+| ----------------------------------- | ---------------------------- | ---------------------- | ---------------- |
+| en                                  | https://www.ugreen.com/      | US                     | EN               |
+| en-US                               | https://www.ugreen.com/      | US                     | EN               |
+| en-CA (context verified 2026-11-13) | https://www.ugreen.com/en-ca | CA                     | EN               |
+
+| Advertised-only locales | URL                          | GraphQL country/region | GraphQL language |
+| ----------------------- | ---------------------------- | ---------------------- | ---------------- |
+| ar                      | https://www.ugreen.com/ar-ae | Not selected           | AR               |
+| ar-SA                   | https://www.ugreen.com/ar-sa | Not selected           | AR               |
+| de-DE                   | https://www.ugreen.com/de-de | Not selected           | DE               |
+| en                      | https://www.ugreen.com/en-ae | Not selected           | EN               |
+| en-AU                   | https://www.ugreen.com/en-au | Not selected           | EN               |
+| en-DE                   | https://www.ugreen.com/en-de | Not selected           | EN               |
+| en-ES                   | https://www.ugreen.com/en-es | Not selected           | EN               |
+| en-AT                   | https://www.ugreen.com/en-eu | Not selected           | EN               |
+| en-BE                   | https://www.ugreen.com/en-eu | Not selected           | EN               |
+| en-BG                   | https://www.ugreen.com/en-eu | Not selected           | EN               |
+| en-CH                   | https://www.ugreen.com/en-eu | Not selected           | EN               |
+| en-CY                   | https://www.ugreen.com/en-eu | Not selected           | EN               |
+| en-CZ                   | https://www.ugreen.com/en-eu | Not selected           | EN               |
+| en-DK                   | https://www.ugreen.com/en-eu | Not selected           | EN               |
+| en-EE                   | https://www.ugreen.com/en-eu | Not selected           | EN               |
+| en-FI                   | https://www.ugreen.com/en-eu | Not selected           | EN               |
+| en-HR                   | https://www.ugreen.com/en-eu | Not selected           | EN               |
+| en-HU                   | https://www.ugreen.com/en-eu | Not selected           | EN               |
+| en-IS                   | https://www.ugreen.com/en-eu | Not selected           | EN               |
+| en-LT                   | https://www.ugreen.com/en-eu | Not selected           | EN               |
+| en-LU                   | https://www.ugreen.com/en-eu | Not selected           | EN               |
+| en-LV                   | https://www.ugreen.com/en-eu | Not selected           | EN               |
+| en-MT                   | https://www.ugreen.com/en-eu | Not selected           | EN               |
+| en-NO                   | https://www.ugreen.com/en-eu | Not selected           | EN               |
+| en-PL                   | https://www.ugreen.com/en-eu | Not selected           | EN               |
+| en-PT                   | https://www.ugreen.com/en-eu | Not selected           | EN               |
+| en-RO                   | https://www.ugreen.com/en-eu | Not selected           | EN               |
+| en-SE                   | https://www.ugreen.com/en-eu | Not selected           | EN               |
+| en-SI                   | https://www.ugreen.com/en-eu | Not selected           | EN               |
+| en-SK                   | https://www.ugreen.com/en-eu | Not selected           | EN               |
+| en-FR                   | https://www.ugreen.com/en-fr | Not selected           | EN               |
+| en-GB                   | https://www.ugreen.com/en-gb | Not selected           | EN               |
+| en-ID                   | https://www.ugreen.com/en-id | Not selected           | EN               |
+| en-IT                   | https://www.ugreen.com/en-it | Not selected           | EN               |
+| en-MY                   | https://www.ugreen.com/en-my | Not selected           | EN               |
+| en-NL                   | https://www.ugreen.com/en-nl | Not selected           | EN               |
+| en-PH                   | https://www.ugreen.com/en-ph | Not selected           | EN               |
+| en-SA                   | https://www.ugreen.com/en-sa | Not selected           | EN               |
+| en-SG                   | https://www.ugreen.com/en-sg | Not selected           | EN               |
+| en-TH                   | https://www.ugreen.com/en-th | Not selected           | EN               |
+| en-TR                   | https://www.ugreen.com/en-tr | Not selected           | EN               |
+| en-VN                   | https://www.ugreen.com/en-vn | Not selected           | EN               |
+| es-ES                   | https://www.ugreen.com/es-es | Not selected           | ES               |
+| fr-FR                   | https://www.ugreen.com/fr-fr | Not selected           | FR               |
+| id-ID                   | https://www.ugreen.com/id-id | Not selected           | ID               |
+| it-IT                   | https://www.ugreen.com/it-it | Not selected           | IT               |
+| nl-US                   | https://www.ugreen.com/nl    | Not selected           | NL               |
+| nl-NL                   | https://www.ugreen.com/nl-nl | Not selected           | NL               |
+| th-TH                   | https://www.ugreen.com/th-th | Not selected           | TH               |
+| tr-US                   | https://www.ugreen.com/tr    | Not selected           | TR               |
+| tr-TR                   | https://www.ugreen.com/tr-tr | Not selected           | TR               |
+| vi-US                   | https://www.ugreen.com/vi    | Not selected           | VI               |
+| vi-VN                   | https://www.ugreen.com/vi-vn | Not selected           | VI               |
 
 **Shipping evidence:** Status: unknown. No reliable enumerated shipping-country definition established in the reviewed sources.
 
-**Research notes:** Source: docs/research/retailer-localization-2026-11-09.json (2026-11-09). Target markets above retain the source-declared storefront markets; they are not an API country enumeration or a shipping-derived market list. Country/region and Language are intended collection contexts, not verified API combinations. No catalog-price comparison has been performed for this retailer in this extension. The research verified the GraphQL QueryRoot only; available country/language combinations still need a localization query. Rows marked advertised only are alternate links, not verified locale pages or confirmed extra content requests. Their country contexts remain unselected, and the base Shopify backend has not been established for those URLs.
+**Research notes:** Source: docs/research/retailer-localization-2026-11-09.json (2026-11-09). Target markets above retain the source-declared storefront markets; they are not an API country enumeration or a shipping-derived market list. GraphQL country/region and GraphQL language are intended collection contexts, not verified API combinations. No catalog-price comparison has been performed for this retailer in this extension. The research verified the GraphQL QueryRoot only; available country/language combinations still need a localization query. Rows in the advertised-only tables are alternate links, not verified locale pages or confirmed extra content requests. Their country contexts remain unselected, and the base Shopify backend has not been established for those URLs.
 
 ## Ugreen India
 
@@ -1269,12 +1409,17 @@ Implementation: [`ugreen::get_retailer("ugreenin")`](../lib/retailers_wip/src/re
 |                        |                                                          |
 |                        |                                                          |
 
-| Supported locales    | URL                          | Country/region | Language |
-| -------------------- | ---------------------------- | -------------- | -------- |
-| en                   | https://www.ugreenindia.com/ | IN             | EN       |
-| en (advertised only) | https://ugreenindia.com/     | Not selected   | EN       |
-| hi (advertised only) | https://ugreenindia.com/hi   | Not selected   | HI       |
+**Shipping configuration checked 2026-11-13:** Shop configuration retrieved successfully. [Recorded result](research/retailer-shipping-countries-2026-11-13.json).
+
+| Supported locales | URL                          | GraphQL country/region | GraphQL language |
+| ----------------- | ---------------------------- | ---------------------- | ---------------- |
+| en                | https://www.ugreenindia.com/ | IN                     | EN               |
+
+| Advertised-only locales | URL                        | GraphQL country/region | GraphQL language |
+| ----------------------- | -------------------------- | ---------------------- | ---------------- |
+| en                      | https://ugreenindia.com/   | Not selected           | EN               |
+| hi                      | https://ugreenindia.com/hi | Not selected           | HI               |
 
 **Shipping evidence:** Status: published. India-wide B2C policy; postcode/carrier restrictions apply. Source: https://ugreenindia.com/policies/shipping-policy.
 
-**Research notes:** Store explicitly labels India; Hindi alternate is separately advertised. Source: docs/research/retailer-localization-2026-11-09.json (2026-11-09). Target markets above retain the source-declared storefront markets; they are not an API country enumeration or a shipping-derived market list. Country/region and Language are intended collection contexts, not verified API combinations. No catalog-price comparison has been performed for this retailer in this extension. The research verified the GraphQL QueryRoot only; available country/language combinations still need a localization query. Rows marked advertised only are alternate links, not verified locale pages or confirmed extra content requests. Their country contexts remain unselected, and the base Shopify backend has not been established for those URLs.
+**Research notes:** Store explicitly labels India; Hindi alternate is separately advertised. Source: docs/research/retailer-localization-2026-11-09.json (2026-11-09). Target markets above retain the source-declared storefront markets; they are not an API country enumeration or a shipping-derived market list. GraphQL country/region and GraphQL language are intended collection contexts, not verified API combinations. No catalog-price comparison has been performed for this retailer in this extension. The research verified the GraphQL QueryRoot only; available country/language combinations still need a localization query. Rows in the advertised-only tables are alternate links, not verified locale pages or confirmed extra content requests. Their country contexts remain unselected, and the base Shopify backend has not been established for those URLs.

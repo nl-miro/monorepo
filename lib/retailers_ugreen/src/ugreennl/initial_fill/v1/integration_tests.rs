@@ -45,7 +45,8 @@ fn operation_documents_and_variables_are_local() {
     }
     for op in operations {
         let query = request(&op).unwrap();
-        assert_eq!(query.variables["country"], CONFIG.country);
+        assert!(query.variables.get("country").is_none());
+        assert!(query.query.contains("$country: CountryCode,"));
         assert_eq!(query.variables["language"], CONFIG.language);
         assert!(query.query.contains("language: $language"));
         for size in [1, 5, 10, 20, 25] {

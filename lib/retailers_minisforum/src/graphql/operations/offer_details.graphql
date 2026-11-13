@@ -1,4 +1,4 @@
-query OfferDetails($pageSize5: Int!, $country: CountryCode!, $language: LanguageCode!, $id: ID!) @inContext(country: $country, language: $language) {
+query OfferDetails($pageSize5: Int!, $country: CountryCode, $language: LanguageCode!, $id: ID!) @inContext(country: $country, language: $language) {
   product(id: $id) {
     __typename
     availableForSale

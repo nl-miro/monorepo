@@ -63,16 +63,11 @@ documented in [offer facts source coverage](../../docs/offer-facts-source-covera
 
 ## GraphQL offer details v2
 
-All registered minisforum storefronts support initial fills across each advertised
-country's available languages. Each retailer owns its configuration, token policy, queries, schema, validation
-and pagination in `<retailer>/initial_fill/v1`.
-Public access is backed by captured data3 responses; this change could not
-revalidate live access because external DNS was unavailable.
-
-Each retailer defines its own concrete Product, ProductResponse and
-RawOfferDetails types in `offer_details/v2/raw`, exported through the crate prelude as
-`<retailer>_raw_v2`. Contextual artifacts use schema version 2; historical version
-1 remains readable. Extracted representations and HTML processing are unchanged.
+All registered storefronts support initial fills for their main-table inventory
+locales. Country may be omitted; language is always explicit. Collection does not
+query advertised market lists. Contextual dumps retain observed country, language
+and currency in schema 2 and country-language directories. Historical schema 1
+remains readable; HTML processing is unchanged. See ADR 69.
 
 Normal CI covers real product and market-discovery fixtures for every storefront.
 To read every available saved product across contexts, run
@@ -117,3 +112,18 @@ older extracted checkout values must be regenerated from raw artifacts.
 Variant extraction rejects a compare-at price in a different currency, including
 when the current price is zero. Errors identify the variant and both currencies.
 Same-currency comparisons at or below the current price are omitted as before.
+
+Catalog and product GraphQL queries accept an optional country, including all
+continuation queries. Calls without an explicit `MarketContext` omit the country
+variable and use Shopify's default country while retaining the configured
+language. Returned prices must use a consistent observed currency; they are not
+forced to the configured country's currency. Explicit contexts still enforce
+country, language and currency. The recorded responses retain Shopify's context
+evidence. Initial fill now obtains requested contexts from the retailer inventory; see ADR 69.
+
+Initial-fill collection loads `Retailer.supported_locales` through the existing
+`StorefrontMarketsDiscovered` stage. It does not query advertised markets.
+Advertised-only locales stay in the documentation. The local
+`LocaleInitialFillIntegration` interface accepts optional countries and retains
+response-derived country/language/currency in schema-2 artifacts. Historical
+concrete-context integrations remain available as compatibility adapters.

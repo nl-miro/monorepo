@@ -13,6 +13,7 @@ members = [
 ]
 
 [workspace.dependencies]
+retailers_wip = { path = "retailers_wip" }
 graphql_client = "0.16.0"
 scraper = { version = "0.27.0", default-features = false }
 chrono = { version = "0.4.45", default-features = false, features = ["std", "serde"] }

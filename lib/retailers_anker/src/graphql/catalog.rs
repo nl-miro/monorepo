@@ -1,6 +1,7 @@
 use super::{Operation, next_cursor, product_gid};
 use retailer_sauce::initial_fill::{CatalogBatch, Http};
-use retailer_sauce::shopify::{initial_fill::StorefrontToken, markets::MarketContext};
+use retailer_sauce::shopify::initial_fill::StorefrontToken;
+use retailers_wip::initial_fill::{LocaleCatalogBatch, RequestedContext};
 use serde_json::Value;
 use std::collections::HashSet;
 const BATCH_SIZE: usize = 500;
@@ -8,9 +9,10 @@ pub fn fetch(
     engine: &super::Engine,
     http: &dyn Http,
     token: Option<&StorefrontToken>,
-    context: Option<&MarketContext>,
+    context: Option<&RequestedContext>,
     after: Option<String>,
-) -> Result<CatalogBatch, String> {
+) -> Result<LocaleCatalogBatch, String> {
+    let mut context = context.cloned();
     let mut after = after;
     let mut cursors = HashSet::new();
     if let Some(cursor) = &after {
@@ -28,8 +30,11 @@ pub fn fetch(
                 first,
                 after: after.clone(),
             },
-            context,
+            context.as_ref(),
         )?;
+        if let Some(context) = &mut context {
+            context.observe(&response)?;
+        }
         let products = response
             .pointer("/data/products")
             .ok_or("catalog response is missing products")?;
@@ -59,9 +64,12 @@ pub fn fetch(
             break;
         }
     }
-    Ok(CatalogBatch {
-        product_ids,
-        next_cursor: after,
+    Ok(LocaleCatalogBatch {
+        batch: CatalogBatch {
+            product_ids,
+            next_cursor: after,
+        },
+        context,
     })
 }
 fn execute(
@@ -69,13 +77,13 @@ fn execute(
     http: &dyn Http,
     token: Option<&StorefrontToken>,
     operation: &Operation,
-    context: Option<&MarketContext>,
+    context: Option<&RequestedContext>,
 ) -> Result<Value, String> {
     if let Some(context) = context {
         engine.execute(
             http,
             token,
-            &Operation::InContext {
+            &Operation::InLocale {
                 context: context.clone(),
                 operation: Box::new(operation.clone()),
             },

@@ -2,6 +2,7 @@ use super::artifact::{OfferDetails, Page};
 use super::{Operation, next_cursor, product_gid};
 use retailer_sauce::initial_fill::Http;
 use retailer_sauce::shopify::{initial_fill::StorefrontToken, markets::MarketContext};
+use retailers_wip::initial_fill::RequestedContext;
 use serde_json::Value;
 use std::collections::HashSet;
 pub fn fetch_in_context(
@@ -9,14 +10,13 @@ pub fn fetch_in_context(
     fetcher: &dyn Http,
     token: Option<&StorefrontToken>,
     id: &str,
-    context: Option<&MarketContext>,
+    context: Option<&RequestedContext>,
 ) -> Result<OfferDetails, String> {
     product_gid(id)?;
-    let config = engine.config;
     let mut session = Session {
         engine,
         fetcher,
-        context,
+        context: context.cloned(),
         token,
         pages: Vec::new(),
     };
@@ -84,16 +84,50 @@ pub fn fetch_in_context(
         })?;
         group_after = Some(cursor);
     }
-    validate_currency(
-        &product,
-        context.map_or(config.currency, |c| c.currency.as_str()),
-    )?;
+    // Without a requested market, Shopify chooses the currency. Still reject
+    // internally inconsistent prices instead of assuming the configured currency.
+    if let Some(currency) = context
+        .and_then(|c| c.currency.as_deref())
+        .or_else(|| observed_currency(&product))
+    {
+        validate_currency(&product, currency)?;
+        for page in &session.pages {
+            validate_currency(&page.response, currency)?;
+        }
+    }
+    let resolved_context = if let Some(context) = &session.context {
+        Some(MarketContext {
+            country: context
+                .country
+                .clone()
+                .or_else(|| context.observed_country.clone())
+                .ok_or("missing observed country")?,
+            language: context.language.clone(),
+            currency: observed_currency(&product)
+                .filter(|c| c.len() == 3 && c.bytes().all(|b| b.is_ascii_uppercase()))
+                .ok_or("missing observed currency")?
+                .to_owned(),
+        })
+    } else {
+        None
+    };
     Ok(OfferDetails {
         schema_version: if context.is_some() { 2 } else { 1 },
-        context: context.cloned(),
+        context: resolved_context,
         product,
         pages: session.pages,
     })
+}
+
+fn observed_currency(value: &Value) -> Option<&str> {
+    match value {
+        Value::Object(map) => map
+            .get("currencyCode")
+            .and_then(Value::as_str)
+            .or_else(|| map.values().find_map(observed_currency)),
+        Value::Array(values) => values.iter().find_map(observed_currency),
+        _ => None,
+    }
 }
 
 fn validate_currency(value: &Value, expected: &str) -> Result<(), String> {
@@ -132,14 +166,14 @@ fn owner<'a>(response: &'a Value, pointer: &str, id: &str) -> Result<&'a Value, 
 struct Session<'a> {
     engine: &'a super::Engine,
     fetcher: &'a dyn Http,
-    context: Option<&'a MarketContext>,
+    context: Option<RequestedContext>,
     token: Option<&'a StorefrontToken>,
     pages: Vec<Page>,
 }
 impl Session<'_> {
     fn execute(&mut self, operation: Operation) -> Result<Value, String> {
-        let operation = if let Some(context) = self.context {
-            Operation::InContext {
+        let operation = if let Some(context) = &self.context {
+            Operation::InLocale {
                 context: context.clone(),
                 operation: Box::new(operation),
             }
@@ -148,6 +182,9 @@ impl Session<'_> {
         };
         let request = self.engine.request(&operation)?;
         let response = self.engine.execute(self.fetcher, self.token, &operation)?;
+        if let Some(context) = &mut self.context {
+            context.observe(&response)?;
+        }
         self.pages.push(Page {
             request,
             response: response.clone(),

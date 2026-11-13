@@ -3098,6 +3098,7 @@ dependencies = [
  "retailers_anker",
  "retailers_minisforum",
  "retailers_ugreen",
+ "retailers_wip",
  "scraper",
  "serde",
  "serde_json",
@@ -3144,6 +3145,7 @@ dependencies = [
  "reqwest",
  "retailer_data_extractor",
  "retailer_sauce",
+ "retailers_wip",
  "serde",
  "serde_json",
  "sha1",
@@ -3173,6 +3175,7 @@ dependencies = [
  "html-extractor",
  "money",
  "retailer_sauce",
+ "retailers_wip",
  "scraper",
  "serde",
  "serde_json",
@@ -3190,6 +3193,7 @@ dependencies = [
  "html-extractor",
  "money",
  "retailer_sauce",
+ "retailers_wip",
  "scraper",
  "serde",
  "serde_json",
@@ -3207,12 +3211,23 @@ dependencies = [
  "html-extractor",
  "money",
  "retailer_sauce",
+ "retailers_wip",
  "scraper",
  "serde",
  "serde_json",
  "shared",
  "thiserror 2.0.21",
  "url",
+]
+
+[[package]]
+name = "retailers_wip"
+version = "0.1.0"
+dependencies = [
+ "retailer_sauce",
+ "serde",
+ "serde_json",
+ "shared",
 ]
 
 [[package]]
