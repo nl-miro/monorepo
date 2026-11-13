@@ -14,7 +14,9 @@
 
 ### IN PROGRESS
 
-- [~] Update money to at least 0.1.2 in every consuming workspace and validate.
+- [x] Update money to 0.1.2 in every consuming workspace and validate.
+  All workspace CI passes; audits report no new advisories. Customers and sourcing
+  HTTP checks pass; offers/customer-facing startup requires DATABASE_URL.
 
 - [~] Deduplicate extracted image IDs across all three brands; reject conflicting records.
 - [~] Repair extraction contract tests and verify library CI.
