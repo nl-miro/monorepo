@@ -1256,9 +1256,9 @@ dependencies = [
 
 [[package]]
 name = "money"
-version = "0.1.1"
+version = "0.1.2"
 source = "sparse+https://bodul-hq.github.io/crates/"
-checksum = "75e7aa394e720c325512acc04cd504204637d45d7480a53859b4b9627d513052"
+checksum = "f96d1080a3a570926a59b70a397b244e320be5b3ab0e79309dc145b9df07258d"
 dependencies = [
  "serde",
 ]

@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-money = { version = "0.1.0", registry = "bodul" }
+money = { version = "0.1.2", registry = "bodul" }
 poem.workspace = true
 reqwest.workspace = true
 retailer_sauce = { version = "0.1.0", registry = "bodul" }

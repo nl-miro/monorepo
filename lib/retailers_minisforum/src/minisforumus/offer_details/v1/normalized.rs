@@ -250,11 +250,11 @@ mod tests {
     #[test]
     fn an_unknown_currency_fails() {
         let mut input = document();
-        island_mut(&mut input)["offers"]["priceCurrency"] = json!("SGD");
+        island_mut(&mut input)["offers"]["priceCurrency"] = json!("ZZZ");
 
         assert!(matches!(
             normalize(input),
-            Err(NormalizeError::UnsupportedCurrency { currency, .. }) if currency == "SGD"
+            Err(NormalizeError::UnsupportedCurrency { currency, .. }) if currency == "ZZZ"
         ));
     }
 
