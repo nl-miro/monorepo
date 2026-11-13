@@ -21,10 +21,10 @@ fn extraction_preserves_every_raw_field() {
         ] {
             let raw: RawOfferDetails = serde_json::from_value(source).unwrap();
             let expected = serde_json::to_value(&raw).unwrap();
-            let extracted = super::ExtractedOfferDetails::try_from(raw).unwrap();
+            let extracted = super::prelude::ExtractedOfferDetails::try_from(raw).unwrap();
             let output = serde_json::to_value(&extracted).unwrap();
             assert_eq!(output, expected);
-            let decoded: super::ExtractedOfferDetails =
+            let decoded: super::prelude::ExtractedOfferDetails =
                 serde_json::from_value(output.clone()).unwrap();
             assert_eq!(serde_json::to_value(decoded).unwrap(), output);
         }
@@ -46,7 +46,7 @@ fn date_times_are_parsed_as_utc() {
     });
     source["product"]["updatedAt"] = json!("2026-11-12T10:00:00+02:00");
     let raw: RawOfferDetails = serde_json::from_value(source.clone()).unwrap();
-    let extracted = super::ExtractedOfferDetails::try_from(raw).unwrap();
+    let extracted = super::prelude::ExtractedOfferDetails::try_from(raw).unwrap();
     assert_eq!(
         extracted.acquired_at.unwrap().to_rfc3339(),
         "2026-11-12T09:10:11.123456789+00:00"
@@ -59,7 +59,7 @@ fn date_times_are_parsed_as_utc() {
         let mut source = source.clone();
         source["product"][field] = json!(value);
         let raw: RawOfferDetails = serde_json::from_value(source).unwrap();
-        let error = super::ExtractedOfferDetails::try_from(raw).unwrap_err();
+        let error = super::prelude::ExtractedOfferDetails::try_from(raw).unwrap_err();
         assert!(error.contains("is not an RFC 3339 instant"), "{error}");
     }
 }
@@ -80,12 +80,12 @@ fn variant_count_is_validated_and_omitted() {
         count: collected,
         precision: "EXACT".to_string(),
     });
-    let extracted = super::ExtractedOfferDetails::try_from(raw.clone()).unwrap();
+    let extracted = super::prelude::ExtractedOfferDetails::try_from(raw.clone()).unwrap();
     let output = serde_json::to_value(extracted).unwrap();
     assert!(output["product"].get("variants_count").is_none());
     for expected in [collected - 1, collected + 1, -1] {
         raw.product.variants_count.as_mut().unwrap().count = expected;
-        let error = super::ExtractedOfferDetails::try_from(raw.clone()).unwrap_err();
+        let error = super::prelude::ExtractedOfferDetails::try_from(raw.clone()).unwrap_err();
         assert!(error.contains("product.variants_count"), "{error}");
     }
 }
@@ -102,14 +102,14 @@ fn variant_count_lower_bound_and_missing_count() {
     .unwrap();
     let collected = i64::try_from(raw.product.variants.edges.len()).unwrap();
     raw.product.variants_count = None;
-    super::ExtractedOfferDetails::try_from(raw.clone()).unwrap();
+    super::prelude::ExtractedOfferDetails::try_from(raw.clone()).unwrap();
     for minimum in [0, collected, collected + 1] {
         raw.product.variants_count = Some(crate::graphql::raw::Count {
             type_name: "Count".to_string(),
             count: minimum,
             precision: "AT_LEAST".to_string(),
         });
-        let result = super::ExtractedOfferDetails::try_from(raw.clone());
+        let result = super::prelude::ExtractedOfferDetails::try_from(raw.clone());
         if minimum <= collected {
             result.unwrap();
         } else {
@@ -152,7 +152,7 @@ fn default_options_are_filtered_without_losing_real_choices() {
                 ]))
                 .unwrap();
             }
-            let extracted = super::Product::try_from(product).unwrap();
+            let extracted = super::prelude::Product::try_from(product).unwrap();
             let ids: Vec<_> = extracted
                 .options
                 .iter()
@@ -198,7 +198,7 @@ fn default_only_options_become_empty_lists() {
         {"__typename":"SelectedOption", "name":"Title", "value":"Default Title"}
     ]))
     .unwrap();
-    let output = serde_json::to_value(super::Product::try_from(product).unwrap()).unwrap();
+    let output = serde_json::to_value(super::prelude::Product::try_from(product).unwrap()).unwrap();
     assert_eq!(output["options"], json!([]));
     assert_eq!(output["variants"][0]["selected_options"], json!([]));
 }
@@ -222,14 +222,15 @@ fn empty_unit_price_measurements_become_null_and_real_values_survive() {
             measurement["measuredType"] = measured_type.clone();
             measurement["quantityValue"] = quantity;
             raw.unit_price_measurement = Some(serde_json::from_value(measurement).unwrap());
-            let output = serde_json::to_value(super::Variant::try_from(raw).unwrap()).unwrap();
+            let output =
+                serde_json::to_value(super::prelude::Variant::try_from(raw).unwrap()).unwrap();
             assert_eq!(output.get("unit_price_measurement"), Some(&Value::Null));
         }
     }
     let mut raw = variant.clone();
     raw.unit_price_measurement = None;
     assert!(
-        super::Variant::try_from(raw)
+        super::prelude::Variant::try_from(raw)
             .unwrap()
             .unit_price_measurement
             .is_none()
@@ -245,9 +246,9 @@ fn empty_unit_price_measurements_become_null_and_real_values_survive() {
         measurement[field] = value;
         let measurement: crate::graphql::raw::UnitPriceMeasurement =
             serde_json::from_value(measurement).unwrap();
-        let expected = super::UnitPriceMeasurement::try_from(measurement.clone()).unwrap();
+        let expected = super::prelude::UnitPriceMeasurement::try_from(measurement.clone()).unwrap();
         raw.unit_price_measurement = Some(measurement);
-        let extracted = super::Variant::try_from(raw).unwrap();
+        let extracted = super::prelude::Variant::try_from(raw).unwrap();
         assert_eq!(
             serde_json::to_value(extracted.unit_price_measurement).unwrap(),
             serde_json::to_value(expected).unwrap(),
@@ -331,31 +332,31 @@ fn variant_pricing_classifies_prices_and_serializes_the_enum() {
         raw.compare_at_price = comparison.map(|(amount, currency)| raw_money(amount, currency));
         let price = money::Money::try_from(raw.price.clone()).unwrap();
         let expected = if price.amount() == 0 {
-            super::Pricing::Unknown
+            super::prelude::Pricing::Unknown
         } else if discounted {
-            super::Pricing::Discounted(
+            super::prelude::Pricing::Discounted(
                 price,
                 money::Money::try_from(raw.compare_at_price.clone().unwrap()).unwrap(),
             )
         } else {
-            super::Pricing::Standard(price)
+            super::prelude::Pricing::Standard(price)
         };
-        let extracted = super::Variant::try_from(raw).unwrap();
+        let extracted = super::prelude::Variant::try_from(raw).unwrap();
         assert_eq!(extracted.pricing, expected);
         let output = serde_json::to_value(&extracted).unwrap();
         assert!(output.get("price").is_none());
         assert!(output.get("compare_at_price").is_none());
         assert_eq!(output["pricing"], serde_json::to_value(&expected).unwrap());
-        let decoded: super::Variant = serde_json::from_value(output).unwrap();
+        let decoded: super::prelude::Variant = serde_json::from_value(output).unwrap();
         assert_eq!(decoded.pricing, expected);
     }
     assert_eq!(
-        serde_json::to_value(super::Pricing::Unknown).unwrap(),
+        serde_json::to_value(super::prelude::Pricing::Unknown).unwrap(),
         json!("Unknown")
     );
     let mut raw = variant;
     raw.price = raw_money("invalid", "USD");
-    assert!(super::Variant::try_from(raw).is_err());
+    assert!(super::prelude::Variant::try_from(raw).is_err());
 }
 
 #[test]
@@ -398,7 +399,8 @@ fn collection_products_are_an_ordered_list_or_empty() {
             json!([])
         };
         let raw: crate::graphql::raw::Collection = serde_json::from_value(input).unwrap();
-        let output = serde_json::to_value(super::Collection::try_from(raw).unwrap()).unwrap();
+        let output =
+            serde_json::to_value(super::prelude::Collection::try_from(raw).unwrap()).unwrap();
         assert_eq!(output["products"], expected);
     }
 }

@@ -1,0 +1,1 @@
+//! Extracted image model definitions.
