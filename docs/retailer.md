@@ -286,6 +286,9 @@ Implementation: [`anker::get_retailer("ankerjapancom")`](../lib/retailers_wip/sr
 
 ## Anker Nordics
 
+Historical combined retailer retained for compatibility. New work uses the five
+country-specific entries below; see [ADR 47](adr/0047-nordic-retailer-markets.md).
+
 Implementation: [`anker::get_retailer("ankernordicscom")`](../lib/retailers_wip/src/retailers/anker.rs). Keep this table and the factory data synchronized.
 
 | Field                  | Value                                                              |
@@ -307,6 +310,131 @@ Implementation: [`anker::get_retailer("ankernordicscom")`](../lib/retailers_wip/
 | en-fi (alternate link) | https://www.ankernordics.com/ | FI             | EN       |
 | en-is (alternate link) | https://www.ankernordics.com/ | IS             | EN       |
 | en-no (alternate link) | https://www.ankernordics.com/ | NO             | EN       |
+
+## Anker Sweden
+
+Implementation: [`anker::get_retailer("ankerse")`](../lib/retailers_wip/src/retailers/anker.rs). Keep this table and the factory data synchronized.
+
+| Field | Value |
+| ----- | ----- |
+| Retailer code | `ankerse` |
+| Storefront website | https://www.ankernordics.com/ |
+| Shopify shop value | ankerneu.myshopify.com |
+| Storefront GraphQL API | https://ankerneu.myshopify.com/api/2026-10/graphql.json |
+| Target markets | Sweden (SE) |
+| Shipping countries | SE, NO, DK, FI, IS |
+| Shipping restrictions | Iceland import clearance and product-specific exclusions apply. |
+
+| Supported locales | URL | Country/region | Language |
+| ----------------- | --- | -------------- | -------- |
+| en-SE | https://www.ankernordics.com/ | SE | EN |
+
+This is the Sweden market of the shared Nordic store, using explicit `SE` / `EN`
+collection context. Shipping countries describe the shared store's documented
+coverage, independently of this retailer's target market. The locale spelling
+retains the Nordic inventory evidence. No country URL prefix is introduced.
+See [ADR 47](adr/0047-nordic-retailer-markets.md) and the
+[existing storefront configuration](../lib/retailers_anker/src/ankerse/initial_fill/v1/mod.rs).
+
+## Anker Norway
+
+Implementation: [`anker::get_retailer("ankerno")`](../lib/retailers_wip/src/retailers/anker.rs). Keep this table and the factory data synchronized.
+
+| Field | Value |
+| ----- | ----- |
+| Retailer code | `ankerno` |
+| Storefront website | https://www.ankernordics.com/ |
+| Shopify shop value | ankerneu.myshopify.com |
+| Storefront GraphQL API | https://ankerneu.myshopify.com/api/2026-10/graphql.json |
+| Target markets | Norway (NO) |
+| Shipping countries | SE, NO, DK, FI, IS |
+| Shipping restrictions | Iceland import clearance and product-specific exclusions apply. |
+
+| Supported locales | URL | Country/region | Language |
+| ----------------- | --- | -------------- | -------- |
+| en-no (alternate link) | https://www.ankernordics.com/ | NO | EN |
+
+This is the Norway market of the shared Nordic store, using explicit `NO` / `EN`
+collection context. Shipping countries describe the shared store's documented
+coverage, independently of this retailer's target market. The locale spelling
+retains the Nordic inventory evidence. No country URL prefix is introduced.
+See [ADR 47](adr/0047-nordic-retailer-markets.md) and the
+[existing storefront configuration](../lib/retailers_anker/src/ankerno/initial_fill/v1/mod.rs).
+
+## Anker Finland
+
+Implementation: [`anker::get_retailer("ankerfi")`](../lib/retailers_wip/src/retailers/anker.rs). Keep this table and the factory data synchronized.
+
+| Field | Value |
+| ----- | ----- |
+| Retailer code | `ankerfi` |
+| Storefront website | https://www.ankernordics.com/ |
+| Shopify shop value | ankerneu.myshopify.com |
+| Storefront GraphQL API | https://ankerneu.myshopify.com/api/2026-10/graphql.json |
+| Target markets | Finland (FI) |
+| Shipping countries | SE, NO, DK, FI, IS |
+| Shipping restrictions | Iceland import clearance and product-specific exclusions apply. |
+
+| Supported locales | URL | Country/region | Language |
+| ----------------- | --- | -------------- | -------- |
+| en-fi (alternate link) | https://www.ankernordics.com/ | FI | EN |
+
+This is the Finland market of the shared Nordic store, using explicit `FI` / `EN`
+collection context. Shipping countries describe the shared store's documented
+coverage, independently of this retailer's target market. The locale spelling
+retains the Nordic inventory evidence. No country URL prefix is introduced.
+See [ADR 47](adr/0047-nordic-retailer-markets.md) and the
+[existing storefront configuration](../lib/retailers_anker/src/ankerfi/initial_fill/v1/mod.rs).
+
+## Anker Iceland
+
+Implementation: [`anker::get_retailer("ankeris")`](../lib/retailers_wip/src/retailers/anker.rs). Keep this table and the factory data synchronized.
+
+| Field | Value |
+| ----- | ----- |
+| Retailer code | `ankeris` |
+| Storefront website | https://www.ankernordics.com/ |
+| Shopify shop value | ankerneu.myshopify.com |
+| Storefront GraphQL API | https://ankerneu.myshopify.com/api/2026-10/graphql.json |
+| Target markets | Iceland (IS) |
+| Shipping countries | SE, NO, DK, FI, IS |
+| Shipping restrictions | Iceland import clearance and product-specific exclusions apply. |
+
+| Supported locales | URL | Country/region | Language |
+| ----------------- | --- | -------------- | -------- |
+| en-is (alternate link) | https://www.ankernordics.com/ | IS | EN |
+
+This is the Iceland market of the shared Nordic store, using explicit `IS` / `EN`
+collection context. Shipping countries describe the shared store's documented
+coverage, independently of this retailer's target market. The locale spelling
+retains the Nordic inventory evidence. No country URL prefix is introduced.
+See [ADR 47](adr/0047-nordic-retailer-markets.md) and the
+[existing storefront configuration](../lib/retailers_anker/src/ankeris/initial_fill/v1/mod.rs).
+
+## Anker Denmark
+
+Implementation: [`anker::get_retailer("ankerdk")`](../lib/retailers_wip/src/retailers/anker.rs). Keep this table and the factory data synchronized.
+
+| Field | Value |
+| ----- | ----- |
+| Retailer code | `ankerdk` |
+| Storefront website | https://www.ankernordics.com/ |
+| Shopify shop value | ankerneu.myshopify.com |
+| Storefront GraphQL API | https://ankerneu.myshopify.com/api/2026-10/graphql.json |
+| Target markets | Denmark (DK) |
+| Shipping countries | SE, NO, DK, FI, IS |
+| Shipping restrictions | Iceland import clearance and product-specific exclusions apply. |
+
+| Supported locales | URL | Country/region | Language |
+| ----------------- | --- | -------------- | -------- |
+| en-dk (alternate link) | https://www.ankernordics.com/ | DK | EN |
+
+This is the Denmark market of the shared Nordic store, using explicit `DK` / `EN`
+collection context. Shipping countries describe the shared store's documented
+coverage, independently of this retailer's target market. The locale spelling
+retains the Nordic inventory evidence. No country URL prefix is introduced.
+See [ADR 47](adr/0047-nordic-retailer-markets.md) and the
+[existing storefront configuration](../lib/retailers_anker/src/ankerdk/initial_fill/v1/mod.rs).
 
 ## Minisforum Australia
 

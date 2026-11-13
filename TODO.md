@@ -14,6 +14,9 @@
 
 ### IN PROGRESS
 
+- [x] Add missing split Nordic retailers to the inventory and WIP factories.
+  All five country contexts and legacy compatibility covered; crate CI passes.
+
 - [x] Model retailers_wip inventory and brand factories from docs/retailer.md.
   Includes bidirectional documentation links and inventory consistency tests; crate CI passes.
 

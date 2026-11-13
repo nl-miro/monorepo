@@ -192,6 +192,7 @@ SupportedLocales { locale: "ko-KR".into(), url: "https://ankerkorea.co.kr/".into
         }),
         // Inventory: [docs/retailer.md](../../../../docs/retailer.md#anker-nordics).
         // Keep this record synchronized with its inventory tables.
+        // Historical combined identity; new work uses the five country codes below.
         "ankernordicscom" => Some(Retailer {
             retailer_code: "ankernordicscom".into(),
             storefront_website: "https://www.ankernordics.com/".into(),
@@ -207,6 +208,76 @@ SupportedLocales { locale: "en-dk".into(), url: "https://www.ankernordics.com/".
 SupportedLocales { locale: "en-fi".into(), url: "https://www.ankernordics.com/".into(), country_region: Some("FI".into()), language: "EN".into(), annotation: Some("alternate link".into()) },
 SupportedLocales { locale: "en-is".into(), url: "https://www.ankernordics.com/".into(), country_region: Some("IS".into()), language: "EN".into(), annotation: Some("alternate link".into()) },
 SupportedLocales { locale: "en-no".into(), url: "https://www.ankernordics.com/".into(), country_region: Some("NO".into()), language: "EN".into(), annotation: Some("alternate link".into()) }],
+        }),
+        // Inventory: [docs/retailer.md](../../../../docs/retailer.md#anker-sweden).
+        // Keep this record synchronized with its inventory tables.
+        "ankerse" => Some(Retailer {
+            retailer_code: "ankerse".into(),
+            storefront_website: "https://www.ankernordics.com/".into(),
+            shopify_shop: Some("ankerneu.myshopify.com".into()),
+            storefront_graphql_api: Some("https://ankerneu.myshopify.com/api/2026-10/graphql.json".into()),
+            target_markets: Some(vec!["SE".into()]),
+            target_markets_annotation: None,
+            shipping_countries: Some(vec!["SE".into(), "NO".into(), "DK".into(), "FI".into(), "IS".into()]),
+            shipping_restrictions: Some("Iceland import clearance and product-specific exclusions apply.".into()),
+            graphql_api_status: None,
+            supported_locales: vec![SupportedLocales { locale: "en-SE".into(), url: "https://www.ankernordics.com/".into(), country_region: Some("SE".into()), language: "EN".into(), annotation: None }],
+        }),
+        // Inventory: [docs/retailer.md](../../../../docs/retailer.md#anker-norway).
+        // Keep this record synchronized with its inventory tables.
+        "ankerno" => Some(Retailer {
+            retailer_code: "ankerno".into(),
+            storefront_website: "https://www.ankernordics.com/".into(),
+            shopify_shop: Some("ankerneu.myshopify.com".into()),
+            storefront_graphql_api: Some("https://ankerneu.myshopify.com/api/2026-10/graphql.json".into()),
+            target_markets: Some(vec!["NO".into()]),
+            target_markets_annotation: None,
+            shipping_countries: Some(vec!["SE".into(), "NO".into(), "DK".into(), "FI".into(), "IS".into()]),
+            shipping_restrictions: Some("Iceland import clearance and product-specific exclusions apply.".into()),
+            graphql_api_status: None,
+            supported_locales: vec![SupportedLocales { locale: "en-no".into(), url: "https://www.ankernordics.com/".into(), country_region: Some("NO".into()), language: "EN".into(), annotation: Some("alternate link".into()) }],
+        }),
+        // Inventory: [docs/retailer.md](../../../../docs/retailer.md#anker-finland).
+        // Keep this record synchronized with its inventory tables.
+        "ankerfi" => Some(Retailer {
+            retailer_code: "ankerfi".into(),
+            storefront_website: "https://www.ankernordics.com/".into(),
+            shopify_shop: Some("ankerneu.myshopify.com".into()),
+            storefront_graphql_api: Some("https://ankerneu.myshopify.com/api/2026-10/graphql.json".into()),
+            target_markets: Some(vec!["FI".into()]),
+            target_markets_annotation: None,
+            shipping_countries: Some(vec!["SE".into(), "NO".into(), "DK".into(), "FI".into(), "IS".into()]),
+            shipping_restrictions: Some("Iceland import clearance and product-specific exclusions apply.".into()),
+            graphql_api_status: None,
+            supported_locales: vec![SupportedLocales { locale: "en-fi".into(), url: "https://www.ankernordics.com/".into(), country_region: Some("FI".into()), language: "EN".into(), annotation: Some("alternate link".into()) }],
+        }),
+        // Inventory: [docs/retailer.md](../../../../docs/retailer.md#anker-iceland).
+        // Keep this record synchronized with its inventory tables.
+        "ankeris" => Some(Retailer {
+            retailer_code: "ankeris".into(),
+            storefront_website: "https://www.ankernordics.com/".into(),
+            shopify_shop: Some("ankerneu.myshopify.com".into()),
+            storefront_graphql_api: Some("https://ankerneu.myshopify.com/api/2026-10/graphql.json".into()),
+            target_markets: Some(vec!["IS".into()]),
+            target_markets_annotation: None,
+            shipping_countries: Some(vec!["SE".into(), "NO".into(), "DK".into(), "FI".into(), "IS".into()]),
+            shipping_restrictions: Some("Iceland import clearance and product-specific exclusions apply.".into()),
+            graphql_api_status: None,
+            supported_locales: vec![SupportedLocales { locale: "en-is".into(), url: "https://www.ankernordics.com/".into(), country_region: Some("IS".into()), language: "EN".into(), annotation: Some("alternate link".into()) }],
+        }),
+        // Inventory: [docs/retailer.md](../../../../docs/retailer.md#anker-denmark).
+        // Keep this record synchronized with its inventory tables.
+        "ankerdk" => Some(Retailer {
+            retailer_code: "ankerdk".into(),
+            storefront_website: "https://www.ankernordics.com/".into(),
+            shopify_shop: Some("ankerneu.myshopify.com".into()),
+            storefront_graphql_api: Some("https://ankerneu.myshopify.com/api/2026-10/graphql.json".into()),
+            target_markets: Some(vec!["DK".into()]),
+            target_markets_annotation: None,
+            shipping_countries: Some(vec!["SE".into(), "NO".into(), "DK".into(), "FI".into(), "IS".into()]),
+            shipping_restrictions: Some("Iceland import clearance and product-specific exclusions apply.".into()),
+            graphql_api_status: None,
+            supported_locales: vec![SupportedLocales { locale: "en-dk".into(), url: "https://www.ankernordics.com/".into(), country_region: Some("DK".into()), language: "EN".into(), annotation: Some("alternate link".into()) }],
         }),
         _ => None,
     }

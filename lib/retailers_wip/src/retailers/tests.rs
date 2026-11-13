@@ -108,7 +108,7 @@ fn factories_match_documented_inventory() {
             .collect();
         assert_eq!(retailer.supported_locales, expected, "{code}");
     }
-    assert_eq!(counts, [14, 10, 21]);
+    assert_eq!(counts, [19, 10, 21]);
 }
 
 #[test]
@@ -173,4 +173,32 @@ fn collection_context_is_independent_of_market_and_locale() {
                     && locale.country_region.is_none()
             )
     );
+}
+
+#[test]
+fn nordic_markets_keep_distinct_contexts_and_shared_storefront() {
+    let legacy = anker::get_retailer("ankernordicscom").unwrap();
+    for (code, country) in [
+        ("ankerse", "SE"),
+        ("ankerno", "NO"),
+        ("ankerfi", "FI"),
+        ("ankeris", "IS"),
+        ("ankerdk", "DK"),
+    ] {
+        let retailer = anker::get_retailer(code).unwrap();
+        assert_eq!(retailer.target_markets, Some(vec![country.into()]));
+        assert_eq!(retailer.storefront_website, legacy.storefront_website);
+        assert_eq!(retailer.shopify_shop, legacy.shopify_shop);
+        assert_eq!(
+            retailer.storefront_graphql_api,
+            legacy.storefront_graphql_api
+        );
+        assert_eq!(retailer.shipping_countries, legacy.shipping_countries);
+        assert_eq!(retailer.supported_locales.len(), 1);
+        assert_eq!(
+            retailer.supported_locales[0].country_region.as_deref(),
+            Some(country)
+        );
+        assert_eq!(retailer.supported_locales[0].language, "EN");
+    }
 }
