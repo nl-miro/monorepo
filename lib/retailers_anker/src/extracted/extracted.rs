@@ -1,4 +1,4 @@
-//! Extracted offer-details model owned by ankercom, copied one-to-one from `graphql::raw`.
+//! Extracted offer-details model shared by Anker storefronts.
 //! Converted from raw via `raw_to_extracted`; reshape here, not in raw.
 //! Monetary values use currency-aware integer minor units via `money::Money`;
 //! other numeric scalars retain their JSON representation. See fixtures/README.md.
@@ -41,7 +41,7 @@ pub struct Seo {
     pub title: Option<String>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Image {
     // #[serde(rename = "__typename")]
     // pub type_name: String,
@@ -56,6 +56,7 @@ pub struct Image {
 #[cfg(test)]
 mod contract_tests {
     use super::prelude::*;
+    use crate::graphql::raw;
     use serde_json::{Value, json};
     #[test]
     fn nested_fields_and_money_are_strict() {
@@ -71,17 +72,24 @@ mod contract_tests {
                 .as_object_mut()
                 .unwrap()
                 .insert("unmodeledField".into(), Value::Bool(true));
-            assert!(serde_json::from_value::<Product>(changed).is_err());
+            assert!(serde_json::from_value::<raw::Product>(changed).is_err());
         }
         let mut changed = product.clone();
         changed.as_object_mut().unwrap().remove("variants");
-        assert!(serde_json::from_value::<Product>(changed).is_err());
+        assert!(serde_json::from_value::<raw::Product>(changed).is_err());
         let mut changed = product;
         changed["priceRange"]["minVariantPrice"]["amount"] = json!(12.34);
-        assert!(serde_json::from_value::<Product>(changed).is_err());
+        assert!(serde_json::from_value::<raw::Product>(changed).is_err());
         let adjustment = json!({"__typename":"SellingPlanPercentagePriceAdjustment","adjustmentPercentage":12.5});
-        let typed: PriceAdjustmentValue = serde_json::from_value(adjustment.clone()).unwrap();
-        assert_eq!(serde_json::to_value(typed).unwrap(), adjustment);
+        let raw: raw::PriceAdjustmentValue = serde_json::from_value(adjustment).unwrap();
+        let typed = PriceAdjustmentValue::try_from(raw).unwrap();
+        let output = serde_json::to_value(typed).unwrap();
+        assert_eq!(
+            output,
+            json!({"__typename":"SellingPlanPercentagePriceAdjustment", "adjustment_percentage":12.5})
+        );
+        let decoded: PriceAdjustmentValue = serde_json::from_value(output.clone()).unwrap();
+        assert_eq!(serde_json::to_value(decoded).unwrap(), output);
     }
     #[test]
     fn historical_and_contextual_artifacts_remain_readable() {
@@ -90,13 +98,37 @@ mod contract_tests {
         ))
         .unwrap();
         let mut artifact = json!({"schema_version":1,"product":product,"pages":[]});
-        assert!(serde_json::from_value::<ExtractedOfferDetails>(artifact.clone()).is_ok());
+        assert!(
+            serde_json::from_value::<raw::RawOfferDetails>(artifact.clone())
+                .and_then(
+                    |raw| ExtractedOfferDetails::try_from(raw).map_err(serde::de::Error::custom)
+                )
+                .is_ok()
+        );
         artifact["schema_version"] = json!(2);
-        assert!(serde_json::from_value::<ExtractedOfferDetails>(artifact.clone()).is_err());
+        assert!(
+            serde_json::from_value::<raw::RawOfferDetails>(artifact.clone())
+                .and_then(
+                    |raw| ExtractedOfferDetails::try_from(raw).map_err(serde::de::Error::custom)
+                )
+                .is_err()
+        );
         artifact["context"] = json!({"country":"CA","language":"FR","currency":"CAD"});
-        assert!(serde_json::from_value::<ExtractedOfferDetails>(artifact.clone()).is_ok());
+        assert!(
+            serde_json::from_value::<raw::RawOfferDetails>(artifact.clone())
+                .and_then(
+                    |raw| ExtractedOfferDetails::try_from(raw).map_err(serde::de::Error::custom)
+                )
+                .is_ok()
+        );
         artifact["schema_version"] = json!(1);
-        assert!(serde_json::from_value::<ExtractedOfferDetails>(artifact).is_err());
+        assert!(
+            serde_json::from_value::<raw::RawOfferDetails>(artifact)
+                .and_then(
+                    |raw| ExtractedOfferDetails::try_from(raw).map_err(serde::de::Error::custom)
+                )
+                .is_err()
+        );
         //         let error: ProductResponse = serde_json::from_value(
         //             json!({"data":{"product":null},"errors":[{"message":"missing"}]}),
         //         )
@@ -104,9 +136,6 @@ mod contract_tests {
         //         assert!(error.data.unwrap().product.is_none());
     }
 }
-
-/// Source-backed metafield selection. Captured references are always null;
-/// reject new reference shapes until this retailer explicitly models them.
 
 #[cfg(test)]
 mod expanded_capture_tests {
@@ -118,11 +147,58 @@ mod expanded_capture_tests {
             "../ankercom/offer_details/v2/fixtures/expanded-product.json"
         ))
         .unwrap();
-        let typed: Product = serde_json::from_value(source.clone()).unwrap();
+        let raw: crate::graphql::raw::Product = serde_json::from_value(source.clone()).unwrap();
+        let typed = Product::try_from(raw).unwrap();
         let typed = serde_json::to_value(typed).unwrap();
-        assert_eq!(typed["totalInventory"], source["totalInventory"]);
-        assert_eq!(typed["metafields"], source["metafields"]);
-        assert_eq!(typed["_expandedReferences"], source["_expandedReferences"]);
+        assert_eq!(typed["total_inventory"], source["totalInventory"]);
+        assert_eq!(
+            typed["metafields"].as_array().unwrap().len(),
+            source["metafields"].as_array().unwrap().len()
+        );
+        let source_refs = source["_expandedReferences"].as_object().unwrap();
+        let output_refs = typed["_expandedReferences"].as_object().unwrap();
+        assert_eq!(output_refs.len(), source_refs.len());
+        for (id, source_ref) in source_refs {
+            assert_eq!(output_refs[id]["id"], source_ref["id"]);
+            assert_eq!(
+                output_refs[id]["metafields"].as_array().unwrap().len(),
+                source_ref["metafields"].as_array().unwrap().len()
+            );
+        }
+        let pairs = std::iter::once((&source["metafields"], &typed["metafields"])).chain(
+            source_refs.iter().map(|(id, source_ref)| {
+                (&source_ref["metafields"], &output_refs[id]["metafields"])
+            }),
+        );
+        for (source_fields, output_fields) in pairs {
+            for (source_field, output_field) in source_fields
+                .as_array()
+                .unwrap()
+                .iter()
+                .zip(output_fields.as_array().unwrap())
+            {
+                if source_field.is_null() {
+                    assert!(output_field.is_null());
+                    continue;
+                }
+                for field in [
+                    "id",
+                    "key",
+                    "namespace",
+                    "value",
+                    "description",
+                    "list",
+                    "reference",
+                    "references",
+                ] {
+                    assert_eq!(output_field[field], source_field[field], "{field}");
+                }
+                assert_eq!(output_field["type"], source_field["type"]);
+                assert!(output_field.get("__typename").is_none());
+            }
+        }
+        let decoded: Product = serde_json::from_value(typed.clone()).unwrap();
+        assert_eq!(serde_json::to_value(decoded).unwrap(), typed);
         assert!(
             typed["_expandedReferences"]
                 .as_object()

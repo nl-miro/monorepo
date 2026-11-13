@@ -1,9 +1,8 @@
 use crate::graphql::raw::RawOfferDetails;
 use serde_json::{Value, json};
 
-/// Extraction is currently a one-to-one copy of raw, so it must be lossless.
 #[test]
-fn extraction_preserves_every_raw_field() {
+fn extraction_preserves_grouped_data_and_excludes_raw_metadata() {
     for product in [include_str!(
         "../ugreenca/offer_details/v2/fixtures/product.json"
     )] {
@@ -18,14 +17,163 @@ fn extraction_preserves_every_raw_field() {
                 "pages":[],
             }),
         ] {
-            let raw: RawOfferDetails = serde_json::from_value(source).unwrap();
-            let expected = serde_json::to_value(&raw).unwrap();
+            let raw: RawOfferDetails = serde_json::from_value(source.clone()).unwrap();
             let extracted = super::prelude::ExtractedOfferDetails::try_from(raw).unwrap();
             let output = serde_json::to_value(&extracted).unwrap();
-            assert_eq!(output, expected);
+            assert_eq!(
+                output["product"]["identifiers"],
+                json!({
+                    "id":"gid://shopify/Product/9351033487648", "handle":"ugreen-travel-charging-bundle"
+                })
+            );
+            assert_eq!(
+                output["product"]["content"]["title"],
+                "UGREEN Travel Charging Bundle"
+            );
+            assert_eq!(
+                output["product"]["variants"][0]["pricing"],
+                json!({
+                    "Discounted":[{"amount":19598,"currency":"CAD"},{"amount":27997,"currency":"CAD"}]
+                })
+            );
+            assert_eq!(output["acquired_at"], source["acquired_at"]);
+            assert_eq!(output["context"], source["context"]);
+            assert_eq!(output["product"]["updated_at"], "2026-10-06T19:34:11Z");
+            assert_eq!(output["collections"].as_array().unwrap().len(), 4);
+            assert_eq!(output["images"].as_array().unwrap().len(), 2);
+            assert!(output["media"].is_array());
+            for key in ["schema_version", "pages"] {
+                assert!(output.get(key).is_none(), "{key}");
+            }
+            for key in [
+                "__typename",
+                "price_range",
+                "compare_at_price_range",
+                "variants_count",
+            ] {
+                assert!(output["product"].get(key).is_none(), "{key}");
+            }
+            assert!(output["product"]["variants"].is_array());
             let decoded: super::prelude::ExtractedOfferDetails =
                 serde_json::from_value(output.clone()).unwrap();
             assert_eq!(serde_json::to_value(decoded).unwrap(), output);
+        }
+    }
+}
+
+fn image_fixture() -> RawOfferDetails {
+    let product: Value = serde_json::from_str(include_str!(
+        "../ugreenca/offer_details/v2/fixtures/product.json"
+    ))
+    .unwrap();
+    serde_json::from_value(json!({"schema_version":1,"product":product,"pages":[]})).unwrap()
+}
+
+#[test]
+fn root_images_are_unique_and_references_resolve_once() {
+    let mut raw = image_fixture();
+    // Include a duplicate within the gallery as well as the existing variant/featured copies.
+    raw.product
+        .images
+        .edges
+        .push(raw.product.images.edges[0].clone());
+    let extracted = super::prelude::ExtractedOfferDetails::try_from(raw).unwrap();
+    assert_eq!(extracted.images.len(), 2);
+    for id in extracted
+        .product
+        .content
+        .images
+        .iter()
+        .chain(extracted.product.content.featured_image.iter())
+        .chain(
+            extracted
+                .product
+                .variants
+                .iter()
+                .filter_map(|variant| variant.image.as_ref()),
+        )
+    {
+        assert_eq!(
+            extracted
+                .images
+                .iter()
+                .filter(|image| image.id.as_ref() == Some(id))
+                .count(),
+            1
+        );
+    }
+}
+
+#[test]
+fn root_images_keep_gallery_then_variant_then_featured_order() {
+    let mut raw = image_fixture();
+    let gallery_ids: Vec<_> = raw
+        .product
+        .images
+        .edges
+        .iter()
+        .map(|edge| edge.node.id.clone().unwrap())
+        .collect();
+    let mut variant_image = raw.product.images.edges[0].node.clone();
+    variant_image.id = Some("variant-only".into());
+    raw.product.variants.edges[0].node.image = Some(variant_image.clone());
+    let mut featured_image = variant_image;
+    featured_image.id = Some("featured-only".into());
+    raw.product.featured_image = Some(featured_image);
+    let extracted = super::prelude::ExtractedOfferDetails::try_from(raw).unwrap();
+    let expected: Vec<_> = gallery_ids
+        .into_iter()
+        .chain(["variant-only".into(), "featured-only".into()])
+        .collect();
+    assert_eq!(
+        extracted
+            .images
+            .iter()
+            .map(|image| image.id.clone().unwrap())
+            .collect::<Vec<_>>(),
+        expected
+    );
+    assert_eq!(
+        extracted.product.variants[0].image.as_deref(),
+        Some("variant-only")
+    );
+    assert_eq!(
+        extracted.product.content.featured_image.as_deref(),
+        Some("featured-only")
+    );
+}
+
+#[test]
+fn conflicting_root_images_report_the_id() {
+    let base = image_fixture();
+    for field in ["url", "alt_text", "width", "height", "thumbhash"] {
+        for location in ["gallery", "variant", "featured"] {
+            let mut raw = base.clone();
+            let mut image = raw.product.images.edges[0].node.clone();
+            let id = image.id.clone().unwrap();
+            match field {
+                "url" => image.url.push_str("&changed=true"),
+                "alt_text" => image.alt_text = Some("changed".into()),
+                "width" => image.width = Some(1),
+                "height" => image.height = Some(1),
+                "thumbhash" => image.thumbhash = Some("changed".into()),
+                _ => unreachable!(),
+            }
+            match location {
+                "gallery" => {
+                    let mut edge = raw.product.images.edges[0].clone();
+                    edge.node = image;
+                    raw.product.images.edges.push(edge);
+                }
+                "variant" => raw.product.variants.edges[0].node.image = Some(image),
+                "featured" => raw.product.featured_image = Some(image),
+                _ => unreachable!(),
+            }
+            let error = super::prelude::ExtractedOfferDetails::try_from(raw).unwrap_err();
+            assert!(
+                error.contains("conflicting root image") && error.contains(&id),
+                "{field} {location}: {error}"
+            );
         }
     }
 }

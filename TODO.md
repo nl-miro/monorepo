@@ -14,6 +14,9 @@
 
 ### IN PROGRESS
 
+- [~] Deduplicate extracted image IDs across all three brands; reject conflicting records.
+- [~] Repair extraction contract tests and verify library CI.
+
 
 
 

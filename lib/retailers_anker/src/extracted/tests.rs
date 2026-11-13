@@ -1,9 +1,9 @@
 use crate::graphql::raw::RawOfferDetails;
 use serde_json::{Value, json};
 
-/// Extraction is currently a one-to-one copy of raw, so it must be lossless.
+/// Extraction reshapes raw data while retaining modeled product facts.
 #[test]
-fn extraction_preserves_every_raw_field() {
+fn extraction_preserves_product_facts_and_round_trips() {
     for product in [
         include_str!("../ankercom/offer_details/v2/fixtures/product.json"),
         include_str!("../ankercom/offer_details/v2/fixtures/expanded-product.json"),
@@ -23,7 +23,39 @@ fn extraction_preserves_every_raw_field() {
             let expected = serde_json::to_value(&raw).unwrap();
             let extracted = super::prelude::ExtractedOfferDetails::try_from(raw).unwrap();
             let output = serde_json::to_value(&extracted).unwrap();
-            assert_eq!(output, expected);
+            assert_eq!(
+                output["product"]["identifiers"]["id"],
+                expected["product"]["id"]
+            );
+            assert_eq!(
+                output["product"]["content"]["title"],
+                expected["product"]["title"]
+            );
+            assert_eq!(
+                output["product"]["total_inventory"],
+                expected["product"]["totalInventory"]
+            );
+            assert_eq!(output["context"], expected["context"]);
+            assert_eq!(
+                output["product"]["variants"].as_array().unwrap().len(),
+                expected["product"]["variants"]["edges"]
+                    .as_array()
+                    .unwrap()
+                    .len()
+            );
+            assert_eq!(
+                output["collections"].as_array().unwrap().len(),
+                expected["product"]["collections"]["edges"]
+                    .as_array()
+                    .unwrap()
+                    .len()
+            );
+            for excluded in ["schema_version", "pages"] {
+                assert!(output.get(excluded).is_none());
+            }
+            for excluded in ["__typename", "price_range", "compare_at_price_range"] {
+                assert!(output["product"].get(excluded).is_none());
+            }
             let decoded: super::prelude::ExtractedOfferDetails =
                 serde_json::from_value(output.clone()).unwrap();
             assert_eq!(serde_json::to_value(decoded).unwrap(), output);
@@ -403,4 +435,93 @@ fn collection_products_are_an_ordered_list_or_empty() {
             serde_json::to_value(super::prelude::Collection::try_from(raw).unwrap()).unwrap();
         assert_eq!(output["products"], expected);
     }
+}
+
+#[test]
+fn root_images_are_unique_ordered_and_references_resolve() {
+    let product: Value = serde_json::from_str(include_str!(
+        "../ankercom/offer_details/v2/fixtures/product.json"
+    ))
+    .unwrap();
+    let mut raw: RawOfferDetails = serde_json::from_value(json!({
+        "schema_version": 1, "product": product, "pages": []
+    }))
+    .unwrap();
+    let original = raw.product.images.edges[0].clone();
+    raw.product.images.edges = vec![original.clone(), original.clone()];
+    let mut variant_image = original.node.clone();
+    variant_image.id = Some("variant-only".into());
+    raw.product.variants.edges[0].node.image = Some(variant_image.clone());
+    let mut featured_image = original.node.clone();
+    featured_image.id = Some("featured-only".into());
+    raw.product.featured_image = Some(featured_image);
+    let extracted = super::prelude::ExtractedOfferDetails::try_from(raw.clone()).unwrap();
+    let ids: Vec<_> = extracted
+        .images
+        .iter()
+        .map(|image| image.id.as_deref().unwrap())
+        .collect();
+    assert_eq!(
+        ids,
+        [
+            original.node.id.as_deref().unwrap(),
+            "variant-only",
+            "featured-only"
+        ]
+    );
+    for id in extracted
+        .product
+        .content
+        .images
+        .iter()
+        .chain(extracted.product.content.featured_image.iter())
+        .chain(
+            extracted
+                .product
+                .variants
+                .iter()
+                .filter_map(|variant| variant.image.as_ref()),
+        )
+    {
+        assert_eq!(
+            extracted
+                .images
+                .iter()
+                .filter(|image| image.id.as_ref() == Some(id))
+                .count(),
+            1
+        );
+    }
+    // The same image in product, variant and featured positions is one root record.
+    raw.product.variants.edges[0].node.image = Some(original.node.clone());
+    raw.product.featured_image = Some(original.node.clone());
+    let extracted = super::prelude::ExtractedOfferDetails::try_from(raw.clone()).unwrap();
+    assert_eq!(extracted.images.len(), 1);
+    // Missing acquisition time remains supported.
+    assert!(extracted.acquired_at.is_none());
+    for location in ["root", "variant", "featured"] {
+        let mut changed = raw.clone();
+        let image = match location {
+            "root" => &mut changed.product.images.edges[1].node,
+            "variant" => changed.product.variants.edges[0]
+                .node
+                .image
+                .as_mut()
+                .unwrap(),
+            _ => changed.product.featured_image.as_mut().unwrap(),
+        };
+        image.alt_text = Some("conflicting observation".into());
+        let error = super::prelude::ExtractedOfferDetails::try_from(changed).unwrap_err();
+        assert!(
+            error.contains(original.node.id.as_deref().unwrap()),
+            "{error}"
+        );
+        assert!(error.contains("conflicting image"), "{error}");
+    }
+    raw.product.images.edges[0].node.id = None;
+    assert!(
+        super::prelude::ExtractedOfferDetails::try_from(raw)
+            .unwrap_err()
+            .contains("missing id")
+    );
 }

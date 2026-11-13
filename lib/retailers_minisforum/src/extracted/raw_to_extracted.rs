@@ -35,19 +35,33 @@ impl TryFrom<raw::RawOfferDetails> for ExtractedOfferDetails {
             .iter()
             .map(|edge| Collection::try_from(edge.node.clone()))
             .collect::<Result<Vec<_>, String>>()?;
-        let mut images = product
+        let mut images: Vec<Image> = Vec::new();
+        let mut image_indices = std::collections::HashMap::new();
+        for image in product
             .images
             .edges
             .iter()
-            .map(|edge| Image::try_from(edge.node.clone()))
-            .collect::<Result<Vec<_>, String>>()?;
-        for edge in &product.variants.edges {
-            if let Some(image) = &edge.node.image {
-                images.push(Image::try_from(image.clone())?);
+            .map(|edge| &edge.node)
+            .chain(
+                product
+                    .variants
+                    .edges
+                    .iter()
+                    .filter_map(|edge| edge.node.image.as_ref()),
+            )
+            .chain(product.featured_image.iter())
+        {
+            let image = Image::try_from(image.clone())?;
+            if let Some(id) = &image.id {
+                if let Some(&index) = image_indices.get(id) {
+                    if images[index] != image {
+                        return Err(format!("conflicting image records for id {id}"));
+                    }
+                    continue;
+                }
+                image_indices.insert(id.clone(), images.len());
             }
-        }
-        if let Some(image) = &product.featured_image {
-            images.push(Image::try_from(image.clone())?);
+            images.push(image);
         }
         let media = product
             .media

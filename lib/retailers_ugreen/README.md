@@ -164,6 +164,11 @@ are in `src/extracted/extracted.rs`; explicit per-type `TryFrom` implementations
 are in `src/extracted/raw_to_extracted.rs`. These conversions use direct field
 assignments and inline ordered connection traversal, without conversion helpers
 or JSON round trips. The facade only parses raw, converts, and serializes.
-Acquisition time is required, optional extracted fields serialize as null, and
+Acquisition time is optional, optional extracted fields serialize as null, and
 all extracted connections are vectors. GraphQL page evidence, explicit type-name
 fields, and product price ranges are excluded. See ADR 66.
+
+Root images are unique by source ID, in first-seen gallery, variant, then featured
+image order. Identical copies share one root entry; conflicting extracted image
+fields for the same ID fail extraction with that ID in the error. Product and
+variant image references resolve against this root list.

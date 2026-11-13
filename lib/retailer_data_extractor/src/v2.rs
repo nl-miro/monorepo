@@ -1,9 +1,8 @@
 //! Typed extraction of persisted initial-fill artifacts.
 use shared::retailer::RetailerCode;
 
-/// Parse with the retailer-owned v2 source model and serialize the complete
-/// artifact, retaining merged product data, market context and page evidence.
-/// This stage does not normalize or structuralize the product.
+/// Parse the retailer-owned raw model and serialize its grouped extracted model.
+/// Market context is retained; recorded pages remain in the raw artifact.
 pub fn extract_v2_for(code: RetailerCode, json: &str) -> Result<String, String> {
     if retailers_anker::initial_fill::integration(code).is_some() {
         let artifact: retailers_anker::graphql::raw::RawOfferDetails =
@@ -34,7 +33,7 @@ mod tests {
     // Product fixtures come from each published retailer crate v0.1.0,
     // src/<retailer>/offer_details/v2/fixtures/product.json.
     #[test]
-    fn parses_each_family_and_preserves_market_and_page_evidence() {
+    fn parses_each_family_and_preserves_market_context() {
         for (code, product) in [
             (
                 RetailerCode::MinisForumAu,
@@ -49,14 +48,13 @@ mod tests {
             let source = json!({"schema_version": 1, "acquired_at":"2026-11-12T00:00:00Z", "product": product, "pages": []});
             let output: Value =
                 serde_json::from_str(&extract_v2_for(code, &source.to_string()).unwrap()).unwrap();
-            // Extraction is a one-to-one copy of the raw artifact.
-            assert_eq!(output, source);
+            assert_extracted_contract(&output, &source);
             let mut source = source;
             source["schema_version"] = json!(2);
             source["context"] = json!({"country":"AU","language":"EN","currency":"AUD"});
             let output: Value =
                 serde_json::from_str(&extract_v2_for(code, &source.to_string()).unwrap()).unwrap();
-            assert_eq!(output, source);
+            assert_extracted_contract(&output, &source);
             source["product"]["unexpected_field"] = json!(true);
             assert!(extract_v2_for(code, &source.to_string()).is_err());
         }
@@ -145,9 +143,41 @@ mod anker_tests {
             count += 1;
             let output: Value =
                 serde_json::from_str(&extract_v2_for(code, &source.to_string()).unwrap()).unwrap();
-            // Extraction is a one-to-one copy of the raw artifact.
-            assert_eq!(output, source, "{code:?}");
+            assert_extracted_contract(&output, &source);
         }
         assert_eq!(count, 17);
+    }
+}
+
+#[cfg(test)]
+pub(crate) fn assert_extracted_contract(output: &serde_json::Value, source: &serde_json::Value) {
+    assert_eq!(
+        output["product"]["identifiers"]["id"],
+        source["product"]["id"]
+    );
+    assert_eq!(
+        output["product"]["content"]["title"],
+        source["product"]["title"]
+    );
+    assert_eq!(output["context"], source["context"]);
+    assert_eq!(output["acquired_at"], source["acquired_at"]);
+    assert!(output.get("pages").is_none());
+    assert!(output.get("schema_version").is_none());
+    assert!(output["product"].get("price_range").is_none());
+    assert_eq!(
+        output["product"]["variants"].as_array().unwrap().len(),
+        source["product"]["variants"]["edges"]
+            .as_array()
+            .unwrap()
+            .len()
+    );
+    let images = output["images"].as_array().unwrap();
+    let ids: std::collections::HashSet<_> = images
+        .iter()
+        .map(|image| image["id"].as_str().unwrap())
+        .collect();
+    assert_eq!(images.len(), ids.len());
+    for id in output["product"]["content"]["images"].as_array().unwrap() {
+        assert!(ids.contains(id.as_str().unwrap()));
     }
 }

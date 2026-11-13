@@ -98,3 +98,8 @@ or JSON round trips. The facade only parses raw, converts, and serializes.
 Acquisition time is required, optional extracted fields serialize as null, and
 all extracted connections are vectors. GraphQL page evidence, explicit type-name
 fields, and product price ranges are excluded. See ADR 66.
+
+Root extracted images are unique by image ID, in first-seen order: gallery,
+variants, then featured image. Repeated IDs with identical extracted fields
+share one record; conflicting fields fail extraction with the image ID. Product
+and variant image references retain their source IDs and ordering.

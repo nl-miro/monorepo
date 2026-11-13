@@ -41,19 +41,35 @@ impl TryFrom<raw::RawOfferDetails> for ExtractedOfferDetails {
             .iter()
             .map(|edge| Collection::try_from(edge.node.clone()))
             .collect::<Result<Vec<_>, String>>()?;
-        let mut images = product
+        let mut images: Vec<Image> = Vec::new();
+        let mut image_indices = BTreeMap::new();
+        for source in product
             .images
             .edges
             .iter()
-            .map(|edge| Image::try_from(edge.node.clone()))
-            .collect::<Result<Vec<_>, String>>()?;
-        for edge in &product.variants.edges {
-            if let Some(image) = &edge.node.image {
-                images.push(Image::try_from(image.clone())?);
+            .map(|edge| &edge.node)
+            .chain(
+                product
+                    .variants
+                    .edges
+                    .iter()
+                    .filter_map(|edge| edge.node.image.as_ref()),
+            )
+            .chain(product.featured_image.iter())
+        {
+            let image = Image::try_from(source.clone())?;
+            let id = image
+                .id
+                .as_ref()
+                .ok_or_else(|| "root image is missing id".to_string())?;
+            if let Some(&index) = image_indices.get(id) {
+                if images[index] != image {
+                    return Err(format!("conflicting image observations for {id}"));
+                }
+            } else {
+                image_indices.insert(id.clone(), images.len());
+                images.push(image);
             }
-        }
-        if let Some(image) = &product.featured_image {
-            images.push(Image::try_from(image.clone())?);
         }
         let media = product
             .media

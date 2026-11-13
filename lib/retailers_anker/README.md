@@ -153,27 +153,21 @@ All 17 supported GraphQL Anker storefronts use `extracted::ExtractedOfferDetails
 AU/CA compatibility exports and the other storefront extraction modules re-export
 that same model. The former per-storefront converters are removed.
 
-The layout retains product identifiers/taxonomy/content and variant
-identifiers/flags/specials/pricing groups, with variants, collections and images
-at the artifact root. Every modeled raw field is retained, including schema
-version, pages, media, GraphQL tags, inventory, metafields, price ranges and count
-metadata. Root connection metadata retains cursors in node order and page info;
-nested connections remain complete. Image references carry a zero-based root
-array index and the optional source ID. Repeated or conflicting images are kept
-as separate observations, and media's nested images remain intact.
+The layout groups product identifiers, taxonomy and content, with variants
+inside the product and collections, images and media at the artifact root.
+Product and variant image references use source IDs. Root images are unique by
+ID, in first-observation order: product images, variant images, then featured
+image. Identical repeated observations are skipped; conflicting extracted
+fields for the same ID fail conversion with that ID in the error. Collection
+and media images remain nested and are outside this root-image deduplication.
 
-This is an unfiltered starting point for later cleanup: money amounts and dates
-remain source strings, acquisition time remains optional, and extraction does
-not require exact variant counts, complete pagination or image IDs. Raw parsing
-still validates its source contract. Context is preserved as recorded at the
-artifact root; request/response contexts remain in pages without inference.
+Money uses exact currency minor units and timestamps are parsed as UTC instants.
+Acquisition time remains optional. Raw parsing validates its source contract;
+extraction checks supplied variant counts. Context is preserved as recorded.
+GraphQL request/response pages remain in the raw artifact, not extracted output.
 
-The AU/CA output intentionally changes to this complete shared representation.
-Other Anker storefronts now return the grouped extracted representation rather
-than raw JSON. Minisforum, Ugreen and HTML v1 behavior are unchanged.
-
-Run `make fmt` and `make ci`. Extracted fixture tests rebuild the source product
-from grouped output to check field preservation across all storefront fixtures.
+Run `make fmt` and `make ci`. Extracted tests cover field mapping, raw validation,
+extracted serialization round trips, pricing, and unique image references.
 
 ## V2 conversion ownership
 
@@ -182,12 +176,13 @@ are in `src/extracted/extracted.rs`; explicit per-type `TryFrom` implementations
 are in `src/extracted/raw_to_extracted.rs`. These conversions use direct field
 assignments and inline ordered connection traversal, without conversion helpers
 or JSON round trips. The facade only parses raw, converts, and serializes.
-Acquisition time is required, optional extracted fields serialize as null, and
+Acquisition time is optional, optional extracted fields serialize as null, and
 all extracted connections are vectors. GraphQL page evidence, explicit type-name
 fields, and product price ranges are excluded. See ADR 66.
 
 The extracted artifact owns root `collections`, `images`, and `media` vectors.
 The product stores their ordered IDs (Anker collection IDs remain in taxonomy).
 Moved image and media entries must have IDs; conversion returns an error if an
-ID is absent or null. Anker retains its existing index references for featured,
-collection, and variant images, and requires IDs on all root image records.
+ID is absent or null. Anker uses ID references for featured
+and variant images, preserves nested collection images, and requires IDs on all
+root image records.

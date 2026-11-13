@@ -462,12 +462,6 @@ mod migrated_wip_tests {
         let source = serde_json::json!({"schema_version":1,"acquired_at":"2026-11-11T00:00:00Z","product":product,"pages":[{"request":{"query":"query Test { product { id } }","operationName":"Test","variables":{}},"response":{"extensions":{"context":{"country":"CA","language":"EN"}}}}]});
         let result: serde_json::Value =
             serde_json::from_str(&extract_v2_for(code, &source.to_string()).unwrap()).unwrap();
-        // Extraction is a one-to-one copy of the raw artifact, recorded pages included.
-        let raw = serde_json::to_value(
-            serde_json::from_value::<retailers_anker::graphql::raw::RawOfferDetails>(source)
-                .unwrap(),
-        )
-        .unwrap();
-        assert_eq!(result, raw);
+        crate::v2::assert_extracted_contract(&result, &source);
     }
 }

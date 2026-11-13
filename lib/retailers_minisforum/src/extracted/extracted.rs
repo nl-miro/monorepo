@@ -1,4 +1,4 @@
-//! Extracted offer-details model owned by minisforumau, copied one-to-one from `graphql::raw`.
+//! Extracted Minisforum offer-details model converted from `graphql::raw`.
 //! Converted from raw via `raw_to_extracted`; reshape here, not in raw.
 //! Monetary values use currency-aware integer minor units via `money::Money`;
 //! other numeric scalars retain their JSON representation. See fixtures/README.md.
@@ -41,7 +41,7 @@ pub struct Seo {
     pub title: Option<String>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Image {
     // #[serde(rename = "__typename")]
     // pub type_name: String,
@@ -56,6 +56,7 @@ pub struct Image {
 #[cfg(test)]
 mod contract_tests {
     use super::prelude::*;
+    use crate::graphql::raw;
     use serde_json::{Value, json};
     #[test]
     fn nested_fields_and_money_are_strict() {
@@ -71,17 +72,24 @@ mod contract_tests {
                 .as_object_mut()
                 .unwrap()
                 .insert("unmodeledField".into(), Value::Bool(true));
-            assert!(serde_json::from_value::<Product>(changed).is_err());
+            assert!(serde_json::from_value::<raw::Product>(changed).is_err());
         }
         let mut changed = product.clone();
         changed.as_object_mut().unwrap().remove("variants");
-        assert!(serde_json::from_value::<Product>(changed).is_err());
+        assert!(serde_json::from_value::<raw::Product>(changed).is_err());
         let mut changed = product;
         changed["priceRange"]["minVariantPrice"]["amount"] = json!(12.34);
-        assert!(serde_json::from_value::<Product>(changed).is_err());
+        assert!(serde_json::from_value::<raw::Product>(changed).is_err());
         let adjustment = json!({"__typename":"SellingPlanPercentagePriceAdjustment","adjustmentPercentage":12.5});
-        let typed: PriceAdjustmentValue = serde_json::from_value(adjustment.clone()).unwrap();
-        assert_eq!(serde_json::to_value(typed).unwrap(), adjustment);
+        let raw: raw::PriceAdjustmentValue = serde_json::from_value(adjustment).unwrap();
+        let typed = PriceAdjustmentValue::try_from(raw).unwrap();
+        let output = serde_json::to_value(typed).unwrap();
+        assert_eq!(
+            output,
+            json!({"__typename":"SellingPlanPercentagePriceAdjustment","adjustment_percentage":12.5})
+        );
+        let decoded: PriceAdjustmentValue = serde_json::from_value(output.clone()).unwrap();
+        assert_eq!(serde_json::to_value(decoded).unwrap(), output);
     }
     #[test]
     fn historical_and_contextual_artifacts_remain_readable() {
@@ -90,13 +98,25 @@ mod contract_tests {
         ))
         .unwrap();
         let mut artifact = json!({"schema_version":1,"product":product,"pages":[]});
-        assert!(serde_json::from_value::<ExtractedOfferDetails>(artifact.clone()).is_ok());
+        assert!(
+            serde_json::from_value::<raw::RawOfferDetails>(artifact.clone())
+                .and_then(
+                    |raw| ExtractedOfferDetails::try_from(raw).map_err(serde::de::Error::custom)
+                )
+                .is_ok()
+        );
         artifact["schema_version"] = json!(2);
-        assert!(serde_json::from_value::<ExtractedOfferDetails>(artifact.clone()).is_err());
+        assert!(serde_json::from_value::<raw::RawOfferDetails>(artifact.clone()).is_err());
         artifact["context"] = json!({"country":"CA","language":"FR","currency":"CAD"});
-        assert!(serde_json::from_value::<ExtractedOfferDetails>(artifact.clone()).is_ok());
+        assert!(
+            serde_json::from_value::<raw::RawOfferDetails>(artifact.clone())
+                .and_then(
+                    |raw| ExtractedOfferDetails::try_from(raw).map_err(serde::de::Error::custom)
+                )
+                .is_ok()
+        );
         artifact["schema_version"] = json!(1);
-        assert!(serde_json::from_value::<ExtractedOfferDetails>(artifact).is_err());
+        assert!(serde_json::from_value::<raw::RawOfferDetails>(artifact).is_err());
         //         let error: ProductResponse = serde_json::from_value(
         //             json!({"data":{"product":null},"errors":[{"message":"missing"}]}),
         //         )
