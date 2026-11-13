@@ -45,7 +45,7 @@ mod tests {
             ),
         ] {
             let product: Value = serde_json::from_str(product).unwrap();
-            let source = json!({"schema_version": 1, "acquired_at":"2026-11-12T00:00:00Z", "product": product, "pages": []});
+            let source = json!({"schema_version":2,"context":{"country":"CA","language":"FR","currency":"CAD"}, "acquired_at":"2026-11-12T00:00:00Z", "product": product, "pages": []});
             let output: Value =
                 serde_json::from_str(&extract_v2_for(code, &source.to_string()).unwrap()).unwrap();
             assert_extracted_contract(&output, &source);
@@ -61,43 +61,47 @@ mod tests {
     }
 
     #[test]
-    fn minisforum_and_ugreen_preserve_optional_acquisition_time() {
-        for code in RetailerCode::ALL {
-            let product = if retailers_minisforum::initial_fill::integration(code).is_some() {
-                include_str!("../tests/fixtures/v2/minisforumau.json")
-            } else if retailers_ugreen::initial_fill::integration(code).is_some() {
-                include_str!("../tests/fixtures/v2/ugreenca.json")
-            } else {
-                continue;
-            };
-            let product: Value = serde_json::from_str(product).unwrap();
-            for version in [1, 2] {
-                let mut source = json!({"schema_version":version,"product":product,"pages":[]});
-                if version == 2 {
-                    source["context"] = json!({"country":"CA","language":"EN","currency":"CAD"});
-                }
-                for timestamp in [
-                    None,
-                    Some(Value::Null),
-                    Some(json!("2026-11-12T09:10:11.123Z")),
-                ] {
-                    source.as_object_mut().unwrap().remove("acquired_at");
-                    if let Some(timestamp) = timestamp {
-                        source["acquired_at"] = timestamp;
+    fn all_brands_require_acquisition_time_and_context() {
+        for (code, fixture) in [
+            (
+                RetailerCode::AnkerAu,
+                include_str!("../tests/fixtures/v2/ankerau.json"),
+            ),
+            (
+                RetailerCode::MinisForumAu,
+                include_str!("../tests/fixtures/v2/minisforumau.json"),
+            ),
+            (
+                RetailerCode::UgreenCa,
+                include_str!("../tests/fixtures/v2/ugreenca.json"),
+            ),
+        ] {
+            let product: Value = serde_json::from_str(fixture).unwrap();
+            let source = json!({"schema_version":2,"acquired_at":"2026-11-12T09:10:11Z",
+                "context":{"country":"CA","language":"EN","currency":"CAD"},"product":product,"pages":[]});
+            assert!(extract_v2_for(code, &source.to_string()).is_ok());
+            for field in ["acquired_at", "context"] {
+                for null in [false, true] {
+                    let mut changed = source.clone();
+                    if null {
+                        changed[field] = Value::Null;
+                    } else {
+                        changed.as_object_mut().unwrap().remove(field);
                     }
-                    let output: Value =
-                        serde_json::from_str(&extract_v2_for(code, &source.to_string()).unwrap())
-                            .unwrap();
-                    assert_eq!(output["acquired_at"], source["acquired_at"], "{code:?}");
-                    if source["acquired_at"].is_null() {
-                        assert_eq!(output.get("acquired_at"), Some(&Value::Null));
+                    if field == "context" {
+                        changed["schema_version"] = json!(1);
                     }
+                    assert!(
+                        extract_v2_for(code, &changed.to_string())
+                            .unwrap_err()
+                            .contains(field)
+                    );
                 }
-                source["acquired_at"] = json!(123);
-                assert!(extract_v2_for(code, &source.to_string()).is_err());
-                source["acquired_at"] = json!("2026-11-12T09:10:11Z");
-                source["unknown_metadata"] = json!(true);
-                assert!(extract_v2_for(code, &source.to_string()).is_err());
+            }
+            for value in [json!(123), json!("yesterday")] {
+                let mut changed = source.clone();
+                changed["acquired_at"] = value;
+                assert!(extract_v2_for(code, &changed.to_string()).is_err());
             }
         }
     }
@@ -134,7 +138,7 @@ mod anker_tests {
             "../../retailers_anker/src/ankerau/offer_details/v2/fixtures/product.json"
         ))
         .unwrap();
-        let source = json!({"schema_version":1,"acquired_at":"2026-11-12T00:00:00Z","product":product,"pages":[]});
+        let source = json!({"schema_version":2,"context":{"country":"CA","language":"FR","currency":"CAD"},"acquired_at":"2026-11-12T00:00:00Z","product":product,"pages":[]});
         let mut count = 0;
         for code in RetailerCode::ALL {
             if retailers_anker::initial_fill::integration(code).is_none() {

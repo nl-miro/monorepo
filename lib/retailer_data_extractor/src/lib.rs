@@ -419,7 +419,7 @@ mod migrated_wip_tests {
         assert!(!initial_fill_process(code).steps.is_empty());
         let product: serde_json::Value =
             serde_json::from_str(include_str!("../tests/fixtures/v2/ankerau.json")).unwrap();
-        let artifact = serde_json::json!({"schema_version":1,"acquired_at":"2026-11-10T00:00:00Z","product":product,"pages":[]});
+        let artifact = serde_json::json!({"schema_version":2,"context":{"country":"CA","language":"FR","currency":"CAD"},"acquired_at":"2026-11-10T00:00:00Z","product":product,"pages":[]});
         assert!(extract_v2_for(code, &artifact.to_string()).is_ok());
     }
 
@@ -459,7 +459,7 @@ mod migrated_wip_tests {
             "../../retailers_anker/src/ankerca/offer_details/v2/fixtures/product.json"
         ))
         .unwrap();
-        let source = serde_json::json!({"schema_version":1,"acquired_at":"2026-11-11T00:00:00Z","product":product,"pages":[{"request":{"query":"query Test { product { id } }","operationName":"Test","variables":{}},"response":{"extensions":{"context":{"country":"CA","language":"EN"}}}}]});
+        let source = serde_json::json!({"schema_version":2,"context":{"country":"CA","language":"EN","currency":"CAD"},"acquired_at":"2026-11-11T00:00:00Z","product":product,"pages":[{"request":{"query":"query Test { product { id } }","operationName":"Test","variables":{}},"response":{"extensions":{"context":{"country":"CA","language":"EN"}}}}]});
         let result: serde_json::Value =
             serde_json::from_str(&extract_v2_for(code, &source.to_string()).unwrap()).unwrap();
         crate::v2::assert_extracted_contract(&result, &source);

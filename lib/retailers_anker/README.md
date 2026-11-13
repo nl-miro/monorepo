@@ -162,7 +162,7 @@ fields for the same ID fail conversion with that ID in the error. Collection
 and media images remain nested and are outside this root-image deduplication.
 
 Money uses exact currency minor units and timestamps are parsed as UTC instants.
-Acquisition time remains optional. Raw parsing validates its source contract;
+Acquisition time and market context are required. Raw parsing validates its source contract;
 extraction checks supplied variant counts. Context is preserved as recorded.
 GraphQL request/response pages remain in the raw artifact, not extracted output.
 
@@ -186,3 +186,20 @@ Moved image and media entries must have IDs; conversion returns an error if an
 ID is absent or null. Anker uses ID references for featured
 and variant images, preserves nested collection images, and requires IDs on all
 root image records.
+
+V2 extraction requires `acquired_at` and a resolved `context`. Acquisition time
+must be a valid RFC 3339 instant. Explicit context is preserved. If raw context
+is absent, country/language are recovered from recorded response
+`extensions.context` and currency from variant prices and product price ranges,
+including comparison prices. Missing, malformed or conflicting evidence fails.
+Raw dumps are unchanged; see [ADR 67](../../docs/adr/0067-anker-context-recovery.md).
+
+Fixed checkout charges use `CheckoutChargeValue::Money(money::Money)`, converted
+through the same currency/precision checks as other prices. Extracted JSON uses
+`{"__typename":"Money","amount":7999,"currency":"USD"}` for USD 79.99.
+Percentage charges are unchanged. Raw GraphQL retains its `MoneyV2` source shape;
+older extracted checkout values must be regenerated from raw artifacts.
+
+Variant extraction rejects a compare-at price in a different currency, including
+when the current price is zero. Errors identify the variant and both currencies.
+Same-currency comparisons at or below the current price are omitted as before.

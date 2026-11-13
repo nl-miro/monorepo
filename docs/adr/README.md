@@ -103,3 +103,5 @@ Decision, Consequences) and give it the next number.
 - [65. Shared complete Anker extraction](0065-shared-complete-anker-extraction.md)
 
 | [66](0066-explicit-raw-to-extracted-conversions.md) | Explicit raw-to-extracted conversions | Accepted; supersedes ADR 65 field preservation |
+
+- [67: Recover Anker extraction context from recorded evidence](0067-anker-context-recovery.md)

@@ -95,7 +95,7 @@ are in `src/extracted/extracted.rs`; explicit per-type `TryFrom` implementations
 are in `src/extracted/raw_to_extracted.rs`. These conversions use direct field
 assignments and inline ordered connection traversal, without conversion helpers
 or JSON round trips. The facade only parses raw, converts, and serializes.
-Acquisition time is required, optional extracted fields serialize as null, and
+Acquisition time and market context are required, optional extracted fields serialize as null, and
 all extracted connections are vectors. GraphQL page evidence, explicit type-name
 fields, and product price ranges are excluded. See ADR 66.
 
@@ -103,3 +103,17 @@ Root extracted images are unique by image ID, in first-seen order: gallery,
 variants, then featured image. Repeated IDs with identical extracted fields
 share one record; conflicting fields fail extraction with the image ID. Product
 and variant image references retain their source IDs and ordering.
+
+V2 extraction requires both `acquired_at` and `context`. Missing or null values
+are rejected; raw historical artifacts remain readable but require source-backed
+metadata before extraction. Timestamps must be valid RFC 3339 instants.
+
+Fixed checkout charges use `CheckoutChargeValue::Money(money::Money)`, converted
+through the same currency/precision checks as other prices. Extracted JSON uses
+`{"__typename":"Money","amount":7999,"currency":"USD"}` for USD 79.99.
+Percentage charges are unchanged. Raw GraphQL retains its `MoneyV2` source shape;
+older extracted checkout values must be regenerated from raw artifacts.
+
+Variant extraction rejects a compare-at price in a different currency, including
+when the current price is zero. Errors identify the variant and both currencies.
+Same-currency comparisons at or below the current price are omitted as before.

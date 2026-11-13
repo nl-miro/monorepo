@@ -4,7 +4,7 @@
 use super::extracted::prelude::*;
 use crate::graphql::raw;
 use chrono::{DateTime, Utc};
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 fn opt<T, U: TryFrom<T, Error = String>>(value: Option<T>) -> Result<Option<U>, String> {
     value.map(U::try_from).transpose()
@@ -33,8 +33,69 @@ impl TryFrom<raw::RawOfferDetails> for ExtractedOfferDetails {
             acquired_at,
             context,
             product,
-            pages: _,
+            pages,
         } = value;
+        let context = match context {
+            Some(context) => context,
+            None => {
+                let mut countries = BTreeSet::new();
+                let mut languages = BTreeSet::new();
+                for page in &pages {
+                    for (field, values) in
+                        [("country", &mut countries), ("language", &mut languages)]
+                    {
+                        if let Some(value) = page
+                            .response
+                            .pointer(&format!("/extensions/context/{field}"))
+                        {
+                            let value = value
+                                .as_str()
+                                .filter(|value| !value.trim().is_empty())
+                                .ok_or_else(|| {
+                                    format!("context recovery: invalid response {field}")
+                                })?;
+                            values.insert(value.to_string());
+                        }
+                    }
+                }
+                let mut currencies = BTreeSet::new();
+                for price in product
+                    .variants
+                    .edges
+                    .iter()
+                    .flat_map(|edge| {
+                        std::iter::once(&edge.node.price).chain(edge.node.compare_at_price.iter())
+                    })
+                    .chain([
+                        &product.price_range.min_variant_price,
+                        &product.price_range.max_variant_price,
+                        &product.compare_at_price_range.min_variant_price,
+                        &product.compare_at_price_range.max_variant_price,
+                    ])
+                {
+                    if price.currency_code.trim().is_empty() {
+                        return Err("context recovery: empty currency".into());
+                    }
+                    currencies.insert(price.currency_code.clone());
+                }
+                for (field, count) in [
+                    ("country", countries.len()),
+                    ("language", languages.len()),
+                    ("currency", currencies.len()),
+                ] {
+                    if count != 1 {
+                        return Err(format!(
+                            "context recovery requires one consistent {field}, found {count}"
+                        ));
+                    }
+                }
+                retailer_sauce::shopify::markets::MarketContext {
+                    country: countries.into_iter().next().unwrap(),
+                    language: languages.into_iter().next().unwrap(),
+                    currency: currencies.into_iter().next().unwrap(),
+                }
+            }
+        };
         let collections = product
             .collections
             .edges
@@ -79,9 +140,10 @@ impl TryFrom<raw::RawOfferDetails> for ExtractedOfferDetails {
             .collect::<Result<Vec<_>, String>>()?;
         Ok(Self {
             // schema_version,
-            acquired_at: acquired_at
-                .map(|value| utc("acquired_at", value))
-                .transpose()?,
+            acquired_at: utc(
+                "acquired_at",
+                acquired_at.ok_or_else(|| "acquired_at is required".to_string())?,
+            )?,
             context,
             product: Product::try_from(product)?,
             collections,
@@ -162,6 +224,8 @@ impl TryFrom<raw::Product> for Product {
                 tags,
             },
             content: ProductContent {
+                seo_title: seo.title,
+                seo_description: seo.description,
                 vendor,
                 featured_image: featured_image
                     .map(|image| {
@@ -234,7 +298,6 @@ impl TryFrom<raw::Product> for Product {
                 .into_iter()
                 .map(|edge| SellingPlanGroup::try_from(edge.node))
                 .collect::<Result<Vec<_>, String>>()?,
-            seo: Seo::try_from(seo)?,
             variants: variants
                 .edges
                 .into_iter()
@@ -551,14 +614,20 @@ impl TryFrom<raw::Variant> for Variant {
         } = value;
         let price = Money::try_from(price)?;
         let compare_at_price: Option<Money> = opt(compare_at_price)?;
+        if let Some(comparison) = &compare_at_price
+            && comparison.currency() != price.currency()
+        {
+            return Err(format!(
+                "variant {id}: compare_at_price currency {} differs from price currency {}",
+                comparison.currency().as_str(),
+                price.currency().as_str()
+            ));
+        }
         let pricing = if price.amount() == 0 {
             Pricing::Unknown
         } else {
             match compare_at_price {
-                Some(comparison)
-                    if comparison.currency() == price.currency()
-                        && comparison.amount() > price.amount() =>
-                {
+                Some(comparison) if comparison.amount() > price.amount() => {
                     Pricing::Discounted(price, comparison)
                 }
                 _ => Pricing::Standard(price),
@@ -1059,10 +1128,11 @@ impl TryFrom<raw::CheckoutChargeValue> for CheckoutChargeValue {
             raw::CheckoutChargeValue::MoneyV2 {
                 amount,
                 currency_code,
-            } => Self::MoneyV2 {
+            } => Self::Money(Money::try_from(raw::Money {
+                type_name: "MoneyV2".into(),
                 amount,
                 currency_code,
-            },
+            })?),
             raw::CheckoutChargeValue::SellingPlanCheckoutChargePercentageValue { percentage } => {
                 Self::SellingPlanCheckoutChargePercentageValue { percentage }
             }

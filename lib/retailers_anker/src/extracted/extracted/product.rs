@@ -1,6 +1,6 @@
 //! Extracted product and its grouped attributes.
 
-use super::{Seo, media::Media};
+use super::media::Media;
 use chrono::{DateTime, Utc};
 use money::Money;
 use serde::{Deserialize, Serialize};
@@ -29,6 +29,8 @@ pub struct ProductContent {
     pub description: String,
     pub description_html: String,
     pub title: String,
+    pub seo_title: Option<String>,
+    pub seo_description: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -54,7 +56,6 @@ pub struct Product {
     // pub price_range: PriceRange,
     pub requires_selling_plan: bool,
     pub selling_plan_groups: Vec<SellingPlanGroup>,
-    pub seo: Seo,
     pub variants: Vec<Variant>,
     // pub variants_count: Option<Count>,
     pub created_at: DateTime<Utc>,
@@ -347,13 +348,8 @@ pub enum DeliveryPolicy {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "__typename")]
 pub enum CheckoutChargeValue {
-    MoneyV2 {
-        amount: String,
-        currency_code: String,
-    },
-    SellingPlanCheckoutChargePercentageValue {
-        percentage: Number,
-    },
+    Money(Money),
+    SellingPlanCheckoutChargePercentageValue { percentage: Number },
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

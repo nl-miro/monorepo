@@ -384,7 +384,9 @@ Both offer dump commands pretty-print valid JSON payloads with a trailing
 newline, retaining key order and numeric spelling. HTML payloads are unchanged.
 Object-storage identity and original payload size are checked before formatting.
 
-Anker v2 extraction retains optional acquisition time, source timestamps and decimal
-strings without normalization. Root variants, collections and images keep their
+V2 extraction requires acquisition time and market context for all three brands;
+missing acquisition time fails extraction. Anker can recover missing context from
+consistent recorded response and price evidence; other brands require explicit
+context. Raw historical artifacts remain unchanged. Root variants, collections and images keep their
 connection metadata; image references include root index and optional source ID.
 See the [shared extracted model](lib/retailers_anker/README.md#shared-complete-extracted-model).

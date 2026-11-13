@@ -14,6 +14,22 @@
 
 ### IN PROGRESS
 
+- [x] Move product SEO title/description into content with seo_ prefixes across all brands.
+  Source values/nulls are preserved; lib CI passes.
+
+- [x] Reject variant compare-at currency mismatches across all three brands.
+  Includes zero-price variants; lib CI passes.
+
+- [x] Replace extracted checkout MoneyV2 with money::Money across all brands.
+  Validates currencies, precision and overflow; lib CI passes.
+
+- [x] Recover missing Anker context from recorded response and price evidence.
+  Lib CI passes. Temporary corpus run writes 9,194 artifacts; 305 retain missing-media-ID errors.
+  Requested extraction into ../data was attempted but writes are blocked by its read-only mount.
+
+- [x] Require acquired_at and context in all three extracted models.
+  Missing/null metadata and malformed timestamps are rejected; lib CI passes.
+
 - [x] Update money to 0.1.2 in every consuming workspace and validate.
   All workspace CI passes; audits report no new advisories. Customers and sourcing
   HTTP checks pass; offers/customer-facing startup requires DATABASE_URL.

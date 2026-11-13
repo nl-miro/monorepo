@@ -71,10 +71,11 @@ impl TryFrom<raw::RawOfferDetails> for ExtractedOfferDetails {
             .collect::<Result<Vec<_>, String>>()?;
         Ok(Self {
             // schema_version,
-            acquired_at: acquired_at
-                .map(|value| utc("acquired_at", value))
-                .transpose()?,
-            context,
+            acquired_at: utc(
+                "acquired_at",
+                acquired_at.ok_or_else(|| "acquired_at is required".to_string())?,
+            )?,
+            context: context.ok_or_else(|| "context is required".to_string())?,
             product: Product::try_from(product)?,
             collections,
             images,
@@ -151,6 +152,8 @@ impl TryFrom<raw::Product> for Product {
                 tags,
             },
             content: ProductContent {
+                seo_title: seo.title,
+                seo_description: seo.description,
                 vendor,
                 featured_image: featured_image
                     .map(|image| {
@@ -211,7 +214,6 @@ impl TryFrom<raw::Product> for Product {
                 .into_iter()
                 .map(|edge| SellingPlanGroup::try_from(edge.node))
                 .collect::<Result<Vec<_>, String>>()?,
-            seo: Seo::try_from(seo)?,
             variants: variants
                 .edges
                 .into_iter()
@@ -525,14 +527,20 @@ impl TryFrom<raw::Variant> for Variant {
         } = value;
         let price = Money::try_from(price)?;
         let compare_at_price: Option<Money> = opt(compare_at_price)?;
+        if let Some(comparison) = &compare_at_price
+            && comparison.currency() != price.currency()
+        {
+            return Err(format!(
+                "variant {id}: compare_at_price currency {} differs from price currency {}",
+                comparison.currency().as_str(),
+                price.currency().as_str()
+            ));
+        }
         let pricing = if price.amount() == 0 {
             Pricing::Unknown
         } else {
             match compare_at_price {
-                Some(comparison)
-                    if comparison.currency() == price.currency()
-                        && comparison.amount() > price.amount() =>
-                {
+                Some(comparison) if comparison.amount() > price.amount() => {
                     Pricing::Discounted(price, comparison)
                 }
                 _ => Pricing::Standard(price),
@@ -1030,10 +1038,11 @@ impl TryFrom<raw::CheckoutChargeValue> for CheckoutChargeValue {
             raw::CheckoutChargeValue::MoneyV2 {
                 amount,
                 currency_code,
-            } => Self::MoneyV2 {
+            } => Self::Money(Money::try_from(raw::Money {
+                type_name: "MoneyV2".into(),
                 amount,
                 currency_code,
-            },
+            })?),
             raw::CheckoutChargeValue::SellingPlanCheckoutChargePercentageValue { percentage } => {
                 Self::SellingPlanCheckoutChargePercentageValue { percentage }
             }

@@ -172,3 +172,17 @@ Root images are unique by source ID, in first-seen gallery, variant, then featur
 image order. Identical copies share one root entry; conflicting extracted image
 fields for the same ID fail extraction with that ID in the error. Product and
 variant image references resolve against this root list.
+
+V2 extraction requires both `acquired_at` and `context`. Missing or null values
+are rejected; raw historical artifacts remain readable but require source-backed
+metadata before extraction. Timestamps must be valid RFC 3339 instants.
+
+Fixed checkout charges use `CheckoutChargeValue::Money(money::Money)`, converted
+through the same currency/precision checks as other prices. Extracted JSON uses
+`{"__typename":"Money","amount":7999,"currency":"USD"}` for USD 79.99.
+Percentage charges are unchanged. Raw GraphQL retains its `MoneyV2` source shape;
+older extracted checkout values must be regenerated from raw artifacts.
+
+Variant extraction rejects a compare-at price in a different currency, including
+when the current price is zero. Errors identify the variant and both currencies.
+Same-currency comparisons at or below the current price are omitted as before.

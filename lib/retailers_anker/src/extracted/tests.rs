@@ -10,7 +10,7 @@ fn extraction_preserves_product_facts_and_round_trips() {
     ] {
         let product: Value = serde_json::from_str(product).unwrap();
         for source in [
-            json!({"schema_version":1,"product":product,"pages":[]}),
+            json!({"schema_version":2,"context":{"country":"CA","language":"FR","currency":"CAD"},"acquired_at":"2026-11-12T00:00:00Z","product":product,"pages":[]}),
             json!({
                 "schema_version":2,
                 "acquired_at":"2026-11-12T00:00:00Z",
@@ -23,6 +23,16 @@ fn extraction_preserves_product_facts_and_round_trips() {
             let expected = serde_json::to_value(&raw).unwrap();
             let extracted = super::prelude::ExtractedOfferDetails::try_from(raw).unwrap();
             let output = serde_json::to_value(&extracted).unwrap();
+            assert!(output["product"].get("seo").is_none());
+            assert_eq!(
+                output["product"]["content"]["seo_title"],
+                expected["product"]["seo"]["title"]
+            );
+            assert_eq!(
+                output["product"]["content"]["seo_description"],
+                expected["product"]["seo"]["description"]
+            );
+
             assert_eq!(
                 output["product"]["identifiers"]["id"],
                 expected["product"]["id"]
@@ -71,7 +81,7 @@ fn date_times_are_parsed_as_utc() {
     ))
     .unwrap();
     let mut source = json!({
-        "schema_version":1,
+        "schema_version":2,"context":{"country":"CA","language":"FR","currency":"CAD"},
         "acquired_at":"2026-11-12T09:10:11.123456789Z",
         "product":product,
         "pages":[],
@@ -80,7 +90,7 @@ fn date_times_are_parsed_as_utc() {
     let raw: RawOfferDetails = serde_json::from_value(source.clone()).unwrap();
     let extracted = super::prelude::ExtractedOfferDetails::try_from(raw).unwrap();
     assert_eq!(
-        extracted.acquired_at.unwrap().to_rfc3339(),
+        extracted.acquired_at.to_rfc3339(),
         "2026-11-12T09:10:11.123456789+00:00"
     );
     assert_eq!(
@@ -103,7 +113,7 @@ fn variant_count_is_validated_and_omitted() {
     ))
     .unwrap();
     let mut raw: RawOfferDetails = serde_json::from_value(json!({
-        "schema_version": 1, "product": product, "pages": []
+        "schema_version":2,"context":{"country":"CA","language":"FR","currency":"CAD"},"acquired_at":"2026-11-12T00:00:00Z", "product": product, "pages": []
     }))
     .unwrap();
     let collected = i64::try_from(raw.product.variants.edges.len()).unwrap();
@@ -129,7 +139,7 @@ fn variant_count_lower_bound_and_missing_count() {
     ))
     .unwrap();
     let mut raw: RawOfferDetails = serde_json::from_value(json!({
-        "schema_version": 1, "product": product, "pages": []
+        "schema_version":2,"context":{"country":"CA","language":"FR","currency":"CAD"},"acquired_at":"2026-11-12T00:00:00Z", "product": product, "pages": []
     }))
     .unwrap();
     let collected = i64::try_from(raw.product.variants.edges.len()).unwrap();
@@ -355,7 +365,6 @@ fn variant_pricing_classifies_prices_and_serializes_the_enum() {
         ("10.00", Some(("15.00", "USD")), true),
         ("10.00", Some(("10.00", "USD")), false),
         ("10.00", Some(("5.00", "USD")), false),
-        ("10.00", Some(("15.00", "EUR")), false),
         ("0", None, false),
         ("0", Some(("15.00", "USD")), false),
     ] {
@@ -386,6 +395,22 @@ fn variant_pricing_classifies_prices_and_serializes_the_enum() {
         serde_json::to_value(super::prelude::Pricing::Unknown).unwrap(),
         json!("Unknown")
     );
+    for amount in ["10.00", "0"] {
+        for comparison in ["15.00", "10.00", "5.00"] {
+            let mut raw = variant.clone();
+            raw.price = raw_money(amount, "USD");
+            raw.compare_at_price = Some(raw_money(comparison, "EUR"));
+            let id = raw.id.clone();
+            let error = super::prelude::Variant::try_from(raw).unwrap_err();
+            assert!(error.contains(&id), "{error}");
+            assert!(
+                error.contains("compare_at_price")
+                    && error.contains("EUR")
+                    && error.contains("USD"),
+                "{error}"
+            );
+        }
+    }
     let mut raw = variant;
     raw.price = raw_money("invalid", "USD");
     assert!(super::prelude::Variant::try_from(raw).is_err());
@@ -444,7 +469,7 @@ fn root_images_are_unique_ordered_and_references_resolve() {
     ))
     .unwrap();
     let mut raw: RawOfferDetails = serde_json::from_value(json!({
-        "schema_version": 1, "product": product, "pages": []
+        "schema_version":2,"context":{"country":"CA","language":"FR","currency":"CAD"},"acquired_at":"2026-11-12T00:00:00Z", "product": product, "pages": []
     }))
     .unwrap();
     let original = raw.product.images.edges[0].clone();
@@ -497,8 +522,10 @@ fn root_images_are_unique_ordered_and_references_resolve() {
     raw.product.featured_image = Some(original.node.clone());
     let extracted = super::prelude::ExtractedOfferDetails::try_from(raw.clone()).unwrap();
     assert_eq!(extracted.images.len(), 1);
-    // Missing acquisition time remains supported.
-    assert!(extracted.acquired_at.is_none());
+    assert_eq!(
+        extracted.acquired_at.to_rfc3339(),
+        "2026-11-12T00:00:00+00:00"
+    );
     for location in ["root", "variant", "featured"] {
         let mut changed = raw.clone();
         let image = match location {
@@ -523,5 +550,157 @@ fn root_images_are_unique_ordered_and_references_resolve() {
         super::prelude::ExtractedOfferDetails::try_from(raw)
             .unwrap_err()
             .contains("missing id")
+    );
+}
+
+#[test]
+fn missing_context_is_recovered_only_from_consistent_source_evidence() {
+    let product: Value = serde_json::from_str(include_str!(
+        "../ankercom/offer_details/v2/fixtures/product.json"
+    ))
+    .unwrap();
+    let source = json!({"schema_version":1,"acquired_at":"2026-11-12T00:00:00Z",
+    "product":product,"pages":[{
+        "request":{"query":"query Test { product { id } }","operationName":"Test","variables":{}},
+        "response":{"extensions":{"context":{"country":"US","language":"EN"}}}
+    }]});
+    let raw: RawOfferDetails = serde_json::from_value(source).unwrap();
+    let expected_currency = raw
+        .product
+        .price_range
+        .min_variant_price
+        .currency_code
+        .clone();
+    let extracted = super::prelude::ExtractedOfferDetails::try_from(raw.clone()).unwrap();
+    assert_eq!(extracted.context.country, "US");
+    assert_eq!(extracted.context.language, "EN");
+    assert_eq!(extracted.context.currency, expected_currency);
+    let output = serde_json::to_value(extracted).unwrap();
+    let _: super::prelude::ExtractedOfferDetails = serde_json::from_value(output).unwrap();
+
+    // Empty variant lists still carry observed currency in product price ranges.
+    let mut empty = raw.clone();
+    empty.product.variants.edges.clear();
+    empty.product.variants_count = None;
+    assert_eq!(
+        super::prelude::ExtractedOfferDetails::try_from(empty)
+            .unwrap()
+            .context
+            .currency,
+        expected_currency
+    );
+    for field in ["country", "language"] {
+        for value in [Value::Null, json!(""), json!(123)] {
+            let mut changed = raw.clone();
+            changed.pages[0].response["extensions"]["context"][field] = value;
+            assert!(
+                super::prelude::ExtractedOfferDetails::try_from(changed)
+                    .unwrap_err()
+                    .contains(field)
+            );
+        }
+        let mut missing = raw.clone();
+        missing.pages[0].response["extensions"]["context"]
+            .as_object_mut()
+            .unwrap()
+            .remove(field);
+        assert!(
+            super::prelude::ExtractedOfferDetails::try_from(missing)
+                .unwrap_err()
+                .contains(field)
+        );
+        let mut conflict = raw.clone();
+        conflict.pages.push(conflict.pages[0].clone());
+        conflict.pages[1].response["extensions"]["context"][field] = json!("OTHER");
+        assert!(
+            super::prelude::ExtractedOfferDetails::try_from(conflict)
+                .unwrap_err()
+                .contains(field)
+        );
+    }
+    let mut conflict = raw.clone();
+    conflict.product.price_range.max_variant_price.currency_code = "OTHER".into();
+    assert!(
+        super::prelude::ExtractedOfferDetails::try_from(conflict)
+            .unwrap_err()
+            .contains("currency")
+    );
+    let mut missing = raw.clone();
+    missing.pages.clear();
+    assert!(
+        super::prelude::ExtractedOfferDetails::try_from(missing)
+            .unwrap_err()
+            .contains("context")
+    );
+    let mut missing_time = raw.clone();
+    missing_time.acquired_at = None;
+    assert!(
+        super::prelude::ExtractedOfferDetails::try_from(missing_time)
+            .unwrap_err()
+            .contains("acquired_at")
+    );
+    // An explicit context remains authoritative; fallback evidence is not consulted.
+    let mut explicit = raw;
+    explicit.context = Some(retailer_sauce::shopify::markets::MarketContext {
+        country: "CA".into(),
+        language: "FR".into(),
+        currency: "CAD".into(),
+    });
+    explicit.pages[0].response["extensions"]["context"]["country"] = json!(123);
+    assert_eq!(
+        super::prelude::ExtractedOfferDetails::try_from(explicit)
+            .unwrap()
+            .context
+            .country,
+        "CA"
+    );
+}
+
+#[test]
+fn checkout_money_uses_validated_minor_units() {
+    use super::prelude::CheckoutChargeValue;
+    for (amount, currency, minor) in [
+        ("79.99", "USD", 7999),
+        ("123", "JPY", 123),
+        ("1.2300", "EUR", 123),
+        ("12.34", "SAR", 1234),
+    ] {
+        let raw = crate::graphql::raw::CheckoutChargeValue::MoneyV2 {
+            amount: amount.into(),
+            currency_code: currency.into(),
+        };
+        let extracted = CheckoutChargeValue::try_from(raw).unwrap();
+        assert!(matches!(&extracted, CheckoutChargeValue::Money(value)
+            if value.amount() == minor && value.currency().as_str() == currency));
+        let output = serde_json::to_value(extracted).unwrap();
+        assert_eq!(
+            output,
+            json!({"__typename":"Money","amount":minor,"currency":currency})
+        );
+        let decoded: CheckoutChargeValue = serde_json::from_value(output.clone()).unwrap();
+        assert_eq!(serde_json::to_value(decoded).unwrap(), output);
+    }
+    for (amount, currency) in [
+        ("junk", "USD"),
+        ("1.001", "USD"),
+        ("1", "ZZZ"),
+        ("9223372036854775808", "JPY"),
+    ] {
+        let raw = crate::graphql::raw::CheckoutChargeValue::MoneyV2 {
+            amount: amount.into(),
+            currency_code: currency.into(),
+        };
+        assert!(
+            CheckoutChargeValue::try_from(raw).is_err(),
+            "{amount} {currency}"
+        );
+    }
+    let raw = crate::graphql::raw::CheckoutChargeValue::SellingPlanCheckoutChargePercentageValue {
+        percentage: serde_json::from_value(json!(12.5)).unwrap(),
+    };
+    let output = serde_json::to_value(CheckoutChargeValue::try_from(raw).unwrap()).unwrap();
+    assert_eq!(
+        output,
+        json!({"__typename":"SellingPlanCheckoutChargePercentageValue","percentage":12.5})
     );
 }

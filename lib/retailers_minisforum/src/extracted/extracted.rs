@@ -23,8 +23,8 @@ use serde::{Deserialize, Serialize};
 // #[serde(try_from = "ArtifactWire")]
 pub struct ExtractedOfferDetails {
     // pub schema_version: u32,
-    pub acquired_at: Option<DateTime<Utc>>,
-    pub context: Option<retailer_sauce::shopify::markets::MarketContext>,
+    pub acquired_at: DateTime<Utc>,
+    pub context: retailer_sauce::shopify::markets::MarketContext,
     pub product: Product,
     pub collections: Vec<Collection>,
     pub images: Vec<Image>,
@@ -91,36 +91,44 @@ mod contract_tests {
         let decoded: PriceAdjustmentValue = serde_json::from_value(output.clone()).unwrap();
         assert_eq!(serde_json::to_value(decoded).unwrap(), output);
     }
+
     #[test]
-    fn historical_and_contextual_artifacts_remain_readable() {
+    fn extraction_requires_acquisition_time_and_context() {
         let product: Value = serde_json::from_str(include_str!(
             "../minisforumau/offer_details/v2/fixtures/product.json"
         ))
         .unwrap();
-        let mut artifact = json!({"schema_version":1,"product":product,"pages":[]});
+        let source = json!({"schema_version":2,"acquired_at":"2026-11-12T00:00:00Z",
+            "context":{"country":"CA","language":"FR","currency":"CAD"},
+            "product":product,"pages":[]});
+        let raw: raw::RawOfferDetails = serde_json::from_value(source).unwrap();
+        let extracted = ExtractedOfferDetails::try_from(raw.clone()).unwrap();
+        let output = serde_json::to_value(extracted).unwrap();
+        for field in ["acquired_at", "context"] {
+            for null in [false, true] {
+                let mut changed = output.clone();
+                if null {
+                    changed[field] = Value::Null;
+                } else {
+                    changed.as_object_mut().unwrap().remove(field);
+                }
+                assert!(serde_json::from_value::<ExtractedOfferDetails>(changed).is_err());
+            }
+            let mut changed = raw.clone();
+            if field == "acquired_at" {
+                changed.acquired_at = None;
+            } else {
+                changed.context = None;
+            }
+            let error = ExtractedOfferDetails::try_from(changed).unwrap_err();
+            assert!(error.contains(field), "{error}");
+        }
+        let mut invalid = raw;
+        invalid.acquired_at = Some("yesterday".into());
         assert!(
-            serde_json::from_value::<raw::RawOfferDetails>(artifact.clone())
-                .and_then(
-                    |raw| ExtractedOfferDetails::try_from(raw).map_err(serde::de::Error::custom)
-                )
-                .is_ok()
+            ExtractedOfferDetails::try_from(invalid)
+                .unwrap_err()
+                .contains("acquired_at")
         );
-        artifact["schema_version"] = json!(2);
-        assert!(serde_json::from_value::<raw::RawOfferDetails>(artifact.clone()).is_err());
-        artifact["context"] = json!({"country":"CA","language":"FR","currency":"CAD"});
-        assert!(
-            serde_json::from_value::<raw::RawOfferDetails>(artifact.clone())
-                .and_then(
-                    |raw| ExtractedOfferDetails::try_from(raw).map_err(serde::de::Error::custom)
-                )
-                .is_ok()
-        );
-        artifact["schema_version"] = json!(1);
-        assert!(serde_json::from_value::<raw::RawOfferDetails>(artifact).is_err());
-        //         let error: ProductResponse = serde_json::from_value(
-        //             json!({"data":{"product":null},"errors":[{"message":"missing"}]}),
-        //         )
-        //         .unwrap();
-        //         assert!(error.data.unwrap().product.is_none());
     }
 }
