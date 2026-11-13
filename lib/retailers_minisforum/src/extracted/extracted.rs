@@ -26,10 +26,10 @@ pub struct ExtractedOfferDetails {
     // pub pages: Vec<RecordedPage>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct IsoCode {
-    pub iso_code: String,
-}
+// #[derive(Debug, Clone, Serialize, Deserialize)]
+// pub struct IsoCode {
+//     pub iso_code: String,
+// }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ProductIdentifiers {

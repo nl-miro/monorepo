@@ -75,13 +75,13 @@ impl TryFrom<raw::RawOfferDetails> for ExtractedOfferDetails {
         })
     }
 }
-impl TryFrom<raw::IsoCode> for IsoCode {
-    type Error = String;
-    fn try_from(value: raw::IsoCode) -> Result<Self, Self::Error> {
-        let raw::IsoCode { iso_code } = value;
-        Ok(Self { iso_code })
-    }
-}
+// impl TryFrom<raw::IsoCode> for IsoCode {
+//     type Error = String;
+//     fn try_from(value: raw::IsoCode) -> Result<Self, Self::Error> {
+//         let raw::IsoCode { iso_code } = value;
+//         Ok(Self { iso_code })
+//     }
+// }
 impl TryFrom<raw::Product> for Product {
     type Error = String;
     fn try_from(value: raw::Product) -> Result<Self, Self::Error> {
