@@ -7,7 +7,6 @@ use retailers_wip::initial_fill::{
 /// Continuations identify the owning product/variant, never a translated label.
 #[derive(Debug, Clone)]
 pub enum Operation {
-    Markets,
     InContext {
         context: MarketContext,
         operation: Box<Operation>,
@@ -39,7 +38,6 @@ mod artifact;
 mod auth;
 mod catalog;
 mod fetch;
-pub mod markets;
 mod scripts;
 mod token;
 use retailer_sauce::initial_fill::{CatalogBatch, Http, InitialFillIntegration};
@@ -64,12 +62,13 @@ impl InitialFillIntegration for Engine {
     ) -> Result<Option<StorefrontToken>, String> {
         auth::resolve(self, http, url)
     }
+    // Required by the external compatibility trait; initial fill uses inventory locales.
     fn discover_markets(
         &self,
-        http: &dyn Http,
-        token: Option<&StorefrontToken>,
+        _http: &dyn Http,
+        _token: Option<&StorefrontToken>,
     ) -> Result<Vec<MarketContext>, String> {
-        markets::contexts(&self.execute(http, token, &Operation::Markets)?)
+        Err("remote market discovery was removed; use Retailer.supported_locales".into())
     }
     fn catalog(
         &self,
@@ -163,7 +162,6 @@ impl Engine {
             Operation::InContext { context, .. } => {
                 Some((Some(context.country.as_str()), context.language.as_str()))
             }
-            Operation::Markets => None,
             _ => Some((None, config.language)),
         };
         if matches!(operation, Operation::InContext { .. })

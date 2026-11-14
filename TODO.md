@@ -1,3 +1,7 @@
+- [x] Remove the unused Markets GraphQL query from all three brands.
+  Removed query/parser/exports; the required legacy trait method returns an
+  error without HTTP. All three brand CI checks and sourcing initial-fill tests pass.
+
 - [x] Restore acquire_token to true for all disabled stores.
   Updated tests and documentation; affected library and sourcing CI pass,
   and the service health endpoint returns HTTP 200.

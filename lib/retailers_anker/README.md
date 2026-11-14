@@ -74,11 +74,11 @@ documented in [offer facts source coverage](../../docs/offer-facts-source-covera
 
 ## Anker initial fill
 
-The versioned AU/CA integrations and shared `shopify::initial_fill::markets`
-configuration support all 17 active Anker stores except Korea. Shared typed
+The versioned AU/CA integrations and shared brand engine support all 17 active
+Anker stores except Korea. Shared typed
 queries take country/language variables for every operation and continuation.
-Canada remains English-only. Germany, France, Poland, Italy, Japan and Vietnam
-use DE, FR, PL, IT, JA and VI respectively; the other storefronts use EN.
+Collection contexts come from the main-table inventory locales, including
+English and French for Canada.
 Nordic markets keep separate prices and discover their browser token automatically
 for initial fill; `ANKER_NORDICS_STOREFRONT_TOKEN` remains an optional override
 (and is still required by the separate sitemap offer-download flow). See
@@ -223,3 +223,7 @@ Advertised-only locales stay in the documentation. The local
 `LocaleInitialFillIntegration` interface accepts optional countries and retains
 response-derived country/language/currency in schema-2 artifacts. Historical
 concrete-context integrations remain available as compatibility adapters.
+
+The remote `Markets` GraphQL query has been removed. Initial fill reads
+`Retailer.supported_locales`; the legacy trait method returns an error without
+HTTP access. Saved localization fixtures remain historical evidence.

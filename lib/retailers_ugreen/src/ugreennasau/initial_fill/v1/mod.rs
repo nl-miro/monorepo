@@ -18,7 +18,7 @@ pub const CONFIG: StorefrontConfig = StorefrontConfig {
 pub use crate::graphql::Operation;
 
 #[allow(unused_imports)]
-pub use crate::graphql::{markets, next_cursor, product_gid};
+pub use crate::graphql::{next_cursor, product_gid};
 #[allow(non_upper_case_globals)]
 pub const Integration: crate::graphql::Engine = crate::graphql::Engine {
     code: CODE,

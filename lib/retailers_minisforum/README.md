@@ -69,7 +69,7 @@ query advertised market lists. Contextual dumps retain observed country, languag
 and currency in schema 2 and country-language directories. Historical schema 1
 remains readable; HTML processing is unchanged. See ADR 69.
 
-Normal CI covers real product and market-discovery fixtures for every storefront.
+Normal CI covers real product fixtures for every storefront.
 To read every available saved product across contexts, run
 `cargo test -p retailers_minisforum saved_graphql_corpus -- --ignored --nocapture`
 in `lib`; this requires `../data3` beside the monorepo. Missing or partial old
@@ -130,3 +130,7 @@ concrete-context integrations remain available as compatibility adapters.
 
 All storefronts enable token acquisition. Token requirements remain unchanged;
 see [ADR 72](../../docs/adr/0072-restore-storefront-token-acquisition.md).
+
+The remote `Markets` GraphQL query has been removed. Initial fill reads
+`Retailer.supported_locales`; the legacy trait method returns an error without
+HTTP access. Saved localization fixtures remain historical evidence.

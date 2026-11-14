@@ -133,7 +133,6 @@ fn validate<Q: GraphQLQuery>(operation: &str, body: &Value) -> Result<(), String
 
 pub fn request(operation: &Operation, config: &StorefrontConfig) -> Result<GraphqlRequest, String> {
     match operation {
-        Operation::Markets => Ok(super::markets::request()),
         Operation::InLocale { context, operation } => {
             let mut request = request(operation, config)?;
             if let Some(country) = &context.country {
@@ -180,9 +179,6 @@ pub fn validate_response(
     body: &Value,
     config: &StorefrontConfig,
 ) -> Result<(), String> {
-    if let Operation::Markets = operation {
-        return super::markets::contexts(body).map(|_| ());
-    }
     if let Operation::InContext { operation, .. } | Operation::InLocale { operation, .. } =
         operation
     {

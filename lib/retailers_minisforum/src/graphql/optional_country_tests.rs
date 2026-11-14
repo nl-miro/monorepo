@@ -250,9 +250,6 @@ fn upstream_errors_survive_partial_data_decoding_and_redact_access_tokens() {
         .err()
         .unwrap();
     assert!(catalog.contains("CatalogIdentifiers"));
-    let market = engine().discover_markets(&reply, Some(&token)).unwrap_err();
-    assert!(market.contains("StorefrontMarkets"));
-    assert!(market.contains("ACCESS_DENIED"));
     let missing = Reply {
         body: json!({"data":null}),
         calls: RefCell::new(vec![]),
@@ -261,4 +258,12 @@ fn upstream_errors_survive_partial_data_decoding_and_redact_access_tokens() {
         .details(&missing, None, None, "gid://shopify/Product/1")
         .unwrap_err();
     assert!(error.contains("missing or null data without GraphQL errors"));
+}
+
+#[test]
+fn legacy_market_discovery_does_not_fetch() {
+    struct NoHttp;
+    impl Http for NoHttp {}
+    let error = engine().discover_markets(&NoHttp, None).unwrap_err();
+    assert!(error.contains("use Retailer.supported_locales"));
 }

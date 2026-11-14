@@ -127,8 +127,3 @@ fn local_snapshot_keeps_artifact_versions_and_exact_evidence() {
             .is_err()
     );
 }
-#[test]
-fn captured_markets_are_parsed_locally() {
-    let body: Value = serde_json::from_str(include_str!("markets.json")).unwrap();
-    assert!(!markets::contexts(&body).unwrap().is_empty());
-}
