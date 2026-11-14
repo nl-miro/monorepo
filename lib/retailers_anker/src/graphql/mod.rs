@@ -33,12 +33,6 @@ pub enum Operation {
         field: String,
         after: Option<String>,
     },
-    SellingPlans {
-        id: String,
-        group_after: Option<String>,
-        group_cursor: String,
-        after: Option<String>,
-    },
 }
 
 mod artifact;

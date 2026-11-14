@@ -22,13 +22,7 @@ pub fn fetch_in_context(
     };
     let response = session.execute(Operation::Details { id: id.into() })?;
     let mut product = owner(&response, "/data/product", id)?.clone();
-    for field in [
-        "collections",
-        "images",
-        "media",
-        "variants",
-        "sellingPlanGroups",
-    ] {
+    for field in ["collections", "images", "media", "variants"] {
         let connection = product
             .get_mut(field)
             .ok_or_else(|| format!("missing product connection {field}"))?;
@@ -51,7 +45,6 @@ pub fn fetch_in_context(
             "components",
             "groupedBy",
             "quantityPriceBreaks",
-            "sellingPlanAllocations",
             "storeAvailability",
         ] {
             let connection = variant
@@ -63,26 +56,6 @@ pub fn fetch_in_context(
                 after,
             })?;
         }
-    }
-    let mut group_after = None;
-    for edge in product["sellingPlanGroups"]["edges"]
-        .as_array_mut()
-        .ok_or("missing selling-plan group edges")?
-    {
-        let cursor = edge["cursor"]
-            .as_str()
-            .ok_or("missing selling-plan group cursor")?
-            .to_owned();
-        let plans = edge
-            .pointer_mut("/node/sellingPlans")
-            .ok_or("missing selling plans")?;
-        session.complete(plans, |after| Operation::SellingPlans {
-            id: id.into(),
-            group_after: group_after.clone(),
-            group_cursor: cursor.clone(),
-            after,
-        })?;
-        group_after = Some(cursor);
     }
     // Without a requested market, Shopify chooses the currency. Still reject
     // internally inconsistent prices instead of assuming the configured currency.
@@ -214,21 +187,6 @@ impl Session<'_> {
                     owner(&response, "/data/node", id)?
                         .get(field)
                         .ok_or("missing variant continuation")?
-                }
-                Operation::SellingPlans {
-                    id, group_cursor, ..
-                } => {
-                    let product = owner(&response, "/data/product", id)?;
-                    let groups = product
-                        .pointer("/sellingPlanGroups/edges")
-                        .and_then(Value::as_array)
-                        .ok_or("missing selling-plan group")?;
-                    if groups.len() != 1 || groups[0]["cursor"].as_str() != Some(group_cursor) {
-                        return Err("selling-plan group changed during pagination".into());
-                    }
-                    groups[0]
-                        .pointer("/node/sellingPlans")
-                        .ok_or("missing selling-plan continuation")?
                 }
                 _ => return Err("invalid continuation operation".into()),
             };

@@ -65,14 +65,6 @@ struct ProductVariants;
 #[derive(GraphQLQuery)]
 #[graphql(
     schema_path = "src/graphql/operations/schema.graphql",
-    query_path = "src/graphql/operations/ProductSellingPlanGroups.graphql",
-    variables_derives = "Deserialize"
-)]
-struct ProductSellingPlanGroups;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "src/graphql/operations/schema.graphql",
     query_path = "src/graphql/operations/VariantComponents.graphql",
     variables_derives = "Deserialize"
 )]
@@ -97,26 +89,10 @@ struct VariantQuantityPriceBreaks;
 #[derive(GraphQLQuery)]
 #[graphql(
     schema_path = "src/graphql/operations/schema.graphql",
-    query_path = "src/graphql/operations/VariantSellingPlanAllocations.graphql",
-    variables_derives = "Deserialize"
-)]
-struct VariantSellingPlanAllocations;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "src/graphql/operations/schema.graphql",
     query_path = "src/graphql/operations/VariantStoreAvailability.graphql",
     variables_derives = "Deserialize"
 )]
 struct VariantStoreAvailability;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "src/graphql/operations/schema.graphql",
-    query_path = "src/graphql/operations/SellingPlans.graphql",
-    variables_derives = "Deserialize"
-)]
-struct SellingPlans;
 
 fn build<Q: GraphQLQuery>(
     mut variables: Value,
@@ -183,7 +159,6 @@ pub fn request(operation: &Operation, config: &StorefrontConfig) -> Result<Graph
                 "images" => build::<ProductImages>(variables, config),
                 "media" => build::<ProductMedia>(variables, config),
                 "variants" => build::<ProductVariants>(variables, config),
-                "sellingPlanGroups" => build::<ProductSellingPlanGroups>(variables, config),
                 _ => Err("unsupported product connection".into()),
             }
         }
@@ -193,22 +168,10 @@ pub fn request(operation: &Operation, config: &StorefrontConfig) -> Result<Graph
                 "components" => build::<VariantComponents>(variables, config),
                 "groupedBy" => build::<VariantGroupedBy>(variables, config),
                 "quantityPriceBreaks" => build::<VariantQuantityPriceBreaks>(variables, config),
-                "sellingPlanAllocations" => {
-                    build::<VariantSellingPlanAllocations>(variables, config)
-                }
                 "storeAvailability" => build::<VariantStoreAvailability>(variables, config),
                 _ => Err("unsupported variant connection".into()),
             }
         }
-        Operation::SellingPlans {
-            id,
-            group_after,
-            after,
-            ..
-        } => build::<SellingPlans>(
-            json!({"id": id, "groupAfter": group_after, "after": after}),
-            config,
-        ),
     }
 }
 
@@ -233,13 +196,10 @@ pub fn validate_response(
         "ProductImages" => validate::<ProductImages>(&name, body),
         "ProductMedia" => validate::<ProductMedia>(&name, body),
         "ProductVariants" => validate::<ProductVariants>(&name, body),
-        "ProductSellingPlanGroups" => validate::<ProductSellingPlanGroups>(&name, body),
         "VariantComponents" => validate::<VariantComponents>(&name, body),
         "VariantGroupedBy" => validate::<VariantGroupedBy>(&name, body),
         "VariantQuantityPriceBreaks" => validate::<VariantQuantityPriceBreaks>(&name, body),
-        "VariantSellingPlanAllocations" => validate::<VariantSellingPlanAllocations>(&name, body),
         "VariantStoreAvailability" => validate::<VariantStoreAvailability>(&name, body),
-        "SellingPlans" => validate::<SellingPlans>(&name, body),
         _ => Err("unsupported GraphQL operation".into()),
     }
 }

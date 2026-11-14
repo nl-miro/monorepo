@@ -12,7 +12,10 @@ mod tests {
         fn preserved(source: &Value, typed: &Value) {
             match source {
                 Value::Object(fields) => {
-                    for (key, value) in fields {
+                    // Older captures carry selling plans, which are no longer modeled.
+                    for (key, value) in fields.iter().filter(|(key, _)| {
+                        !matches!(key.as_str(), "sellingPlanGroups" | "sellingPlanAllocations")
+                    }) {
                         preserved(value, &typed[key]);
                     }
                 }

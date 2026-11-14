@@ -4,6 +4,7 @@
 //! other numeric scalars retain their JSON representation. See fixtures/README.md.
 
 use retailer_sauce::shopify::initial_fill::GraphqlRequest;
+use serde::de::IgnoredAny;
 use serde::{Deserialize, Serialize};
 use serde_json::{Number, Value};
 
@@ -175,7 +176,9 @@ pub struct Product {
     pub product_type: String,
     pub published_at: String,
     pub requires_selling_plan: bool,
-    pub selling_plan_groups: Connection<SellingPlanGroup>,
+    /// No longer queried; older captures still carry it, so accept and drop it.
+    #[serde(default, rename = "sellingPlanGroups", skip_serializing)]
+    pub legacy_selling_plan_groups: Option<IgnoredAny>,
     pub seo: Seo,
     pub tags: Vec<String>,
     pub title: String,
@@ -366,7 +369,9 @@ pub struct Variant {
     pub requires_components: bool,
     pub requires_shipping: bool,
     pub selected_options: Vec<SelectedOption>,
-    pub selling_plan_allocations: Connection<SellingPlanAllocation>,
+    /// No longer queried; older captures still carry it, so accept and drop it.
+    #[serde(default, rename = "sellingPlanAllocations", skip_serializing)]
+    pub legacy_selling_plan_allocations: Option<IgnoredAny>,
     pub sku: Option<String>,
     pub store_availability: Connection<StoreAvailability>,
     pub taxable: bool,
@@ -476,92 +481,6 @@ pub struct Address {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(deny_unknown_fields, rename_all = "camelCase")]
-pub struct SellingPlanAllocation {
-    #[serde(rename = "__typename")]
-    pub type_name: String,
-    pub checkout_charge_amount: Money,
-    pub price_adjustments: Vec<AllocationPriceAdjustment>,
-    pub remaining_balance_charge_amount: Money,
-    pub selling_plan: SellingPlan,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(deny_unknown_fields, rename_all = "camelCase")]
-pub struct AllocationPriceAdjustment {
-    #[serde(rename = "__typename")]
-    pub type_name: String,
-    pub compare_at_price: Money,
-    pub per_delivery_price: Money,
-    pub price: Money,
-    pub unit_price: Option<Money>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(deny_unknown_fields, rename_all = "camelCase")]
-pub struct SellingPlanGroup {
-    #[serde(rename = "__typename")]
-    pub type_name: String,
-    pub app_name: Option<String>,
-    pub name: String,
-    pub options: Vec<SellingPlanGroupOption>,
-    pub selling_plans: Connection<SellingPlan>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(deny_unknown_fields, rename_all = "camelCase")]
-pub struct SellingPlanGroupOption {
-    #[serde(rename = "__typename")]
-    pub type_name: String,
-    pub name: String,
-    pub values: Vec<String>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(deny_unknown_fields, rename_all = "camelCase")]
-pub struct SellingPlan {
-    #[serde(rename = "__typename")]
-    pub type_name: String,
-    pub billing_policy: Option<BillingPolicy>,
-    pub checkout_charge: CheckoutCharge,
-    pub delivery_policy: Option<DeliveryPolicy>,
-    pub description: Option<String>,
-    pub id: String,
-    pub name: String,
-    pub options: Vec<SellingPlanOption>,
-    pub price_adjustments: Vec<PlanPriceAdjustment>,
-    pub recurring_deliveries: bool,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(deny_unknown_fields, rename_all = "camelCase")]
-pub struct SellingPlanOption {
-    #[serde(rename = "__typename")]
-    pub type_name: String,
-    pub name: Option<String>,
-    pub value: Option<String>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(deny_unknown_fields, rename_all = "camelCase")]
-pub struct CheckoutCharge {
-    #[serde(rename = "__typename")]
-    pub type_name: String,
-    #[serde(rename = "type")]
-    pub kind: String,
-    pub value: CheckoutChargeValue,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(deny_unknown_fields, rename_all = "camelCase")]
-pub struct PlanPriceAdjustment {
-    #[serde(rename = "__typename")]
-    pub type_name: String,
-    pub adjustment_value: PriceAdjustmentValue,
-    pub order_count: Option<i64>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "__typename", deny_unknown_fields)]
 pub enum Media {
     MediaImage {
@@ -610,55 +529,6 @@ pub enum Media {
     },
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(tag = "__typename", deny_unknown_fields)]
-pub enum BillingPolicy {
-    SellingPlanRecurringBillingPolicy {
-        interval: String,
-        #[serde(rename = "intervalCount")]
-        interval_count: i64,
-    },
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(tag = "__typename", deny_unknown_fields)]
-pub enum DeliveryPolicy {
-    SellingPlanRecurringDeliveryPolicy {
-        interval: String,
-        #[serde(rename = "intervalCount")]
-        interval_count: i64,
-    },
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(tag = "__typename", deny_unknown_fields)]
-pub enum CheckoutChargeValue {
-    MoneyV2 {
-        amount: String,
-        #[serde(rename = "currencyCode")]
-        currency_code: String,
-    },
-    SellingPlanCheckoutChargePercentageValue {
-        percentage: Number,
-    },
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(tag = "__typename", deny_unknown_fields)]
-pub enum PriceAdjustmentValue {
-    SellingPlanFixedAmountPriceAdjustment {
-        #[serde(rename = "adjustmentAmount")]
-        adjustment_amount: Money,
-    },
-    SellingPlanFixedPriceAdjustment {
-        price: Money,
-    },
-    SellingPlanPercentagePriceAdjustment {
-        #[serde(rename = "adjustmentPercentage")]
-        adjustment_percentage: Number,
-    },
-}
-
 #[cfg(test)]
 mod contract_tests {
     use super::*;
@@ -685,9 +555,6 @@ mod contract_tests {
         let mut changed = product;
         changed["priceRange"]["minVariantPrice"]["amount"] = json!(12.34);
         assert!(serde_json::from_value::<Product>(changed).is_err());
-        let adjustment = json!({"__typename":"SellingPlanPercentagePriceAdjustment","adjustmentPercentage":12.5});
-        let typed: PriceAdjustmentValue = serde_json::from_value(adjustment.clone()).unwrap();
-        assert_eq!(serde_json::to_value(typed).unwrap(), adjustment);
     }
     #[test]
     fn historical_and_contextual_artifacts_remain_readable() {
@@ -695,6 +562,23 @@ mod contract_tests {
             "../ankercom/offer_details/v2/fixtures/product.json"
         ))
         .unwrap();
+        // Captures from before selling plans were dropped still parse, and the
+        // legacy fields are not written back out.
+        assert!(product.get("sellingPlanGroups").is_some());
+        assert!(
+            product
+                .pointer("/variants/edges/0/node/sellingPlanAllocations")
+                .is_some()
+        );
+        let typed =
+            serde_json::to_value(serde_json::from_value::<Product>(product.clone()).unwrap())
+                .unwrap();
+        assert!(typed.get("sellingPlanGroups").is_none());
+        assert!(
+            typed
+                .pointer("/variants/edges/0/node/sellingPlanAllocations")
+                .is_none()
+        );
         let mut artifact = json!({"schema_version":1,"product":product,"pages":[]});
         assert!(serde_json::from_value::<RawOfferDetails>(artifact.clone()).is_ok());
         artifact["schema_version"] = json!(2);

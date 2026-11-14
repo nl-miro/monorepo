@@ -52,20 +52,8 @@ mod tests {
             Operation::Details {
                 id: "gid://shopify/Product/1".into(),
             },
-            Operation::SellingPlans {
-                id: "gid://shopify/Product/1".into(),
-                group_after: Some("group".into()),
-                group_cursor: "cursor".into(),
-                after: Some("plans".into()),
-            },
         ];
-        for field in [
-            "collections",
-            "images",
-            "media",
-            "variants",
-            "sellingPlanGroups",
-        ] {
+        for field in ["collections", "images", "media", "variants"] {
             operations.push(Operation::ProductConnection {
                 id: "gid://shopify/Product/1".into(),
                 field: field.into(),
@@ -76,7 +64,6 @@ mod tests {
             "components",
             "groupedBy",
             "quantityPriceBreaks",
-            "sellingPlanAllocations",
             "storeAvailability",
         ] {
             operations.push(Operation::VariantConnection {

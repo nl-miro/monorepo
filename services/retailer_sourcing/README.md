@@ -1074,11 +1074,11 @@ Shopify. All requests use the 2026-10 schema, existing offer proxy rotation,
 a six-second delay, a 60-second timeout and no redirects.
 All retailers use the same detail-query page sizes regardless of authentication.
 The initial query fetches up to 5 items per selected connection. Continuations
-fetch up to 25 collections/images/media, 10 variants, 20 selling-plan groups,
-and 5 items per nested variant connection or selling-plan list. Selling-plan
-continuation selects one owning group at a time. Every selected connection still
-paginates as needed; see
+fetch up to 25 collections/images/media, 10 variants, and 5 items per nested
+variant connection. Every selected connection still paginates as needed; see
 [ADR 56](../../docs/adr/0056-anker-operation-specific-page-sizes.md).
+Selling plans are not selected, because acquired tokens often lack their access
+scope; see [ADR 73](../../docs/adr/0073-drop-storefront-selling-plans.md).
 GraphQL/access failures fail the command rather than silently omit fields.
 
 ## Anker, Minisforum and Ugreen multi-market initial fills

@@ -88,18 +88,19 @@ when no token is found; other stores
 acquire the selected browser token from their configured source. The full field
 selection and exhaustive pagination are preserved for both access modes.
 All retailers use initial pages of 5 for every selected connection. Continuations
-fetch 25 collections/images/media, 10 variants, 20 selling-plan groups, and 5
-items per nested variant connection or selling-plan list. Authentication does
-not change these sizes; see
+fetch 25 collections/images/media, 10 variants, and 5 items per nested variant
+connection. Authentication does not change these sizes; see
 [ADR 56](../../docs/adr/0056-anker-operation-specific-page-sizes.md).
+Selling plans are not selected; see
+[ADR 73](../../docs/adr/0073-drop-storefront-selling-plans.md).
 See the [market table](../../services/retailer_sourcing/README.md#anker-initial-offer-fill),
 [ADR 53](../../docs/adr/0053-anker-storefront-initial-fill-markets.md), and
 [captured evidence](src/shopify/initial_fill/fixtures/README.md).
 
 The checked-in schema and full details selection come from
 `wip/switching-shopify-retailers-to-api` (`c3f5872`). Catalog requests select only
-product GIDs and cursors. Separate typed continuation operations cover product,
-variant, and selling-plan connections. The saved WIP response in the fixtures
+product GIDs and cursors. Separate typed continuation operations cover product
+and variant connections. The saved WIP response in the fixtures
 has incomplete collections and is deliberately retained as a pagination regression.
 Presentation selections additionally request `id` to avoid the generated client's
 empty enum for objects selecting only `__typename`.
@@ -124,8 +125,9 @@ let variants = &raw.product.variants.edges;
 All 17 configured Anker retailers share concrete types in `graphql/raw.rs`,
 re-exported through their `offer_details/v2/raw.rs` compatibility paths and prelude. Every product
 field is typed, including connections, images/media, variants, prices, quantity
-rules, selling plans and localization. Unknown fields fail rather than being
-silently dropped. Decimal amounts remain strings; other numeric scalars retain
+rules and localization. Unknown fields fail rather than being silently dropped,
+except the selling-plan fields of older captures, which are accepted and
+ignored. Decimal amounts remain strings; other numeric scalars retain
 JSON numbers. Diagnostic metadata and recorded continuation response pages stay
 JSON evidence. Artifacts use schema 1 without context and schema 2 with context; v2 names the pipeline.
 All supported storefronts now use the shared complete extracted model described below.

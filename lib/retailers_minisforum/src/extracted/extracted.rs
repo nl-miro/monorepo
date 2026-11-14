@@ -80,16 +80,6 @@ mod contract_tests {
         let mut changed = product;
         changed["priceRange"]["minVariantPrice"]["amount"] = json!(12.34);
         assert!(serde_json::from_value::<raw::Product>(changed).is_err());
-        let adjustment = json!({"__typename":"SellingPlanPercentagePriceAdjustment","adjustmentPercentage":12.5});
-        let raw: raw::PriceAdjustmentValue = serde_json::from_value(adjustment).unwrap();
-        let typed = PriceAdjustmentValue::try_from(raw).unwrap();
-        let output = serde_json::to_value(typed).unwrap();
-        assert_eq!(
-            output,
-            json!({"__typename":"SellingPlanPercentagePriceAdjustment","adjustment_percentage":12.5})
-        );
-        let decoded: PriceAdjustmentValue = serde_json::from_value(output.clone()).unwrap();
-        assert_eq!(serde_json::to_value(decoded).unwrap(), output);
     }
 
     #[test]

@@ -49,7 +49,6 @@ pub struct Product {
     pub options: Vec<ProductOption>,
     // pub price_range: PriceRange,
     pub requires_selling_plan: bool,
-    pub selling_plan_groups: Vec<SellingPlanGroup>,
     pub variants: Vec<Variant>,
     // pub variants_count: Option<Count>,
     pub created_at: DateTime<Utc>,
@@ -114,7 +113,6 @@ pub struct VariantSpecials {
     pub quantity_price_breaks: Vec<QuantityPriceBreak>,
     pub quantity_rule: QuantityRule,
     pub requires_components: bool,
-    pub selling_plan_allocations: Vec<SellingPlanAllocation>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -238,115 +236,4 @@ pub struct Address {
     pub province: Option<String>,
     pub province_code: Option<String>,
     pub zip: Option<String>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct SellingPlanAllocation {
-    // #[serde(rename = "__typename")]
-    // pub type_name: String,
-    pub checkout_charge_amount: Money,
-    pub price_adjustments: Vec<AllocationPriceAdjustment>,
-    pub remaining_balance_charge_amount: Money,
-    pub selling_plan: SellingPlan,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct AllocationPriceAdjustment {
-    // #[serde(rename = "__typename")]
-    // pub type_name: String,
-    pub compare_at_price: Money,
-    pub per_delivery_price: Money,
-    pub price: Money,
-    pub unit_price: Option<Money>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct SellingPlanGroup {
-    // #[serde(rename = "__typename")]
-    // pub type_name: String,
-    pub app_name: Option<String>,
-    pub name: String,
-    pub options: Vec<SellingPlanGroupOption>,
-    pub selling_plans: Vec<SellingPlan>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct SellingPlanGroupOption {
-    // #[serde(rename = "__typename")]
-    // pub type_name: String,
-    pub name: String,
-    pub values: Vec<String>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct SellingPlan {
-    // #[serde(rename = "__typename")]
-    // pub type_name: String,
-    pub billing_policy: Option<BillingPolicy>,
-    pub checkout_charge: CheckoutCharge,
-    pub delivery_policy: Option<DeliveryPolicy>,
-    pub description: Option<String>,
-    pub id: String,
-    pub name: String,
-    pub options: Vec<SellingPlanOption>,
-    pub price_adjustments: Vec<PlanPriceAdjustment>,
-    pub recurring_deliveries: bool,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct SellingPlanOption {
-    // #[serde(rename = "__typename")]
-    // pub type_name: String,
-    pub name: Option<String>,
-    pub value: Option<String>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct CheckoutCharge {
-    // #[serde(rename = "__typename")]
-    // pub type_name: String,
-    #[serde(rename = "type")]
-    pub kind: String,
-    pub value: CheckoutChargeValue,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct PlanPriceAdjustment {
-    // #[serde(rename = "__typename")]
-    // pub type_name: String,
-    pub adjustment_value: PriceAdjustmentValue,
-    pub order_count: Option<i64>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(tag = "__typename")]
-pub enum BillingPolicy {
-    SellingPlanRecurringBillingPolicy {
-        interval: String,
-        interval_count: i64,
-    },
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(tag = "__typename")]
-pub enum DeliveryPolicy {
-    SellingPlanRecurringDeliveryPolicy {
-        interval: String,
-        interval_count: i64,
-    },
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(tag = "__typename")]
-pub enum CheckoutChargeValue {
-    Money(Money),
-    SellingPlanCheckoutChargePercentageValue { percentage: Number },
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(tag = "__typename")]
-pub enum PriceAdjustmentValue {
-    SellingPlanFixedAmountPriceAdjustment { adjustment_amount: Money },
-    SellingPlanFixedPriceAdjustment { price: Money },
-    SellingPlanPercentagePriceAdjustment { adjustment_percentage: Number },
 }

@@ -51,13 +51,7 @@ fn omitted_detail_country_uses_observed_currency_not_configured_default() {
         "../ankerau/offer_details/v2/fixtures/product.json"
     ))
     .unwrap();
-    for field in [
-        "collections",
-        "images",
-        "media",
-        "variants",
-        "sellingPlanGroups",
-    ] {
+    for field in ["collections", "images", "media", "variants"] {
         product[field] = json!({"edges":[],"pageInfo":{"hasNextPage":false,"endCursor":null}});
     }
     fn currency(value: &mut Value) {
@@ -157,13 +151,7 @@ fn inventory_language_country_and_currency_are_preserved_through_pagination() {
         "../ankerau/offer_details/v2/fixtures/product.json"
     ))
     .unwrap();
-    for field in [
-        "collections",
-        "images",
-        "media",
-        "variants",
-        "sellingPlanGroups",
-    ] {
+    for field in ["collections", "images", "media", "variants"] {
         p[field] = json!({"edges":[],"pageInfo":{"hasNextPage":false,"endCursor":null}});
     }
     p["images"]["pageInfo"] = json!({"hasNextPage":true,"endCursor":"image-next"});

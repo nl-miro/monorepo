@@ -60,13 +60,7 @@ pub(super) fn product(id: &str) -> Value {
     ))
     .unwrap();
     value["id"] = json!(id);
-    for field in [
-        "collections",
-        "images",
-        "media",
-        "variants",
-        "sellingPlanGroups",
-    ] {
+    for field in ["collections", "images", "media", "variants"] {
         value[field] = connection(vec![], false, None);
     }
     value
@@ -466,7 +460,7 @@ fn details_fail_for_missing_wrong_product_currency_or_unsupported_html() {
 }
 
 #[test]
-fn every_product_variant_and_selling_plan_connection_is_exhausted() {
+fn every_product_and_variant_connection_is_exhausted() {
     let id = "gid://shopify/Product/1";
     let variant_id = "gid://shopify/ProductVariant/10";
     let mut variant = sample_node("variants");
@@ -475,26 +469,16 @@ fn every_product_variant_and_selling_plan_connection_is_exhausted() {
         "components",
         "groupedBy",
         "quantityPriceBreaks",
-        "sellingPlanAllocations",
         "storeAvailability",
     ];
     for field in fields {
         variant[field] = connection(vec![], true, Some(&format!("{field}-1")));
     }
-    let group1 = json!({"__typename":"SellingPlanGroup", "appName":null,"options":[],"name":"first","sellingPlans":connection(vec![],true,Some("plans-1"))});
-    let group2 = json!({"__typename":"SellingPlanGroup", "appName":null,"options":[],"name":"second","sellingPlans":connection(vec![],true,Some("plans-2"))});
     let mut initial = product(id);
-    let product_fields = [
-        "collections",
-        "images",
-        "media",
-        "variants",
-        "sellingPlanGroups",
-    ];
+    let product_fields = ["collections", "images", "media", "variants"];
     for field in product_fields {
         let node = match field {
             "variants" => variant.clone(),
-            "sellingPlanGroups" => group1.clone(),
             _ => {
                 let mut node = sample_node(field);
                 node["id"] = json!(format!("{field}-one"));
@@ -511,7 +495,6 @@ fn every_product_variant_and_selling_plan_connection_is_exhausted() {
     for field in product_fields {
         let edges = match field {
             "variants" => vec![],
-            "sellingPlanGroups" => vec![json!({"cursor":"sellingPlanGroups-2","node":group2})],
             _ => {
                 let mut node = sample_node(field);
                 node["id"] = json!(format!("{field}-two"));
@@ -526,9 +509,6 @@ fn every_product_variant_and_selling_plan_connection_is_exhausted() {
         let mut parent = json!({"__typename":"ProductVariant", "id":variant_id});
         parent[field] = connection(vec![], false, Some(&format!("{field}-2")));
         responses.push(json!({"data":{"node":parent}}));
-    }
-    for n in [1, 2] {
-        responses.push(json!({"data":{"product":{"id":id,"sellingPlanGroups":{"edges":[{"cursor":format!("sellingPlanGroups-{n}"),"node":{"sellingPlans":connection(vec![],false,Some("end"))}}]}}}}));
     }
     for retailer in [RetailerCode::AnkerAu] {
         let config = retailer_data_extractor::initial_fill_config_for(retailer).unwrap();
@@ -545,7 +525,7 @@ fn every_product_variant_and_selling_plan_connection_is_exhausted() {
             )
         };
         let result = fetch_details(&fake, retailer, access.as_ref(), id).unwrap();
-        assert_eq!(result.pages.len(), 13);
+        assert_eq!(result.pages.len(), 9);
         let config = retailer_data_extractor::initial_fill_config_for(retailer).unwrap();
         for page in &result.pages {
             assert!(page.request.variables.get("country").is_none());
@@ -564,15 +544,9 @@ fn every_product_variant_and_selling_plan_connection_is_exhausted() {
                 0
             );
         }
+        // Selling plans need a scope acquired storefront tokens usually lack.
         let calls = fake.calls.lock().unwrap();
-        assert!(
-            calls[11].operation_name == "SellingPlans"
-                && calls[11].variables["groupAfter"].is_null()
-        );
-        assert!(
-            calls[12].operation_name == "SellingPlans"
-                && calls[12].variables["groupAfter"] == "sellingPlanGroups-1"
-        );
+        assert!(calls.iter().all(|call| !call.query.contains("sellingPlan")));
     }
 }
 #[test]

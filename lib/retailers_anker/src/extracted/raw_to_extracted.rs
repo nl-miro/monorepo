@@ -183,7 +183,7 @@ impl TryFrom<raw::Product> for Product {
             product_type,
             published_at,
             requires_selling_plan,
-            selling_plan_groups,
+            legacy_selling_plan_groups: _,
             seo,
             tags,
             title,
@@ -293,11 +293,6 @@ impl TryFrom<raw::Product> for Product {
                 .collect::<Result<Vec<_>, String>>()?,
             // price_range: PriceRange::try_from(price_range)?,
             requires_selling_plan,
-            selling_plan_groups: selling_plan_groups
-                .edges
-                .into_iter()
-                .map(|edge| SellingPlanGroup::try_from(edge.node))
-                .collect::<Result<Vec<_>, String>>()?,
             variants: variants
                 .edges
                 .into_iter()
@@ -602,7 +597,7 @@ impl TryFrom<raw::Variant> for Variant {
             requires_components,
             requires_shipping,
             selected_options,
-            selling_plan_allocations,
+            legacy_selling_plan_allocations: _,
             sku,
             store_availability,
             taxable,
@@ -659,11 +654,6 @@ impl TryFrom<raw::Variant> for Variant {
                     .collect::<Result<Vec<_>, String>>()?,
                 quantity_rule: QuantityRule::try_from(quantity_rule)?,
                 requires_components,
-                selling_plan_allocations: selling_plan_allocations
-                    .edges
-                    .into_iter()
-                    .map(|edge| SellingPlanAllocation::try_from(edge.node))
-                    .collect::<Result<Vec<_>, String>>()?,
             },
             title,
             pricing,
@@ -872,156 +862,6 @@ impl TryFrom<raw::Address> for Address {
         })
     }
 }
-impl TryFrom<raw::SellingPlanAllocation> for SellingPlanAllocation {
-    type Error = String;
-    fn try_from(value: raw::SellingPlanAllocation) -> Result<Self, Self::Error> {
-        let raw::SellingPlanAllocation {
-            type_name: _,
-            checkout_charge_amount,
-            price_adjustments,
-            remaining_balance_charge_amount,
-            selling_plan,
-        } = value;
-        Ok(Self {
-            // type_name,
-            checkout_charge_amount: Money::try_from(checkout_charge_amount)?,
-            price_adjustments: vec(price_adjustments)?,
-            remaining_balance_charge_amount: Money::try_from(remaining_balance_charge_amount)?,
-            selling_plan: SellingPlan::try_from(selling_plan)?,
-        })
-    }
-}
-impl TryFrom<raw::AllocationPriceAdjustment> for AllocationPriceAdjustment {
-    type Error = String;
-    fn try_from(value: raw::AllocationPriceAdjustment) -> Result<Self, Self::Error> {
-        let raw::AllocationPriceAdjustment {
-            type_name: _,
-            compare_at_price,
-            per_delivery_price,
-            price,
-            unit_price,
-        } = value;
-        Ok(Self {
-            // type_name,
-            compare_at_price: Money::try_from(compare_at_price)?,
-            per_delivery_price: Money::try_from(per_delivery_price)?,
-            price: Money::try_from(price)?,
-            unit_price: opt(unit_price)?,
-        })
-    }
-}
-impl TryFrom<raw::SellingPlanGroup> for SellingPlanGroup {
-    type Error = String;
-    fn try_from(value: raw::SellingPlanGroup) -> Result<Self, Self::Error> {
-        let raw::SellingPlanGroup {
-            type_name: _,
-            app_name,
-            name,
-            options,
-            selling_plans,
-        } = value;
-        Ok(Self {
-            // type_name,
-            app_name,
-            name,
-            options: vec(options)?,
-            selling_plans: selling_plans
-                .edges
-                .into_iter()
-                .map(|edge| SellingPlan::try_from(edge.node))
-                .collect::<Result<Vec<_>, String>>()?,
-        })
-    }
-}
-impl TryFrom<raw::SellingPlanGroupOption> for SellingPlanGroupOption {
-    type Error = String;
-    fn try_from(value: raw::SellingPlanGroupOption) -> Result<Self, Self::Error> {
-        let raw::SellingPlanGroupOption {
-            type_name: _,
-            name,
-            values,
-        } = value;
-        Ok(Self {
-            // type_name,
-            name,
-            values,
-        })
-    }
-}
-impl TryFrom<raw::SellingPlan> for SellingPlan {
-    type Error = String;
-    fn try_from(value: raw::SellingPlan) -> Result<Self, Self::Error> {
-        let raw::SellingPlan {
-            type_name: _,
-            billing_policy,
-            checkout_charge,
-            delivery_policy,
-            description,
-            id,
-            name,
-            options,
-            price_adjustments,
-            recurring_deliveries,
-        } = value;
-        Ok(Self {
-            // type_name,
-            billing_policy: opt(billing_policy)?,
-            checkout_charge: CheckoutCharge::try_from(checkout_charge)?,
-            delivery_policy: opt(delivery_policy)?,
-            description,
-            id,
-            name,
-            options: vec(options)?,
-            price_adjustments: vec(price_adjustments)?,
-            recurring_deliveries,
-        })
-    }
-}
-impl TryFrom<raw::SellingPlanOption> for SellingPlanOption {
-    type Error = String;
-    fn try_from(value: raw::SellingPlanOption) -> Result<Self, Self::Error> {
-        let raw::SellingPlanOption {
-            type_name: _,
-            name,
-            value,
-        } = value;
-        Ok(Self {
-            // type_name,
-            name,
-            value,
-        })
-    }
-}
-impl TryFrom<raw::CheckoutCharge> for CheckoutCharge {
-    type Error = String;
-    fn try_from(value: raw::CheckoutCharge) -> Result<Self, Self::Error> {
-        let raw::CheckoutCharge {
-            type_name: _,
-            kind,
-            value,
-        } = value;
-        Ok(Self {
-            // type_name,
-            kind,
-            value: CheckoutChargeValue::try_from(value)?,
-        })
-    }
-}
-impl TryFrom<raw::PlanPriceAdjustment> for PlanPriceAdjustment {
-    type Error = String;
-    fn try_from(value: raw::PlanPriceAdjustment) -> Result<Self, Self::Error> {
-        let raw::PlanPriceAdjustment {
-            type_name: _,
-            adjustment_value,
-            order_count,
-        } = value;
-        Ok(Self {
-            // type_name,
-            adjustment_value: PriceAdjustmentValue::try_from(adjustment_value)?,
-            order_count,
-        })
-    }
-}
 impl TryFrom<raw::Media> for Media {
     type Error = String;
     fn try_from(value: raw::Media) -> Result<Self, Self::Error> {
@@ -1089,74 +929,6 @@ impl TryFrom<raw::Media> for Media {
                 presentation: opt(presentation)?,
                 preview_image: opt(preview_image)?,
                 sources: vec(sources)?,
-            },
-        })
-    }
-}
-impl TryFrom<raw::BillingPolicy> for BillingPolicy {
-    type Error = String;
-    fn try_from(value: raw::BillingPolicy) -> Result<Self, Self::Error> {
-        Ok(match value {
-            raw::BillingPolicy::SellingPlanRecurringBillingPolicy {
-                interval,
-                interval_count,
-            } => Self::SellingPlanRecurringBillingPolicy {
-                interval,
-                interval_count,
-            },
-        })
-    }
-}
-impl TryFrom<raw::DeliveryPolicy> for DeliveryPolicy {
-    type Error = String;
-    fn try_from(value: raw::DeliveryPolicy) -> Result<Self, Self::Error> {
-        Ok(match value {
-            raw::DeliveryPolicy::SellingPlanRecurringDeliveryPolicy {
-                interval,
-                interval_count,
-            } => Self::SellingPlanRecurringDeliveryPolicy {
-                interval,
-                interval_count,
-            },
-        })
-    }
-}
-impl TryFrom<raw::CheckoutChargeValue> for CheckoutChargeValue {
-    type Error = String;
-    fn try_from(value: raw::CheckoutChargeValue) -> Result<Self, Self::Error> {
-        Ok(match value {
-            raw::CheckoutChargeValue::MoneyV2 {
-                amount,
-                currency_code,
-            } => Self::Money(Money::try_from(raw::Money {
-                type_name: "MoneyV2".into(),
-                amount,
-                currency_code,
-            })?),
-            raw::CheckoutChargeValue::SellingPlanCheckoutChargePercentageValue { percentage } => {
-                Self::SellingPlanCheckoutChargePercentageValue { percentage }
-            }
-        })
-    }
-}
-impl TryFrom<raw::PriceAdjustmentValue> for PriceAdjustmentValue {
-    type Error = String;
-    fn try_from(value: raw::PriceAdjustmentValue) -> Result<Self, Self::Error> {
-        Ok(match value {
-            raw::PriceAdjustmentValue::SellingPlanFixedAmountPriceAdjustment {
-                adjustment_amount,
-            } => Self::SellingPlanFixedAmountPriceAdjustment {
-                adjustment_amount: Money::try_from(adjustment_amount)?,
-            },
-            raw::PriceAdjustmentValue::SellingPlanFixedPriceAdjustment { price } => {
-                Self::SellingPlanFixedPriceAdjustment {
-                    price: Money::try_from(price)?,
-                }
-            }
-            raw::PriceAdjustmentValue::SellingPlanPercentagePriceAdjustment {
-                adjustment_percentage,
-            } => Self::SellingPlanPercentagePriceAdjustment {
-                adjustment_percentage,
             },
         })
     }

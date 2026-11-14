@@ -80,7 +80,8 @@ mod tests {
                 .query
                 .contains("country: $country, language: $language")
         );
-        assert!(request.query.contains("sellingPlanAllocations"));
+        // Selling plans need a scope acquired storefront tokens usually lack.
+        assert!(!request.query.contains("sellingPlan"));
         assert!(request.query.contains("storeAvailability"));
         assert_eq!(request.variables["id"], body["data"]["product"]["id"]);
     }

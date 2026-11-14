@@ -10,20 +10,8 @@ fn operation_documents_and_variables_are_local() {
             after: Some("cursor".into()),
         },
         Operation::Details { id: id.into() },
-        Operation::SellingPlans {
-            id: id.into(),
-            group_after: None,
-            group_cursor: "group".into(),
-            after: None,
-        },
     ];
-    for field in [
-        "collections",
-        "images",
-        "media",
-        "variants",
-        "sellingPlanGroups",
-    ] {
+    for field in ["collections", "images", "media", "variants"] {
         operations.push(Operation::ProductConnection {
             id: id.into(),
             field: field.into(),
@@ -34,7 +22,6 @@ fn operation_documents_and_variables_are_local() {
         "components",
         "groupedBy",
         "quantityPriceBreaks",
-        "sellingPlanAllocations",
         "storeAvailability",
     ] {
         operations.push(Operation::VariantConnection {
@@ -95,13 +82,7 @@ fn local_snapshot_keeps_artifact_versions_and_exact_evidence() {
     let mut product: Value =
         serde_json::from_str(include_str!("../../offer_details/v2/fixtures/product.json")).unwrap();
     // Make a complete one-page reply from this retailer's captured fields.
-    for field in [
-        "collections",
-        "images",
-        "media",
-        "variants",
-        "sellingPlanGroups",
-    ] {
+    for field in ["collections", "images", "media", "variants"] {
         product[field] = json!({"edges":[],"pageInfo":{"hasNextPage":false,"endCursor":null}});
     }
     // The selected fixture may be a different advertised market than the default.

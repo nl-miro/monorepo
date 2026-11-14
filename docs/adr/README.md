@@ -115,3 +115,5 @@ Decision, Consequences) and give it the next number.
 - [71: Tokenless access for additional Ugreen storefronts](0071-additional-tokenless-ugreen-storefronts.md)
 
 - [72: Restore Storefront token acquisition](0072-restore-storefront-token-acquisition.md)
+
+- [73: Drop selling plans from Storefront offer details](0073-drop-storefront-selling-plans.md)
