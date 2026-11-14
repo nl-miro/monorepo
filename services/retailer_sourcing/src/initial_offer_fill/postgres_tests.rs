@@ -204,7 +204,7 @@ fn run_initial_fill(retailer: RetailerCode) {
     let attempts_token = retailer_data_extractor::initial_fill_config_for(retailer)
         .unwrap()
         .attempts_token();
-    let expected_commands = 1 + usize::from(attempts_token) + contexts.len() * 4;
+    let expected_commands = usize::from(attempts_token) + contexts.len() * 4;
     let db = Database::new();
     let server = Server::new();
     let mut bus = Bus::default();
@@ -214,7 +214,6 @@ fn run_initial_fill(retailer: RetailerCode) {
         fetcher: Source,
         store: server.client(),
     });
-    super::discover_markets::register_inventory(&mut bus);
     bus.on_many_keyed(catalog::reacts_to::acquired);
     bus.on_many_keyed(catalog::reacts_to::next_batch);
     bus.on_many_keyed(details::reacts_to::on);

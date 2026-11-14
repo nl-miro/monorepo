@@ -25,9 +25,6 @@ pub fn initial_fill_integration_for(
         .or_else(|| retailers_minisforum::initial_fill::integration(retailer))
         .or_else(|| retailers_ugreen::initial_fill::integration(retailer))
 }
-pub fn all_market_contexts(retailer: RetailerCode) -> bool {
-    initial_fill_integration_for(retailer).is_some_and(|i| i.all_market_contexts())
-}
 pub fn initial_fill_config_for(
     retailer: RetailerCode,
 ) -> Option<retailer_sauce::shopify::initial_fill::StorefrontConfig> {
@@ -431,12 +428,10 @@ mod migrated_wip_tests {
             (config.country, config.language, config.currency),
             ("CA", "EN", "CAD")
         );
-        assert!(all_market_contexts(code));
         assert_eq!(
             initial_fill_process(code).steps,
             vec![
                 Step::AcquireStorefrontToken,
-                Step::DiscoverMarkets,
                 Step::ProductCatalogIdentifiers,
                 Step::OfferDetails
             ]

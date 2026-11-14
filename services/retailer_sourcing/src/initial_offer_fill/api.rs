@@ -2,7 +2,7 @@ use super::{
     acquire_storefront_token::prelude::AcquireStorefrontToken,
     product_catalog_ids::command::FetchProductCatalogIdentifiers,
 };
-use crate::platform::bus::BusHandle;
+use crate::platform::bus::{BusHandle, KeyedCommand};
 use axum::{
     Json,
     extract::State,
@@ -77,9 +77,10 @@ pub async fn start(
     };
     let queued = tokio::task::spawn_blocking(move || {
         queue(prepared, |command, run_id| match command {
-            InitialCommand::Markets(command) => bus.dispatcher().dispatch_run(command, run_id),
             InitialCommand::Token(command) => bus.dispatcher().dispatch_run(command, run_id),
-            InitialCommand::Catalog(command) => bus.dispatcher().dispatch_run(command, run_id),
+            InitialCommand::Catalog(commands) => commands
+                .iter()
+                .try_for_each(|command| bus.dispatcher().dispatch_keyed(command)),
         })
     })
     .await;
@@ -116,9 +117,9 @@ pub async fn start(
 
 #[derive(Debug)]
 enum InitialCommand {
-    Markets(super::discover_markets::DiscoverStorefrontMarkets),
     Token(AcquireStorefrontToken),
-    Catalog(FetchProductCatalogIdentifiers),
+    /// Tokenless runs start with one catalog page per supported locale.
+    Catalog(Vec<KeyedCommand<FetchProductCatalogIdentifiers>>),
 }
 
 #[derive(Debug)]
@@ -139,32 +140,16 @@ fn prepare(codes: &[String]) -> Result<Vec<PreparedFill>, String> {
             .ok_or_else(|| format!("initial fill is not implemented for retailer {code}"))?;
         // Configuration gates scaffolds; the executable flow must match the declared process.
         let process = retailer_data_extractor::initial_fill_process(retailer_code);
-        let mut expected = if retailer_data_extractor::all_market_contexts(retailer_code) {
-            vec![
-                retailer_data_extractor::Step::DiscoverMarkets,
-                retailer_data_extractor::Step::ProductCatalogIdentifiers,
-                retailer_data_extractor::Step::OfferDetails,
-            ]
-        } else if config.requires_token() {
-            vec![
-                retailer_data_extractor::Step::AcquireStorefrontToken,
-                retailer_data_extractor::Step::ProductCatalogIdentifiers,
-                retailer_data_extractor::Step::OfferDetails,
-            ]
-        } else {
-            vec![
-                retailer_data_extractor::Step::ProductCatalogIdentifiers,
-                retailer_data_extractor::Step::OfferDetails,
-            ]
-        };
         if config.requires_token() && !config.attempts_token() {
             return Err(format!(
                 "token-required retailer must enable token acquisition: {code}"
             ));
         }
-        if config.attempts_token()
-            && expected.first() != Some(&retailer_data_extractor::Step::AcquireStorefrontToken)
-        {
+        let mut expected = vec![
+            retailer_data_extractor::Step::ProductCatalogIdentifiers,
+            retailer_data_extractor::Step::OfferDetails,
+        ];
+        if config.attempts_token() {
             expected.insert(0, retailer_data_extractor::Step::AcquireStorefrontToken);
         }
         if process.steps != expected {
@@ -177,32 +162,17 @@ fn prepare(codes: &[String]) -> Result<Vec<PreparedFill>, String> {
             continue;
         }
         let run_id = Uuid::now_v7();
+        // Resolve the locale fan-out now so inventory problems reject the request.
+        let catalog = super::product_catalog_ids::reacts_to::initial(run_id, retailer_code, None)
+            .map_err(|error| format!("{error}: {code}"))?;
         let command = if config.attempts_token() {
             InitialCommand::Token(AcquireStorefrontToken {
                 run_id,
                 retailer_code,
                 url: config.storefront_url.into(),
             })
-        } else if retailer_data_extractor::all_market_contexts(retailer_code) {
-            InitialCommand::Markets(super::discover_markets::DiscoverStorefrontMarkets {
-                storefront_token: None,
-                run_id,
-                retailer_code,
-            })
-        } else if config.requires_token() {
-            InitialCommand::Token(AcquireStorefrontToken {
-                run_id,
-                retailer_code,
-                url: config.storefront_url.into(),
-            })
         } else {
-            InitialCommand::Catalog(FetchProductCatalogIdentifiers {
-                context: None,
-                run_id,
-                retailer_code,
-                storefront_token: None,
-                after: None,
-            })
+            InitialCommand::Catalog(catalog)
         };
         prepared.push(PreparedFill {
             fill: QueuedInitialFill { retailer, run_id },
@@ -266,9 +236,6 @@ mod tests {
         let mut dispatched = Vec::new();
         let fills = queue(prepared, |command, run_id| {
             match command {
-                InitialCommand::Markets(_) => {
-                    panic!("token resolution must precede market discovery")
-                }
                 InitialCommand::Token(command) => {
                     assert!(matches!(
                         command.retailer_code,
@@ -284,14 +251,20 @@ mod tests {
                     );
                     assert_eq!(command.run_id, run_id);
                 }
-                InitialCommand::Catalog(command) => {
-                    assert!(matches!(
-                        command.retailer_code,
-                        RetailerCode::AnkerItalyCom | RetailerCode::AnkerJapanCom
-                    ));
-                    assert_eq!(command.run_id, run_id);
-                    assert!(command.storefront_token.is_none());
-                    assert!(command.after.is_none());
+                InitialCommand::Catalog(commands) => {
+                    assert!(!commands.is_empty());
+                    for keyed in commands {
+                        let command = &keyed.command;
+                        assert!(matches!(
+                            command.retailer_code,
+                            RetailerCode::AnkerItalyCom | RetailerCode::AnkerJapanCom
+                        ));
+                        assert_eq!(keyed.run_id, run_id);
+                        assert_eq!(command.run_id, run_id);
+                        assert!(command.context.is_some());
+                        assert!(command.storefront_token.is_none());
+                        assert!(command.after.is_none());
+                    }
                 }
             }
             dispatched.push(run_id);
@@ -367,7 +340,7 @@ mod market_tests {
         let codes: Vec<String> = RetailerCode::ALL
             .iter()
             .copied()
-            .filter(|r| retailer_data_extractor::all_market_contexts(*r))
+            .filter(|r| retailer_data_extractor::initial_fill_integration_for(*r).is_some())
             .map(|r| r.as_str())
             .collect();
         assert_eq!(codes.len(), 48);

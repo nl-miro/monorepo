@@ -6,7 +6,6 @@ use retailer_sauce::shopify::initial_fill::StorefrontConfig;
 #[cfg(test)]
 use serde_json::Value;
 const CODE: &str = "ugreennasfr";
-const ALL_MARKETS: bool = true;
 pub const CONFIG: StorefrontConfig = StorefrontConfig {
     acquire_token: true,
     token_required: false,
@@ -27,7 +26,6 @@ pub use crate::graphql::{next_cursor, product_gid};
 pub const Integration: crate::graphql::Engine = crate::graphql::Engine {
     code: CODE,
     config: CONFIG,
-    all_markets: ALL_MARKETS,
 };
 #[cfg(test)]
 mod integration_tests;

@@ -263,6 +263,7 @@ impl Dispatcher {
 }
 
 /// A command whose identity survives replay of its triggering event.
+#[derive(Debug)]
 pub struct KeyedCommand<C> {
     pub id: Uuid,
     pub run_id: Uuid,
@@ -311,6 +312,23 @@ impl Dispatcher {
             NewCommandMetadata {
                 command_id: run_id,
                 correlation_id: Some(run_id),
+                causation_id: None,
+                source: Some("api".into()),
+            },
+        )
+        .map_err(|error| DispatchError(error.to_string()))?;
+        self.gateway
+            .dispatch(envelope)
+            .map_err(|error| DispatchError(error.to_string()))
+    }
+
+    /// Queues one of several first commands of an API run under its own stable ID.
+    pub fn dispatch_keyed<C: Command>(&self, keyed: &KeyedCommand<C>) -> Result<(), DispatchError> {
+        let envelope = command_envelope(
+            &keyed.command,
+            NewCommandMetadata {
+                command_id: keyed.id,
+                correlation_id: Some(keyed.run_id),
                 causation_id: None,
                 source: Some("api".into()),
             },

@@ -30,7 +30,6 @@ fn operation_documents_and_variables_are_local() {
             after: Some("cursor".into()),
         });
     }
-    assert!(Integration.all_market_contexts());
     for op in operations {
         let contextual = Operation::InContext {
             context: MarketContext {

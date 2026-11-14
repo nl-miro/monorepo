@@ -3,7 +3,6 @@ use shared::prelude::RetailerCode;
 /// A step in the initial offer fill process.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Step {
-    DiscoverMarkets,
     AcquireStorefrontToken,
     ProductCatalogIdentifiers,
     OfferDetails,
@@ -23,9 +22,6 @@ pub fn initial_fill_process(retailer_code: RetailerCode) -> InitialFillProcess {
     let mut steps = Vec::new();
     if config.attempts_token() {
         steps.push(Step::AcquireStorefrontToken);
-    }
-    if crate::all_market_contexts(retailer_code) {
-        steps.push(Step::DiscoverMarkets);
     }
     steps.extend([Step::ProductCatalogIdentifiers, Step::OfferDetails]);
     InitialFillProcess { steps }

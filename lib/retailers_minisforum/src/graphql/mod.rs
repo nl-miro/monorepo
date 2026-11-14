@@ -46,14 +46,14 @@ use serde_json::Value;
 pub struct Engine {
     pub code: &'static str,
     pub config: StorefrontConfig,
-    pub all_markets: bool,
 }
 impl InitialFillIntegration for Engine {
     fn config(&self) -> StorefrontConfig {
         self.config
     }
+    // Required by retailer_sauce 0.1.1; contexts come from Retailer.supported_locales.
     fn all_market_contexts(&self) -> bool {
-        self.all_markets
+        true
     }
     fn resolve_access(
         &self,

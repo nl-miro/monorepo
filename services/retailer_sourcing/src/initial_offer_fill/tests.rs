@@ -250,7 +250,9 @@ fn downloaded_au_storefront_emits_the_expected_token() {
         .remove(0);
     assert_eq!(event.storefront_token, Some(expected.clone()));
     assert_eq!(event.retailer_code, RetailerCode::AnkerAu);
-    assert!(catalog::reacts_to::acquired(&event).is_empty());
+    let commands = catalog::reacts_to::acquired(&event);
+    assert_eq!(commands.len(), 1);
+    assert_eq!(commands[0].command.storefront_token, event.storefront_token);
 }
 
 #[test]
@@ -331,7 +333,9 @@ fn token_handler_fetches_assets_and_emits_market_token_and_timestamp() {
     assert_eq!(event.storefront_token, Some(token_value()));
     assert!(event.acquired_at >= start);
     assert_eq!(event.run_id, run_id);
-    assert!(catalog::reacts_to::acquired(&event).is_empty());
+    let commands = catalog::reacts_to::acquired(&event);
+    assert_eq!(commands.len(), 1);
+    assert_eq!(commands[0].command.storefront_token, event.storefront_token);
 }
 #[test]
 fn token_handler_rejects_missing_token_failed_assets_and_arbitrary_urls() {
@@ -867,9 +871,6 @@ fn every_market_preserves_its_token_policy_through_catalog_fanout_and_storage() 
                 retailer_data_extractor::Step::ProductCatalogIdentifiers,
                 retailer_data_extractor::Step::OfferDetails,
             ];
-            if retailer_data_extractor::all_market_contexts(retailer) {
-                expected.insert(0, retailer_data_extractor::Step::DiscoverMarkets);
-            }
             expected.insert(0, retailer_data_extractor::Step::AcquireStorefrontToken);
             assert_eq!(process.steps, expected);
             assert!(
@@ -1106,7 +1107,13 @@ fn public_storefront_settings_resolve_tokens_and_propagate_optional_absence() {
             event.storefront_token.as_ref().unwrap().as_str(),
             format!("synthetic-{code}")
         );
-        assert!(catalog::reacts_to::acquired(&event).is_empty());
+        let commands = catalog::reacts_to::acquired(&event);
+        assert!(!commands.is_empty());
+        assert!(
+            commands
+                .iter()
+                .all(|c| c.command.storefront_token == event.storefront_token)
+        );
     }
     for retailer in [
         RetailerCode::AnkerItalyCom,
@@ -1127,14 +1134,13 @@ fn public_storefront_settings_resolve_tokens_and_propagate_optional_absence() {
         .unwrap()
         .remove(0);
         assert!(event.storefront_token.is_none());
-        if !retailer_data_extractor::all_market_contexts(retailer) {
-            assert!(
-                catalog::reacts_to::acquired(&event)[0]
-                    .command
-                    .storefront_token
-                    .is_none()
-            );
-        }
+        let commands = catalog::reacts_to::acquired(&event);
+        assert!(!commands.is_empty());
+        assert!(
+            commands
+                .iter()
+                .all(|c| c.command.storefront_token.is_none())
+        );
     }
 }
 

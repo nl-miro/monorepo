@@ -1,3 +1,6 @@
+- [~] Drop all_markets and the discover-markets stage.
+  Fan out entity contexts after token acquisition; stub the published trait methods.
+
 - [x] Remove redundant per-retailer request and validation wrappers.
   All 48 configurations use direct Integration calls in tests; imports are
   test-only where appropriate. Formatting and all three brand CI checks pass.

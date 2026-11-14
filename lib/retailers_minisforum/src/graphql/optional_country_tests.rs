@@ -31,7 +31,6 @@ fn engine() -> Engine {
             language: "EN",
             currency: "EUR",
         },
-        all_markets: true,
     }
 }
 #[test]
