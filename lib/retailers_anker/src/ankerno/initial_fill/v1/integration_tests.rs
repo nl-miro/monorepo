@@ -40,10 +40,10 @@ fn operation_documents_and_variables_are_local() {
             },
             operation: Box::new(op.clone()),
         };
-        let contextual_request = request(&contextual).unwrap();
+        let contextual_request = Integration.request(&contextual).unwrap();
         assert_eq!(contextual_request.variables["country"], "CA");
         assert_eq!(contextual_request.variables["language"], "FR");
-        let query = request(&op).unwrap();
+        let query = Integration.request(&op).unwrap();
         assert!(query.variables.get("country").is_none());
         assert!(query.query.contains("$country: CountryCode,"));
         assert_eq!(query.variables["language"], CONFIG.language);
@@ -55,9 +55,15 @@ fn operation_documents_and_variables_are_local() {
             }
         }
         assert!(
-            validate_response(&op, &json!({"data":null,"errors":[{"message":"denied"}]})).is_err()
+            Integration
+                .validate_response(&op, &json!({"data":null,"errors":[{"message":"denied"}]}))
+                .is_err()
         );
-        assert!(validate_response(&op, &json!({"data":{"product":{},"node":{}}})).is_err());
+        assert!(
+            Integration
+                .validate_response(&op, &json!({"data":{"product":{},"node":{}}}))
+                .is_err()
+        );
     }
 }
 struct Reply {

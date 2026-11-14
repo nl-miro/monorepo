@@ -1,6 +1,9 @@
 //! Storefront configuration and compatibility adapters for minisforumeu.
 
-use retailer_sauce::shopify::initial_fill::{GraphqlRequest, StorefrontConfig};
+#[cfg(test)]
+use retailer_sauce::shopify::initial_fill::GraphqlRequest;
+use retailer_sauce::shopify::initial_fill::StorefrontConfig;
+#[cfg(test)]
 use serde_json::Value;
 const CODE: &str = "minisforumeu";
 const ALL_MARKETS: bool = true;
@@ -15,7 +18,8 @@ pub const CONFIG: StorefrontConfig = StorefrontConfig {
     language: "EN",
     currency: "EUR",
 };
-pub use crate::graphql::Operation;
+#[cfg(test)]
+use crate::graphql::Operation;
 
 #[allow(unused_imports)]
 pub use crate::graphql::{next_cursor, product_gid};
@@ -25,14 +29,6 @@ pub const Integration: crate::graphql::Engine = crate::graphql::Engine {
     config: CONFIG,
     all_markets: ALL_MARKETS,
 };
-#[allow(dead_code)]
-pub fn request(operation: &Operation) -> Result<GraphqlRequest, String> {
-    Integration.request(operation)
-}
-#[allow(dead_code)]
-pub fn validate_response(operation: &Operation, response: &Value) -> Result<(), String> {
-    Integration.validate_response(operation, response)
-}
 #[cfg(test)]
 mod integration_tests;
 

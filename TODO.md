@@ -1,3 +1,7 @@
+- [x] Remove redundant per-retailer request and validation wrappers.
+  All 48 configurations use direct Integration calls in tests; imports are
+  test-only where appropriate. Formatting and all three brand CI checks pass.
+
 - [x] Remove the unused Markets GraphQL query from all three brands.
   Removed query/parser/exports; the required legacy trait method returns an
   error without HTTP. All three brand CI checks and sourcing initial-fill tests pass.

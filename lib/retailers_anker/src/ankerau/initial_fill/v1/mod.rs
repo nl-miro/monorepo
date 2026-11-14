@@ -1,6 +1,9 @@
 //! Storefront configuration and compatibility adapters for ankerau.
 
-use retailer_sauce::shopify::initial_fill::{GraphqlRequest, StorefrontConfig};
+#[cfg(test)]
+use retailer_sauce::shopify::initial_fill::GraphqlRequest;
+use retailer_sauce::shopify::initial_fill::StorefrontConfig;
+#[cfg(test)]
 use serde_json::Value;
 const CODE: &str = "ankerau";
 const ALL_MARKETS: bool = true;
@@ -15,7 +18,8 @@ pub const CONFIG: StorefrontConfig = StorefrontConfig {
     language: "EN",
     currency: "AUD",
 };
-pub use crate::graphql::Operation;
+#[cfg(test)]
+use crate::graphql::Operation;
 
 #[allow(unused_imports)]
 pub use crate::graphql::{next_cursor, product_gid};
@@ -25,14 +29,6 @@ pub const Integration: crate::graphql::Engine = crate::graphql::Engine {
     config: CONFIG,
     all_markets: ALL_MARKETS,
 };
-#[allow(dead_code)]
-pub fn request(operation: &Operation) -> Result<GraphqlRequest, String> {
-    Integration.request(operation)
-}
-#[allow(dead_code)]
-pub fn validate_response(operation: &Operation, response: &Value) -> Result<(), String> {
-    Integration.validate_response(operation, response)
-}
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -69,12 +65,12 @@ mod tests {
         let op = Operation::Details {
             id: body["data"]["product"]["id"].as_str().unwrap().into(),
         };
-        validate_response(&op, &body).unwrap();
+        Integration.validate_response(&op, &body).unwrap();
         assert_eq!(
             body["data"]["product"]["collections"]["pageInfo"]["hasNextPage"],
             true
         );
-        let request = request(&op).unwrap();
+        let request = Integration.request(&op).unwrap();
         assert!(
             request
                 .query
@@ -91,23 +87,32 @@ mod tests {
             first: 250,
             after: Some("cursor".into()),
         };
-        let request = request(&op).unwrap();
+        let request = Integration.request(&op).unwrap();
         assert_eq!(
             request.variables,
             json!({"language":"EN","first":250,"after":"cursor"})
         );
         assert!(!request.query.contains("variants"));
         let body = json!({"data":{"products":{"edges":[{"cursor":"c","node":{"id":"gid://shopify/Product/1"}}],"pageInfo":{"hasNextPage":false,"endCursor":"c"}}}});
-        validate_response(&op, &body).unwrap();
+        Integration.validate_response(&op, &body).unwrap();
         assert!(
-            validate_response(
-                &op,
-                &json!({"data":body["data"],"errors":[{"message":"denied"}]})
-            )
-            .is_err()
+            Integration
+                .validate_response(
+                    &op,
+                    &json!({"data":body["data"],"errors":[{"message":"denied"}]})
+                )
+                .is_err()
         );
-        assert!(validate_response(&op, &json!({"data":null})).is_err());
-        assert!(validate_response(&op, &json!({"data":{"products":{}}})).is_err());
+        assert!(
+            Integration
+                .validate_response(&op, &json!({"data":null}))
+                .is_err()
+        );
+        assert!(
+            Integration
+                .validate_response(&op, &json!({"data":{"products":{}}}))
+                .is_err()
+        );
     }
 
     #[test]
@@ -128,7 +133,7 @@ mod tests {
                 }}]
             }
         }}});
-        validate_response(&operation, &body).unwrap();
+        Integration.validate_response(&operation, &body).unwrap();
     }
 }
 

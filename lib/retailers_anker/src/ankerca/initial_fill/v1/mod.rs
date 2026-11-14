@@ -1,6 +1,9 @@
 //! Storefront configuration and compatibility adapters for ankerca.
 
-use retailer_sauce::shopify::initial_fill::{GraphqlRequest, StorefrontConfig};
+#[cfg(test)]
+use retailer_sauce::shopify::initial_fill::GraphqlRequest;
+use retailer_sauce::shopify::initial_fill::StorefrontConfig;
+#[cfg(test)]
 use serde_json::Value;
 const CODE: &str = "ankerca";
 const ALL_MARKETS: bool = true;
@@ -15,7 +18,8 @@ pub const CONFIG: StorefrontConfig = StorefrontConfig {
     language: "EN",
     currency: "CAD",
 };
-pub use crate::graphql::Operation;
+#[cfg(test)]
+use crate::graphql::Operation;
 
 #[allow(unused_imports)]
 pub use crate::graphql::{next_cursor, product_gid};
@@ -25,14 +29,6 @@ pub const Integration: crate::graphql::Engine = crate::graphql::Engine {
     config: CONFIG,
     all_markets: ALL_MARKETS,
 };
-#[allow(dead_code)]
-pub fn request(operation: &Operation) -> Result<GraphqlRequest, String> {
-    Integration.request(operation)
-}
-#[allow(dead_code)]
-pub fn validate_response(operation: &Operation, response: &Value) -> Result<(), String> {
-    Integration.validate_response(operation, response)
-}
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -73,7 +69,7 @@ mod tests {
             });
         }
         for operation in operations {
-            let request = request(&operation).unwrap();
+            let request = Integration.request(&operation).unwrap();
             assert!(
                 request
                     .query
@@ -92,15 +88,22 @@ mod tests {
             after: None,
         };
         let response = json!({"data":{"products":{"edges":[{"cursor":"p1","node":{"id":"gid://shopify/Product/1"}}],"pageInfo":{"hasNextPage":false,"endCursor":"p1"}}}});
-        validate_response(&operation, &response).unwrap();
+        Integration
+            .validate_response(&operation, &response)
+            .unwrap();
         assert!(
-            validate_response(
-                &operation,
-                &json!({"data":response["data"],"errors":[{"message":"denied"}]})
-            )
-            .is_err()
+            Integration
+                .validate_response(
+                    &operation,
+                    &json!({"data":response["data"],"errors":[{"message":"denied"}]})
+                )
+                .is_err()
         );
-        assert!(validate_response(&operation, &json!({"data":{"products":{}}})).is_err());
+        assert!(
+            Integration
+                .validate_response(&operation, &json!({"data":{"products":{}}}))
+                .is_err()
+        );
     }
 }
 
