@@ -152,7 +152,9 @@ impl Engine {
             return Err("Storefront authentication does not match retailer configuration".into());
         }
         let request = self.request(operation)?;
-        let response = http.post(config.graphql_url, &request, token)?;
+        // Ignore historical queued tokens for storefronts configured for anonymous access.
+        let request_token = token.filter(|_| config.attempts_token() || config.requires_token());
+        let response = http.post(config.graphql_url, &request, request_token)?;
         self.validate_response(operation, &response)
             .map_err(|error| {
                 // Redact the active credential if Shopify echoes it in diagnostics.

@@ -201,7 +201,10 @@ fn run_initial_fill(retailer: RetailerCode) {
         .unwrap()
         .initial_fill_contexts()
         .unwrap();
-    let expected_commands = 2 + contexts.len() * 4;
+    let attempts_token = retailer_data_extractor::initial_fill_config_for(retailer)
+        .unwrap()
+        .attempts_token();
+    let expected_commands = 1 + usize::from(attempts_token) + contexts.len() * 4;
     let db = Database::new();
     let server = Server::new();
     let mut bus = Bus::default();
@@ -236,6 +239,21 @@ fn run_initial_fill(retailer: RetailerCode) {
     }
     let commands = rows(&db, "command_entries");
     assert_eq!(commands.as_array().unwrap().len(), expected_commands);
+    assert_eq!(
+        commands
+            .as_array()
+            .unwrap()
+            .iter()
+            .filter(|row| row["command_type"] == "AcquireStorefrontToken")
+            .count(),
+        usize::from(attempts_token)
+    );
+    if !attempts_token {
+        for row in commands.as_array().unwrap() {
+            let payload: Value = serde_json::from_str(row["payload"].as_str().unwrap()).unwrap();
+            assert!(payload["storefront_token"].is_null());
+        }
+    }
     assert!(
         commands
             .as_array()

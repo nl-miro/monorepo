@@ -1094,11 +1094,15 @@ countryless fill before broader collection. See
 
 ## Optional public token acquisition
 
-New fills for Minisforum, Ugreen and Anker Italy/Japan now start with
-`AcquireStorefrontToken`. They inspect public storefront settings and continue
+New fills for Minisforum, Ugreen and Anker Italy/Japan start with
+`AcquireStorefrontToken`. All storefronts enable token acquisition again;
+`token_required` settings remain unchanged. See
+[ADR 72](../../docs/adr/0072-restore-storefront-token-acquisition.md).
+
+Optional-token stores inspect public storefront settings and continue
 without a token when a successful lookup finds none. Override discovery with
 `<UPPERCASE_RETAILER_CODE>_STOREFRONT_TOKEN`, for example
-`UGREENEU_STOREFRONT_TOKEN` or `MINISFORUMJP_STOREFRONT_TOKEN`.
+`UGREENCA_STOREFRONT_TOKEN` or `MINISFORUMJP_STOREFRONT_TOKEN`.
 Empty third-party settings are ignored; conflicting tokens, lookup errors and
 rejected API credentials remain errors. Required-token Anker stores stay strict.
 

@@ -157,7 +157,14 @@ fn prepare(codes: &[String]) -> Result<Vec<PreparedFill>, String> {
                 retailer_data_extractor::Step::OfferDetails,
             ]
         };
-        if expected.first() != Some(&retailer_data_extractor::Step::AcquireStorefrontToken) {
+        if config.requires_token() && !config.attempts_token() {
+            return Err(format!(
+                "token-required retailer must enable token acquisition: {code}"
+            ));
+        }
+        if config.attempts_token()
+            && expected.first() != Some(&retailer_data_extractor::Step::AcquireStorefrontToken)
+        {
             expected.insert(0, retailer_data_extractor::Step::AcquireStorefrontToken);
         }
         if process.steps != expected {
@@ -356,7 +363,7 @@ mod tests {
 mod market_tests {
     use super::*;
     #[test]
-    fn every_new_retailer_starts_token_resolution() {
+    fn each_retailer_starts_with_its_configured_access_policy() {
         let codes: Vec<String> = RetailerCode::ALL
             .iter()
             .copied()

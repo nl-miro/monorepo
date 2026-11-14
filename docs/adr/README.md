@@ -109,3 +109,9 @@ Decision, Consequences) and give it the next number.
 - [68: Anker multi-market initial fills](0068-anker-multi-market-initial-fills.md)
 
 - [69: Inventory-backed initial-fill contexts](0069-inventory-initial-fill-contexts.md)
+
+- [70: Tokenless access for selected storefronts](0070-selected-tokenless-storefronts.md)
+
+- [71: Tokenless access for additional Ugreen storefronts](0071-additional-tokenless-ugreen-storefronts.md)
+
+- [72: Restore Storefront token acquisition](0072-restore-storefront-token-acquisition.md)

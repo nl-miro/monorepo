@@ -127,3 +127,6 @@ Advertised-only locales stay in the documentation. The local
 `LocaleInitialFillIntegration` interface accepts optional countries and retains
 response-derived country/language/currency in schema-2 artifacts. Historical
 concrete-context integrations remain available as compatibility adapters.
+
+All storefronts enable token acquisition. Token requirements remain unchanged;
+see [ADR 72](../../docs/adr/0072-restore-storefront-token-acquisition.md).

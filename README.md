@@ -357,8 +357,8 @@ A workflow definition is not evidence of a passing Actions run.
 All 48 supported Anker, Minisforum and Ugreen (including NAS) initial fills use
 `Retailer.supported_locales` as their discovered markets. The entity contains only
 main-table entries from `docs/retailer.md`; advertised-only entries remain research.
-Country is optional and currency comes from responses. Token policies and brand
-GraphQL engines are unchanged. Stored v2 artifacts retain observed market context
+Country is optional and currency comes from responses. Brand GraphQL engines retain their configured access policies; all storefronts
+enable token acquisition (see ADR 72). Stored v2 artifacts retain observed market context
 and country-language dump directories. See
 [ADR 69](docs/adr/0069-inventory-initial-fill-contexts.md).
 

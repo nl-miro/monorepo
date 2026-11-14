@@ -1,3 +1,16 @@
+- [x] Restore acquire_token to true for all disabled stores.
+  Updated tests and documentation; affected library and sourcing CI pass,
+  and the service health endpoint returns HTTP 200.
+
+- [x] Disable token acquisition for ugreenin, ugreenuk and ugreennl.
+  Updated policy and historical-token checks; Ugreen and sourcing CI pass,
+  and the service health endpoint returns HTTP 200.
+
+- [x] Disable Storefront token acquisition for the five affected retailers.
+  Flags are honored in discovery/HTTP and API validation, including queued-token
+  retries. Affected crate CI and all five PostgreSQL workflow tests pass; the
+  service health endpoint returns HTTP 200.
+
 - [x] Preserve actionable Shopify GraphQL errors in initial fill.
   All three brands retain operation, messages, codes, paths, locations and scope/cost
   diagnostics before typed decoding; missing data is distinct and tokens are redacted.

@@ -11,6 +11,10 @@ pub fn resolve(
     if url != config.storefront_url {
         return Err("token acquisition URL does not match retailer configuration".into());
     }
+    // Also handles AcquireStorefrontToken commands queued before acquisition was disabled.
+    if !config.attempts_token() && !config.requires_token() {
+        return Ok(None);
+    }
     let configured = match config.token_environment {
         Some(name) => http.configured_token(name)?,
         None if !config.requires_token() => http.configured_token(&format!(
