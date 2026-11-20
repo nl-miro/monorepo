@@ -46,8 +46,8 @@ impl Store {
         if encoding.server_encoding != "UTF8" {
             return Err("Database must use UTF8 encoding.");
         }
-        if encoding.server_version < 160_000 {
-            return Err("PostgreSQL 16 or later is required.");
+        if encoding.server_version < 180_000 {
+            return Err("PostgreSQL 18 or later is required.");
         }
         connection
             .run_pending_migrations(MIGRATIONS)

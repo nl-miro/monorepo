@@ -43,7 +43,7 @@ jobs:
         service: [offers, products, training, retailer_sourcing, customer_facing]
     services:
       postgres:
-        image: postgres:16
+        image: postgres:18
         env:
           POSTGRES_PASSWORD: postgres
         ports:
@@ -90,7 +90,7 @@ jobs:
     timeout-minutes: 45
     services:
       postgres:
-        image: postgres:16
+        image: postgres:18
         env:
           POSTGRES_PASSWORD: postgres
         ports:

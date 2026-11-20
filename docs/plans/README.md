@@ -18,6 +18,12 @@ in TODO.md; shared dependency, dashboard and ADR edits must be coordinated.
 
 - [Sync retailer crates to bodul_hq](retailer-crates-bodul-hq-sync.md): `[>]` planned; decisions confirmed.
 
+## Saga implementation
+
+- [Saga implementation](saga-implementation.md): `[>]` planned;
+  use UUID v7 `id` as the sole primary key, string `saga_type`, UUID v7
+  `correlation_id`, and uniqueness on `(saga_type, correlation_id)`.
+
 ## Current round and dependencies
 
 [Plan 34: Inbox and outbox statistics](34-inbox-outbox-statistics.md) is implemented

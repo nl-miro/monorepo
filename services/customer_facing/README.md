@@ -8,7 +8,7 @@ messages are generated.
 
 ## Setup and startup
 
-Use the repository's pinned Rust toolchain, GNU Make, libpq, and PostgreSQL 16
+Use the repository's pinned Rust toolchain, GNU Make, libpq, and PostgreSQL 18
 or later. Mulac 0.5.0 is resolved from the configured `null-labs-hq` Cargo registry.
 See [ADR 42](../../docs/adr/0042-published-mulac-crates.md) for dependency resolution.
 

@@ -17,14 +17,14 @@ customers' cards or introduce background queue runners.
 
 ## Starting behavior
 
-- The [download handler](../../services/retailer_sourcing/src/offer_discovery/download_offer_page/handler.rs)
+- The [download handler](../../services/retailer_sourcing/src/steps/html/download_offer_page/handler.rs)
   fetches and stores a page before emitting an event without its download time.
 - Intermediate handlers load the current stored artifact by offer ID. For
-  example, the [extraction store](../../services/retailer_sourcing/src/offer_discovery/extract_offer_page/store.rs)
+  example, the [extraction store](../../services/retailer_sourcing/src/steps/html/extract_offer_page/store.rs)
   can load a replacement downloaded after the command was queued. Simply
   forwarding a timestamp through commands could label that replacement with
   an earlier scrape time.
-- [Export sources and payloads](../../services/retailer_sourcing/src/offer_discovery/processing_for_export/entity.rs)
+- [Export sources and payloads](../../services/retailer_sourcing/src/steps/html/processing_for_export/entity.rs)
   support immutable schema v1/v2 snapshots. Export preparation already pins
   the structuralized object reference and preserves prepared bytes on retries.
 - The [offers handler](../../services/offers/src/offers/handler.rs) emits events

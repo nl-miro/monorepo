@@ -36,9 +36,9 @@ body:json {
 
 docs {
   Queues initial fills for all 17 supported Anker retailers, excluding Korea
-  and the retired Nordic aggregate. Returns fills with each retailer and run_id.
-  A dispatch failure returns confirmed prior successes in fills; those runs stay
-  queued. An unexpected queue-task failure omits fills because outcomes are unknown.
+  and the retired Nordic aggregate. Returns 204 when all commands are queued.
+  A dispatch failure returns 500 with the dispatch error message in the error
+  field. Previously queued commands stay queued.
   Commands run through the existing workers or POST /api/commands/run.
   Run POST /api/events/run to advance reactions: token acquisition where required,
   batches of up to 500 product IDs, then one complete GraphQL fetch per product.

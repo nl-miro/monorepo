@@ -1,9 +1,11 @@
-use super::{offer_details as details, product_catalog_ids as catalog};
 use crate::app;
 use crate::platform::bus::stable_command_id;
 use crate::platform::{bus::Handle, object_storage::OfferStorageMetadata};
+use crate::steps::prelude::acquire_storefront_token as token;
+use crate::steps::prelude::{
+    offer_details as details, product_catalog_ids as catalog, storefront_engine,
+};
 use crate::v2::incoming::InitialFillContexts;
-use crate::v2::prelude as token;
 use catalog::FetchProductCatalogIdentifiers;
 use catalog::Handler as CatalogHandler;
 use catalog::ProductCatalogIdsRetrieved;
@@ -15,12 +17,12 @@ use details::Handler as OfferDetailsHandler;
 use details::SourceType;
 use details::Store;
 use details::fetch_details_for_catalog_products;
-use details::fetch_in_context;
 use retailer_data_extractor::Step;
 use retailer_data_extractor::get_storefront_config;
 use retailer_data_extractor::initial_fill_process;
 use retailer_sauce::prelude::GraphqlRequest;
 use retailer_sauce::prelude::Http;
+use retailer_sauce::prelude::InitialFillIntegration;
 use retailer_sauce::prelude::MarketContext;
 use retailer_sauce::prelude::StorefrontToken;
 use serde_json::from_slice;
@@ -35,8 +37,8 @@ use std::fs::read_to_string;
 use std::path::Path;
 use std::{collections::VecDeque, sync::Mutex};
 use token::AcquireStorefrontToken;
-use token::AcquireStorefrontTokenHandler;
-use token::StorefrontTokenFetch;
+use token::Fetch as StorefrontTokenFetch;
+use token::Handler as AcquireStorefrontTokenHandler;
 use uuid::Uuid;
 
 pub(super) fn token_value() -> StorefrontToken {
@@ -73,14 +75,13 @@ fn tokenless_retries_skip_discovery_and_catalog_ignores_historical_tokens() {
         let config = get_storefront_config(retailer).unwrap();
         let event = AcquireStorefrontTokenHandler(NoDiscovery)
             .handle(AcquireStorefrontToken {
-                run_id: Uuid::now_v7(),
                 retailer_code: retailer,
                 url: config.storefront_url().into(),
             })
             .unwrap()
             .remove(0);
         assert!(event.storefront_token.is_none());
-        let commands = start_catalog_for_locales(&event);
+        let commands = start_catalog_for_locales(Uuid::nil(), &event);
         assert!(!commands.is_empty());
         for queued in commands {
             assert!(queued.command.storefront_token.is_none());
@@ -112,6 +113,7 @@ fn retailer_payloads_read_legacy_names_write_slugs_and_keep_command_ids() {
     let command: AcquireStorefrontToken = from_value(old_command).unwrap();
     let encoded = to_value(&command).unwrap();
     assert_eq!(encoded["retailer_code"], "ankerau");
+    assert!(encoded.get("run_id").is_none());
     assert_eq!(
         from_value::<AcquireStorefrontToken>(encoded)
             .unwrap()
@@ -128,11 +130,12 @@ fn retailer_payloads_read_legacy_names_write_slugs_and_keep_command_ids() {
     assert_eq!((old_event.product_count, old_event.loop_count), (0, 0));
     let encoded = to_value(&old_event).unwrap();
     assert_eq!(encoded["retailer_code"], "ankerau");
+    assert!(encoded.get("run_id").is_none());
     let new_event: ProductCatalogIdsRetrieved = from_value(encoded).unwrap();
     let old_key = br#"["FetchOfferDetails","AnkerAu","gid://shopify/Product/1"]"#;
-    let expected_id = stable_command_id(&run_id, old_key);
+    let expected_id = stable_command_id(&Uuid::nil(), old_key);
     for event in [old_event, new_event] {
-        let queued = fetch_details_for_catalog_products(&event).remove(0);
+        let queued = fetch_details_for_catalog_products(Uuid::nil(), &event).remove(0);
         assert_eq!(queued.id, expected_id);
         assert_eq!(
             to_value(&queued.command).unwrap()["retailer_code"],
@@ -203,10 +206,10 @@ fn catalog_page(start: usize, count: usize, more: bool, cursor: &str) -> Value {
     let edges = (start..start+count).map(|i| json!({"cursor":format!("p{i}"),"node":{"id":format!("gid://shopify/Product/{i}")}})).collect();
     json!({"data":{"products":connection(edges,more,Some(cursor))}})
 }
-pub(super) fn catalog_command(run_id: Uuid) -> FetchProductCatalogIdentifiers {
+pub(super) fn catalog_command() -> FetchProductCatalogIdentifiers {
     FetchProductCatalogIdentifiers {
         context: None,
-        run_id,
+
         retailer_code: RetailerCode::AnkerAu,
         storefront_token: Some(token_value()),
     }
@@ -218,8 +221,7 @@ fn catalog_handler_collects_every_batch_into_one_event() {
         catalog_page(251, 250, true, "b"),
         catalog_page(501, 2, false, "c"),
     ]));
-    let run_id = Uuid::now_v7();
-    let events = handler.handle(catalog_command(run_id)).unwrap();
+    let events = handler.handle(catalog_command()).unwrap();
     assert_eq!(events.len(), 1);
     let event = &events[0];
     assert_eq!(event.product_ids.len(), 502);
@@ -227,18 +229,18 @@ fn catalog_handler_collects_every_batch_into_one_event() {
     assert_eq!(event.loop_count, 2);
     assert_eq!(event.product_ids[0], "gid://shopify/Product/1");
     assert_eq!(event.product_ids[501], "gid://shopify/Product/502");
-    let commands = fetch_details_for_catalog_products(event);
+    let commands = fetch_details_for_catalog_products(Uuid::nil(), event);
     assert_eq!(commands.len(), 502);
-    let again = fetch_details_for_catalog_products(event);
+    let again = fetch_details_for_catalog_products(Uuid::nil(), event);
     assert_eq!(commands[0].id, again[0].id);
-    assert_eq!(commands[0].run_id, run_id);
+
     let calls = handler.0.calls.lock().unwrap();
     assert_eq!(calls.len(), 3);
     assert!(calls[2].variables["after"] == "b");
 }
 #[test]
 fn catalog_handler_restarts_legacy_continuation_commands_from_the_beginning() {
-    let mut legacy = to_value(catalog_command(Uuid::now_v7())).unwrap();
+    let mut legacy = to_value(catalog_command()).unwrap();
     legacy["after"] = json!("b");
     let command: FetchProductCatalogIdentifiers = from_value(legacy).unwrap();
     let handler = CatalogHandler(FakeHttp::from(vec![catalog_page(1, 2, false, "c")]));
@@ -254,10 +256,7 @@ fn catalog_handler_drops_ids_repeated_across_batches() {
         catalog_page(251, 250, true, "b"),
         catalog_page(500, 2, false, "c"),
     ]));
-    let event = handler
-        .handle(catalog_command(Uuid::now_v7()))
-        .unwrap()
-        .remove(0);
+    let event = handler.handle(catalog_command()).unwrap().remove(0);
     assert_eq!(event.product_ids.len(), 501);
     assert_eq!(event.product_count, 501);
     assert_eq!(event.loop_count, 2);
@@ -274,25 +273,22 @@ fn catalog_handler_rejects_cursor_cycles_across_batches() {
         catalog_page(1001, 250, true, "e"),
         catalog_page(1251, 250, true, "b"),
     ]));
-    let error = handler.handle(catalog_command(Uuid::now_v7())).unwrap_err();
+    let error = handler.handle(catalog_command()).unwrap_err();
     assert_eq!(error, "catalog cursor b repeated");
 }
 #[test]
 fn catalog_empty_short_duplicate_and_exact_batches() {
     let empty = CatalogHandler(FakeHttp::from(vec![catalog_page(1, 0, false, "end")]));
-    let event = empty
-        .handle(catalog_command(Uuid::now_v7()))
-        .unwrap()
-        .remove(0);
+    let event = empty.handle(catalog_command()).unwrap().remove(0);
     assert!(event.product_ids.is_empty());
     assert_eq!((event.product_count, event.loop_count), (0, 1));
-    assert!(fetch_details_for_catalog_products(&event).is_empty());
+    assert!(fetch_details_for_catalog_products(Uuid::nil(), &event).is_empty());
     let short = CatalogHandler(FakeHttp::from(vec![
         catalog_page(1, 1, true, "a"),
         catalog_page(1, 2, false, "b"),
     ]));
     assert_eq!(
-        short.handle(catalog_command(Uuid::now_v7())).unwrap()[0]
+        short.handle(catalog_command()).unwrap()[0]
             .product_ids
             .len(),
         2
@@ -301,10 +297,7 @@ fn catalog_empty_short_duplicate_and_exact_batches() {
         catalog_page(1, 250, true, "a"),
         catalog_page(251, 250, false, "b"),
     ]));
-    let event = exact
-        .handle(catalog_command(Uuid::now_v7()))
-        .unwrap()
-        .remove(0);
+    let event = exact.handle(catalog_command()).unwrap().remove(0);
     assert_eq!(event.product_ids.len(), 500);
     assert_eq!(exact.0.calls.lock().unwrap().len(), 2);
 }
@@ -319,7 +312,7 @@ fn catalog_rejects_stalled_missing_cursors_invalid_ids_and_transport_errors() {
     ] {
         assert!(
             CatalogHandler(FakeHttp::from(pages))
-                .handle(catalog_command(Uuid::now_v7()))
+                .handle(catalog_command())
                 .is_err()
         );
     }
@@ -328,11 +321,7 @@ fn catalog_rejects_stalled_missing_cursors_invalid_ids_and_transport_errors() {
         .lock()
         .unwrap()
         .push_back(Err("network failed".into()));
-    assert!(
-        CatalogHandler(fake)
-            .handle(catalog_command(Uuid::now_v7()))
-            .is_err()
-    );
+    assert!(CatalogHandler(fake).handle(catalog_command()).is_err());
 }
 
 struct Documents(HashMap<String, String>);
@@ -366,7 +355,6 @@ fn downloaded_au_storefront_emits_the_expected_token() {
     let expected = StorefrontToken::new("ca89549ed256ec3f2c3a12d113b9f29e".into()).unwrap();
     let event = AcquireStorefrontTokenHandler(Documents(documents))
         .handle(AcquireStorefrontToken {
-            run_id: Uuid::now_v7(),
             retailer_code: RetailerCode::AnkerAu,
             url: "https://www.anker.com/au".into(),
         })
@@ -374,7 +362,7 @@ fn downloaded_au_storefront_emits_the_expected_token() {
         .remove(0);
     assert_eq!(event.storefront_token, Some(expected.clone()));
     assert_eq!(event.retailer_code, RetailerCode::AnkerAu);
-    let commands = start_catalog_for_locales(&event);
+    let commands = start_catalog_for_locales(Uuid::nil(), &event);
     assert_eq!(commands.len(), 1);
     assert_eq!(commands[0].command.storefront_token, event.storefront_token);
 }
@@ -408,10 +396,8 @@ fn regional_bundle_resolves_imported_tokens_for_fr_pl_nz_vn_eu_and_us() {
             ]
             .into(),
         ));
-        let run_id = Uuid::now_v7();
         let event = handler
             .handle(AcquireStorefrontToken {
-                run_id,
                 retailer_code,
                 url: config.storefront_url().into(),
             })
@@ -429,10 +415,10 @@ fn regional_bundle_resolves_imported_tokens_for_fr_pl_nz_vn_eu_and_us() {
             Some(expected.clone()),
             "{retailer_code:?}"
         );
-        assert_eq!(event.run_id, run_id);
+
         assert_eq!(event.retailer_code, retailer_code);
         assert_eq!(
-            start_catalog_for_locales(&event)[0]
+            start_catalog_for_locales(Uuid::nil(), &event)[0]
                 .command
                 .storefront_token,
             Some(expected)
@@ -447,17 +433,15 @@ fn token_handler_fetches_assets_and_emits_market_token_and_timestamp() {
         ("https://www.anker.com/app.js".into(),"window.config={storeTokens:{au:'synthetic-au-token',ca:'other'}}".into()),
     ].into()));
     let start = Utc::now();
-    let run_id = Uuid::now_v7();
     let command = AcquireStorefrontToken {
-        run_id,
         retailer_code: RetailerCode::AnkerAu,
         url: "https://www.anker.com/au".into(),
     };
     let event = handler.handle(command).unwrap().remove(0);
     assert_eq!(event.storefront_token, Some(token_value()));
     assert!(event.acquired_at >= start);
-    assert_eq!(event.run_id, run_id);
-    let commands = start_catalog_for_locales(&event);
+
+    let commands = start_catalog_for_locales(Uuid::nil(), &event);
     assert_eq!(commands.len(), 1);
     assert_eq!(commands[0].command.storefront_token, event.storefront_token);
 }
@@ -472,7 +456,6 @@ fn token_handler_rejects_missing_token_failed_assets_and_arbitrary_urls() {
             [("https://www.anker.com/au".into(), html.into())].into(),
         ));
         let command = AcquireStorefrontToken {
-            run_id: Uuid::now_v7(),
             retailer_code: RetailerCode::AnkerAu,
             url: "https://www.anker.com/au".into(),
         };
@@ -506,10 +489,10 @@ impl Store for FakeStore {
         })
     }
 }
-pub(super) fn detail_command(run_id: Uuid, id: &str) -> FetchOfferDetails {
+pub(super) fn detail_command(id: &str) -> FetchOfferDetails {
     FetchOfferDetails {
         context: None,
-        run_id,
+
         retailer_code: RetailerCode::AnkerAu,
         storefront_token: Some(token_value()),
         source: SourceType::GraphQl {
@@ -528,10 +511,7 @@ fn detail_handler_preserves_raw_evidence_and_emits_only_after_storage() {
             fail: false,
         },
     };
-    let event = handler
-        .handle(detail_command(Uuid::now_v7(), id))
-        .unwrap()
-        .remove(0);
+    let event = handler.handle(detail_command(id)).unwrap().remove(0);
     let bodies = handler.store.bodies.lock().unwrap();
     let artifact: Value = from_str(&bodies[0]).unwrap();
     assert_eq!(artifact["pages"][0]["response"], raw);
@@ -546,7 +526,7 @@ fn detail_handler_preserves_raw_evidence_and_emits_only_after_storage() {
             fail: true,
         },
     };
-    assert!(failing.handle(detail_command(Uuid::now_v7(), id)).is_err());
+    assert!(failing.handle(detail_command(id)).is_err());
 }
 #[test]
 fn details_fail_for_missing_wrong_product_currency_or_unsupported_html() {
@@ -565,7 +545,7 @@ fn details_fail_for_missing_wrong_product_currency_or_unsupported_html() {
                 fail: false,
             },
         };
-        assert!(handler.handle(detail_command(Uuid::now_v7(), id)).is_err());
+        assert!(handler.handle(detail_command(id)).is_err());
         assert!(handler.store.bodies.lock().unwrap().is_empty());
     }
     let handler = OfferDetailsHandler {
@@ -575,7 +555,7 @@ fn details_fail_for_missing_wrong_product_currency_or_unsupported_html() {
             fail: false,
         },
     };
-    let mut command = detail_command(Uuid::now_v7(), id);
+    let mut command = detail_command(id);
     command.source = SourceType::Html {
         url: "https://example.test".into(),
     };
@@ -779,7 +759,7 @@ async fn api_validates_retailers_and_documents_the_new_route() {
         .unwrap();
     let body: Value =
         from_slice(&to_bytes(response.into_body(), usize::MAX).await.unwrap()).unwrap();
-    assert!(body["paths"]["/initial-offer-fills"]["post"]["responses"]["202"].is_object());
+    assert!(body["paths"]["/initial-offer-fills"]["post"]["responses"]["204"].is_object());
     let schemas = &body["components"]["schemas"];
     assert_eq!(
         schemas["InitialFillRequest"]["properties"]["retailers"]["type"],
@@ -790,18 +770,9 @@ async fn api_validates_retailers_and_documents_the_new_route() {
         json!(["retailers"])
     );
     assert_eq!(
-        schemas["InitialFillResponse"]["properties"]["fills"]["type"],
-        "array"
-    );
-    assert_eq!(
-        schemas["QueuedInitialFill"]["properties"]["run_id"]["format"],
-        "uuid"
-    );
-    assert!(schemas["InitialFillQueueFailure"]["properties"]["fills"].is_object());
-    assert_eq!(
         body["paths"]["/initial-offer-fills"]["post"]["responses"]["500"]["content"]["application/json"]
             ["schema"]["$ref"],
-        "#/components/schemas/InitialFillQueueFailure"
+        "#/components/schemas/InitialFillError"
     );
 }
 
@@ -825,10 +796,8 @@ fn canada_acquires_its_token_batches_500_and_stores_english_cad_details() {
         ),
         (script_url.into(), bundle.into()),
     ])));
-    let run_id = Uuid::now_v7();
     let acquired = handler
         .handle(AcquireStorefrontToken {
-            run_id,
             retailer_code: RetailerCode::AnkerCa,
             url: config.storefront_url().into(),
         })
@@ -849,13 +818,17 @@ fn canada_acquires_its_token_batches_500_and_stores_english_cad_details() {
         ])
     });
     let batch = catalog
-        .handle(start_catalog_for_locales(&acquired).remove(0).command)
+        .handle(
+            start_catalog_for_locales(Uuid::nil(), &acquired)
+                .remove(0)
+                .command,
+        )
         .unwrap()
         .remove(0);
     assert_eq!(batch.retailer_code, RetailerCode::AnkerCa);
-    assert_eq!(batch.run_id, run_id);
+
     assert_eq!(batch.product_ids.len(), 501);
-    let commands = fetch_details_for_catalog_products(&batch);
+    let commands = fetch_details_for_catalog_products(Uuid::nil(), &batch);
     assert_eq!(commands.len(), 501);
     assert!(
         commands
@@ -880,7 +853,7 @@ fn canada_acquires_its_token_batches_500_and_stores_english_cad_details() {
         .unwrap()
         .remove(0);
     assert_eq!(event.retailer_code, RetailerCode::AnkerCa);
-    assert_eq!(event.run_id, run_id);
+
     let bodies = handler.store.bodies.lock().unwrap();
     let artifact: Value = from_str(&bodies[0]).unwrap();
     assert_eq!(
@@ -904,7 +877,6 @@ fn canada_acquires_its_token_batches_500_and_stores_english_cad_details() {
 #[ignore = "retailer integration disconnected"]
 fn canada_rejects_french_token_urls_and_wrong_currency_before_storage() {
     let command = AcquireStorefrontToken {
-        run_id: Uuid::now_v7(),
         retailer_code: RetailerCode::AnkerCa,
         url: "https://www.anker.com/ca-fr".into(),
     };
@@ -920,7 +892,6 @@ fn canada_rejects_french_token_urls_and_wrong_currency_before_storage() {
     )]));
     let error = AcquireStorefrontTokenHandler(only_french)
         .handle(AcquireStorefrontToken {
-            run_id: Uuid::now_v7(),
             retailer_code: RetailerCode::AnkerCa,
             url: "https://www.anker.com/ca".into(),
         })
@@ -940,7 +911,7 @@ fn canada_rejects_french_token_urls_and_wrong_currency_before_storage() {
             .handle(FetchOfferDetails {
                 context: None,
                 retailer_code: RetailerCode::AnkerCa,
-                ..detail_command(Uuid::now_v7(), "gid://shopify/Product/1")
+                ..detail_command("gid://shopify/Product/1")
             })
             .unwrap_err();
         assert!(error.contains("CAD"));
@@ -957,7 +928,6 @@ fn every_market_preserves_its_token_policy_through_catalog_fanout_and_storage() 
             continue;
         };
         count += 1;
-        let run_id = Uuid::now_v7();
         let command = if config.requires_token() {
             let market = config.token_market().unwrap_or("unused");
             let html = format!(
@@ -968,13 +938,14 @@ fn every_market_preserves_its_token_policy_through_catalog_fanout_and_storage() 
                 html,
             )])))
             .handle(AcquireStorefrontToken {
-                run_id,
                 retailer_code: retailer,
                 url: config.storefront_url().into(),
             })
             .unwrap()
             .remove(0);
-            start_catalog_for_locales(&acquired).remove(0).command
+            start_catalog_for_locales(Uuid::nil(), &acquired)
+                .remove(0)
+                .command
         } else {
             let process = initial_fill_process(retailer);
             let mut expected = vec![Step::ProductCatalogIdentifiers, Step::OfferDetails];
@@ -983,7 +954,6 @@ fn every_market_preserves_its_token_policy_through_catalog_fanout_and_storage() 
             assert!(
                 AcquireStorefrontTokenHandler(Documents(Default::default()))
                     .handle(AcquireStorefrontToken {
-                        run_id,
                         retailer_code: retailer,
                         url: config.storefront_url().into()
                     })
@@ -991,7 +961,7 @@ fn every_market_preserves_its_token_policy_through_catalog_fanout_and_storage() 
             );
             FetchProductCatalogIdentifiers {
                 context: None,
-                run_id,
+
                 retailer_code: retailer,
                 storefront_token: None,
             }
@@ -1007,7 +977,7 @@ fn every_market_preserves_its_token_policy_through_catalog_fanout_and_storage() 
         .handle(command)
         .unwrap()
         .remove(0);
-        let commands = fetch_details_for_catalog_products(&batch);
+        let commands = fetch_details_for_catalog_products(Uuid::nil(), &batch);
         assert_eq!(commands.len(), 500);
         assert!(
             commands
@@ -1031,7 +1001,7 @@ fn every_market_preserves_its_token_policy_through_catalog_fanout_and_storage() 
         let expected_country = command.context.as_ref().and_then(|c| c.country.clone());
         let event = handler.handle(command).unwrap().remove(0);
         assert_eq!(event.retailer_code, retailer);
-        assert_eq!(event.run_id, run_id);
+
         let bodies = handler.store.bodies.lock().unwrap();
         let artifact: Value = from_str(&bodies[0]).unwrap();
         assert_eq!(
@@ -1086,7 +1056,6 @@ fn nordic_acquisition_discovers_browser_tokens_and_preserves_environment_overrid
         RetailerCode::AnkerDk,
     ] {
         let command = AcquireStorefrontToken {
-            run_id: Uuid::now_v7(),
             retailer_code: retailer,
             url: "https://www.ankernordics.com".into(),
         };
@@ -1108,7 +1077,7 @@ fn nordic_acquisition_discovers_browser_tokens_and_preserves_environment_overrid
         assert_eq!(acquired.storefront_token, Some(expected.clone()));
         assert_eq!(acquired.retailer_code, retailer);
         assert_eq!(
-            start_catalog_for_locales(&acquired)[0]
+            start_catalog_for_locales(Uuid::nil(), &acquired)[0]
                 .command
                 .storefront_token,
             Some(expected)
@@ -1192,14 +1161,13 @@ fn disabled_storefront_settings_are_ignored_and_optional_absence_propagates() {
             html,
         )])))
         .handle(AcquireStorefrontToken {
-            run_id: Uuid::now_v7(),
             retailer_code: retailer,
             url: config.storefront_url().into(),
         })
         .unwrap()
         .remove(0);
         assert!(event.storefront_token.is_none());
-        let commands = start_catalog_for_locales(&event);
+        let commands = start_catalog_for_locales(Uuid::nil(), &event);
         assert!(!commands.is_empty());
         assert!(
             commands
@@ -1219,14 +1187,13 @@ fn disabled_storefront_settings_are_ignored_and_optional_absence_propagates() {
             "<script>var settings = {storefrontAccessToken: ''};</script>".into(),
         )])))
         .handle(AcquireStorefrontToken {
-            run_id: Uuid::now_v7(),
             retailer_code: retailer,
             url: config.storefront_url().into(),
         })
         .unwrap()
         .remove(0);
         assert!(event.storefront_token.is_none());
-        let commands = start_catalog_for_locales(&event);
+        let commands = start_catalog_for_locales(Uuid::nil(), &event);
         assert!(!commands.is_empty());
         assert!(
             commands
@@ -1247,6 +1214,16 @@ struct TestArtifact {
 struct TestPage {
     request: GraphqlRequest,
 }
+fn fetch_in_context<F: Http>(
+    fetcher: &F,
+    retailer: RetailerCode,
+    token: Option<&StorefrontToken>,
+    id: &str,
+    context: Option<&MarketContext>,
+) -> Result<String, String> {
+    storefront_engine(retailer)?.details(fetcher, token, context, id)
+}
+
 fn fetch_details<F: Http>(
     http: &F,
     retailer: RetailerCode,
@@ -1258,7 +1235,6 @@ fn fetch_details<F: Http>(
 
 #[test]
 fn countryless_inventory_context_survives_catalog_batches_and_detail_pagination() {
-    let run_id = Uuid::now_v7();
     let retailer = get_storefront_config(RetailerCode::MinisForumEu).unwrap();
     let context = retailer.initial_fill_contexts().unwrap().remove(0);
     assert_eq!(context.language, "EN");
@@ -1278,7 +1254,7 @@ fn countryless_inventory_context_survives_catalog_batches_and_detail_pagination(
     let event = handler
         .handle(FetchProductCatalogIdentifiers {
             context: Some(context),
-            run_id,
+
             retailer_code: RetailerCode::MinisForumEu,
             storefront_token: None,
         })
@@ -1289,7 +1265,7 @@ fn countryless_inventory_context_survives_catalog_batches_and_detail_pagination(
         Some("DE")
     );
     assert_eq!((event.product_count, event.loop_count), (501, 2));
-    let command = fetch_details_for_catalog_products(&event)
+    let command = fetch_details_for_catalog_products(Uuid::nil(), &event)
         .pop()
         .unwrap()
         .command;

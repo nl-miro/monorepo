@@ -150,7 +150,7 @@ shows exact inbox/command/event/outbox status counts for the three pipeline serv
   checkout is required. See [ADR 42](docs/adr/0042-published-mulac-crates.md)
   and the [0.5 integration changes](docs/adr/0043-mulac-0-5-integration.md).
 - Access to the `bodul` Cargo registry for the published `retailer_sauce` 0.3.7 package.
-- PostgreSQL 16 or later for `object_storage`, `offers`, and `customer_facing` (separate UTF8 databases), and to run the `retailer_sourcing` pipeline.
+- PostgreSQL 18 or later for `object_storage`, `offers`, and `customer_facing` (separate UTF8 databases), and to run the `retailer_sourcing` pipeline.
 - The `retailer_sourcing` pipeline also requires a running object storage service, configured with `OBJECT_STORAGE_URL` and `OBJECT_STORAGE_TOKEN`; see its [setup](services/retailer_sourcing/README.md).
 - PostgreSQL `pg_trgm`, provisioned in the trusted `customer_facing_extensions` schema before customer-facing migrations; see its README for setup.
 - [Diesel CLI](https://diesel.rs/guides/getting-started) with PostgreSQL support, only for `make migrate` and `make migrate-redo`: `cargo install diesel_cli --no-default-features --features postgres --locked`.
@@ -239,15 +239,13 @@ manual operation. Each worker uses Mulac's one-second polling and ten-command
 batches. Events and outbox delivery remain explicit; other services keep their
 existing manual runners. See [ADR 39](docs/adr/0039-sourcing-command-workers.md).
 
-Queue retrievals, then run events to advance reactions and outbox to deliver
-exports. The command endpoint remains available for explicit batches; each
-HTTP runner waits for its batch to finish:
+For queued sitemap retrievals, run events to advance reactions and run the outbox
+to deliver exports. Each HTTP runner waits for its batch to finish.
 
-| Route                          | Body                          | Purpose                                                            |
-| ------------------------------ | ----------------------------- | ------------------------------------------------------------------ |
-| `POST /api/sitemap-retrievals` | `{"retailers": ["ugreenca"]}` | Queue one sitemap retrieval per retailer                           |
-| `POST /api/commands/run`       | `{"limit": 10}`               | Process up to `limit` queued commands                              |
-| `POST /api/events/run`         | `{"limit": 10}`               | Process up to `limit` queued events, which queue the next commands |
+| Route                    | Body            | Purpose                                                            |
+| ------------------------ | --------------- | ------------------------------------------------------------------ |
+| `POST /api/commands/run` | `{"limit": 10}` | Process up to `limit` queued commands                              |
+| `POST /api/events/run`   | `{"limit": 10}` | Process up to `limit` queued events, which queue the next commands |
 
 Without `DATABASE_URL` these routes return 503.
 

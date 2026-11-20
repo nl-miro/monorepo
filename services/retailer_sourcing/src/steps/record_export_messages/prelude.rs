@@ -1,0 +1,10 @@
+use reacts_to::Listener;
+use store::PgStore;
+
+use super::{reacts_to, store};
+use crate::platform::{Platform, bus::Bus};
+
+pub fn register(bus: &mut Bus, platform: &Platform) {
+    let store = PgStore::new(platform.db.clone(), platform.object_storage.clone());
+    bus.listen(Listener::new(store));
+}

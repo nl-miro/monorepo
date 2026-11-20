@@ -1,14 +1,13 @@
+mod business_process;
 mod development;
 mod monitoring;
-mod offer_delivery;
-mod offer_discovery;
 mod platform;
 mod reporting;
 mod saga;
-mod sitemap_discovery;
 mod steps;
 mod v2;
 
+use crate::saga::shopify_graphql_initial_fill::reconcile as reconcile_sagas;
 use axum::serve;
 use development::prelude::register as development_register;
 use development::prelude::routes as development_routes;
@@ -16,8 +15,6 @@ use io::Error;
 use io::ErrorKind as IoErrorKind;
 use io::Result as IoResult;
 use monitoring::prelude::register as monitoring_register;
-use offer_delivery::prelude::register as offer_delivery_register;
-use offer_discovery::prelude::register as offer_discovery_register;
 use outbox::prelude::AsyncOutboxService;
 use outbox::prelude::axum::OutboxAdapter;
 use platform::auth::SECURITY_SCHEME;
@@ -28,13 +25,16 @@ use platform::object_storage::ObjectStorage;
 use platform::offers_publisher::OffersPublisher;
 use reporting::prelude::register as reporting_register;
 use reporting::prelude::routes as reporting_routes;
+use saga::shopify_graphql_initial_fill::register as register_graphql_initial_fill_saga;
+use saga::shopify_graphql_initial_fill::routes as shopify_graphql_initial_fill_routes;
 use shared::health as shared_health;
-use sitemap_discovery::prelude::register;
-use sitemap_discovery::prelude::routes as sitemap_discovery_routes;
 use std::env::var;
 #[cfg(not(unix))]
 use std::future::pending as std_future_pending;
 use std::sync::Arc;
+use steps::prelude::{
+    register_graphql, register_html, register_record_export_messages, register_sitemap,
+};
 use tokio::net::TcpListener;
 use tokio::runtime::Handle;
 use tokio::select;
@@ -45,8 +45,6 @@ use tokio::signal::unix::signal as signal_unix_signal;
 use tokio::task::spawn_blocking;
 use tracing::info as tracing_info;
 use utoipa::openapi::OpenApi as UtoipaOpenapiOpenApi;
-use v2::prelude::register as v2_register;
-use v2::prelude::routes as v2_routes;
 
 use std::env::VarError;
 use std::io;
@@ -109,8 +107,7 @@ fn app(state: AppState) -> Router {
     let (api, openapi) = OpenApiRouter::with_openapi(ApiDoc::openapi())
         .routes(routes!(health))
         .merge(platform_bus_api_routes())
-        .merge(sitemap_discovery_routes())
-        .merge(v2_routes())
+        .merge(shopify_graphql_initial_fill_routes())
         .merge(development_routes())
         .merge(reporting_routes())
         .split_for_parts();
@@ -184,14 +181,20 @@ async fn start_features(database_url: Result<String, VarError>) -> IoResult<AppS
             .map_err(Error::other)?;
 
     let mut bus = Bus::default();
-    register(&mut bus, &platform);
-    v2_register(&mut bus, &platform);
-    offer_discovery_register(&mut bus, &platform);
-    offer_delivery_register(&mut bus, &platform);
+    register_sitemap(&mut bus, &platform);
+    register_graphql(&mut bus, &platform);
+    register_graphql_initial_fill_saga(&mut bus, &platform.db);
+    register_html(&mut bus, &platform);
+    register_record_export_messages(&mut bus, &platform);
     development_register(&mut bus, &platform);
     monitoring_register(&mut bus, &platform);
     reporting_register(&mut bus, &platform);
 
+    let reconciliation_db = platform.db.clone();
+    spawn_blocking(move || reconcile_sagas(&reconciliation_db))
+        .await
+        .map_err(Error::other)?
+        .map_err(Error::other)?;
     let db = platform.db.clone();
     let outbox = publisher.map(|publisher| {
         let service = AsyncOutboxService::from_postgres(db.clone(), Arc::new(publisher));
@@ -402,12 +405,8 @@ mod tests {
             spec["paths"]["/health"]["get"].is_object(),
             "OpenAPI must document GET /health",
         );
-        for path in [
-            "/sitemap-retrievals",
-            "/commands/run",
-            "/events/run",
-            "/outbox/run",
-        ] {
+        assert!(spec["paths"].get("/sitemap-retrievals").is_none());
+        for path in ["/commands/run", "/events/run", "/outbox/run"] {
             assert!(
                 spec["paths"][path]["post"].is_object(),
                 "OpenAPI must document POST {path}",
@@ -456,22 +455,13 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn sitemap_retrievals_reject_unknown_retailers() {
-        let response = post_json("/api/sitemap-retrievals", json!({ "retailers": ["nope"] })).await;
-        assert_eq!(response.status(), StatusCode::BAD_REQUEST);
-        let json: Value = from_slice(&body(response).await).unwrap();
-        assert_eq!(json, json!({ "error": "unknown retailer code: nope" }));
-    }
-
-    #[tokio::test]
-    async fn sitemap_retrievals_reject_disconnected_retailers() {
-        for (code, expected) in [
-            ("micom", StatusCode::BAD_REQUEST),
-            ("ugreenca", StatusCode::SERVICE_UNAVAILABLE),
-        ] {
-            let response = post_json("/api/sitemap-retrievals", json!({"retailers": [code]})).await;
-            assert_eq!(response.status(), expected);
-        }
+    async fn retired_sitemap_retrieval_endpoint_returns_404() {
+        let response = post_json(
+            "/api/sitemap-retrievals",
+            json!({"retailers": ["ugreenca"]}),
+        )
+        .await;
+        assert_eq!(response.status(), StatusCode::NOT_FOUND);
     }
 
     #[tokio::test]

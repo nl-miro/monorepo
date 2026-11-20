@@ -75,7 +75,7 @@ do not establish a successful PostgreSQL migration or runtime rehearsal.
 
 1. **Establish a runnable verification environment.** Use Rust/libpq and the
    sibling Mulac checkout required by the [root README](../../README.md), plus
-   PostgreSQL 16+ with a separate UTF8 test database. The test role needs CREATE
+   PostgreSQL 18+ with a separate UTF8 test database. The test role needs CREATE
    SCHEMA; each test creates and drops its own schema. Enable local listening
    sockets for the ordinary suite and live service. Docker is optional; the
    previous environment had neither Docker access nor a PostgreSQL server.

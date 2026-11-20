@@ -113,15 +113,15 @@ centrally. Reviews found no production defect requiring a behavior, migration,
 wire-version or architecture change. The added tests cover:
 
 - **Export persistence and recovery:** a shared five-variation
-  [fixture](../../services/retailer_sourcing/src/offer_discovery/processing_for_export/test_facts.rs)
+  [fixture](../../services/retailer_sourcing/src/steps/html/processing_for_export/test_facts.rs)
   includes exact large/zero-decimal Money, null and omitted observations,
   historical raw statuses and exact HTML/Unicode/empty/whitespace content.
-  [Database cases](../../services/retailer_sourcing/src/offer_discovery/processing_for_export/postgres_tests/facts.rs)
+  [Database cases](../../services/retailer_sourcing/src/steps/html/processing_for_export/postgres_tests/facts.rs)
   compare v6–v8 bytes, versions and IDs through prepare/upload/load/restart,
   coexistence with pending v1/completed v5, upload-success/completion-failure
   recovery without a readable original source, and invalid-input rejection
-  before preparation. [Outbox tests](../../services/retailer_sourcing/src/offer_delivery/record_export_messages/postgres_tests.rs)
-  retain exact payloads/IDs on replay. The [real-storage suite](../../services/retailer_sourcing/src/offer_discovery/processing_for_export/live_tests.rs)
+  before preparation. [Outbox tests](../../services/retailer_sourcing/src/steps/record_export_messages/postgres_tests.rs)
+  retain exact payloads/IDs on replay. The [real-storage suite](../../services/retailer_sourcing/src/steps/html/processing_for_export/live_tests.rs)
   adds current v8 and retains v1.
 - **Offers transitions and replay:** [aggregate cases](../../services/offers/src/offers/aggregate/facts_tests.rs)
   check one event per independent change, exact record serialization/replay,

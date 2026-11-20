@@ -63,10 +63,10 @@ was denied, and localhost sockets were restricted. Ignored/filtered cases do
 not count as passes. Existing combined fact tests cover content but their
 PostgreSQL cases have not executed in the recorded environment.
 
-The [shared sourcing cases](../../services/retailer_sourcing/src/offer_discovery/processing_for_export/postgres_tests/facts.rs)
+The [shared sourcing cases](../../services/retailer_sourcing/src/steps/html/processing_for_export/postgres_tests/facts.rs)
 now exercise content-bearing v8 through preparation/upload/load and recovery
 after failed completion, comparing exact strings, bytes and identities. The
-[live suite](../../services/retailer_sourcing/src/offer_discovery/processing_for_export/live_tests.rs)
+[live suite](../../services/retailer_sourcing/src/steps/html/processing_for_export/live_tests.rs)
 adds a current-v8 round trip while retaining v1. Neither requires a new version.
 
 Focused tests now cover content-only updates, empty/whitespace TEXT/API round
@@ -104,7 +104,7 @@ content/statuses. No production defect was found; database tests remain unrun.
 
 Commands below are for the implementation follow-up, from repository root.
 Require pinned Rust, Make, libpq, the compatible sibling Mulac checkout, socket
-permissions and separate PostgreSQL 16+ UTF8 test databases with schema
+permissions and separate PostgreSQL 18+ UTF8 test databases with schema
 create/drop privileges. Provision `pg_trgm` in trusted
 `customer_facing_extensions` with role USAGE before customer-facing migrations;
 follow its [setup](../../services/customer_facing/README.md#title-search).

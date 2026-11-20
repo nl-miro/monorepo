@@ -37,7 +37,7 @@ Grounded at monorepo `d6686d7290f7ca8050564476a3242007d3bdfefc`.
   declares `<html lang="en-AU">`, Next.js locale `au`, default locale `us`,
   and a Klarna widget locale `en-US`. Its document language is directly stated;
   neither the widget nor a guessed mapping from `au` proves its language.
-- [Export conversion](../../services/retailer_sourcing/src/offer_discovery/processing_for_export/conversion.rs)
+- [Export conversion](../../services/retailer_sourcing/src/steps/html/processing_for_export/conversion.rs)
   currently copies title, price, URL and images from variations. The
   [customers client](../../apps/customers/src/offers.rs) has no market or
   language fields.

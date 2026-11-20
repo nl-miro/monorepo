@@ -30,13 +30,13 @@ introduce either into the first implementation.
 
 ## Current behavior and contracts
 
-- [`structuralize_offer::Handler`](../../services/retailer_sourcing/src/offer_discovery/structuralize_offer/handler.rs)
+- [`structuralize_offer::Handler`](../../services/retailer_sourcing/src/steps/html/structuralize_offer/handler.rs)
   uploads a JSON document, saves its reference, and returns
-  [`OfferWasStructuralized`](../../services/retailer_sourcing/src/offer_discovery/structuralize_offer/event.rs).
+  [`OfferWasStructuralized`](../../services/retailer_sourcing/src/steps/html/structuralize_offer/event.rs).
   That event currently contains the sourcing offer ID, consolidated sitemap ID,
   retailer code and page URL. It carries neither the document nor its immutable
   storage reference.
-- [`offer_details_structuralized`](../../services/retailer_sourcing/src/offer_discovery/structuralize_offer/store.rs)
+- [`offer_details_structuralized`](../../services/retailer_sourcing/src/steps/html/structuralize_offer/store.rs)
   has one current row per sourcing offer. Each replacement uploads an immutable
   object and replaces the row's reference. Reading by `offer_id` returns the
   last committed snapshot, which may differ from the document that originally
@@ -160,7 +160,7 @@ Create `offer_discovery/processing_for_export/` with `command.rs`, `event.rs`,
 `prelude.rs`, and focused tests, following the neighboring feature slices.
 
 Register its reaction to `OfferWasStructuralized` and its handler through
-[`offer_discovery::prelude::register`](../../services/retailer_sourcing/src/offer_discovery/prelude.rs).
+[`offer_discovery::prelude::register`](../../services/retailer_sourcing/src/steps/html/prelude.rs).
 The existing bus continues to enqueue and execute commands only through the
 manual queue endpoints. A structuralizer returning no document still produces
 no downstream work.

@@ -27,8 +27,8 @@ Grounded at monorepo `c8ad6e8ff6da4b229c668ea5d89c1e12260b7783`.
   emits a nested `identifiers` object per variation, with GTIN, SKU and all
   three Shopify fields. Other storefronts can have optional SKU/GTIN; existing
   export fixtures also contain partial identifier objects.
-- [Export conversion](../../services/retailer_sourcing/src/offer_discovery/processing_for_export/conversion.rs)
-  ignores that object. [OfferImport](../../services/retailer_sourcing/src/offer_discovery/processing_for_export/entity.rs)
+- [Export conversion](../../services/retailer_sourcing/src/steps/html/processing_for_export/conversion.rs)
+  ignores that object. [OfferImport](../../services/retailer_sourcing/src/steps/html/processing_for_export/entity.rs)
   and the [receiving command](../../services/offers/src/offers/command.rs)
   currently carry title, price, URL and images only.
 - Despite its name, [read_offers_identifiers](../../services/offers/src/read_offers_identifiers/entity.rs)
