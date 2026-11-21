@@ -2,7 +2,7 @@
 
 use super::results::load_result;
 use super::{ApplicationCommand, ShopifyGraphQlInitialFillSaga};
-use crate::platform::bus::EventEnvelope;
+use crate::platform::bus::{Event, EventEnvelope};
 use crate::saga::saga::SagaRecord;
 use crate::saga::saga_repository::{SagaRepository, SaveError};
 use crate::steps::graphql::acquire_storefront_token::StorefrontTokenAcquired;
@@ -68,7 +68,7 @@ impl Listener {
             .map_err(|error| error.to_string())?
             .ok_or_else(|| "initialization did not create a saga".into())
     }
-    fn apply<E>(
+    fn apply<E: Event>(
         &self,
         envelope: &EventEnvelope<E>,
         retailer: RetailerCode,
@@ -88,17 +88,24 @@ impl Listener {
             .ok_or("step event requires correlation")?;
         let cause = meta.causation_id.ok_or("step event requires causation")?;
         self.repository
-            .transition::<ShopifyGraphQlInitialFillSaga, _>(
-                correlation,
-                retailer,
-                None,
-                |record, conn| {
-                    let commands =
-                        apply(record, conn, cause, meta.event_id).map_err(SaveError::Invalid)?;
-                    record.status = record.payload.status().into();
-                    Ok(commands)
-                },
-            )
+            .transition_event::<ShopifyGraphQlInitialFillSaga, _>(correlation, |record, conn| {
+                let Some(expected) =
+                    record
+                        .payload
+                        .expected_event(record.id, record.retailer_code, cause)
+                else {
+                    return Ok(vec![]);
+                };
+                if expected != E::NAME || record.retailer_code != retailer {
+                    return Err(SaveError::Invalid(
+                        "matched saga work has conflicting event type or retailer".into(),
+                    ));
+                }
+                let commands =
+                    apply(record, conn, cause, meta.event_id).map_err(SaveError::Invalid)?;
+                record.status = record.payload.status().into();
+                Ok(commands)
+            })
             .map(|result| result.unwrap_or_default())
             .map_err(|error| error.to_string())
     }

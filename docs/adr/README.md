@@ -158,14 +158,10 @@ Decision, Consequences) and give it the next number.
 
 - [92: Business processes, sagas and steps in retailer sourcing](0092-business-processes-sagas-and-steps.md)
 
-- [93: Shared saga storage in retailer sourcing](0093-shared-saga-storage.md)
 
-- [94: Typed event envelopes in retailer sourcing](0094-typed-event-envelopes.md)
 
-- [95: Preserve event correlation in command-producing reactions](0095-preserve-event-correlation-in-reactions.md)
 
-- [96: Saga record identities and transactions](0096-saga-record-identities-and-transactions.md)
 
-- [97: Saga initialization from envelope correlation](0097-saga-initialization-from-envelope-correlation.md)
 
-- [98: Saga progress, replay and failure observation](0098-saga-progress-replay-and-failure-observation.md)
+- [93: Saga storage and identity](0093-saga-storage-and-identity.md)
+- [94: Saga execution, replay and recovery](0094-saga-execution-replay-and-recovery.md)

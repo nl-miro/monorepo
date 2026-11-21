@@ -20,9 +20,11 @@ in TODO.md; shared dependency, dashboard and ADR edits must be coordinated.
 
 ## Saga implementation
 
-- [Saga implementation](saga-implementation.md): `[>]` planned;
-  use UUID v7 `id` as the sole primary key, string `saga_type`, UUID v7
-  `correlation_id`, and uniqueness on `(saga_type, correlation_id)`.
+- [Saga implementation](saga-implementation.md): historical, superseded by v3.
+- [Saga implementation v3](saga-implementation-v3.md): `[>]` planned; the single active saga plan;
+  redo the saga on the ADR 91–92 module layout, keeping the JSONB payload,
+  payload-guided work matching, manual batches and strict success, with bounded
+  admission/recovery and focused failure, concurrency and scale verification.
 
 ## Current round and dependencies
 

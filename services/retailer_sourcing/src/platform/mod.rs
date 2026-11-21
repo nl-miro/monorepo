@@ -9,6 +9,7 @@ pub mod http;
 pub mod logging;
 pub mod offers_publisher;
 pub mod outbox;
+pub(crate) mod recovery;
 pub mod state;
 use db::DbError;
 use db::DbPool;

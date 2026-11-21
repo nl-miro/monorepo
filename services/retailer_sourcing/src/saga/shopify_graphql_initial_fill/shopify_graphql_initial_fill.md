@@ -35,6 +35,6 @@ product maps identify pending work through missing result references, completed
 steps through canonical references, and terminal failures through their reason.
 Development artifact listings expose envelope `correlation_id`.
 
-See [ADR 98](../../../../../docs/adr/0098-saga-progress-replay-and-failure-observation.md).
+See [ADR 94](../../../../../docs/adr/0094-saga-execution-replay-and-recovery.md).
 Run `make test-postgres` for controlled pipeline/failure scenarios and
 `make test-saga-live` for complete API-driven Anker AU and Ugreen EU verification.

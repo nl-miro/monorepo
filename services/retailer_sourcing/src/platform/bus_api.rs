@@ -48,6 +48,12 @@ async fn run_commands(State(bus): State<Option<BusHandle>>, request: RunCommands
     let Some(bus) = bus else {
         return unavailable_bus();
     };
+    if bus.recovery.is_some() {
+        return match bus.run_commands(request.0.limit()).await {
+            Ok(result) => Json(result).into_response(),
+            Err(failure) => recovery_failure(failure),
+        };
+    }
     let response = bus.commands.run(request).await.into_response();
     reconcile_after_batch(bus, response).await
 }
@@ -70,6 +76,12 @@ async fn run_events(State(bus): State<Option<BusHandle>>, request: RunEvents) ->
     let Some(bus) = bus else {
         return unavailable_bus();
     };
+    if bus.recovery.is_some() {
+        return match bus.run_events(request.0.limit()).await {
+            Ok(result) => Json(result).into_response(),
+            Err(failure) => recovery_failure(failure),
+        };
+    }
     let response = bus.events.run(request).await.into_response();
     reconcile_after_batch(bus, response).await
 }
@@ -130,4 +142,13 @@ async fn reconcile_after_batch(bus: BusHandle, response: Response) -> Response {
         }
     }
     response
+}
+
+fn recovery_failure(failure: String) -> Response {
+    error!(%failure, "queue recovery or reconciliation failed");
+    (
+        StatusCode::INTERNAL_SERVER_ERROR,
+        "queue recovery or reconciliation failed; retry the batch",
+    )
+        .into_response()
 }

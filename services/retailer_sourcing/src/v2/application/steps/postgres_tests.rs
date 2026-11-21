@@ -165,20 +165,32 @@ fn postgres_bulk_initial_fill_validates_before_dispatch_and_preserves_run_identi
     assert_eq!(status, StatusCode::BAD_REQUEST);
     assert!(rows(&db, "command_entries").as_array().unwrap().is_empty());
 
-    let retailers = ["ankerau", "ankerkr", "ankerca"];
     let (status, _) = post(
+        &server,
+        &app,
+        "/api/initial-offer-fills",
+        json!({"retailers":["ankerau","ankerkr"]}),
+    );
+    assert_eq!(status, StatusCode::BAD_REQUEST);
+    assert!(rows(&db, "command_entries").as_array().unwrap().is_empty());
+    let retailers = ["ankerau", "ankerca", "ankeritalycom"];
+    let (status, receipts) = post(
         &server,
         &app,
         "/api/initial-offer-fills",
         json!({"retailers": retailers}),
     );
-    assert_eq!(status, StatusCode::NO_CONTENT);
+    assert_eq!(status, StatusCode::ACCEPTED);
     let commands = json_query(
         &mut db.pool.get().unwrap(),
         "SELECT jsonb_agg(to_jsonb(c) ORDER BY id) AS value FROM command_entries c",
     );
     let commands = commands.as_array().unwrap();
     assert_eq!(commands.len(), retailers.len());
+    assert_eq!(receipts["fills"].as_array().unwrap().len(), retailers.len());
+    for (command, receipt) in commands.iter().zip(receipts["fills"].as_array().unwrap()) {
+        assert_eq!(command["id"], receipt["correlation_id"]);
+    }
     for (command, retailer) in commands.iter().zip(retailers) {
         assert_eq!(command["command_type"], "InitializeRetailerFill");
         let payload: Value = from_str(command["payload"].as_str().unwrap()).unwrap();
@@ -238,7 +250,7 @@ fn run_initial_fill(retailer: RetailerCode) {
         "/api/initial-offer-fills",
         json!({"retailers":[retailer.as_str()]}),
     );
-    assert_eq!(status, StatusCode::NO_CONTENT);
+    assert_eq!(status, StatusCode::ACCEPTED);
     run(&server, &app, "/api/commands/run");
     run(&server, &app, "/api/events/run");
     let correlation_id = json_query(

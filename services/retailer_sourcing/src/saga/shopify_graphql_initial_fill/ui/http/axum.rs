@@ -1,7 +1,9 @@
 //! Axum extraction, route registration and response rendering.
 use super::{InitialFillError, InitialFillHttpResponse, InitialFillRequest};
 use crate::platform::{bus::BusHandle, state::AppState};
-use crate::saga::shopify_graphql_initial_fill::service::{InitializationFailure, Service};
+use crate::saga::shopify_graphql_initial_fill::service::{
+    InitialFills, InitializationFailure, Service,
+};
 use axum::{
     Json,
     extract::State,
@@ -9,6 +11,7 @@ use axum::{
     response::{IntoResponse, Response},
 };
 use std::collections::HashSet;
+use tokio::task::spawn_blocking;
 use tracing::error;
 use utoipa_axum::{router::OpenApiRouter, routes};
 
@@ -17,15 +20,15 @@ pub fn routes() -> OpenApiRouter<AppState> {
 }
 
 #[utoipa::path(post, path="/initial-offer-fills", request_body=InitialFillRequest, responses(
-    (status=204, description="Initialization commands queued for all requested retailers"),
-    (status=400, body=InitialFillError, description="Empty list, unknown or duplicate retailer"),
+    (status=202, body=InitialFills, description="Initialization commands accepted; track fills by correlation ID"),
+    (status=400, body=InitialFillError, description="Empty list, unknown, duplicate or unsupported retailer/configuration"),
     (status=500, body=InitialFillError, description="Failed to queue an initialization command"),
     (status=503, body=InitialFillError, description="Command bus unavailable")
 ))]
 async fn start_initial_fills(
     State(bus): State<Option<BusHandle>>,
     Json(request): Json<InitialFillRequest>,
-) -> Result<StatusCode, InitialFillHttpResponse> {
+) -> Result<(StatusCode, Json<InitialFills>), InitialFillHttpResponse> {
     if request.retailers.is_empty() {
         return Err(InitializationFailure::EmptyRetailers.into());
     }
@@ -35,14 +38,14 @@ async fn start_initial_fills(
             return Err(InitializationFailure::DuplicateRetailer(retailer.clone()).into());
         }
     }
-    run(bus, request).await?;
-    Ok(StatusCode::NO_CONTENT)
+    let fills = run(bus, request).await?;
+    Ok((StatusCode::ACCEPTED, Json(fills)))
 }
 
 async fn run(
     bus: Option<BusHandle>,
     request: InitialFillRequest,
-) -> Result<(), InitialFillHttpResponse> {
+) -> Result<InitialFills, InitialFillHttpResponse> {
     let Some(bus) = bus else {
         let failure = command_bus_unavailable();
         return Err(failure);
@@ -52,7 +55,15 @@ async fn run(
 
     let service = Service::new(bus.command_gateway());
 
-    service.run(retailers).map_err(Into::into)
+    spawn_blocking(move || service.run(retailers))
+        .await
+        .map_err(|error| {
+            error!(%error, "initialization task failed");
+            InitialFillHttpResponse::InternalServerError(InitialFillError::new(
+                "initialization task failed",
+            ))
+        })?
+        .map_err(Into::into)
 }
 
 fn command_bus_unavailable() -> InitialFillHttpResponse {

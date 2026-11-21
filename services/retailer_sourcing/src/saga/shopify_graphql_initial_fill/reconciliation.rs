@@ -15,15 +15,20 @@ use crate::steps::graphql::structuralize_offer_details::{
     OfferDetailsStructuralized, StructuralizeOfferDetails,
 };
 use commanding::prelude::{CommandStatus, ReservableCommandSpec};
+use diesel::result::Error as DieselError;
 use diesel::sql_types::{Bool, Integer, Nullable, Text, Uuid as SqlUuid};
 use diesel::{PgConnection, QueryableByName, RunQueryDsl, sql_query};
 use eventing::prelude::{EventStatus, ReservableEventSpec};
+use serde_json::to_value;
 use shared::retailer::RetailerCode;
 use std::collections::HashMap;
+use tracing::{error, info};
 use uuid::Uuid;
 
 #[derive(QueryableByName)]
 struct ActiveSaga {
+    #[diesel(sql_type = SqlUuid)]
+    id: Uuid,
     #[diesel(sql_type = SqlUuid)]
     correlation_id: Uuid,
     #[diesel(sql_type = Text)]
@@ -31,30 +36,63 @@ struct ActiveSaga {
 }
 
 /// Only active sagas need observation. Recheck status after acquiring their lock.
-pub(crate) fn reconcile(pool: &DbPool) -> Result<(), SaveError> {
-    let rows = sql_query("SELECT correlation_id, retailer_code FROM sagas WHERE saga_type = $1 AND status = 'in_progress'")
+#[derive(Debug, Default)]
+pub(crate) struct ReconciliationReport {
+    pub scanned: usize,
+    pub changed: usize,
+    pub failed: usize,
+}
+
+pub(crate) fn reconcile(pool: &DbPool) -> Result<ReconciliationReport, SaveError> {
+    let rows = sql_query("SELECT id, correlation_id, retailer_code FROM sagas WHERE saga_type = $1 AND status = 'in_progress'")
         .bind::<Text, _>(ShopifyGraphQlInitialFillSaga::TYPE)
         .load::<ActiveSaga>(&mut pool.get()?)?;
     let repository = SagaRepository::new(pool.clone());
+    let mut report = ReconciliationReport::default();
     for row in rows {
-        let retailer = RetailerCode::from_str(&row.retailer_code)
-            .map_err(|error| SaveError::Invalid(error.to_string()))?;
-        repository.transition::<ShopifyGraphQlInitialFillSaga, _>(
-            row.correlation_id,
-            retailer,
-            None,
-            |record, conn| {
-                if record.status != "in_progress" {
-                    return Ok(());
-                }
-                let queue = Queue::load(conn, record.correlation_id)?;
-                record.payload.reconcile(&queue, record.id, retailer);
-                record.status = record.payload.status().into();
-                Ok(())
-            },
-        )?;
+        report.scanned += 1;
+        let result = (|| {
+            let retailer = RetailerCode::from_str(&row.retailer_code)
+                .map_err(|error| SaveError::Invalid(error.to_string()))?;
+            let changed = repository.transition::<ShopifyGraphQlInitialFillSaga, _>(
+                row.correlation_id,
+                retailer,
+                None,
+                |record, conn| {
+                    if record.status != "in_progress" {
+                        return Ok(false);
+                    }
+                    let before = to_value((&record.status, &record.payload))
+                        .map_err(|e| SaveError::Invalid(e.to_string()))?;
+                    let queue = Queue::load(conn, record.correlation_id)?;
+                    record.payload.reconcile(&queue, record.id, retailer);
+                    record.status = record.payload.status().into();
+                    Ok(before
+                        != to_value((&record.status, &record.payload))
+                            .map_err(|e| SaveError::Invalid(e.to_string()))?)
+                },
+            )?;
+            Ok(changed.unwrap_or(false))
+        })();
+        match result {
+            Ok(changed) => report.changed += usize::from(changed),
+            Err(
+                error @ (SaveError::Invalid(_)
+                | SaveError::Database(DieselError::DeserializationError(_))),
+            ) => {
+                report.failed += 1;
+                error!(saga_id = %row.id, correlation_id = %row.correlation_id, saga_type = ShopifyGraphQlInitialFillSaga::TYPE, %error, "could not reconcile saga");
+            }
+            Err(error) => return Err(error),
+        }
     }
-    Ok(())
+    info!(
+        scanned = report.scanned,
+        changed = report.changed,
+        failed = report.failed,
+        "saga reconciliation finished"
+    );
+    Ok(report)
 }
 
 #[derive(QueryableByName)]

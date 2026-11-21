@@ -38,6 +38,10 @@ use uuid::Uuid;
 
 use super::db::DbPool;
 use super::logging::TIMING_TARGET;
+use super::recovery::Recovery;
+use commanding::prelude::{ReservableCommandSpec, RunCommandsResponse};
+use eventing::prelude::{ReservableEventSpec, RunEventsResponse};
+use tokio::task::spawn_blocking;
 
 /// A request to change state, handled by exactly one handler.
 pub trait Command: Serialize + DeserializeOwned + Send + Sync + 'static {
@@ -222,6 +226,7 @@ impl Bus {
             )),
             events: EventingAdapter::new(AsyncEventingService::new(handle.event_consumer())),
             kernel: Arc::new(handle),
+            recovery: None,
             batch_observers: self.batch_observers,
         })
     }
@@ -235,10 +240,54 @@ pub struct BusHandle {
     pub(super) commands: CommandingAdapter,
     pub(super) events: EventingAdapter,
     kernel: Arc<PersistentKernelHandle>,
+    pub(crate) recovery: Option<Recovery>,
     batch_observers: Vec<BatchObserver>,
 }
 
 impl BusHandle {
+    pub(super) async fn run_commands(&self, limit: usize) -> Result<RunCommandsResponse, String> {
+        let bus = self.clone();
+        spawn_blocking(move || {
+            let guard = bus.recovery.as_ref().map(Recovery::begin).transpose()?;
+            let result = RunCommandsResponse::from_result(
+                bus.kernel
+                    .command_consumer()
+                    .consume(&ReservableCommandSpec::new(limit)),
+            );
+            if let Some(guard) = guard {
+                guard.finish();
+            }
+            if let Some(recovery) = &bus.recovery {
+                recovery.sweep()?;
+            }
+            bus.observe_batch()?;
+            Ok(result)
+        })
+        .await
+        .map_err(|error| error.to_string())?
+    }
+    pub(super) async fn run_events(&self, limit: usize) -> Result<RunEventsResponse, String> {
+        let bus = self.clone();
+        spawn_blocking(move || {
+            let guard = bus.recovery.as_ref().map(Recovery::begin).transpose()?;
+            let result = RunEventsResponse::from_result(
+                bus.kernel
+                    .event_consumer()
+                    .consume(&ReservableEventSpec::new(limit)),
+            );
+            if let Some(guard) = guard {
+                guard.finish();
+            }
+            if let Some(recovery) = &bus.recovery {
+                recovery.sweep()?;
+            }
+            bus.observe_batch()?;
+            Ok(result)
+        })
+        .await
+        .map_err(|error| error.to_string())?
+    }
+
     pub(super) fn observe_batch(&self) -> Result<(), String> {
         for observer in &self.batch_observers {
             observer()?;

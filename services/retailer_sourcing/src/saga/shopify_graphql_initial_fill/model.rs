@@ -1,7 +1,7 @@
 //! Durable workflow state and sequencing. Identity belongs to the saga record.
 
 use super::ApplicationCommand;
-use crate::platform::bus::{Command, KeyedCommand, stable_command_id};
+use crate::platform::bus::{Command, Event, KeyedCommand, stable_command_id};
 use crate::saga::saga::Saga;
 use crate::steps::graphql::acquire_storefront_token::{
     AcquireStorefrontToken, StorefrontTokenAcquired,
@@ -123,6 +123,37 @@ impl ShopifyGraphQlInitialFillSaga {
                 .collect::<Vec<_>>(),
         )
     }
+    pub(super) fn expected_event(
+        &self,
+        namespace: Uuid,
+        retailer: RetailerCode,
+        cause: Uuid,
+    ) -> Option<&'static str> {
+        if self.acquire_token
+            && cause == stable_command_id(&namespace, AcquireStorefrontToken::NAME.as_bytes())
+        {
+            return Some(StorefrontTokenAcquired::NAME);
+        }
+        if (!self.acquire_token || self.token_event.is_some())
+            && self
+                .catalog_commands(namespace, retailer)
+                .iter()
+                .any(|command| command.id == cause)
+        {
+            return Some(ProductCatalogIdsRetrieved::NAME);
+        }
+        if self.locate_fetch(namespace, retailer, cause).is_some() {
+            return Some(OfferDetailsFetched::NAME);
+        }
+        if self.locate_derived(cause, true).is_some() {
+            return Some(OfferDetailsExtracted::NAME);
+        }
+        if self.locate_derived(cause, false).is_some() {
+            return Some(OfferDetailsStructuralized::NAME);
+        }
+        None
+    }
+
     pub(super) fn on_token(
         &mut self,
         namespace: Uuid,

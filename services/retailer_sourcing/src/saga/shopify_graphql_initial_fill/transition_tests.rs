@@ -114,7 +114,10 @@ impl Fixture {
     fn row(&self) -> Value {
         json_query(
             &mut self.db.pool.get().unwrap(),
-            "SELECT to_jsonb(s) AS value FROM sagas s",
+            &format!(
+                "SELECT to_jsonb(s) AS value FROM sagas s WHERE correlation_id = '{}'",
+                self.correlation
+            ),
         )
     }
     fn command(
@@ -849,5 +852,174 @@ fn completed_command_retention_prevents_reexecution_after_replay() {
         ),
         0
     );
+    bus.shutdown();
+}
+
+#[test]
+#[ignore = "requires DATABASE_URL_TEST; run make test-postgres"]
+fn unmatched_wrong_retailer_is_ignored_but_matched_conflict_is_rejected() {
+    let f = Fixture::new();
+    let before = f.row();
+    let mut event = f.catalog(&["one"]);
+    event.event.retailer_code = RetailerCode::AnkerAu;
+    assert!(f.listener.on_catalog(&event).is_err());
+    event.metadata.as_mut().unwrap().causation_id = Some(Uuid::now_v7());
+    assert!(f.listener.on_catalog(&event).unwrap().is_empty());
+    assert_eq!(f.row(), before);
+}
+
+#[test]
+#[ignore = "requires DATABASE_URL_TEST; run make test-postgres"]
+fn malformed_saga_does_not_block_healthy_reconciliation() {
+    let f = Fixture::new();
+    sql_query("INSERT INTO sagas (id, saga_type, correlation_id, retailer_code, status, payload) SELECT $1, saga_type, $2, retailer_code, status, '{}'::jsonb FROM sagas LIMIT 1")
+        .bind::<SqlUuid,_>(Uuid::now_v7()).bind::<SqlUuid,_>(Uuid::now_v7()).execute(&mut f.db.pool.get().unwrap()).unwrap();
+    f.command(&f.catalog, f.initialization, 4, 6);
+    let report = reconcile(&f.db.pool).unwrap();
+    assert_eq!(report.scanned, 2);
+    assert_eq!(report.failed, 1);
+    assert_eq!(report.changed, 1);
+    assert_eq!(f.row()["status"], "failed");
+}
+
+#[test]
+#[ignore = "requires DATABASE_URL_TEST; run make test-postgres"]
+fn replay_returns_commands_without_rewriting_the_row() {
+    let f = Fixture::new();
+    let event = f.catalog(&["one"]);
+    let first = f
+        .listener
+        .on_catalog(&event)
+        .unwrap()
+        .remove(0)
+        .encode()
+        .unwrap();
+    let before = json_query(
+        &mut f.db.pool.get().unwrap(),
+        "SELECT to_jsonb(xmin::text) AS value FROM sagas",
+    );
+    let replay = f
+        .listener
+        .on_catalog(&event)
+        .unwrap()
+        .remove(0)
+        .encode()
+        .unwrap();
+    let after = json_query(
+        &mut f.db.pool.get().unwrap(),
+        "SELECT to_jsonb(xmin::text) AS value FROM sagas",
+    );
+    assert_eq!(before, after);
+    assert_eq!(first.id, replay.id);
+    assert_eq!(first.command.payload, replay.command.payload);
+}
+
+#[test]
+#[ignore = "requires DATABASE_URL_TEST; run make test-postgres"]
+fn production_registration_accepts_success_before_import_failure() {
+    use crate::app;
+    use crate::platform::recovery::Recovery;
+    use crate::platform::state::AppState;
+    use crate::platform::{
+        Platform,
+        bus::Bus,
+        http::{Client, OfferClient},
+        test_objects::Server,
+    };
+    use crate::register_graphql_pipeline;
+    use axum::{body::Body, http::Request};
+    use std::env::var;
+    use tower::ServiceExt;
+    let f = Fixture::new();
+    let server = Server::new();
+    let command = f
+        .listener
+        .on_catalog(&f.catalog(&["one"]))
+        .unwrap()
+        .remove(0)
+        .encode()
+        .unwrap();
+    let fetched = f.fetched(command.id, "one");
+    let extraction = f
+        .listener
+        .on_fetched(&fetched)
+        .unwrap()
+        .remove(0)
+        .encode()
+        .unwrap();
+    let extracted = publish(
+        &f.db,
+        f.correlation,
+        extraction.id,
+        OfferDetailsExtracted {
+            fetched: fetched.event,
+            storage: storage(),
+        },
+    );
+    let structuralize = f
+        .listener
+        .on_extracted(&extracted)
+        .unwrap()
+        .remove(0)
+        .encode()
+        .unwrap();
+    // Only the final result is delivered through the bus. Its artifact is absent,
+    // making the real import subscriber fail on every attempt.
+    sql_query("UPDATE event_entries SET status = 5")
+        .execute(&mut f.db.pool.get().unwrap())
+        .unwrap();
+    let event = publish(
+        &f.db,
+        f.correlation,
+        structuralize.id,
+        OfferDetailsStructuralized {
+            extracted: extracted.event,
+            storage: storage(),
+        },
+    );
+    f.event_status(event.metadata.as_ref().unwrap().event_id, 0, 0);
+    let platform = Platform {
+        db: f.db.pool.clone(),
+        http: Client,
+        offer_http: OfferClient::default(),
+        object_storage: server.client(),
+    };
+    let mut bus = Bus::default();
+    register_graphql_pipeline(&mut bus, &platform);
+    let guard = server.runtime.enter();
+    let mut bus = bus.start(f.db.pool.clone()).unwrap();
+    bus.recovery = Some(Recovery::new(
+        f.db.pool.clone(),
+        var("DATABASE_URL_TEST").unwrap(),
+    ));
+    drop(guard);
+    let router = app(AppState {
+        bus: Some(bus.clone()),
+        ..Default::default()
+    });
+    for _ in 0..6 {
+        sql_query("UPDATE event_entries SET scheduled_at=now() WHERE status=4")
+            .execute(&mut f.db.pool.get().unwrap())
+            .unwrap();
+        let response = server
+            .runtime
+            .block_on(
+                router.clone().oneshot(
+                    Request::post("/api/events/run")
+                        .header("content-type", "application/json")
+                        .body(Body::from(r#"{"limit":1}"#))
+                        .unwrap(),
+                ),
+            )
+            .unwrap();
+        assert!(response.status().is_success());
+        assert_eq!(f.row()["status"], "succeeded");
+    }
+    let result = json_query(
+        &mut f.db.pool.get().unwrap(),
+        "SELECT to_jsonb(attempts) AS value FROM event_entries WHERE event_type='OfferDetailsStructuralized'",
+    );
+    assert_eq!(result, json!(6));
+    assert!(event.metadata.is_some());
     bus.shutdown();
 }

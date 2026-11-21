@@ -398,9 +398,8 @@ supersede them where necessary.
 ### Current status
 
 Storage, initialization, step contracts, durable transitions and queue failure
-reconciliation are implemented. See [ADR 96](../adr/0096-saga-record-identities-and-transactions.md),
-[ADR 97](../adr/0097-saga-initialization-from-envelope-correlation.md) and
-[ADR 98](../adr/0098-saga-progress-replay-and-failure-observation.md).
+reconciliation are implemented. See [ADR 93](../adr/0093-saga-storage-and-identity.md),
+[ADR 94](../adr/0094-saga-execution-replay-and-recovery.md).
 
 Verification on 2026-11-20 passed service and development-app `make ci`, all 96
 PostgreSQL tests on PostgreSQL 18.6, and the service health smoke check. The queue
@@ -413,10 +412,10 @@ Both API-driven live fills reached `succeeded` and verified every structured
 artifact, including product identity, variant counts, language, currency and
 standard/discounted pricing:
 
-| Retailer | Access | Verified structured artifacts | Resolved contexts |
-| --- | --- | ---: | --- |
-| Anker AU | Acquired storefront token | 152 | AU/EN/AUD: 152 |
-| Ugreen EU | Tokenless | 1,234 | BG/BG/EUR: 247; AT/DE/EUR: 247; CZ/CS/EUR: 247; DE/EN/EUR: 246; DK/DA/EUR: 247 |
+| Retailer  | Access                    | Verified structured artifacts | Resolved contexts                                                              |
+| --------- | ------------------------- | ----------------------------: | ------------------------------------------------------------------------------ |
+| Anker AU  | Acquired storefront token |                           152 | AU/EN/AUD: 152                                                                 |
+| Ugreen EU | Tokenless                 |                         1,234 | BG/BG/EUR: 247; AT/DE/EUR: 247; CZ/CS/EUR: 247; DE/EN/EUR: 246; DK/DA/EUR: 247 |
 
 Ugreen also exercised concurrent manual HTTP batches from a second service
 process against the same isolated test schema, with command workers disabled.
@@ -488,7 +487,7 @@ Paths beginning with `src/` are relative to `services/retailer_sourcing`.
 | Reconciliation     | Local queue observer and saga state updates; startup/background lifecycle and manual runner integration.                                                                                                                        |
 | Verification       | Saga and pipeline PostgreSQL tests, failure/replay fixtures, artifact checks, and API-driven live verification.                                                                                                                 |
 | Documentation      | New ADRs and index entries, service/Shopify walkthrough, retention and terminal-outcome contracts.                                                                                                                              |
-| CI                 | `.github/workflows/ci.yml`: run the PostgreSQL service images at version 18.                                                                                                                                                  |
+| CI                 | `.github/workflows/ci.yml`: run the PostgreSQL service images at version 18.                                                                                                                                                    |
 
 No Mulac dependency change is required by this design.
 
@@ -521,3 +520,30 @@ indefinitely pending sagas.
 - Should explicitly verified product disappearance/unpublication be an allowed
   skip for success? Until that policy is changed, the strict criterion above
   remains in force; technical failures never count as success.
+
+## Review fixes
+
+Saga subscriptions precede step subscriptions through shared production/live-test
+registration. Unmatched work is ignored before validating retailer ownership.
+Start requests validate all configurations before enqueueing and return HTTP 202
+with retailer/correlation receipts; synchronous dispatch uses the blocking pool.
+
+Startup and manual batches sweep reservations older than five minutes. Shared
+PostgreSQL advisory locks protect active batches; exclusive sweeps defer while
+batches run. Dedicated guard connections survive request cancellation until the
+blocking work finishes. Workers remain disabled, and recovery after the timeout
+requires another manual batch. Per-saga decoding/validation failures are logged
+with identity and counted; infrastructure errors remain fatal. Reconciliation
+reports scanned, changed and failed counts.
+
+A follow-up migration indexes both queue correlation expressions without resetting
+development data. No-op transitions avoid rewriting saga rows while still returning
+replay commands. Decisions are consolidated in ADRs 93 and 94. Token refresh,
+atomic multi-retailer insertion and background workers remain outside this phase.
+
+Review-fix verification passed service `make fmt` and `make ci`, and all 103
+PostgreSQL integration tests on PostgreSQL 18.6. Coverage includes exhausted
+import delivery with production registration, malformed-saga isolation,
+unchanged replay writes, retailer matching, correlation-index migration
+round trips, coordinated command/event recovery, and cancellation of a batch
+waiter while its blocking work remains protected.

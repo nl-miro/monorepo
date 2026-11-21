@@ -117,8 +117,6 @@ fn run_api(retailer: RetailerCode) {
     use crate::platform::object_storage::STRUCTURALIZED_OFFERS_BUCKET;
     use crate::platform::state::AppState;
     use crate::platform::test_db::{Database, json_query};
-    use crate::saga::shopify_graphql_initial_fill::register as register_saga;
-    use crate::steps::graphql::prelude::register as register_steps;
     use crate::steps::graphql::structuralize_offer_details::OfferDetailsStructuralized;
     use axum::body::{Body, to_bytes};
     use axum::http::{Request, StatusCode};
@@ -141,11 +139,16 @@ fn run_api(retailer: RetailerCode) {
         offer_http: OfferClient::default(),
         object_storage: storage.clone(),
     };
+    use crate::platform::recovery::Recovery;
+    use crate::register_graphql_pipeline;
     let mut bus = Bus::default();
-    register_steps(&mut bus, &platform);
-    register_saga(&mut bus, &db.pool);
+    register_graphql_pipeline(&mut bus, &platform);
     let guard = runtime.enter();
-    let bus = bus.start(db.pool.clone()).unwrap();
+    let mut bus = bus.start(db.pool.clone()).unwrap();
+    bus.recovery = Some(Recovery::new(
+        db.pool.clone(),
+        var("DATABASE_URL_TEST").unwrap(),
+    ));
     drop(guard);
     let app = app(AppState {
         db: Some(db.pool.clone()),

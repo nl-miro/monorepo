@@ -1,11 +1,11 @@
-# 98. Saga progress, replay and failure observation
+# 94. Saga progress, replay and failure observation
 
 Status: Accepted
 
 Supersedes the initial-fill reaction ownership and payload identity described in
 [ADR 59](0059-multi-market-shopify-initial-fills.md) and
 [ADR 74](0074-drop-market-discovery-stage.md). Completes the initialization
-boundary in [ADR 97](0097-saga-initialization-from-envelope-correlation.md).
+boundary in the initialization event contract.
 
 ## Decision
 
@@ -91,3 +91,25 @@ artifacts and 1,234 Ugreen EU artifacts across five contexts. Both persisted
 `succeeded`; every artifact passed product, variant, context and pricing checks.
 Ugreen also used a second service process to drive concurrent manual HTTP
 batches with workers disabled. See the implementation plan for context counts.
+
+## Recovery and delivery isolation
+
+Saga subscribers register before import preparation. An import subscriber failure
+must not prevent acceptance of a successfully structuralized product.
+
+Startup and manual batches sweep command and event reservations older than five
+minutes using Mulac's six-attempt policy. Concurrent batches hold shared PostgreSQL
+advisory locks on dedicated connections. Sweeping requires the exclusive lock and
+is deferred while any batch is active. Guards live inside blocking execution,
+including after an HTTP client disconnects. Recent abandoned reservations are
+recovered on a subsequent manual batch. Workers remain disabled.
+
+Malformed saga payloads are logged individually and counted while healthy sagas
+continue. Infrastructure errors still fail startup or the batch. Reconciliation
+logs scanned and failed counts. Queue correlation expression indexes support
+indefinitely retained history.
+
+The start endpoint validates all requested retailer configurations before dispatch,
+then returns HTTP 202 with retailer/correlation receipts. Saga creation remains
+asynchronous. Dispatch runs outside Tokio runtime threads. Multi-retailer dispatch
+is not atomic; a queue failure can follow earlier successful inserts.

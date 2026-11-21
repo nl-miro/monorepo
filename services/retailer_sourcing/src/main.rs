@@ -23,6 +23,7 @@ use platform::http::OfferClient;
 use platform::logging::init;
 use platform::object_storage::ObjectStorage;
 use platform::offers_publisher::OffersPublisher;
+use platform::recovery::Recovery;
 use reporting::prelude::register as reporting_register;
 use reporting::prelude::routes as reporting_routes;
 use saga::shopify_graphql_initial_fill::register as register_graphql_initial_fill_saga;
@@ -174,22 +175,28 @@ async fn start_features(database_url: Result<String, VarError>) -> IoResult<AppS
     };
     let object_storage = ObjectStorage::from_env(Handle::current()).map_err(Error::other)?;
     let offer_http = OfferClient::configured()?;
+    let connection_url = database_url.clone();
     let platform =
-        spawn_blocking(move || Platform::connect(&database_url, object_storage, offer_http))
+        spawn_blocking(move || Platform::connect(&connection_url, object_storage, offer_http))
             .await
             .map_err(Error::other)?
             .map_err(Error::other)?;
 
     let mut bus = Bus::default();
     register_sitemap(&mut bus, &platform);
-    register_graphql(&mut bus, &platform);
-    register_graphql_initial_fill_saga(&mut bus, &platform.db);
+    register_graphql_pipeline(&mut bus, &platform);
     register_html(&mut bus, &platform);
     register_record_export_messages(&mut bus, &platform);
     development_register(&mut bus, &platform);
     monitoring_register(&mut bus, &platform);
     reporting_register(&mut bus, &platform);
 
+    let recovery = Recovery::new(platform.db.clone(), database_url);
+    let startup_recovery = recovery.clone();
+    spawn_blocking(move || startup_recovery.sweep())
+        .await
+        .map_err(Error::other)?
+        .map_err(Error::other)?;
     let reconciliation_db = platform.db.clone();
     spawn_blocking(move || reconcile_sagas(&reconciliation_db))
         .await
@@ -201,7 +208,8 @@ async fn start_features(database_url: Result<String, VarError>) -> IoResult<AppS
         OutboxAdapter::new(service)
     });
     let object_storage = platform.object_storage.clone();
-    let bus = bus.start(platform.db).map_err(Error::other)?;
+    let mut bus = bus.start(platform.db).map_err(Error::other)?;
+    bus.recovery = Some(recovery);
     Ok(AppState {
         bus: Some(bus),
         db: Some(db),
@@ -268,6 +276,12 @@ fn shutdown_signal() -> IoResult<impl Future<Output = ()> + Send + 'static> {
             std_future_pending::<()>().await;
         }
     })
+}
+
+/// Saga progress must be accepted before independent import delivery.
+pub(crate) fn register_graphql_pipeline(bus: &mut Bus, platform: &Platform) {
+    register_graphql_initial_fill_saga(bus, &platform.db);
+    register_graphql(bus, platform);
 }
 
 #[cfg(test)]

@@ -1,0 +1,2 @@
+DROP INDEX event_entries_correlation_idx;
+DROP INDEX command_entries_correlation_idx;

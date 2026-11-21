@@ -11,6 +11,7 @@ use diesel::{
     Connection, ExpressionMethods, OptionalExtension, PgConnection, QueryDsl, RunQueryDsl,
     insert_into, update,
 };
+use serde_json::to_value;
 use shared::retailer::RetailerCode;
 use thiserror::Error;
 use uuid::{Uuid, Variant};
@@ -114,10 +115,29 @@ impl SagaRepository {
         initial: Option<S>,
         apply: impl FnOnce(&mut SagaRecord<S>, &mut PgConnection) -> Result<R, SaveError>,
     ) -> Result<Option<R>, SaveError> {
+        self.transition_inner(correlation, Some(retailer), initial, apply)
+    }
+
+    pub(crate) fn transition_event<S: Saga, R>(
+        &self,
+        correlation: Uuid,
+        apply: impl FnOnce(&mut SagaRecord<S>, &mut PgConnection) -> Result<R, SaveError>,
+    ) -> Result<Option<R>, SaveError> {
+        self.transition_inner(correlation, None, None, apply)
+    }
+
+    fn transition_inner<S: Saga, R>(
+        &self,
+        correlation: Uuid,
+        expected_retailer: Option<RetailerCode>,
+        initial: Option<S>,
+        apply: impl FnOnce(&mut SagaRecord<S>, &mut PgConnection) -> Result<R, SaveError>,
+    ) -> Result<Option<R>, SaveError> {
         validate_uuid(correlation)?;
         let mut conn = self.pool.get()?;
         conn.transaction::<_, SaveError, _>(|conn| {
             if let Some(initial) = initial {
+                let retailer = expected_retailer.expect("initialization requires retailer");
                 insert_into(sagas)
                     .values((
                         id.eq(Uuid::now_v7()),
@@ -141,7 +161,9 @@ impl SagaRepository {
             let Some((saved_id, retailer_name, saved_status, Json(state))) = stored else {
                 return Ok(None);
             };
-            if retailer_name != retailer.as_str() {
+            let retailer = RetailerCode::from_str(&retailer_name)
+                .map_err(|error| SaveError::Invalid(error.to_string()))?;
+            if expected_retailer.is_some_and(|expected| expected != retailer) {
                 return Err(SaveError::Invalid("saga retailer mismatch".into()));
             }
             let mut record = SagaRecord {
@@ -153,6 +175,8 @@ impl SagaRepository {
             };
             validate(&record)?;
             let previous_status = record.status.clone();
+            let previous_payload =
+                to_value(&record.payload).map_err(|error| SaveError::Invalid(error.to_string()))?;
             let result = apply(&mut record, conn)?;
             validate(&record)?;
             if record.id != saved_id
@@ -168,7 +192,13 @@ impl SagaRepository {
                     "terminal saga cannot change status".into(),
                 ));
             }
-            Self::save_on(conn, &record)?;
+            if record.status != previous_status
+                || to_value(&record.payload)
+                    .map_err(|error| SaveError::Invalid(error.to_string()))?
+                    != previous_payload
+            {
+                Self::save_on(conn, &record)?;
+            }
             Ok(Some(result))
         })
     }

@@ -22,15 +22,20 @@ impl Event for RetailerFillInitialized {
     const NAME: &'static str = "RetailerFillInitialized";
 }
 
+pub(crate) fn validate_retailer(retailer: RetailerCode) -> Result<(), String> {
+    let config =
+        get_storefront_config(retailer).ok_or("retailer has no storefront configuration")?;
+    config.initial_fill_contexts()?;
+    Ok(())
+}
+
 pub(crate) struct Handler;
 impl Handle for Handler {
     type Command = InitializeRetailerFill;
     type Event = RetailerFillInitialized;
     type Error = String;
     fn handle(&self, command: Self::Command) -> Result<Vec<Self::Event>, String> {
-        let config = get_storefront_config(command.retailer_code)
-            .ok_or("retailer has no storefront configuration")?;
-        config.initial_fill_contexts()?;
+        validate_retailer(command.retailer_code)?;
         Ok(vec![RetailerFillInitialized {
             retailer_code: command.retailer_code,
         }])

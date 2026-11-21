@@ -49,7 +49,8 @@ impl From<InitializationFailure> for InitialFillHttpResponse {
         match failure {
             InitializationFailure::EmptyRetailers
             | InitializationFailure::UnknownRetailer(_)
-            | InitializationFailure::DuplicateRetailer(_) => {
+            | InitializationFailure::DuplicateRetailer(_)
+            | InitializationFailure::UnsupportedRetailer(_, _) => {
                 Self::BadRequest(InitialFillError::new(failure.to_string()))
             }
             InitializationFailure::QueueFailed(message) => {

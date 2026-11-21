@@ -48,7 +48,11 @@ impl IntoEventCommand for ApplicationCommand {
 }
 pub(crate) fn register(bus: &mut Bus, db: &DbPool) {
     let reconciliation_pool = db.clone();
-    bus.after_batch(move || reconcile(&reconciliation_pool).map_err(|error| error.to_string()));
+    bus.after_batch(move || {
+        reconcile(&reconciliation_pool)
+            .map(|_| ())
+            .map_err(|error| error.to_string())
+    });
     let listener = Listener::new(SagaRepository::new(db.clone()));
     let initial = listener.clone();
     bus.on_commands_envelope(ShopifyGraphQlInitialFillSaga::TYPE, move |event| {

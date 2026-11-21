@@ -207,17 +207,16 @@ delivered again.
 
 ## Driving the workflow
 
-With `DATABASE_URL` configured, the executable starts four command workers by
-default. `COMMAND_WORKERS` sets their count; `0` keeps commands manual. Unset
-means four; empty, negative, malformed, overflowing or non-Unicode values fail
-startup with a `COMMAND_WORKERS` error. Without a database, no workers start.
-Shell and command-line settings override `.env`, including an explicit `0`.
+Command workers are disabled in this phase, regardless of `COMMAND_WORKERS`.
+Drive commands and events explicitly with `/api/commands/run` and `/api/events/run`.
+The outbox also requires explicit runs. Parallel manual batches are supported.
+Before enabling workers, extend recovery coordination to worker execution and add
+recurring sweeping and reconciliation.
 
-Each worker polls every second and reserves up to ten commands, processing its
-batch sequentially. These are concurrent task loops, not dedicated threads.
-`POST /api/commands/run` stays available and can add command concurrency beyond
-this count. Events and the outbox still require explicit API runs; command
-workers alone do not drive the whole pipeline.
+Startup and manual batches recover reservations older than five minutes, only
+while no coordinated batch is active. A recently abandoned reservation needs a
+later manual batch after that timeout. Malformed sagas are logged and counted
+without blocking healthy sagas; infrastructure failures remain errors.
 
 Offer downloads wait six seconds before every fetch, including retries and
 repeated URLs. Sitemap crawls choose a fresh random whole-second delay from one
@@ -227,16 +226,15 @@ per invocation/crawl: concurrent workers may fetch the same retailer together.
 Legacy retailer-library `sitemap_pause` functions are no longer used here.
 
 `Bus::start` and `start_features` remain worker-free, with zero inline drain
-rounds. Only the executable starts workers, after the database, routes/listener
-and shutdown signals are ready. For queued retrievals, use the command and event runners below.
+rounds. The executable also keeps workers disabled. For queued retrievals, use
+the command and event runners below.
 
 | Route                    | Body            | Does                                                                      |
 | ------------------------ | --------------- | ------------------------------------------------------------------------- |
 | `POST /api/commands/run` | `{"limit": 10}` | Runs up to `limit` queued commands and waits for them                     |
 | `POST /api/events/run`   | `{"limit": 10}` | Runs up to `limit` queued events; their reactions queue the next commands |
 
-With `COMMAND_WORKERS=0`, a queued retrieval advances through alternating
-runs. With workers enabled, wait for each command stage before running events.
+A queued retrieval advances through alternating command and event runs.
 
 1. `commands/run`: retrieves the sitemaps (can take minutes; keep the limit small).
 2. `events/run`, then `commands/run`: processes the sitemaps.
@@ -966,7 +964,7 @@ are not rewritten. Detail-command identities remain stable across both formats.
 See [ADR 49](../../docs/adr/0049-lowercase-retailer-serialization.md) for rollout.
 
 `POST /api/initial-offer-fills` accepts `{"retailers":["ankerau","ankerca"]}`
-and returns `204` once an `InitializeRetailerFill` command has been queued for
+and returns `202` with correlation receipts once initialization commands are queued for
 each retailer in request order. Use a one-element array to start a single store.
 An empty list, an unknown retailer code, or a duplicate code returns `400`.
 An unavailable bus returns `503`.
@@ -1042,7 +1040,7 @@ an explicit network check. No public token is hardcoded in production.
    connection page. The assembled product and raw request/response pages are
    written as one JSON artifact to the existing `offer_details_raw` bucket.
 
-`OfferDetailsFetched` includes retailer, run ID, source, fetched time, and
+`OfferDetailsFetched` includes retailer, source, fetched time, and
 `OfferStorageMetadata` (`object_storage_id`, `external_id`, `content_size`,
 `scraped_at`). Its bucket is `offer_details_raw` (see
 [ADR 51](../../docs/adr/0051-initial-fill-raw-offer-bucket.md)). New artifacts have
@@ -1060,8 +1058,8 @@ object reference. A listener records one outbox message per variant with a
 known price and storefront URL. The offers publisher submits those messages
 as `ImportOfferDetails` to the offers inbox when the outbox runs.
 
-Command workers run as configured. Advance reactions with `/api/events/run`;
-use `/api/commands/run` when `COMMAND_WORKERS=0`. Repeat those explicit runners
+Workers remain disabled. Advance reactions with `/api/events/run` and commands
+with `/api/commands/run`. Repeat those explicit runners
 until queues drain. A fresh POST intentionally starts a fresh run. Replaying a
 batch within a run does not add duplicate product commands. HTTP/GraphQL,
 pagination, and storage failures fail the command and use existing queue retry
@@ -1144,7 +1142,7 @@ Saga storage requires PostgreSQL 18 and uses independent record IDs, unique
 type/correlation mappings, and transactional row locks. The three unshipped
 saga migrations have been consolidated; use a fresh database rather than
 applying the replacement migration over an existing saga schema. See
-[ADR 96](../../docs/adr/0096-saga-record-identities-and-transactions.md).
+[ADR 93](../../docs/adr/0093-saga-storage-and-identity.md).
 
 
 Saga listeners persist canonical progress under a row lock and replay the same
@@ -1153,10 +1151,16 @@ success requires all catalogs and product/context structuralizations to succeed.
 Startup and manual command/event batches reconcile exhausted queue work. Workers
 remain disabled in this phase. Retain queue rows, canonical events, saga payloads
 and referenced artifacts indefinitely; token refresh is outside this phase.
-See [ADR 98](../../docs/adr/0098-saga-progress-replay-and-failure-observation.md).
+See [ADR 94](../../docs/adr/0094-saga-execution-replay-and-recovery.md).
 
 `make test-saga-live` runs complete Anker AU and Ugreen EU fills through the API
 with real HTTP and object storage. It requires `DATABASE_URL_TEST` (PostgreSQL 18),
 `OBJECT_STORAGE_URL` and `OBJECT_STORAGE_TOKEN`, uses isolated test schemas, and
 creates immutable artifacts. `make test-postgres` uses deterministic local
 responses for replay, concurrency, partial-dispatch and failure scenarios.
+
+The initial-fill endpoint returns `202` with `{"fills":[{"retailer_code":"ankerau",
+"correlation_id":"<uuid>"}]}`. Track the asynchronously created saga by envelope
+correlation. Unsupported storefronts and invalid context configurations return
+`400` before any request commands are queued. Queue insertion failures return
+`500` and can follow earlier successful inserts in a multi-retailer request.
