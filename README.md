@@ -3,13 +3,27 @@
 Rust monorepo with shared libraries, backend services and web apps. Each
 top-level folder is its own Cargo workspace, with its own `Cargo.lock`.
 
+`retailer_sourcing` also runs the sitemap discovery pipeline: it crawls each
+retailer's sitemaps and sorts the page URLs into products, catalogs and other
+content. Offer discovery then records every product URL as an offer and
+downloads its page, extracts, normalizes and structuralizes it, then prepares
+an immutable export of priced variations. Export snapshots feed outbox
+delivery; preparing them does not contact offers. See
+[ADR 19](docs/adr/0019-immutable-offer-export-preparation.md). The code is organised as feature slices
+([ADR 4](docs/adr/0004-feature-slices-for-retailer-sourcing.md)), and the
+pipeline runs only when `DATABASE_URL` is set (see below).
+
+
+
+
+
+
 ## Layout
 
 ```
 .
 ├── lib/        Libraries shared by services and apps
 ├── services/   Backend HTTP services (REST + GraphQL)
-├── apps/       Web apps that render HTML on the server
 ├── make/       Shared Make targets
 ├── bruno/      Bruno workspace with collections for calling the services by hand
 └── docs/adr/   Architecture decision records
@@ -26,7 +40,6 @@ top-level folder is its own Cargo workspace, with its own `Cargo.lock`.
 | `everyday`                | Common business, date/time, country, and geographic value types         |
 | `everyday_infra`          | Serialization and chrono adapters for everyday value types              |
 | `retailer_sauce`          | Retailer integrations                                                   |
-| `retailer_data_extractor` | Extracting data from retailers                                          |
 | `retailers_anker`         | Integration for the Anker retailer                                      |
 | `retailers_mi`            | Integration for the Mi retailer                                         |
 | `retailers_minisforum`    | Integration for the Minisforum retailer                                 |
@@ -66,15 +79,6 @@ The original services have a single GraphQL `health` query that returns `ok`.
 health only at `/api/health`. See its
 [setup, API examples and tests](services/object_storage/README.md) and [ADR 6](docs/adr/0006-object-storage-startup-and-access.md).
 
-`retailer_sourcing` also runs the sitemap discovery pipeline: it crawls each
-retailer's sitemaps and sorts the page URLs into products, catalogs and other
-content. Offer discovery then records every product URL as an offer and
-downloads its page, extracts, normalizes and structuralizes it, then prepares
-an immutable export of priced variations. Export snapshots feed outbox
-delivery; preparing them does not contact offers. See
-[ADR 19](docs/adr/0019-immutable-offer-export-preparation.md). The code is organised as feature slices
-([ADR 4](docs/adr/0004-feature-slices-for-retailer-sourcing.md)), and the
-pipeline runs only when `DATABASE_URL` is set (see below).
 
 `retailer_sourcing` also offers an independent initial fill for all active Anker storefronts except Korea through
 `POST /api/initial-offer-fills`: acquire its public Storefront token, traverse
