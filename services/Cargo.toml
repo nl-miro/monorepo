@@ -22,14 +22,15 @@ http-body-util = "0.1.5"
 inbox = { version = "0.5.0", registry = "null-labs-hq", package = "mulac-inbox" }
 inbox_client = { path = "../lib/inbox_client" }
 kernel = { version = "0.5.0", registry = "null-labs-hq", package = "mulac-kernel" }
-money = { version = "0.1.2", registry = "bodul" }
+money = { path = "../../../space/bodul_hq/lib_money" }
 outbox = { version = "0.5.0", registry = "null-labs-hq", package = "mulac-outbox" }
 poem = "3.1.12"
 poem-openapi = { version = "5.1.16", features = ["swagger-ui"] }
-retailer_sauce = { version = "0.3.7", registry = "bodul" }
+retailer_sauce = { path = "../../../space/bodul_hq/lib_retailer_sauce" }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-shared = { version = "0.1.1", registry = "bodul" }
+shared = { path = "../../../space/bodul_hq/lib_shared" }
+sitemap = { path = "../../../space/bodul_hq/lib_sitemap" }
 testimony = { path = "../lib/testimony" }
 testimony_infra = { path = "../lib/testimony_infra" }
 thiserror = "2"
@@ -42,3 +43,9 @@ tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt"] }
 url = "2"
 utoipa-swagger-ui = { version = "10.0.1", features = ["axum", "vendored"] }
 uuid = { version = "1", features = ["serde", "v4", "v7"] }
+
+[patch.bodul]
+everyday = { path = "../../../space/bodul_hq/lib_everyday" }
+money = { path = "../../../space/bodul_hq/lib_money" }
+retailer_sauce = { path = "../../../space/bodul_hq/lib_retailer_sauce" }
+shared = { path = "../../../space/bodul_hq/lib_shared" }

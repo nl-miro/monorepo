@@ -7,9 +7,18 @@ members = [
 ]
 
 [workspace.dependencies]
+money = { path = "../../../space/bodul_hq/lib_money" }
 poem = "3.1.12"
 reqwest = { version = "0.13.5", features = ["json"] }
+retailer_sauce = { path = "../../../space/bodul_hq/lib_retailer_sauce" }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-shared = { version = "0.1.1", registry = "bodul" }
+shared = { path = "../../../space/bodul_hq/lib_shared" }
+sitemap = { path = "../../../space/bodul_hq/lib_sitemap" }
 tokio = { version = "1.53.2", features = ["macros", "rt-multi-thread", "signal"] }
+
+[patch.bodul]
+everyday = { path = "../../../space/bodul_hq/lib_everyday" }
+money = { path = "../../../space/bodul_hq/lib_money" }
+retailer_sauce = { path = "../../../space/bodul_hq/lib_retailer_sauce" }
+shared = { path = "../../../space/bodul_hq/lib_shared" }

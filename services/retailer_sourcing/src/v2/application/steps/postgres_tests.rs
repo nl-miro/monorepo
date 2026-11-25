@@ -1,11 +1,5 @@
 //! Durable end-to-end tests in an isolated schema, with local object-storage fixtures.
-use super::extract_offer_details::register as register_extraction;
-use super::prepare_offer_imports::register as register_imports;
-use super::structuralize_offer_details::register as register_structuralization;
-use super::{
-    offer_details as details, product_catalog_ids as catalog,
-    tests::{connection, token_value},
-};
+use super::tests::{connection, token_value};
 use crate::app;
 use crate::platform::{
     bus::{Bus, Event},
@@ -13,8 +7,11 @@ use crate::platform::{
     test_db::{Database, json_query},
     test_objects::Server,
 };
+use crate::saga::shopify_graphql_initial_fill::register as register_initial_fill_saga;
+use crate::steps::prelude::acquire_storefront_token as token;
+use crate::steps::prelude::register_derived_offer_steps;
+use crate::steps::prelude::{offer_details as details, product_catalog_ids as catalog};
 use crate::v2::incoming::InitialFillContexts;
-use crate::v2::prelude as token;
 use axum::Router;
 use axum::{
     body::{Body, to_bytes},
@@ -22,7 +19,7 @@ use axum::{
 };
 use catalog::Handler as CatalogHandler;
 use catalog::ProductCatalogIdsRetrieved;
-use catalog::start_catalog_for_locales;
+
 use chrono::Utc;
 use details::BUCKET;
 use details::Handler as OfferDetailsHandler;
@@ -45,9 +42,8 @@ use serde_json::to_string;
 use serde_json::to_value;
 use serde_json::{Value, json};
 use shared::retailer::RetailerCode;
-use std::collections::HashSet;
-use token::AcquireStorefrontTokenHandler;
-use token::StorefrontTokenFetch;
+use token::Fetch as StorefrontTokenFetch;
+use token::Handler as AcquireStorefrontTokenHandler;
 use tower::ServiceExt;
 use uuid::Uuid;
 
@@ -106,7 +102,13 @@ fn post(server: &Server, app: &Router, path: &str, body: Value) -> (StatusCode, 
             .unwrap();
         let status = response.status();
         let body = to_bytes(response.into_body(), usize::MAX).await.unwrap();
-        (status, from_slice(&body).unwrap())
+        let value = if status == StatusCode::NO_CONTENT {
+            assert!(body.is_empty());
+            Value::Null
+        } else {
+            from_slice(&body).unwrap()
+        };
+        (status, value)
     })
 }
 fn run(server: &Server, app: &Router, path: &str) {
@@ -151,54 +153,54 @@ fn postgres_bulk_initial_fill_validates_before_dispatch_and_preserves_run_identi
     drop(guard);
     let app = app(AppState {
         bus: Some(bus.clone()),
+        db: Some(db.pool.clone()),
         ..Default::default()
     });
     let (status, _) = post(
         &server,
         &app,
         "/api/initial-offer-fills",
-        json!({"retailers":["ankerau", "ankerkr"]}),
+        json!({"retailers":["ankerau", "unknown"]}),
     );
     assert_eq!(status, StatusCode::BAD_REQUEST);
     assert!(rows(&db, "command_entries").as_array().unwrap().is_empty());
 
-    let (status, response) = post(
+    let retailers = ["ankerau", "ankerkr", "ankerca"];
+    let (status, _) = post(
         &server,
         &app,
         "/api/initial-offer-fills",
-        json!({"retailers":["ankerau", "ankeritalycom", "ankerca"]}),
+        json!({"retailers": retailers}),
     );
-    assert_eq!(status, StatusCode::ACCEPTED);
-    let fills = response["fills"].as_array().unwrap();
-    assert_eq!(
-        fills
-            .iter()
-            .map(|f| f["retailer"].as_str().unwrap())
-            .collect::<Vec<_>>(),
-        ["ankerau", "ankeritalycom", "ankerca"]
+    assert_eq!(status, StatusCode::NO_CONTENT);
+    let commands = json_query(
+        &mut db.pool.get().unwrap(),
+        "SELECT jsonb_agg(to_jsonb(c) ORDER BY id) AS value FROM command_entries c",
     );
-    assert_eq!(
-        fills
-            .iter()
-            .map(|f| f["run_id"].as_str().unwrap())
-            .collect::<HashSet<_>>()
-            .len(),
-        3
-    );
-    let commands = rows(&db, "command_entries");
     let commands = commands.as_array().unwrap();
-    assert_eq!(commands.len(), 3);
-    for fill in fills {
-        let command = commands
-            .iter()
-            .find(|c| c["meta"]["correlation_id"] == fill["run_id"])
-            .unwrap();
+    assert_eq!(commands.len(), retailers.len());
+    for (command, retailer) in commands.iter().zip(retailers) {
+        assert_eq!(command["command_type"], "InitializeRetailerFill");
         let payload: Value = from_str(command["payload"].as_str().unwrap()).unwrap();
-        assert_eq!(payload["run_id"], fill["run_id"]);
-        assert_eq!(payload["retailer_code"], fill["retailer"]);
-        let expected = "AcquireStorefrontToken";
-        assert_eq!(command["command_type"], expected);
+        assert_eq!(payload, json!({"retailer_code": retailer}));
+        assert_eq!(command["meta"]["command_id"], command["id"]);
+        assert_eq!(command["meta"]["correlation_id"], command["id"]);
     }
+
+    db.pool.get().unwrap().batch_execute(
+        "ALTER TABLE command_entries ADD CHECK (payload::jsonb->>'retailer_code' <> 'ankerca') NOT VALID"
+    ).unwrap();
+    let (status, failure) = post(
+        &server,
+        &app,
+        "/api/initial-offer-fills",
+        json!({"retailers": ["ankerau", "ankerca", "ankeritalycom"]}),
+    );
+    assert_eq!(status, StatusCode::INTERNAL_SERVER_ERROR);
+    let message = failure["error"].as_str().unwrap();
+    assert!(!message.is_empty());
+    assert_eq!(failure, json!({"error": message}));
+    assert_eq!(rows(&db, "command_entries").as_array().unwrap().len(), 4);
     bus.shutdown();
 }
 
@@ -208,39 +210,63 @@ fn run_initial_fill(retailer: RetailerCode) {
         .initial_fill_contexts()
         .unwrap();
     let attempts_token = get_storefront_config(retailer).unwrap().attempts_token();
-    let expected_commands = usize::from(attempts_token) + contexts.len() * 10;
+    let expected_commands = 1 + usize::from(attempts_token) + contexts.len() * 10;
     let db = Database::new();
     let server = Server::new();
     let mut bus = Bus::default();
+    register_initial_fill_saga(&mut bus, &db.pool);
     bus.handle(AcquireStorefrontTokenHandler(Documents));
     bus.handle(CatalogHandler(Source));
     bus.handle(OfferDetailsHandler {
         fetcher: Source,
         store: server.client(),
     });
-    register_extraction(&mut bus, server.client());
-    register_structuralization(&mut bus, server.client());
-    register_imports(&mut bus, db.pool.clone(), server.client());
-    bus.on_many_keyed(start_catalog_for_locales);
-    bus.on_many_keyed(fetch_details_for_catalog_products);
+    register_derived_offer_steps(&mut bus, &db.pool, &server.client());
+
     let guard = server.runtime.enter();
     let bus = bus.start(db.pool.clone()).unwrap();
     drop(guard);
     let app = app(AppState {
         bus: Some(bus.clone()),
+        db: Some(db.pool.clone()),
         ..Default::default()
     });
-    let (status, response) = post(
+    let (status, _) = post(
         &server,
         &app,
         "/api/initial-offer-fills",
         json!({"retailers":[retailer.as_str()]}),
     );
-    assert_eq!(status, StatusCode::ACCEPTED);
-    let run_id = response["fills"][0]["run_id"].as_str().unwrap();
+    assert_eq!(status, StatusCode::NO_CONTENT);
+    run(&server, &app, "/api/commands/run");
+    run(&server, &app, "/api/events/run");
+    let correlation_id = json_query(
+        &mut db.pool.get().unwrap(),
+        "SELECT meta->'correlation_id' AS value FROM command_entries WHERE command_type = 'InitializeRetailerFill'",
+    );
     for _ in 0..5 {
         run(&server, &app, "/api/commands/run");
         run(&server, &app, "/api/events/run");
+    }
+    let saga = json_query(
+        &mut db.pool.get().unwrap(),
+        "SELECT to_jsonb(s) AS value FROM sagas s",
+    );
+    assert_eq!(saga["status"], "succeeded");
+    assert_ne!(saga["id"], saga["correlation_id"]);
+    assert_eq!(
+        saga["payload"]["catalogs"].as_array().unwrap().len(),
+        contexts.len()
+    );
+    for catalog in saga["payload"]["catalogs"].as_array().unwrap() {
+        assert_eq!(catalog["products"].as_object().unwrap().len(), 3);
+        assert!(
+            catalog["products"]
+                .as_object()
+                .unwrap()
+                .values()
+                .all(|product| product["structuralized"]["object"].is_string())
+        );
     }
     let commands = rows(&db, "command_entries");
     assert_eq!(commands.as_array().unwrap().len(), expected_commands);
@@ -271,9 +297,16 @@ fn run_initial_fill(retailer: RetailerCode) {
             .as_array()
             .unwrap()
             .iter()
-            .all(|c| c["meta"]["correlation_id"] == run_id)
+            .all(|c| c["meta"]["correlation_id"] == correlation_id)
     );
     let events = rows(&db, "event_entries");
+    assert!(
+        events
+            .as_array()
+            .unwrap()
+            .iter()
+            .all(|event| { event["meta"]["correlation_id"] == correlation_id })
+    );
     let terminal: Vec<_> = events
         .as_array()
         .unwrap()
@@ -341,7 +374,7 @@ fn run_initial_fill(retailer: RetailerCode) {
     for message in messages {
         let meta = &message["meta"];
         assert_eq!(meta["routing_key"], "offers");
-        assert_eq!(meta["correlation_id"], run_id);
+        assert_eq!(meta["correlation_id"], correlation_id);
         assert_eq!(meta["event_type"], "OfferDetailsStructuralized");
         let row = events
             .as_array()
@@ -425,7 +458,7 @@ fn postgres_partial_fanout_replay_deduplicates_command_rows() {
     let server = Server::new();
     let event = ProductCatalogIdsRetrieved {
         context: None,
-        run_id: Uuid::now_v7(),
+
         retailer_code: RetailerCode::AnkerAu,
         storefront_token: Some(token_value()),
         product_count: 3,
@@ -435,23 +468,24 @@ fn postgres_partial_fanout_replay_deduplicates_command_rows() {
             .collect(),
         retrieved_at: Utc::now(),
     };
-    let failed_id = fetch_details_for_catalog_products(&event)[1].id;
+    let failed_id = fetch_details_for_catalog_products(Uuid::nil(), &event)[1].id;
     let mut conn = db.pool.get().unwrap();
     conn.batch_execute(&format!("CREATE FUNCTION fail_fanout() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN IF NEW.id = '{failed_id}'::uuid THEN RAISE EXCEPTION 'fixture failure'; END IF; RETURN NEW; END $$; CREATE TRIGGER fail_fanout BEFORE INSERT ON command_entries FOR EACH ROW EXECUTE FUNCTION fail_fanout();")).unwrap();
     let event_id = Uuid::now_v7();
     sql_query("INSERT INTO event_entries (id,event_type,payload,meta,status) VALUES ($1,$2,$3,$4,0)")
         .bind::<SqlUuid,_>(event_id).bind::<Text,_>(ProductCatalogIdsRetrieved::NAME)
         .bind::<Text,_>(to_string(&event).unwrap())
-        .bind::<Jsonb,_>(json!({"event_id":event_id,"correlation_id":event.run_id,"causation_id":null,"source":"test"}))
+        .bind::<Jsonb,_>(json!({"event_id":event_id,"correlation_id":Uuid::now_v7(),"causation_id":null,"source":"test"}))
         .execute(&mut conn).unwrap();
     drop(conn);
     let mut bus = Bus::default();
-    bus.on_many_keyed(fetch_details_for_catalog_products);
+    bus.on_many_keyed(|event| fetch_details_for_catalog_products(Uuid::nil(), event));
     let guard = server.runtime.enter();
     let bus = bus.start(db.pool.clone()).unwrap();
     drop(guard);
     let app = app(AppState {
         bus: Some(bus.clone()),
+        db: Some(db.pool.clone()),
         ..Default::default()
     });
     let (_, body) = post(&server, &app, "/api/events/run", json!({"limit":10}));

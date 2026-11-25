@@ -173,7 +173,7 @@ async fn dumps_graphql_v2_pretty_printed_and_skips_older_product_copies() {
     let body = "{\n  \"schema_version\":1, \"product\":{\"id\":\"gid://shopify/Product/123\",\"title\":\"ž 🔎\"}, \"pages\":[]\n}";
     let (sourcing, sourcing_thread) = fixture(
         "/api/development/offer-details-v2/sources?limit=200&offset=0", "sourcing-token", 200,
-        json!({"sources":[{"id":"event-id","run_id":"run-id","product_id":"gid://shopify/Product/123", "retailer_code":"AnkerCa", "fetched_at":"2026-11-10T00:00:00Z", "storage":{
+        json!({"sources":[{"id":"event-id","correlation_id":"correlation-id","product_id":"gid://shopify/Product/123", "retailer_code":"AnkerCa", "fetched_at":"2026-11-10T00:00:00Z", "storage":{
             "object_storage_id":OBJECT_ID,"external_id":EXTERNAL_ID,"content_size":body.len()
         }}]}).to_string(),
     );

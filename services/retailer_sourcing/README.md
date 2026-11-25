@@ -28,7 +28,8 @@ extracts each page into JSON, normalizes and structuralizes it, then prepares an
 immutable export of its priced variations.
 
 The code is organised as feature slices
-([ADR 4](../../docs/adr/0004-feature-slices-for-retailer-sourcing.md)). Each
+([ADR 4](../../docs/adr/0004-feature-slices-for-retailer-sourcing.md)).
+[ADR 91](../../docs/adr/0091-sitemap-workflow-steps.md) describes the sitemap steps and their queue entry point. Each
 slice handles one command and returns events; a reaction in the next slice turns
 an event into the next command. Commands and events are stored in Postgres by
 the [Mulac](https://github.com/nulllabsdev/mulac) kernel.
@@ -36,8 +37,7 @@ the [Mulac](https://github.com/nulllabsdev/mulac) kernel.
 ## Workflow
 
 ```
-POST /api/sitemap-retrievals
-  └─▶ RetrieveSitemap ──▶ retrieve_sitemap handler ──▶ SitemapRetrieved
+Queued RetrieveSitemap ──▶ retrieve_sitemap handler ──▶ SitemapRetrieved
         └─▶ process_sitemap reaction ──▶ ProcessSitemap ──▶ process_sitemap handler ──▶ SitemapProcessed
               └─▶ consolidate_sitemap reaction ──▶ ConsolidateSitemap ──▶ consolidate_sitemap handler ──▶ SitemapConsolidated
                     └─▶ discover_offers reaction ──▶ DiscoverOffers ──▶ discover_offers handler ──▶ OfferDiscovered × N
@@ -90,30 +90,28 @@ src/
     bus_api.rs               POST /api/commands/run, /api/events/run and /api/outbox/run
     db.rs                    Postgres pool and embedded migrations
     http.rs                  blocking HTTP client
-  sitemap_discovery/         context: sitemaps → sorted URLs
-    retrieve_sitemap/        step 1, plus POST /api/sitemap-retrievals
+  steps/sitemap/             sitemap retrieval, processing and consolidation
+    retrieve_sitemap/        step 1
     process_sitemap/         step 2
     consolidate_sitemap/     step 3
-  saga/                      placeholder for saga orchestration
-  steps/                     placeholder for workflow steps
-  offer_discovery/           context: product URLs → offer data
+  saga/                      durable workflow orchestration
+  steps/graphql/             Shopify acquisition, offer detail processing and import preparation
+  steps/html/                context: product URLs → offer data
     discover_offers/         step 4
     download_offer_page/     step 5
     extract_offer_page/      step 6
     normalize_offer/         step 7
     structuralize_offer/     step 8
     processing_for_export/   step 9
-  offer_delivery/            context: completed exports → outbox messages
-    record_export_messages/  listener on OfferExportWasPrepared
+  steps/record_export_messages/  listener on OfferExportWasPrepared
 migrations/                  Mulac's tables, then each context's tables
 ```
 
 A slice holds `command.rs`, `handler.rs`, `event.rs`, `entity.rs` (domain
 values), `store/record.rs` (PostgreSQL representations and conversions),
-`store.rs` (its own queries), and `reacts_to.rs` when a reaction starts it. A
-slice that consumes an event with its envelope metadata and writes state itself,
-rather than queueing a command, has a `listener.rs` registered with
-`Bus::listen`. Each context and slice exposes only its `prelude` module, with
+`store.rs` (its own queries), and `reacts_to.rs` for event reactions. For example,
+`on_sitemap_retrieved` queues the processing command. A slice that writes state
+using the event envelope registers its listener from `reacts_to.rs` with `Bus::listen`. Each context and slice exposes only its `prelude` module, with
 `register()`, any `routes()`, and the events others may use. Contexts talk to each other only
 through events.
 
@@ -230,28 +228,25 @@ Legacy retailer-library `sitemap_pause` functions are no longer used here.
 
 `Bus::start` and `start_features` remain worker-free, with zero inline drain
 rounds. Only the executable starts workers, after the database, routes/listener
-and shutdown signals are ready. Queue retrievals and explicitly run events:
+and shutdown signals are ready. For queued retrievals, use the command and event runners below.
 
-| Route                          | Body                          | Does                                                                      |
-| ------------------------------ | ----------------------------- | ------------------------------------------------------------------------- |
-| `POST /api/sitemap-retrievals` | `{"retailers": ["ugreenca"]}` | Queues a `RetrieveSitemap` per retailer, returns each `retrieval_id`      |
-| `POST /api/commands/run`       | `{"limit": 10}`               | Runs up to `limit` queued commands and waits for them                     |
-| `POST /api/events/run`         | `{"limit": 10}`               | Runs up to `limit` queued events; their reactions queue the next commands |
+| Route                    | Body            | Does                                                                      |
+| ------------------------ | --------------- | ------------------------------------------------------------------------- |
+| `POST /api/commands/run` | `{"limit": 10}` | Runs up to `limit` queued commands and waits for them                     |
+| `POST /api/events/run`   | `{"limit": 10}` | Runs up to `limit` queued events; their reactions queue the next commands |
 
-With `COMMAND_WORKERS=0`, one retailer from start to finish takes alternating
-runs (with workers enabled, wait for each command stage instead of calling
-`commands/run`):
+With `COMMAND_WORKERS=0`, a queued retrieval advances through alternating
+runs. With workers enabled, wait for each command stage before running events.
 
-1. `sitemap-retrievals` with the retailer.
-2. `commands/run`: retrieves the sitemaps (can take minutes; keep the limit small).
-3. `events/run`, then `commands/run`: processes the sitemaps.
-4. `events/run`, then `commands/run`: consolidates them.
-5. `events/run`, then `commands/run`: discovers the offers.
-6. `events/run`, then `commands/run` until it reports `"processed": 0`: downloads the offer pages.
-7. `events/run`, then `commands/run`, three more times: extracts, normalizes and structuralizes the offers.
-8. `events/run`, then `commands/run`: prepares immutable `offer_export` snapshots.
-9. `events/run`: dispatches `OfferExportWasPrepared`, which records one outbox message per exported variation.
-10. `outbox/run` (needs `OFFERS_URL`): delivers the recorded messages to offers' inbox.
+1. `commands/run`: retrieves the sitemaps (can take minutes; keep the limit small).
+2. `events/run`, then `commands/run`: processes the sitemaps.
+3. `events/run`, then `commands/run`: consolidates them.
+4. `events/run`, then `commands/run`: discovers the offers.
+5. `events/run`, then `commands/run` until it reports `"processed": 0`: downloads the offer pages.
+6. `events/run`, then `commands/run`, three more times: extracts, normalizes and structuralizes the offers.
+7. `events/run`, then `commands/run`: prepares immutable `offer_export` snapshots.
+8. `events/run`: dispatches `OfferExportWasPrepared`, which records one outbox message per exported variation.
+9. `outbox/run` (needs `OFFERS_URL`): delivers the recorded messages to offers' inbox.
 
 Run responses look like `{"processed": 3, "errors": []}`. When something fails,
 `processed` is `null` and `errors` lists one UUID per failure; failed commands are
@@ -576,10 +571,6 @@ source API responses. Limit test concurrency with `RUST_TEST_THREADS=4` on the
 shared test server. `make ci` also checks exported content and event suppression
 when storage fails.
 
-If queuing a sitemap request fails partway through, its HTTP 500 response
-includes `error` and the `retrievals` already queued. These remain queued; retry
-only retailers not listed in the response.
-
 ### Migration review limitations
 
 The combined migration batch is retained for review, not a promise of a safe
@@ -606,7 +597,7 @@ documents the bearer scheme.
 
 `GET /api/development/offer-details-v2/sources` lists GraphQL initial-fill
 artifacts from retained `OfferDetailsFetched` events. It returns `id` (event ID),
-`run_id`, `product_id` (full Shopify GID), lowercase `retailer_code`, `fetched_at`,
+`correlation_id` (from envelope metadata), `product_id` (full Shopify GID), lowercase `retailer_code`, `fetched_at`,
 and `storage`, newest first with event ID as a tie breaker. It uses the same
 bearer authentication, limit/offset bounds (1–1000) and status codes as the v1
 offer listing. HTML source events and unrelated events are excluded; consumer
@@ -730,7 +721,7 @@ are immutable artifacts in the `offer_export` bucket, using the snapshot UUID
 as their idempotency key. Deploy the object-storage allowlist first.
 
 `OfferExportWasPrepared` references the completed snapshot and its source.
-`offer_discovery::prelude::ExportStore::load` reads a completed domain snapshot
+`steps::prelude::ExportStore::load` reads a completed domain snapshot
 and validates its object reference. Repeated events may reference the same
 export; downstream delivery must use the stable per-entry UUIDs to deduplicate.
 This stage produces no outbox rows or HTTP requests to offers itself.
@@ -745,7 +736,7 @@ See [ADR 19](../../docs/adr/0019-immutable-offer-export-preparation.md).
 
 ## Recording export messages
 
-`offer_delivery::record_export_messages` listens to `OfferExportWasPrepared`.
+`steps::record_export_messages` listens to `OfferExportWasPrepared`.
 It loads the completed snapshot the event names through `ExportStore::load`.
 It never uses the latest structuralized document or a pending preparation.
 The listener checks that the snapshot and event agree on export UUID, source
@@ -959,12 +950,15 @@ See ADR 45.
 
 ## Anker initial offer fill
 
-`src/v2/application/service/mod.rs` owns validation, run preparation and queueing.
-The application steps implement token acquisition, catalog pagination and offer details;
-`src/v2/infrastructure/` provides HTTP adapters. `src/v2/ui/http.rs` holds HTTP
-bodies and outcome mapping; `http/axum.rs` handles Axum extraction, responses and routes.
+The HTTP handler validates the retailer list, then builds the service with the command
+gateway. The controller passes the validated list to `Service::run` once.
+The service creates and queues one initialization command at a time in request order.
+The steps in `src/steps/graphql/` implement token acquisition, catalog pagination, offer detail fetching, extraction, structuralization and import preparation.
+`src/v2/infrastructure/` provides HTTP adapters.
+`src/saga/shopify_graphql_initial_fill/ui/http.rs` holds HTTP bodies and outcome mapping.
+Its `http/axum.rs` module handles Axum extraction, responses and routes.
 The legacy `initial_offer_fill` module has been removed; unit, PostgreSQL and live
-initial-fill tests now exercise v2. See
+initial-fill tests exercise the saga, GraphQL steps and downstream processing. See
 [ADR 79](../../docs/adr/0079-initial-fill-http-boundary.md).
 
 New command/event payloads serialize `retailer_code` as a lowercase slug, such
@@ -973,28 +967,24 @@ are not rewritten. Detail-command identities remain stable across both formats.
 See [ADR 49](../../docs/adr/0049-lowercase-retailer-serialization.md) for rollout.
 
 `POST /api/initial-offer-fills` accepts `{"retailers":["ankerau","ankerca"]}`
-and returns `202` with `{"fills":[{"retailer":"ankerau","run_id":"..."},
-{"retailer":"ankerca","run_id":"..."}]}`. Each retailer gets its own
-run ID, in request order. Duplicate retailers within a request are rejected with `400`. The old singular `retailer` request format is no longer accepted;
-use a one-element `retailers` array to start a single store.
+and returns `204` once an `InitializeRetailerFill` command has been queued for
+each retailer in request order. Use a one-element array to start a single store.
+An empty list, an unknown retailer code, or a duplicate code returns `400`.
+A valid request requires a configured command bus. If the bus is absent, controller construction panics before dispatch.
 
-The complete retailer list is validated before anything is queued. An empty list, unknown or unsupported
-code, Korea, or the retired `ankernordicscom` aggregate returns `400` without
-starting any runs; an unavailable bus returns `503`.
+The initialization handler rejects missing or empty context configuration. The
+saga listener snapshots configuration once and owns downstream dispatch through
+structuralization, using envelope correlation for routing.
 
 Commands are queued sequentially. A dispatch failure stops the batch and
-returns `500` with `{"error":"<opaque error ID>","fills":[...]}` listing
-confirmed prior successes. Those runs remain queued; retry only the remaining
-retailers to avoid duplicate runs. `fills` is empty when no run was confirmed,
-which includes an unexpected queue task failure where enqueue outcomes are
-unknown; inspect the service logs and queue before retrying. Internal error details are logged under
-the error ID. This flow is independent of sitemap retrieval and does not start
+returns `500` with `{"error":"<dispatch error message>"}`. Previously queued
+commands stay queued. Check the queue before retrying to avoid duplicate runs.
+This flow is independent of sitemap retrieval and does not start
 automatically. See [ADR 53](../../docs/adr/0053-anker-storefront-initial-fill-markets.md).
 
 Initial fill supports 48 retailer codes: 17 Anker, ten Minisforum and 21 Ugreen
 (including NAS). After token acquisition, or at start for storefronts that do not
-acquire a token, the catalog slice loads the `Retailer` entity and queues one catalog
-command per entry in its `supported_locales`. There is no separate market-discovery
+acquire a token, the saga queues one catalog command per entry in its persisted context snapshot. There is no separate market-discovery
 stage and no market-discovery HTTP request; see
 [ADR 74](../../docs/adr/0074-drop-market-discovery-stage.md).
 Only the main tables in `docs/retailer.md` populate the entity; advertised-only
@@ -1040,7 +1030,7 @@ an explicit network check. No public token is hardcoded in production.
    command per unique optional-country/language pair from the entity locales.
    Contexts are read when the event is handled; replaying it after an inventory
    change uses the current inventory.
-3. `FetchProductCatalogIdentifiers` is queued once per locale. Its handler loops
+3. `FetchProductCatalogIdentifiersKeyed` is queued once per locale. Its handler loops
    over the whole catalog in batches of up to 500 product GIDs (pages of at most
    250) until no cursor remains, and emits one `ProductCatalogIdsRetrieved` with
    every unique GID, `product_count` and `loop_count` (batches fetched). That
@@ -1150,3 +1140,24 @@ See [ADR 64](../../docs/adr/0064-brand-shared-graphql.md) and
 Initial-fill locale request contracts now live in `retailer_sauce::initial_fill`;
 brand integrations use its shared Shopify GraphQL engine. See
 [ADR 83](../../docs/adr/0083-shared-shopify-engine.md).
+
+Saga storage requires PostgreSQL 18 and uses independent record IDs, unique
+type/correlation mappings, and transactional row locks. The three unshipped
+saga migrations have been consolidated; use a fresh database rather than
+applying the replacement migration over an existing saga schema. See
+[ADR 96](../../docs/adr/0096-saga-record-identities-and-transactions.md).
+
+
+Saga listeners persist canonical progress under a row lock and replay the same
+commands after partial dispatch. Status is `in_progress`, `succeeded`, or `failed`;
+success requires all catalogs and product/context structuralizations to succeed.
+Startup and manual command/event batches reconcile exhausted queue work. Workers
+remain disabled in this phase. Retain queue rows, canonical events, saga payloads
+and referenced artifacts indefinitely; token refresh is outside this phase.
+See [ADR 98](../../docs/adr/0098-saga-progress-replay-and-failure-observation.md).
+
+`make test-saga-live` runs complete Anker AU and Ugreen EU fills through the API
+with real HTTP and object storage. It requires `DATABASE_URL_TEST` (PostgreSQL 18),
+`OBJECT_STORAGE_URL` and `OBJECT_STORAGE_TOKEN`, uses isolated test schemas, and
+creates immutable artifacts. `make test-postgres` uses deterministic local
+responses for replay, concurrency, partial-dispatch and failure scenarios.

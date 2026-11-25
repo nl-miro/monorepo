@@ -953,8 +953,6 @@ dependencies = [
 [[package]]
 name = "everyday"
 version = "0.1.1"
-source = "sparse+https://bodul-hq.github.io/crates/"
-checksum = "e421ec780baf93904d23592e84768f6c5f08a0b8fb9bd8d826b8ef1df33e5cda"
 dependencies = [
  "regex",
  "serde",
@@ -1968,8 +1966,6 @@ dependencies = [
 [[package]]
 name = "money"
 version = "0.1.2"
-source = "sparse+https://bodul-hq.github.io/crates/"
-checksum = "f96d1080a3a570926a59b70a397b244e320be5b3ab0e79309dc145b9df07258d"
 dependencies = [
  "serde",
 ]
@@ -3145,9 +3141,7 @@ dependencies = [
 
 [[package]]
 name = "retailer_sauce"
-version = "0.3.7"
-source = "sparse+https://bodul-hq.github.io/crates/"
-checksum = "5522e3cbf902fd152a5bfb6ed9c87c06dc4182eb66637cdcedf6b19a8b0b1e80"
+version = "0.4.0"
 dependencies = [
  "chrono",
  "everyday",
@@ -3209,9 +3203,7 @@ dependencies = [
 
 [[package]]
 name = "retailers_anker"
-version = "0.5.2"
-source = "sparse+https://bodul-hq.github.io/crates/"
-checksum = "4f47c33f45340e7fb4789fb1762a7fc79102c194269438689455ced2764574a5"
+version = "0.6.0"
 dependencies = [
  "chrono",
  "graphql_client",
@@ -3228,9 +3220,7 @@ dependencies = [
 
 [[package]]
 name = "retailers_minisforum"
-version = "0.5.2"
-source = "sparse+https://bodul-hq.github.io/crates/"
-checksum = "c832585ef4b181799c754f06592e7f33d410e5057af565eb4324dac5c771453e"
+version = "0.6.0"
 dependencies = [
  "graphql_client",
  "html-extractor",
@@ -3246,9 +3236,7 @@ dependencies = [
 
 [[package]]
 name = "retailers_ugreen"
-version = "0.5.2"
-source = "sparse+https://bodul-hq.github.io/crates/"
-checksum = "1cb7bbf99e0cbfec746244299463e82878f82db16ecc438ad40eff156c77edb0"
+version = "0.5.3"
 dependencies = [
  "graphql_client",
  "html-extractor",
@@ -3645,9 +3633,7 @@ dependencies = [
 
 [[package]]
 name = "shared"
-version = "0.1.1"
-source = "sparse+https://bodul-hq.github.io/crates/"
-checksum = "4aef8e55d452d6572f7cef011a1126f512c003fe5220287164aab542c7555d7c"
+version = "0.1.2"
 dependencies = [
  "serde",
  "thiserror 2.0.21",
@@ -3707,8 +3693,6 @@ checksum = "33f4fe9184a62d842c9ef383018f3306d8ba224fd9d836f56d7288308847c256"
 [[package]]
 name = "sitemap"
 version = "0.1.1"
-source = "sparse+https://bodul-hq.github.io/crates/"
-checksum = "69f3b2c08be2c5b4d927a90fc5a026d3121d85886fa91920e71cea65346cdf5b"
 dependencies = [
  "chrono",
  "percent-encoding",

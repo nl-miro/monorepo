@@ -3,13 +3,27 @@
 Rust monorepo with shared libraries, backend services and web apps. Each
 top-level folder is its own Cargo workspace, with its own `Cargo.lock`.
 
+`retailer_sourcing` also runs the sitemap discovery pipeline: it crawls each
+retailer's sitemaps and sorts the page URLs into products, catalogs and other
+content. Offer discovery then records every product URL as an offer and
+downloads its page, extracts, normalizes and structuralizes it, then prepares
+an immutable export of priced variations. Export snapshots feed outbox
+delivery; preparing them does not contact offers. See
+[ADR 19](docs/adr/0019-immutable-offer-export-preparation.md). The code is organised as feature slices
+([ADR 4](docs/adr/0004-feature-slices-for-retailer-sourcing.md)), and the
+pipeline runs only when `DATABASE_URL` is set (see below).
+
+
+
+
+
+
 ## Layout
 
 ```
 .
 ├── lib/        Libraries shared by services and apps
 ├── services/   Backend HTTP services (REST + GraphQL)
-├── apps/       Web apps that render HTML on the server
 ├── make/       Shared Make targets
 ├── bruno/      Bruno workspace with collections for calling the services by hand
 └── docs/adr/   Architecture decision records
@@ -26,7 +40,6 @@ top-level folder is its own Cargo workspace, with its own `Cargo.lock`.
 | `everyday`                | Common business, date/time, country, and geographic value types         |
 | `everyday_infra`          | Serialization and chrono adapters for everyday value types              |
 | `retailer_sauce`          | Retailer integrations                                                   |
-| `retailer_data_extractor` | Extracting data from retailers                                          |
 | `retailers_anker`         | Integration for the Anker retailer                                      |
 | `retailers_mi`            | Integration for the Mi retailer                                         |
 | `retailers_minisforum`    | Integration for the Minisforum retailer                                 |
@@ -35,6 +48,11 @@ top-level folder is its own Cargo workspace, with its own `Cargo.lock`.
 | `sitemap`                 | Parsing sitemap XML and building a crawl's sitemap tree                 |
 | `testimony`               | Event sourcing abstractions, aggregate repositories, and query dispatch |
 | `testimony_infra`         | In-memory and PostgreSQL event stores for testimony                     |
+
+`shared`, `money`, `everyday`, `sitemap`, `retailer_sauce`, `retailers_anker`,
+`retailers_minisforum` and `retailers_ugreen` are not in `lib/`. They are path
+dependencies on the checkouts in `../../space/bodul_hq/` (see
+[Requirements](#requirements)).
 
 Each crate has its own README. To add a retailer storefront, or finish one,
 follow the [retailer integration playbook](docs/retailer-integration.md).
@@ -66,15 +84,6 @@ The original services have a single GraphQL `health` query that returns `ok`.
 health only at `/api/health`. See its
 [setup, API examples and tests](services/object_storage/README.md) and [ADR 6](docs/adr/0006-object-storage-startup-and-access.md).
 
-`retailer_sourcing` also runs the sitemap discovery pipeline: it crawls each
-retailer's sitemaps and sorts the page URLs into products, catalogs and other
-content. Offer discovery then records every product URL as an offer and
-downloads its page, extracts, normalizes and structuralizes it, then prepares
-an immutable export of priced variations. Export snapshots feed outbox
-delivery; preparing them does not contact offers. See
-[ADR 19](docs/adr/0019-immutable-offer-export-preparation.md). The code is organised as feature slices
-([ADR 4](docs/adr/0004-feature-slices-for-retailer-sourcing.md)), and the
-pipeline runs only when `DATABASE_URL` is set (see below).
 
 `retailer_sourcing` also offers an independent initial fill for all active Anker storefronts except Korea through
 `POST /api/initial-offer-fills`: acquire its public Storefront token, traverse
@@ -149,8 +158,16 @@ shows exact inbox/command/event/outbox status counts for the three pipeline serv
   The services lockfile pins resolved versions and checksums; no sibling Mulac
   checkout is required. See [ADR 42](docs/adr/0042-published-mulac-crates.md)
   and the [0.5 integration changes](docs/adr/0043-mulac-0-5-integration.md).
-- Access to the `bodul` Cargo registry for the published `retailer_sauce` 0.3.7 package.
-- PostgreSQL 16 or later for `object_storage`, `offers`, and `customer_facing` (separate UTF8 databases), and to run the `retailer_sourcing` pipeline.
+- Local checkouts of `lib_shared`, `lib_money`, `lib_everyday`, `lib_sitemap`,
+  `lib_retailer_sauce`, `lib_retailers_anker`, `lib_retailers_minisforum` and
+  `lib_retailers_ugreen` in `../../space/bodul_hq/` (relative to this
+  repository). Every workspace uses them as path dependencies, and its
+  `[patch.bodul]` section redirects the checkouts' own `bodul` registry
+  dependencies on `shared`, `money`, `everyday` and `retailer_sauce` to the same
+  checkouts, so changes there build without publishing a release. The `bodul`
+  registry stays configured in `.cargo/config.toml` because those patches and
+  manifests name it.
+- PostgreSQL 18 or later for `object_storage`, `offers`, and `customer_facing` (separate UTF8 databases), and to run the `retailer_sourcing` pipeline.
 - The `retailer_sourcing` pipeline also requires a running object storage service, configured with `OBJECT_STORAGE_URL` and `OBJECT_STORAGE_TOKEN`; see its [setup](services/retailer_sourcing/README.md).
 - PostgreSQL `pg_trgm`, provisioned in the trusted `customer_facing_extensions` schema before customer-facing migrations; see its README for setup.
 - [Diesel CLI](https://diesel.rs/guides/getting-started) with PostgreSQL support, only for `make migrate` and `make migrate-redo`: `cargo install diesel_cli --no-default-features --features postgres --locked`.
@@ -239,15 +256,13 @@ manual operation. Each worker uses Mulac's one-second polling and ten-command
 batches. Events and outbox delivery remain explicit; other services keep their
 existing manual runners. See [ADR 39](docs/adr/0039-sourcing-command-workers.md).
 
-Queue retrievals, then run events to advance reactions and outbox to deliver
-exports. The command endpoint remains available for explicit batches; each
-HTTP runner waits for its batch to finish:
+For queued sitemap retrievals, run events to advance reactions and run the outbox
+to deliver exports. Each HTTP runner waits for its batch to finish.
 
-| Route                          | Body                          | Purpose                                                            |
-| ------------------------------ | ----------------------------- | ------------------------------------------------------------------ |
-| `POST /api/sitemap-retrievals` | `{"retailers": ["ugreenca"]}` | Queue one sitemap retrieval per retailer                           |
-| `POST /api/commands/run`       | `{"limit": 10}`               | Process up to `limit` queued commands                              |
-| `POST /api/events/run`         | `{"limit": 10}`               | Process up to `limit` queued events, which queue the next commands |
+| Route                    | Body            | Purpose                                                            |
+| ------------------------ | --------------- | ------------------------------------------------------------------ |
+| `POST /api/commands/run` | `{"limit": 10}` | Process up to `limit` queued commands                              |
+| `POST /api/events/run`   | `{"limit": 10}` | Process up to `limit` queued events, which queue the next commands |
 
 Without `DATABASE_URL` these routes return 503.
 

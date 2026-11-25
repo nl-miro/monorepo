@@ -4,10 +4,10 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-money = { version = "0.1.2", registry = "bodul" }
+money.workspace = true
 poem.workspace = true
 reqwest.workspace = true
-retailer_sauce = { version = "0.3.7", registry = "bodul" }
+retailer_sauce.workspace = true
 scraper = { version = "0.27.0", default-features = false }
 serde.workspace = true
 serde_json.workspace = true

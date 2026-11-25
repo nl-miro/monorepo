@@ -7,10 +7,12 @@ products, and how to turn a product page into structured offer data.
 The reference implementation is `ankerau` (`lib_retailers_anker/src/ankerau/`).
 Every step below shows the matching ankerau code. Open it next to this document.
 
-The Anker, Minisforum and Ugreen crates live under `lib/retailers_<brand>`.
-Edit and test them locally; no retailer package publication is required.
-`retailer_sauce` and other supporting crates remain registry dependencies.
-Legacy `lib_retailers_<brand>` references below identify the corresponding local crate.
+The Anker, Minisforum and Ugreen crates, `retailer_sauce` and the shared
+libraries (`shared`, `money`, `everyday`, `sitemap`) are checked out in
+`~/work/space/bodul_hq/lib_<name>`. Every workspace in this repository uses
+them as path dependencies, so edit and test them there; no package publication
+is required.
+`lib_retailers_<brand>` paths below are relative to `~/work/space/bodul_hq/`.
 
 ## How to use this document
 
@@ -101,8 +103,8 @@ filenames. For these markets, follow the source contract and fixtures in
 
 ```
 services/retailer_sourcing
-  sitemap_discovery/mod.rs   struct Retailers   (sitemap hooks)
-  offer_discovery/mod.rs     struct Retailers   (extract, normalize, structuralize; panics caught)
+  steps/sitemap/mod.rs      struct Retailers   (sitemap hooks)
+  steps/html/mod.rs          struct Retailers   (extract, normalize, structuralize; panics caught)
         │
         ▼
 lib/retailer_data_extractor/src/lib.rs          facade: <hook>_for(code, …)
@@ -726,5 +728,10 @@ Don't copy these:
 - [ ] Crate README updated if needed.
 
 ## GraphQL initial fills
+
+Set each storefront's `StorefrontAccess.preferred` to one of the `StorefrontStrategy`
+variants `ShopifyGraphQl`, `ShopifySitemapPlusHtml`, `Cafe24`,
+`HtmlMenuCatalogDetails`, or `SitemapThenHtmlDetails`. The GraphQL
+initial-fill endpoint accepts storefronts with the `ShopifyGraphQl` preference.
 
 Each brand owns one `src/graphql` engine, schema, query set and raw model. Storefronts configure endpoints, markets and token policies through thin initial-fill adapters and retain their source fixtures. Add known optional source fields to the brand model; keep unknown-field rejection. HTML models remain storefront-specific. Anker has one complete shared extracted model; see ADR 65. Preserve artifact and command/event formats and test all storefront configurations when changing shared operations. See ADR 64.

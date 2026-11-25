@@ -350,10 +350,11 @@ mod postgres_tests {
             let schema = format!("reporting_indexes_{}", Uuid::now_v7().simple());
             conn.batch_execute(&format!("CREATE SCHEMA {schema}; SET LOCAL search_path TO {schema}")).unwrap();
             const MIGRATIONS: EmbeddedMigrations = embed_migrations!("migrations");
-            conn.run_pending_migrations(MIGRATIONS).unwrap();
+            const INDEX_MIGRATION: &str = "20261030000001";
+            while conn.run_next_migration(MIGRATIONS).unwrap().to_string() != INDEX_MIGRATION {}
             let index_query = "SELECT indexname || ': ' || indexdef AS value FROM pg_indexes WHERE schemaname = current_schema() ORDER BY indexname";
             let migrated_indexes = lines(conn, index_query);
-            assert_eq!(conn.revert_last_migration(MIGRATIONS).unwrap().to_string(), "20261030000001");
+            assert_eq!(conn.revert_last_migration(MIGRATIONS).unwrap().to_string(), INDEX_MIGRATION);
             let baseline_indexes = lines(conn, index_query);
             assert_eq!(migrated_indexes.len(), baseline_indexes.len() + 4);
 
@@ -384,7 +385,7 @@ mod postgres_tests {
             )).join(" UNION ALL ") + " ORDER BY kind, status";
             println!("PostgreSQL: {:?}", lines(conn, "SELECT version() AS value"));
             explain(conn, &query, "Baseline (existing worker indexes)");
-            conn.run_pending_migrations(MIGRATIONS).unwrap();
+            assert_eq!(conn.run_next_migration(MIGRATIONS).unwrap().to_string(), INDEX_MIGRATION);
             assert_eq!(lines(conn, index_query), migrated_indexes);
             assert_eq!(to_value(load_entry_statuses_at(conn, now).unwrap()).unwrap(), before);
             explain(conn, &query, "After scheduled_at indexes");
@@ -393,7 +394,7 @@ mod postgres_tests {
             conn.revert_last_migration(MIGRATIONS).unwrap();
             assert_eq!(lines(conn, index_query), baseline_indexes);
             assert_eq!(to_value(load_entry_statuses_at(conn, now).unwrap()).unwrap(), before);
-            conn.run_pending_migrations(MIGRATIONS).unwrap();
+            assert_eq!(conn.run_next_migration(MIGRATIONS).unwrap().to_string(), INDEX_MIGRATION);
             assert_eq!(lines(conn, index_query), migrated_indexes);
             assert_eq!(to_value(load_entry_statuses_at(conn, now).unwrap()).unwrap(), before);
             Ok(())

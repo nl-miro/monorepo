@@ -14,6 +14,8 @@ use utoipa_axum::routes;
 
 use super::bus::BusHandle;
 use super::state::AppState;
+use tokio::task::spawn_blocking;
+use tracing::error;
 
 #[derive(Serialize, ToSchema)]
 pub struct ErrorBody {
@@ -38,7 +40,7 @@ pub fn routes() -> OpenApiRouter<AppState> {
         (status = 400, description = "Invalid JSON or batch limit", body = String, content_type = "text/plain"),
         (status = 413, description = "Request body too large", body = String, content_type = "text/plain"),
         (status = 415, description = "JSON content type required", body = String, content_type = "text/plain"),
-        (status = 500, description = "Queue processing task failed", body = String, content_type = "text/plain"),
+        (status = 500, description = "Queue processing or reconciliation failed", body = String, content_type = "text/plain"),
         (status = 503, description = "The command bus isn't running (no DATABASE_URL)", body = ErrorBody),
     )
 )]
@@ -46,7 +48,8 @@ async fn run_commands(State(bus): State<Option<BusHandle>>, request: RunCommands
     let Some(bus) = bus else {
         return unavailable_bus();
     };
-    bus.commands.run(request).await.into_response()
+    let response = bus.commands.run(request).await.into_response();
+    reconcile_after_batch(bus, response).await
 }
 
 /// Processes up to `limit` queued events that are due, and waits for them.
@@ -59,7 +62,7 @@ async fn run_commands(State(bus): State<Option<BusHandle>>, request: RunCommands
         (status = 400, description = "Invalid JSON or batch limit", body = String, content_type = "text/plain"),
         (status = 413, description = "Request body too large", body = String, content_type = "text/plain"),
         (status = 415, description = "JSON content type required", body = String, content_type = "text/plain"),
-        (status = 500, description = "Queue processing task failed", body = String, content_type = "text/plain"),
+        (status = 500, description = "Queue processing or reconciliation failed", body = String, content_type = "text/plain"),
         (status = 503, description = "The command bus isn't running (no DATABASE_URL)", body = ErrorBody),
     )
 )]
@@ -67,7 +70,8 @@ async fn run_events(State(bus): State<Option<BusHandle>>, request: RunEvents) ->
     let Some(bus) = bus else {
         return unavailable_bus();
     };
-    bus.events.run(request).await.into_response()
+    let response = bus.events.run(request).await.into_response();
+    reconcile_after_batch(bus, response).await
 }
 
 /// Delivers up to `limit` queued outbox messages through Mulac's adapter.
@@ -77,7 +81,7 @@ async fn run_events(State(bus): State<Option<BusHandle>>, request: RunEvents) ->
         (status = 400, description = "Invalid JSON or limit", body = String),
         (status = 413, description = "Request too large", body = String),
         (status = 415, description = "JSON content type required", body = String),
-        (status = 500, description = "Queue processing task failed", body = String),
+        (status = 500, description = "Queue processing or reconciliation failed", body = String),
         (status = 503, description = "Database or offers publisher is not configured", body = String)
     ))]
 async fn run_outbox(
@@ -109,3 +113,21 @@ pub(crate) mod outbox_tests;
 
 #[cfg(test)]
 pub(crate) mod outbox_postgres_tests;
+
+async fn reconcile_after_batch(bus: BusHandle, response: Response) -> Response {
+    if !response.status().is_success() {
+        return response;
+    }
+    match spawn_blocking(move || bus.observe_batch()).await {
+        Ok(Ok(())) => (),
+        failure => {
+            error!(?failure, "saga reconciliation failed");
+            return (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "saga reconciliation failed; retry the batch",
+            )
+                .into_response();
+        }
+    }
+    response
+}

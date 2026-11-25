@@ -26,7 +26,7 @@ const MAX_LIMIT: u32 = 1000;
 /// Read persisted terminal events regardless of consumer status. These artifacts
 /// have no legacy offer projection. Queue retention therefore bounds this listing.
 const SOURCES_QUERY: &str = "
-    SELECT id, (payload::jsonb ->> 'run_id')::uuid AS run_id,
+    SELECT id, (meta ->> 'correlation_id')::uuid AS correlation_id,
            payload::jsonb #>> '{source,GraphQl,product_id}' AS product_id,
            (payload::jsonb -> 'retailer_code')::text AS retailer_code,
            payload::jsonb ->> 'fetched_at' AS fetched_at,
@@ -66,7 +66,7 @@ pub struct OfferSourceV2 {
     id: Uuid,
     /// The initial-fill run that fetched this artifact.
     #[schema(value_type = String, format = "uuid")]
-    run_id: Uuid,
+    correlation_id: Uuid,
     /// The complete Shopify product GID.
     product_id: String,
     /// The retailer the offer belongs to.
@@ -85,7 +85,7 @@ struct SourceRecord {
     #[diesel(sql_type = SqlUuid)]
     id: Uuid,
     #[diesel(sql_type = SqlUuid)]
-    run_id: Uuid,
+    correlation_id: Uuid,
     #[diesel(sql_type = Text)]
     product_id: String,
     // Retailer codes are JSON strings, not metadata objects. Keep their JSON
@@ -150,7 +150,7 @@ fn load_sources(db: &DbPool, page: &PageV2) -> Result<Vec<OfferSourceV2>, String
         .map(|record| {
             Ok(OfferSourceV2 {
                 id: record.id,
-                run_id: record.run_id,
+                correlation_id: record.correlation_id,
                 product_id: record.product_id,
                 retailer_code: from_str(&record.retailer_code).map_err(|error| {
                     format!("Invalid retailer code in event {}: {error}", record.id)
@@ -193,7 +193,7 @@ mod postgres_tests {
             object_storage_id: Uuid::now_v7(),
             external_id: Uuid::now_v7(),
         };
-        let run_id = Uuid::now_v7();
+        let correlation_id = Uuid::now_v7();
         let older = Uuid::now_v7();
         let newest = Uuid::now_v7();
         let tied = Uuid::now_v7();
@@ -240,17 +240,18 @@ mod postgres_tests {
                 0,
             ),
         ] {
-            let mut payload = json!({"run_id":run_id,"retailer_code":retailer,"source":source,"fetched_at":time,"storage":storage});
+            let mut payload = json!({"retailer_code":retailer,"source":source,"fetched_at":time,"storage":storage});
             if id == newest || id == tied {
                 payload["context"] = json!({"country":"CA","language":if id==newest {"EN"} else {"FR"},"currency":"CAD"});
             }
             diesel_sql_query(
-                "INSERT INTO event_entries (id,event_type,payload,status) VALUES ($1,$2,$3,$4)",
+                "INSERT INTO event_entries (id,event_type,payload,status,meta) VALUES ($1,$2,$3,$4,$5)",
             )
             .bind::<SqlUuid, _>(id)
             .bind::<Text, _>(kind)
             .bind::<Text, _>(payload.to_string())
             .bind::<Integer, _>(status)
+            .bind::<Jsonb, _>(json!({"correlation_id":correlation_id}))
             .execute(&mut conn)
             .unwrap();
         }
@@ -286,7 +287,10 @@ mod postgres_tests {
             let value: Value = from_slice(&body).unwrap();
             assert_eq!(value["sources"].as_array().unwrap().len(), 1);
             assert_eq!(value["sources"][0]["id"], id.to_string());
-            assert_eq!(value["sources"][0]["run_id"], run_id.to_string());
+            assert_eq!(
+                value["sources"][0]["correlation_id"],
+                correlation_id.to_string()
+            );
             assert_eq!(value["sources"][0]["retailer_code"], retailer);
             assert_eq!(value["sources"][0]["storage"], json!(storage));
             if id == newest || id == tied {

@@ -22,17 +22,23 @@ use std::fmt::Display;
 use std::sync::Arc;
 use std::time::Instant;
 
-use commanding::prelude::AsyncCommandingService;
 use commanding::prelude::axum::CommandingAdapter;
+use commanding::prelude::{AsyncCommandingService, ErasedCommandHandler};
 use eventing::prelude::AsyncEventingService;
 use eventing::prelude::axum::EventingAdapter;
+use kernel::prelude::{
+    CommandConsumer, CommandDispatcher, CommandHandlerRegistry, DieselPgCommandRepository,
+    DieselPgEventRepository, EventGateway, wrap_handler,
+};
 use kernel::prelude::{CommandGateway, NewCommand, NewCommandEnvelope, NewCommandMetadata};
 use kernel::{
     ApplicationEvent, CommandError, CommandHandlerPort, EventError, EventSubscriberPort,
-    KernelBuilder, KernelConfig, KernelError, NewEventEnvelope, PersistentKernelHandle,
+    KernelBuilder, KernelConfig, KernelError, NewEventEnvelope, NewEventMetadata,
+    PersistentKernelHandle,
 };
 use serde::Serialize;
 use serde::de::DeserializeOwned;
+use std::collections::HashSet;
 use uuid::Uuid;
 
 use super::db::DbPool;
@@ -73,6 +79,31 @@ pub struct EventContext {
     pub source: Option<String>,
 }
 
+/// A decoded event together with the metadata carried by its stored envelope.
+#[derive(Debug, Clone)]
+pub struct EventEnvelope<E> {
+    pub event: E,
+    pub metadata: Option<NewEventMetadata>,
+}
+
+impl<E: Event> TryFrom<&NewEventEnvelope> for EventEnvelope<E> {
+    type Error = EventError;
+
+    fn try_from(envelope: &NewEventEnvelope) -> Result<Self, Self::Error> {
+        if envelope.event_type != E::NAME {
+            return Err(subscriber_error(format!(
+                "expected event {}, received {}",
+                E::NAME,
+                envelope.event_type
+            )));
+        }
+        Ok(Self {
+            event: from_str(&envelope.payload).map_err(subscriber_error)?,
+            metadata: envelope.metadata.clone(),
+        })
+    }
+}
+
 /// Consumes one event type with its envelope metadata, for subscribers that
 /// write state themselves rather than queue a command.
 pub trait Listen: Send + Sync + 'static {
@@ -95,22 +126,81 @@ pub trait Handle: Send + Sync + 'static {
     fn handle(&self, command: Self::Command) -> Result<Vec<Self::Event>, Self::Error>;
 }
 
+/// A command whose outcome depends on its original envelope metadata.
+pub(crate) trait HandleCorrelated: Send + Sync + 'static {
+    type Command: Command;
+    type Event: Event;
+
+    fn handle(&self, command: Self::Command, correlation: Uuid) -> Result<Self::Event, String>;
+}
+
+struct CorrelatedPort<H>(H);
+
+impl<H: HandleCorrelated> ErasedCommandHandler for CorrelatedPort<H> {
+    fn execute(
+        &self,
+        envelope: &NewCommandEnvelope,
+    ) -> Result<Vec<NewEventEnvelope>, CommandError> {
+        let metadata = envelope
+            .metadata
+            .as_ref()
+            .ok_or_else(CommandError::missing_command_metadata)?;
+        let correlation = metadata.correlation_id.ok_or_else(|| {
+            CommandError::Storage("initialization requires envelope correlation".into())
+        })?;
+        let command = from_str(&envelope.command.payload).map_err(CommandError::conversion)?;
+        let event = self
+            .0
+            .handle(command, correlation)
+            .map_err(CommandError::Storage)?;
+        Ok(vec![NewEventEnvelope::new(
+            H::Event::NAME.to_owned(),
+            serde_json_to_string(&event).map_err(CommandError::conversion)?,
+            Some(NewEventMetadata {
+                event_id: Uuid::now_v7(),
+                correlation_id: Some(correlation),
+                causation_id: Some(metadata.command_id),
+                source: None,
+                sequence: None,
+            }),
+        )])
+    }
+}
+
+type BatchObserver = Arc<dyn Fn() -> Result<(), String> + Send + Sync>;
+
 type Registration = Box<dyn FnOnce(KernelBuilder) -> KernelBuilder>;
 
 /// Collects handlers and reactions until [`Bus::start`] runs them.
 #[derive(Default)]
 pub struct Bus {
+    command_handlers: Vec<(String, Arc<dyn ErasedCommandHandler>)>,
     registrations: Vec<Registration>,
+    batch_observers: Vec<BatchObserver>,
 }
 
 impl Bus {
+    /// Observe durable outcomes after manual queue batches, outside the async runtime.
+    pub fn after_batch(
+        &mut self,
+        observer: impl Fn() -> Result<(), String> + Send + Sync + 'static,
+    ) {
+        self.batch_observers.push(Arc::new(observer));
+    }
+
     /// Registers the handler for its command type.
     pub fn handle<H: Handle>(&mut self, handler: H) {
         let port: Arc<dyn CommandHandlerPort<H::Command, Published<H::Event>>> =
             Arc::new(HandlerPort(handler));
-        self.registrations.push(Box::new(move |kernel| {
-            kernel.command_handler(<H::Command as Command>::NAME, port)
-        }));
+        self.command_handlers
+            .push((H::Command::NAME.to_owned(), wrap_handler(port)));
+    }
+
+    pub(crate) fn handle_correlated<H: HandleCorrelated>(&mut self, handler: H) {
+        self.command_handlers.push((
+            H::Command::NAME.to_owned(),
+            Arc::new(CorrelatedPort(handler)),
+        ));
     }
 
     /// Registers a reaction that turns each `E` event into a `C` command.
@@ -126,7 +216,8 @@ impl Bus {
         }));
     }
 
-    /// A replay-safe reaction: each command supplies a stable identity and run correlation.
+    /// A replay-safe reaction: each command supplies a stable identity and inherits event correlation.
+    #[cfg(test)]
     pub fn on_many_keyed<E: Event, C: Command>(
         &mut self,
         reaction: fn(&E) -> Vec<KeyedCommand<C>>,
@@ -134,6 +225,23 @@ impl Bus {
         self.registrations.push(Box::new(move |kernel| {
             kernel.event_subscriber_with_command_gateway(E::NAME, C::NAME, move |gateway| {
                 Arc::new(KeyedReaction { gateway, reaction }) as Arc<dyn EventSubscriberPort>
+            })
+        }));
+    }
+
+    /// Registers a command-producing reaction with the decoded event and its metadata.
+    pub fn on_commands_envelope<E: Event, C: IntoEventCommand, Err: Display + 'static>(
+        &mut self,
+        name: &'static str,
+        reaction: impl Fn(&EventEnvelope<E>) -> Result<Vec<C>, Err> + Send + Sync + 'static,
+    ) {
+        let reaction: CommandReactionFn<E, C, Err> = Arc::new(reaction);
+        self.registrations.push(Box::new(move |kernel| {
+            kernel.event_subscriber_with_command_gateway(E::NAME, name, move |gateway| {
+                Arc::new(CommandReaction {
+                    gateway,
+                    reaction: reaction.clone(),
+                })
             })
         }));
     }
@@ -155,17 +263,34 @@ impl Bus {
             .fold(boot(KernelConfig::default()), |kernel, register| {
                 register(kernel)
             });
+        // Mulac's typed kernel registration strips command metadata. Compose its
+        // public dispatcher so both typed and envelope-aware handlers use the same queue.
+        let mut names = HashSet::new();
+        for (name, _) in &self.command_handlers {
+            if !names.insert(name) {
+                return Err(KernelError::DuplicateCommandHandler(name.clone()));
+            }
+        }
+        let registry = CommandHandlerRegistry::from_handlers(self.command_handlers);
+        let event_store = Arc::new(DieselPgEventRepository::new(pool.clone()));
+        let events = EventGateway::two_phased(event_store);
+        let dispatcher = CommandDispatcher::new(Arc::new(registry), Arc::new(events));
+        let consumer = Arc::new(CommandConsumer::new(
+            Arc::new(DieselPgCommandRepository::new(pool.clone())),
+            Arc::new(dispatcher),
+        ));
         let handle = kernel.start_persistent(pool, 0)?;
 
         Ok(BusHandle {
+            #[cfg(test)]
             dispatcher: Dispatcher {
                 gateway: handle.state().command_gateway(),
             },
-            commands: CommandingAdapter::new(AsyncCommandingService::new(
-                handle.command_consumer(),
-            )),
+            commands: CommandingAdapter::new(AsyncCommandingService::new(consumer.clone())),
             events: EventingAdapter::new(AsyncEventingService::new(handle.event_consumer())),
+            command_consumer: consumer,
             kernel: Arc::new(handle),
+            batch_observers: self.batch_observers,
         })
     }
 }
@@ -173,13 +298,28 @@ impl Bus {
 /// A started bus: queues commands and processes queued work on request.
 #[derive(Clone)]
 pub struct BusHandle {
+    #[cfg(test)]
     dispatcher: Dispatcher,
     pub(super) commands: CommandingAdapter,
     pub(super) events: EventingAdapter,
+    command_consumer: Arc<CommandConsumer<DieselPgCommandRepository>>,
     kernel: Arc<PersistentKernelHandle>,
+    batch_observers: Vec<BatchObserver>,
 }
 
 impl BusHandle {
+    pub(super) fn observe_batch(&self) -> Result<(), String> {
+        for observer in &self.batch_observers {
+            observer()?;
+        }
+        Ok(())
+    }
+
+    pub fn command_gateway(&self) -> Arc<CommandGateway> {
+        self.kernel.state().command_gateway()
+    }
+
+    #[cfg(test)]
     pub fn dispatcher(&self) -> &Dispatcher {
         &self.dispatcher
     }
@@ -190,7 +330,7 @@ impl BusHandle {
         let handles = (0..count)
             .map(|_| {
                 spawn(run_command_worker(
-                    self.kernel.command_consumer(),
+                    self.command_consumer.clone(),
                     self.kernel.child_token(),
                 ))
             })
@@ -241,16 +381,19 @@ impl CommandWorkers {
 mod command_workers_tests;
 
 /// Queues commands from outside the bus, such as from an HTTP request.
+#[cfg(test)]
 #[derive(Clone)]
 pub struct Dispatcher {
     gateway: Arc<CommandGateway>,
 }
 
 /// A command that couldn't be queued.
+#[cfg(test)]
 #[derive(Debug, thiserror::Error)]
 #[error("failed to queue command: {0}")]
 pub struct DispatchError(String);
 
+#[cfg(test)]
 impl Dispatcher {
     /// Stores `command` for the workers to handle. `source` says where it came
     /// from, such as `api`. Blocks on a database insert, so call it off the
@@ -277,15 +420,67 @@ impl Dispatcher {
 #[derive(Debug)]
 pub struct KeyedCommand<C> {
     pub id: Uuid,
-    pub run_id: Uuid,
     pub command: C,
 }
 
+pub trait IntoEventCommand: Send + Sync + 'static {
+    fn encode(self) -> Result<KeyedCommand<NewCommand>, SerdeJsonError>;
+}
+
+impl<C: Command> KeyedCommand<C> {
+    pub fn encode(self) -> Result<KeyedCommand<NewCommand>, SerdeJsonError> {
+        Ok(KeyedCommand {
+            id: self.id,
+            command: NewCommand {
+                command_type: C::NAME.into(),
+                payload: serde_json_to_string(&self.command)?,
+            },
+        })
+    }
+}
+
+type CommandReactionFn<E, C, Err> =
+    Arc<dyn Fn(&EventEnvelope<E>) -> Result<Vec<C>, Err> + Send + Sync>;
+
+struct CommandReaction<E, C, Err> {
+    gateway: Arc<CommandGateway>,
+    reaction: CommandReactionFn<E, C, Err>,
+}
+
+impl<E: Event, C: IntoEventCommand, Err: Display> EventSubscriberPort
+    for CommandReaction<E, C, Err>
+{
+    fn handle(&self, envelope: &NewEventEnvelope) -> Result<(), EventError> {
+        let event = EventEnvelope::<E>::try_from(envelope)?;
+        for command in (self.reaction)(&event).map_err(subscriber_error)? {
+            let metadata = event
+                .metadata
+                .as_ref()
+                .ok_or_else(|| subscriber_error("command reaction requires event metadata"))?;
+            let keyed = command.encode().map_err(subscriber_error)?;
+            self.gateway
+                .dispatch(NewCommandEnvelope {
+                    command: keyed.command,
+                    metadata: Some(NewCommandMetadata {
+                        command_id: keyed.id,
+                        correlation_id: metadata.correlation_id,
+                        causation_id: Some(metadata.event_id),
+                        source: Some(format!("event:{}", E::NAME)),
+                    }),
+                })
+                .map_err(subscriber_error)?;
+        }
+        Ok(())
+    }
+}
+
+#[cfg(test)]
 struct KeyedReaction<E, C> {
     gateway: Arc<CommandGateway>,
     reaction: fn(&E) -> Vec<KeyedCommand<C>>,
 }
 
+#[cfg(test)]
 impl<E: Event, C: Command> EventSubscriberPort for KeyedReaction<E, C> {
     fn handle(&self, envelope: &NewEventEnvelope) -> Result<(), EventError> {
         let event: E = from_str(&envelope.payload).map_err(subscriber_error)?;
@@ -300,7 +495,7 @@ impl<E: Event, C: Command> EventSubscriberPort for KeyedReaction<E, C> {
                     &keyed.command,
                     NewCommandMetadata {
                         command_id: keyed.id,
-                        correlation_id: Some(keyed.run_id),
+                        correlation_id: metadata.correlation_id,
                         causation_id: Some(metadata.event_id),
                         source: Some(format!("event:{}", E::NAME)),
                     },
@@ -312,42 +507,6 @@ impl<E: Event, C: Command> EventSubscriberPort for KeyedReaction<E, C> {
         })();
         info!(target: TIMING_TARGET, kind="event", name=E::NAME, reaction=C::NAME, elapsed_ms=start.elapsed().as_millis() as u64, status=if result.is_ok() { "ok" } else { "error" });
         result
-    }
-}
-
-impl Dispatcher {
-    /// Queues the first command with the API run ID as correlation metadata.
-    pub fn dispatch_run<C: Command>(&self, command: &C, run_id: Uuid) -> Result<(), DispatchError> {
-        let envelope = command_envelope(
-            command,
-            NewCommandMetadata {
-                command_id: run_id,
-                correlation_id: Some(run_id),
-                causation_id: None,
-                source: Some("api".into()),
-            },
-        )
-        .map_err(|error| DispatchError(error.to_string()))?;
-        self.gateway
-            .dispatch(envelope)
-            .map_err(|error| DispatchError(error.to_string()))
-    }
-
-    /// Queues one of several first commands of an API run under its own stable ID.
-    pub fn dispatch_keyed<C: Command>(&self, keyed: &KeyedCommand<C>) -> Result<(), DispatchError> {
-        let envelope = command_envelope(
-            &keyed.command,
-            NewCommandMetadata {
-                command_id: keyed.id,
-                correlation_id: Some(keyed.run_id),
-                causation_id: None,
-                source: Some("api".into()),
-            },
-        )
-        .map_err(|error| DispatchError(error.to_string()))?;
-        self.gateway
-            .dispatch(envelope)
-            .map_err(|error| DispatchError(error.to_string()))
     }
 }
 
@@ -492,7 +651,7 @@ impl<L: Listen> Listener<L> {
     }
 }
 
-fn command_envelope<C: Command>(
+pub(crate) fn command_envelope<C: Command>(
     command: &C,
     metadata: NewCommandMetadata,
 ) -> Result<NewCommandEnvelope, SerdeJsonError> {
@@ -511,7 +670,6 @@ fn subscriber_error(error: impl Display) -> EventError {
 
 #[cfg(test)]
 mod tests {
-    use kernel::NewEventMetadata;
     use serde_json::to_string as serde_json_to_string2;
     use std::sync::Mutex;
 
@@ -584,6 +742,34 @@ mod tests {
             causation_id: Some(Uuid::now_v7()),
             source: Some("test".to_string()),
         }
+    }
+
+    #[test]
+    fn typed_envelopes_preserve_payload_and_all_metadata() {
+        let mut metadata = metadata();
+        metadata.sequence = Some(7);
+        let raw = ponged(42, Some(metadata.clone()));
+        let envelope = EventEnvelope::<Ponged>::try_from(&raw).unwrap();
+        assert_eq!(envelope.event.id, 42);
+        let actual = envelope.metadata.unwrap();
+        assert_eq!(actual.sequence, metadata.sequence);
+        assert_eq!(actual.event_id, metadata.event_id);
+        assert_eq!(actual.correlation_id, metadata.correlation_id);
+        assert_eq!(actual.causation_id, metadata.causation_id);
+        assert_eq!(actual.source, metadata.source);
+        assert!(
+            EventEnvelope::<Ponged>::try_from(&ponged(42, None))
+                .unwrap()
+                .metadata
+                .is_none()
+        );
+
+        let mut wrong_type = raw.clone();
+        wrong_type.event_type = "OtherEvent".into();
+        assert!(EventEnvelope::<Ponged>::try_from(&wrong_type).is_err());
+        let mut malformed = raw;
+        malformed.payload = "invalid JSON".into();
+        assert!(EventEnvelope::<Ponged>::try_from(&malformed).is_err());
     }
 
     #[test]

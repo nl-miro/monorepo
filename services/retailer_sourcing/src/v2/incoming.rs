@@ -5,19 +5,8 @@
 //! Every initial-fill storefront uses `retailer_sauce`'s shared Shopify engine,
 //! built from the retailer's storefront configuration.
 
-use retailer_data_extractor::get_storefront_config;
 use retailer_sauce::initial_fill::RequestedContext;
 use retailer_sauce::prelude::{Market, StorefrontConfig};
-use retailer_sauce::shopify::graphql::Engine;
-use shared::retailer::RetailerCode;
-
-/// The Shopify engine for a retailer's storefront, or an error when the
-/// retailer has no storefront configuration.
-pub(crate) fn storefront_engine(retailer: RetailerCode) -> Result<Engine, String> {
-    get_storefront_config(retailer)
-        .map(Engine)
-        .ok_or_else(|| "initial fill is not configured".into())
-}
 
 /// Initial-fill request contexts derived from a storefront's supported locales.
 pub(crate) trait InitialFillContexts {
@@ -55,7 +44,8 @@ mod tests {
     use super::*;
     use retailer_data_extractor::get_storefront_config;
     use retailer_sauce::prelude::{
-        Language, Locale, Region, RetailerCode, RetailerProfile, StorefrontAccess, SupportedLocales,
+        Language, Locale, Region, RetailerCode, RetailerProfile, StorefrontAccess,
+        StorefrontStrategy, SupportedLocales,
     };
 
     #[test]
@@ -108,6 +98,7 @@ mod tests {
                     supported_locales,
                 },
                 StorefrontAccess {
+                    preferred: StorefrontStrategy::ShopifyGraphQl,
                     shopify_shop: None,
                     storefront_graphql_api: None,
                     graphql_api_status: None,
