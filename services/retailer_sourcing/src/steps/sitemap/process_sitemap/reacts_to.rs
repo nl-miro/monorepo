@@ -1,0 +1,36 @@
+use super::super::retrieve_sitemap::prelude::SitemapRetrieved;
+use super::command::ProcessSitemap;
+
+/// Processes every retrieval as soon as its sitemap files are stored.
+pub fn on_sitemap_retrieved(event: &SitemapRetrieved) -> Option<ProcessSitemap> {
+    Some(ProcessSitemap {
+        retrieval_id: event.retrieval_id,
+        retailer_code: event.retailer_code,
+    })
+}
+
+#[cfg(test)]
+mod tests {
+    use shared::retailer::RetailerCode;
+    use uuid::Uuid;
+
+    use super::*;
+
+    #[test]
+    fn processes_the_retrieval_that_was_retrieved() {
+        let retrieval_id = Uuid::now_v7();
+        let event = SitemapRetrieved {
+            retrieval_id,
+            retailer_code: RetailerCode::UgreenCa,
+            document_count: 3,
+        };
+
+        assert_eq!(
+            on_sitemap_retrieved(&event),
+            Some(ProcessSitemap {
+                retrieval_id,
+                retailer_code: RetailerCode::UgreenCa,
+            })
+        );
+    }
+}

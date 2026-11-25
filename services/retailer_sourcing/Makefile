@@ -105,3 +105,11 @@ test-initial-fill-live:
 	@test -n "$$OBJECT_STORAGE_URL" || { echo "OBJECT_STORAGE_URL is required"; exit 1; }
 	@test -n "$$OBJECT_STORAGE_TOKEN" || { echo "OBJECT_STORAGE_TOKEN is required"; exit 1; }
 	INITIAL_FILL_LIVE=1 cargo test --bin retailer_sourcing live_shopify_tests:: -- --ignored
+
+# Full API-driven fills with real catalogs and artifacts in isolated test schemas.
+.PHONY: test-saga-live
+test-saga-live:
+	@test -n "$$DATABASE_URL_TEST" || { echo "DATABASE_URL_TEST is required (PostgreSQL 18)"; exit 1; }
+	@test -n "$$OBJECT_STORAGE_URL" || { echo "OBJECT_STORAGE_URL is required"; exit 1; }
+	@test -n "$$OBJECT_STORAGE_TOKEN" || { echo "OBJECT_STORAGE_TOKEN is required"; exit 1; }
+	INITIAL_FILL_LIVE=1 cargo test --bin retailer_sourcing live_api_ -- --ignored --nocapture --test-threads=1

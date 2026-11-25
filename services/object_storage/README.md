@@ -8,7 +8,7 @@ integration are deferred.
 
 ## Run locally
 
-Requires PostgreSQL 16 or later for native JSONB input validation. Use the
+Requires PostgreSQL 18 or later for native JSONB input validation. Use the
 existing `object_storing-db` infrastructure in the parent workspace's
 `compose-infra.yaml`. This service is named `object_storage`; the database and
 credentials retain the existing `object_storing` names. No Compose changes are

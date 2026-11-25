@@ -305,7 +305,7 @@ The PostgreSQL contract tests run with
 
 ## Requirements and startup
 
-Use the repository's pinned Rust toolchain, GNU Make, libpq, and PostgreSQL 16
+Use the repository's pinned Rust toolchain, GNU Make, libpq, and PostgreSQL 18
 or later. Cargo also needs the configured `null-labs-hq` registry and the pinned
 Mulac Git dependency (`0.3.0`). No separate Testimony process, object storage, or retailer sourcing process is
 required. A reachable customer-facing service is needed only when running

@@ -62,7 +62,7 @@ When this grows, promote each bounded context (`sitemap_discovery`,
    adding a folder, not editing an existing one.
 
    ```rust
-   pub fn on(e: &SitemapRetrieved) -> Option<ProcessSitemap> {
+   pub fn on_sitemap_retrieved(e: &SitemapRetrieved) -> Option<ProcessSitemap> {
        Some(ProcessSitemap { sitemap_id: e.sitemap_id })
    }
    ```
@@ -73,7 +73,7 @@ When this grows, promote each bounded context (`sitemap_discovery`,
    // process_sitemap/mod.rs
    pub fn register(bus: &mut Bus, deps: &Platform) {
        bus.handle::<ProcessSitemap>(Handler::new(deps.db.clone()));
-       bus.on::<SitemapRetrieved>(reacts_to::on);
+       bus.on::<SitemapRetrieved>(reacts_to::on_sitemap_retrieved);
    }
    ```
 

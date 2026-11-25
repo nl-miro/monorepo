@@ -5,7 +5,7 @@ Sign in at /login with username bodul and password bodul.
 The account has full access. POST /logout revokes its session.
 
 ## Setup
-Provide PostgreSQL 16+ and a dedicated database. Run make .env and configure
+Provide PostgreSQL 18+ and a dedicated database. Run make .env and configure
 DATABASE_URL, then PORT=3008 make serve. Shell values override .env.
 Startup applies migrations; missing or unreachable databases stop startup.
 PORT defaults to 3000. BACK_OFFICE_COOKIE_SECURE defaults to false for local HTTP;

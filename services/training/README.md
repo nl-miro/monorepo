@@ -6,7 +6,7 @@ registered. Each service owns a separate PostgreSQL database.
 
 ## Running
 
-Provide PostgreSQL 16 or later and a database dedicated to this service:
+Provide PostgreSQL 18 or later and a database dedicated to this service:
 
 ```sh
 make .env
