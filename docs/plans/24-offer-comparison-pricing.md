@@ -39,7 +39,7 @@ from that event. The existing `OfferPriceChanged.v1` record and
 | Boundary                  | Current implementation                                                                                                                                                                                                                                                                                                                                                             |
 | ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Retailer evidence         | Family helpers in [Anker](../../lib/retailers_anker/src/offer_facts.rs), [Minisforum](../../lib/retailers_minisforum/src/offer_facts.rs), and [Ugreen](../../lib/retailers_ugreen/src/offer_facts.rs). Ugreen accepts scoped explicit ListPrice/StrikethroughPrice specifications only when valid comparisons agree. See [storefront coverage](../offer-facts-source-coverage.md). |
-| Immutable export          | [Conversion](../../services/retailer_sourcing/src/offer_discovery/processing_for_export/conversion.rs), [schema validation](../../services/retailer_sourcing/src/offer_discovery/processing_for_export/entity.rs), and [store](../../services/retailer_sourcing/src/offer_discovery/processing_for_export/store.rs) preserve versioned omission/null semantics.                    |
+| Immutable export          | [Conversion](../../services/retailer_sourcing/src/steps/processing-offers/processing_for_export/conversion.rs), [schema validation](../../services/retailer_sourcing/src/steps/processing-offers/processing_for_export/entity.rs), and [store](../../services/retailer_sourcing/src/steps/processing-offers/processing_for_export/store.rs) preserve versioned omission/null semantics.                    |
 | Offers import and history | [Observation type](../../lib/retailer_sauce/src/observation.rs), [import command](../../services/offers/src/offers/command.rs), [aggregate](../../services/offers/src/offers/aggregate.rs), [events](../../services/offers/src/offers/event.rs), and [record versions](../../services/offers/src/infra/records.rs). JSON money objects are validated before use.                   |
 | Persistence and delivery  | [Offers projection](../../services/offers/src/read_offer/repository/postgres.rs), [outbox publisher](../../services/offers/src/orchestration/customer_facing_publisher.rs), and [customer-facing projection](../../services/customer_facing/src/offer_projection.rs). Pricing updates replace the whole pair atomically.                                                           |
 | Read and display          | [API mapping](../../services/customer_facing/src/offer_read/facts.rs), [customers model](../../apps/customers/src/offers.rs), and [card renderer](../../apps/customers/src/page.rs). Incompatible stored comparison prices are hidden without rewriting history.                                                                                                                   |
@@ -62,13 +62,13 @@ Existing rows become unknown, and event history and queues are preserved.
    permissions or services remain an explicit verification block.
 
 2. **Persisted-export coverage added.** The shared
-   [fact fixture](../../services/retailer_sourcing/src/offer_discovery/processing_for_export/test_facts.rs)
-   and [database cases](../../services/retailer_sourcing/src/offer_discovery/processing_for_export/postgres_tests/facts.rs)
+   [fact fixture](../../services/retailer_sourcing/src/steps/processing-offers/processing_for_export/test_facts.rs)
+   and [database cases](../../services/retailer_sourcing/src/steps/processing-offers/processing_for_export/postgres_tests/facts.rs)
    cover exact large Money, explicit null and omission in v6–v8, repeated
    preparation/load, version coexistence with legacy pending/completed exports,
    and upload-success/completion-failure recovery after restart. Assertions
    compare raw bytes, export/entry/message IDs and source/version association.
-   The [live suite](../../services/retailer_sourcing/src/offer_discovery/processing_for_export/live_tests.rs)
+   The [live suite](../../services/retailer_sourcing/src/steps/processing-offers/processing_for_export/live_tests.rs)
    now has separate v1 and current-v8 cases. Execution against PostgreSQL and
    real object storage is still required; no production version was changed.
 

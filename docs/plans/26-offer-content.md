@@ -42,7 +42,7 @@ applied-message receipt may survive that failure.
 | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Shared value/source selection  | [structuralized.rs](../../lib/retailer_sauce/src/structuralized.rs), [observation.rs](../../lib/retailer_sauce/src/observation.rs); `lib/retailers_{anker,minisforum,ugreen}/src/offer_facts.rs` and each `src/<storefront>/offer_details/v1/structuralize.rs`. Helpers copy the optional primary description unchanged.                         |
 | Source boundary                | [Coverage report](../offer-facts-source-coverage.md): 44 completed structuralizers; expected nulls are listed. Anker KR and Mi/WIP stubs are outside that completed set.                                                                                                                                                                         |
-| Export                         | `services/retailer_sourcing/src/offer_discovery/processing_for_export/{entity,conversion,handler,store}.rs`: write v8/read v1–v8; older versions omit content, old artifact omission remains distinct from clearing; pinned references/prepared bytes stay immutable. Fixtures are in `services/retailer_sourcing/tests/fixtures/offer_export/`. |
+| Export                         | `services/retailer_sourcing/src/steps/processing-offers/processing_for_export/{entity,conversion,handler,store}.rs`: write v8/read v1–v8; older versions omit content, old artifact omission remains distinct from clearing; pinned references/prepared bytes stay immutable. Fixtures are in `services/retailer_sourcing/tests/fixtures/offer_export/`. |
 | Offers import/history/delivery | `services/offers/src/offers/{command,handler,aggregate,event}.rs`, `offers/http/rest.rs`, `infra/records.rs`, and `orchestration/customer_facing_publisher.rs`: preserve observations, compare full content, write creation v8/read v1–v8, publish original payload/identity. HTTP routing uses `OfferContentChanged`, without `.v1`.            |
 | Projections/API                | `services/offers/src/read_offer/` writes description; `services/customer_facing/src/offer_projection.rs` couples writes with original-message receipts. `offer_read.rs` and `offer_read/facts.rs` share browse/search REST/GraphQL mapping.                                                                                                      |
 | Customers                      | `apps/customers/src/offers.rs`, `offers/facts.rs`, and `page/tests.rs` validate/default content and verify descriptions never enter browse/search HTML.                                                                                                                                                                                          |
@@ -63,10 +63,10 @@ was denied, and localhost sockets were restricted. Ignored/filtered cases do
 not count as passes. Existing combined fact tests cover content but their
 PostgreSQL cases have not executed in the recorded environment.
 
-The [shared sourcing cases](../../services/retailer_sourcing/src/offer_discovery/processing_for_export/postgres_tests/facts.rs)
+The [shared sourcing cases](../../services/retailer_sourcing/src/steps/processing-offers/processing_for_export/postgres_tests/facts.rs)
 now exercise content-bearing v8 through preparation/upload/load and recovery
 after failed completion, comparing exact strings, bytes and identities. The
-[live suite](../../services/retailer_sourcing/src/offer_discovery/processing_for_export/live_tests.rs)
+[live suite](../../services/retailer_sourcing/src/steps/processing-offers/processing_for_export/live_tests.rs)
 adds a current-v8 round trip while retaining v1. Neither requires a new version.
 
 Focused tests now cover content-only updates, empty/whitespace TEXT/API round

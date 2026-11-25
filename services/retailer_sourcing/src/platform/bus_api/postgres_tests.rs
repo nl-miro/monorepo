@@ -57,14 +57,16 @@ impl Handle for PingHandler {
     }
 }
 
-struct FinishHandler(Arc<Mutex<Vec<i32>>>);
+struct FinishHandler {
+    finished: Arc<Mutex<Vec<i32>>>,
+}
 impl Handle for FinishHandler {
     type Command = Finish;
     type Event = Pong;
     type Error = &'static str;
 
     fn handle(&self, command: Finish) -> Result<Vec<Pong>, Self::Error> {
-        self.0.lock().unwrap().push(command.value);
+        self.finished.lock().unwrap().push(command.value);
         Ok(Vec::new())
     }
 }
@@ -72,7 +74,7 @@ impl Handle for FinishHandler {
 fn app(db: &Database, finished: Arc<Mutex<Vec<i32>>>) -> Router {
     let mut bus = Bus::default();
     bus.handle(PingHandler);
-    bus.handle(FinishHandler(finished));
+    bus.handle(FinishHandler { finished });
     bus.on::<Pong, Finish>(|event| Some(Finish { value: event.value }));
     imported_app(AppState {
         bus: Some(bus.start(db.pool.clone()).unwrap()),
@@ -310,7 +312,9 @@ async fn http_diagnostics_survive_command_persistence_and_retry_history() {
 
     use crate::platform::http::{FetchError, OfferClient};
 
-    struct FailingFetch(Arc<Mutex<Option<String>>>);
+    struct FailingFetch {
+        diagnostic: Arc<Mutex<Option<String>>>,
+    }
     impl Handle for FailingFetch {
         type Command = Ping;
         type Event = Pong;
@@ -325,7 +329,7 @@ async fn http_diagnostics_survive_command_persistence_and_retry_history() {
                     "invalid\nsecret-token",
                 )
                 .unwrap_err();
-            *self.0.lock().unwrap() = Some(error.message.clone());
+            *self.diagnostic.lock().unwrap() = Some(error.message.clone());
             Err(error)
         }
     }
@@ -334,7 +338,9 @@ async fn http_diagnostics_survive_command_persistence_and_retry_history() {
     let id = seed_command(&db, r#"{"value":0}"#, None);
     let diagnostic = Arc::new(Mutex::new(None));
     let mut bus = Bus::default();
-    bus.handle(FailingFetch(diagnostic.clone()));
+    bus.handle(FailingFetch {
+        diagnostic: diagnostic.clone(),
+    });
     let app = imported_app2(AppState {
         bus: Some(bus.start(db.pool.clone()).unwrap()),
         db: Some(db.pool.clone()),

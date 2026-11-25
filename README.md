@@ -77,7 +77,7 @@ delivery; preparing them does not contact offers. See
 pipeline runs only when `DATABASE_URL` is set (see below).
 
 `retailer_sourcing` also offers an independent initial fill for all active Anker storefronts except Korea through
-`POST /api/initial-offer-fills`: acquire its public Storefront token, traverse
+`POST /api/initial-fill`: acquire its public Storefront token, traverse
 catalog identifiers in batches of 500, and fetch complete GraphQL details for
 each product. Details are saved in object storage and produce a terminal event;
 they do not enter the existing normalization/export pipeline. See the
@@ -358,7 +358,7 @@ A workflow definition is not evidence of a passing Actions run.
 
 
 Minisforum and Ugreen (including NAS) also support GraphQL initial fills through
-`POST /api/initial-offer-fills`, discovering every advertised country/language
+`POST /api/initial-fill`, discovering every advertised country/language
 context per retailer. Their v2 dumps separate markets into country-language
 subdirectories; existing Anker configurations remain fixed-context. See
 [ADR 59](docs/adr/0059-multi-market-shopify-initial-fills.md).

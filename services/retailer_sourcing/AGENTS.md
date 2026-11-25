@@ -24,10 +24,4 @@ Read [README.md](README.md) for the service layout and requirements.
   (for example, `Uuid::now_v7()` and `SourceType::GraphQl`).
 - Keep test-only imports inside the test module. For tests in the same module
   as production code, place their imports just above the first test.
-- In `src/v2`, when a returned constructed value takes more than 4 lines, define
-  it with `let` before returning it. Shorter ones may be returned directly.
-  A value that is itself the returned expression is exempt, because clippy's
-  `let_and_return` flags binding it. Don't add `#[allow(clippy::let_and_return)]`.
-- This doesn't apply when returning a property or variable straight out, since
-  nothing is constructed. It also doesn't apply to a constructor that only
-  assigns its own parameters to fields, like `Self { run_id, url }`.
+- Follow the repository's [Rust formatting and readability guidance](../../AGENTS.md#rust-formatting-and-readability).

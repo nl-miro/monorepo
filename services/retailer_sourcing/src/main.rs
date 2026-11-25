@@ -1,14 +1,14 @@
 mod development;
 mod monitoring;
-mod offer_delivery;
-mod offer_discovery;
 mod platform;
 mod reporting;
+#[cfg_attr(not(test), allow(dead_code, reason = "saga orchestration is pending"))]
 mod saga;
-mod sitemap_discovery;
 mod steps;
 mod v2;
 
+// use crate::http::routes as http_routes;
+use crate::v2::prelude::routes as v2_routes;
 use axum::serve;
 use development::prelude::register as development_register;
 use development::prelude::routes as development_routes;
@@ -16,8 +16,6 @@ use io::Error;
 use io::ErrorKind as IoErrorKind;
 use io::Result as IoResult;
 use monitoring::prelude::register as monitoring_register;
-use offer_delivery::prelude::register as offer_delivery_register;
-use offer_discovery::prelude::register as offer_discovery_register;
 use outbox::prelude::AsyncOutboxService;
 use outbox::prelude::axum::OutboxAdapter;
 use platform::auth::SECURITY_SCHEME;
@@ -28,13 +26,16 @@ use platform::object_storage::ObjectStorage;
 use platform::offers_publisher::OffersPublisher;
 use reporting::prelude::register as reporting_register;
 use reporting::prelude::routes as reporting_routes;
+use saga::prelude::register_initial_fill_listeners;
 use shared::health as shared_health;
-use sitemap_discovery::prelude::register;
-use sitemap_discovery::prelude::routes as sitemap_discovery_routes;
 use std::env::var;
 #[cfg(not(unix))]
 use std::future::pending as std_future_pending;
 use std::sync::Arc;
+use steps::prelude::{
+    register_html_steps, register_initial_fill, register_offer_processing_steps,
+    register_shopify_steps, register_sitemap_steps, sitemap_routes,
+};
 use tokio::net::TcpListener;
 use tokio::runtime::Handle;
 use tokio::select;
@@ -45,8 +46,6 @@ use tokio::signal::unix::signal as signal_unix_signal;
 use tokio::task::spawn_blocking;
 use tracing::info as tracing_info;
 use utoipa::openapi::OpenApi as UtoipaOpenapiOpenApi;
-use v2::prelude::register as v2_register;
-use v2::prelude::routes as v2_routes;
 
 use std::env::VarError;
 use std::io;
@@ -109,7 +108,7 @@ fn app(state: AppState) -> Router {
     let (api, openapi) = OpenApiRouter::with_openapi(ApiDoc::openapi())
         .routes(routes!(health))
         .merge(platform_bus_api_routes())
-        .merge(sitemap_discovery_routes())
+        .merge(sitemap_routes())
         .merge(v2_routes())
         .merge(development_routes())
         .merge(reporting_routes())
@@ -184,10 +183,12 @@ async fn start_features(database_url: Result<String, VarError>) -> IoResult<AppS
             .map_err(Error::other)?;
 
     let mut bus = Bus::default();
-    register(&mut bus, &platform);
-    v2_register(&mut bus, &platform);
-    offer_discovery_register(&mut bus, &platform);
-    offer_delivery_register(&mut bus, &platform);
+    register_sitemap_steps(&mut bus, &platform);
+    register_initial_fill(&mut bus);
+    register_initial_fill_listeners(&mut bus, &platform);
+    register_shopify_steps(&mut bus, &platform);
+    register_html_steps(&mut bus, &platform);
+    register_offer_processing_steps(&mut bus, &platform);
     development_register(&mut bus, &platform);
     monitoring_register(&mut bus, &platform);
     reporting_register(&mut bus, &platform);
@@ -403,6 +404,7 @@ mod tests {
             "OpenAPI must document GET /health",
         );
         for path in [
+            "/initial-fill",
             "/sitemap-retrievals",
             "/commands/run",
             "/events/run",
@@ -453,6 +455,15 @@ mod tests {
             .body(Body::from(body.to_string()))
             .unwrap();
         app(AppState::default()).oneshot(request).await.unwrap()
+    }
+
+    #[tokio::test]
+    async fn initial_fill_accepts_a_json_array_of_retailer_codes() {
+        let path = "/api/initial-fill";
+        let response = post_json(path, json!(["ankerau", "ankerca"])).await;
+        assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
+        let invalid = post_json(path, json!([42])).await;
+        assert_eq!(invalid.status(), StatusCode::UNPROCESSABLE_ENTITY);
     }
 
     #[tokio::test]

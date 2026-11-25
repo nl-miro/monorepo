@@ -7,9 +7,9 @@ publish = ["null-labs-hq"]
 [dependencies]
 html-extractor.workspace = true
 retailer_sauce.workspace = true
-retailers_anker.workspace = true
-retailers_minisforum.workspace = true
-retailers_ugreen.workspace = true
+retailers_anker = { path = "../../../../space/bodul_hq/lib_retailers_anker" }
+retailers_minisforum = { path = "../../../../space/bodul_hq/lib_retailers_minisforum" }
+retailers_ugreen = { path = "../../../../space/bodul_hq/lib_retailers_ugreen" }
 scraper.workspace = true
 serde.workspace = true
 serde_json.workspace = true

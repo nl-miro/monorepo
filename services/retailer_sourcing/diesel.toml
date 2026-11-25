@@ -1,23 +1,37 @@
 # Diesel CLI settings. Regenerate the schemas with `diesel print-schema` against
-# a database migrated with `diesel migration run`. Each context gets its own
-# schema file with only its own tables.
+# a database migrated with `diesel migration run`.
 
-[print_schema.sitemap_discovery]
-file = "src/sitemap_discovery/schema.rs"
-filter = { only_tables = [
-    "sitemaps_raw",
-    "sitemaps_processed",
-    "sitemaps_consolidated",
-] }
+[print_schema.retrieve_sitemap]
+file = "src/steps/sitemap/retrieve_sitemap/schema.rs"
+filter = { only_tables = ["sitemaps_raw"] }
 
-[print_schema.offer_discovery]
-file = "src/offer_discovery/schema.rs"
-filter = { only_tables = [
-    "offer_details_raw",
-    "offer_details_extracted",
-    "offer_details_normalized",
-    "offer_details_structuralized",
-] }
+[print_schema.process_sitemap]
+file = "src/steps/sitemap/process_sitemap/schema.rs"
+filter = { only_tables = ["sitemaps_processed"] }
+
+[print_schema.consolidate_sitemap]
+file = "src/steps/sitemap/consolidate_sitemap/schema.rs"
+filter = { only_tables = ["sitemaps_consolidated"] }
+
+[print_schema.download_offer_page]
+file = "src/steps/html/download_offer_page/schema.rs"
+filter = { only_tables = ["offer_details_raw"] }
+
+[print_schema.extract_offer_page]
+file = "src/steps/processing-offers/extract_offer_page/schema.rs"
+filter = { only_tables = ["offer_details_extracted"] }
+
+[print_schema.normalize_offer]
+file = "src/steps/processing-offers/normalize_offer/schema.rs"
+filter = { only_tables = ["offer_details_normalized"] }
+
+[print_schema.structuralize_offer]
+file = "src/steps/processing-offers/structuralize_offer/schema.rs"
+filter = { only_tables = ["offer_details_structuralized"] }
+
+[print_schema.saga]
+file = "src/saga/initial_fill/shopify_graphql/schema.rs"
+filter = { only_tables = ["shopify_graphql_initial_fills"] }
 
 [migrations_directory]
 dir = "migrations"

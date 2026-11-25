@@ -307,13 +307,12 @@ mod postgres_tests {
     #[test]
     #[ignore = "requires DATABASE_URL_TEST; run make test-postgres"]
     fn postgres_scheduled_indexes_round_trip_and_explain() {
+        use crate::platform::test_db::Database;
         use chrono::DateTime as ChronoDateTime2;
         use chrono::Utc as ChronoUtc3;
         use diesel::result::Error as DieselResultError2;
         use diesel::sql_query as diesel_sql_query3;
         use serde_json::to_value;
-        use std::env::var as std_env_var;
-        use uuid::Uuid;
 
         use diesel::sql_types::Text;
         use diesel_migrations::{EmbeddedMigrations, MigrationHarness, embed_migrations};
@@ -343,14 +342,10 @@ mod postgres_tests {
             }
         }
 
-        let url = std_env_var("DATABASE_URL_TEST").expect("DATABASE_URL_TEST");
-        let mut conn = PgConnection::establish(&url).unwrap();
-        // Roll back the private schema and fixtures even when an assertion fails.
+        let db = Database::at("20261030000001");
+        let mut conn = db.pool.get().unwrap();
         conn.test_transaction::<_, DieselResultError2, _>(|conn| {
-            let schema = format!("reporting_indexes_{}", Uuid::now_v7().simple());
-            conn.batch_execute(&format!("CREATE SCHEMA {schema}; SET LOCAL search_path TO {schema}")).unwrap();
             const MIGRATIONS: EmbeddedMigrations = embed_migrations!("migrations");
-            conn.run_pending_migrations(MIGRATIONS).unwrap();
             let index_query = "SELECT indexname || ': ' || indexdef AS value FROM pg_indexes WHERE schemaname = current_schema() ORDER BY indexname";
             let migrated_indexes = lines(conn, index_query);
             assert_eq!(conn.revert_last_migration(MIGRATIONS).unwrap().to_string(), "20261030000001");
@@ -384,7 +379,7 @@ mod postgres_tests {
             )).join(" UNION ALL ") + " ORDER BY kind, status";
             println!("PostgreSQL: {:?}", lines(conn, "SELECT version() AS value"));
             explain(conn, &query, "Baseline (existing worker indexes)");
-            conn.run_pending_migrations(MIGRATIONS).unwrap();
+            conn.run_next_migration(MIGRATIONS).unwrap();
             assert_eq!(lines(conn, index_query), migrated_indexes);
             assert_eq!(to_value(load_entry_statuses_at(conn, now).unwrap()).unwrap(), before);
             explain(conn, &query, "After scheduled_at indexes");
@@ -393,7 +388,7 @@ mod postgres_tests {
             conn.revert_last_migration(MIGRATIONS).unwrap();
             assert_eq!(lines(conn, index_query), baseline_indexes);
             assert_eq!(to_value(load_entry_statuses_at(conn, now).unwrap()).unwrap(), before);
-            conn.run_pending_migrations(MIGRATIONS).unwrap();
+            conn.run_next_migration(MIGRATIONS).unwrap();
             assert_eq!(lines(conn, index_query), migrated_indexes);
             assert_eq!(to_value(load_entry_statuses_at(conn, now).unwrap()).unwrap(), before);
             Ok(())

@@ -1,0 +1,359 @@
+use crate::platform::object_storage::Error as PlatformObjectStorageError;
+use serde_json::Error as SerdeJsonError;
+use serde_json::from_str;
+use tracing::debug;
+use tracing::info;
+
+use crate::platform::object_storage::OfferStorageMetadata;
+use serde_json::Value;
+use shared::retailer::RetailerCode;
+use uuid::Uuid;
+
+use super::command::StructuralizeOffer;
+use super::entity::{NormalizedOffer, StructuralizedOffer};
+use super::event::OfferWasStructuralized;
+use super::store::StoreError;
+use crate::platform::bus::Handle;
+use crate::steps::processing_offers::Retailers;
+
+/// The storage this slice needs.
+pub trait Store: Send + Sync + 'static {
+    /// The offer's normalized document.
+    fn normalized_offer(
+        &self,
+        offer_id: Uuid,
+        storage: Option<OfferStorageMetadata>,
+    ) -> Result<Option<NormalizedOffer>, StoreError>;
+
+    /// Stores the structuralized document, replacing any stored for the offer before.
+    fn store_structuralized_offer(
+        &self,
+        entity: &StructuralizedOffer,
+    ) -> Result<OfferStorageMetadata, StoreError>;
+}
+
+/// The retailer step this slice runs.
+pub trait Structuralize: Send + Sync + 'static {
+    fn structuralize(
+        &self,
+        retailer_code: RetailerCode,
+        input: &str,
+    ) -> Result<Option<String>, String>;
+}
+
+impl Structuralize for Retailers {
+    fn structuralize(
+        &self,
+        retailer_code: RetailerCode,
+        input: &str,
+    ) -> Result<Option<String>, String> {
+        Retailers::structuralize(*self, retailer_code, input)
+    }
+}
+
+#[derive(Debug, thiserror::Error)]
+pub enum HandlerError {
+    #[error(transparent)]
+    Store(#[from] StoreError),
+
+    #[error("no normalized document for offer {0}")]
+    MissingInput(Uuid),
+
+    #[error("structuralizing offer {offer_id} failed: {message}")]
+    Step { offer_id: Uuid, message: String },
+
+    #[error("the structuralized document of offer {offer_id} is not JSON: {source}")]
+    NotJson {
+        offer_id: Uuid,
+        source: SerdeJsonError,
+    },
+}
+
+pub struct Handler<S, R> {
+    store: S,
+    retailers: R,
+}
+
+impl<S, R> Handler<S, R> {
+    pub fn new(store: S, retailers: R) -> Self {
+        Self { store, retailers }
+    }
+}
+
+impl<S: Store, R: Structuralize> Handle for Handler<S, R> {
+    type Command = StructuralizeOffer;
+    type Event = OfferWasStructuralized;
+    type Error = HandlerError;
+
+    fn handle(
+        &self,
+        command: StructuralizeOffer,
+    ) -> Result<Vec<OfferWasStructuralized>, HandlerError> {
+        let scraped_at = command.storage.and_then(|storage| storage.scraped_at);
+        if command.scraped_at != scraped_at {
+            return Err(HandlerError::Store(StoreError::ObjectStorage(
+                PlatformObjectStorageError::InvalidRecord,
+            )));
+        }
+        let input = self
+            .store
+            .normalized_offer(command.offer_id, command.storage)?
+            .ok_or(HandlerError::MissingInput(command.offer_id))?;
+
+        // A failure fails the command, so the bus retries it later.
+        debug!(object_storage_id = %input.object_storage_id, "input object loaded");
+        let output = self
+            .retailers
+            .structuralize(command.retailer_code, &input.document.to_string())
+            .map_err(|message| HandlerError::Step {
+                offer_id: command.offer_id,
+                message,
+            })?;
+        let Some(output) = output else {
+            // The retailer produces no document for this offer: nothing to
+            // store, and nothing follows.
+            info!(
+                offer_id = %command.offer_id,
+                url = %command.url,
+                "offer not structuralized: the retailer produces no structuralized document"
+            );
+            return Ok(Vec::new());
+        };
+
+        let document: Value = from_str(&output).map_err(|source| HandlerError::NotJson {
+            offer_id: command.offer_id,
+            source,
+        })?;
+
+        let stored = self
+            .store
+            .store_structuralized_offer(&StructuralizedOffer {
+                scraped_at,
+                offer_id: input.offer_id,
+                document,
+            })?;
+        info!(
+            object_storage_id = %stored.object_storage_id,
+            offer_id = %command.offer_id,
+            url = %command.url,
+            bytes = output.len(),
+            "offer structuralized"
+        );
+
+        Ok(vec![OfferWasStructuralized {
+            scraped_at,
+            offer_id: command.offer_id,
+            consolidated_sitemap_id: command.consolidated_sitemap_id,
+            retailer_code: command.retailer_code,
+            url: command.url,
+            storage: Some(stored),
+        }])
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::platform::object_storage::Error as PlatformObjectStorageError2;
+    use crate::platform::object_storage::OfferStorageMetadata as PlatformObjectStorageOfferStorageMetadata;
+    use chrono::DateTime;
+    use serde_json::from_str as serde_json_from_str;
+    use serde_json::from_value;
+    use serde_json::json as serde_json_json;
+    use serde_json::to_value;
+    use uuid::Uuid as UuidUuid;
+
+    use std::sync::Mutex;
+
+    use super::*;
+
+    const URL: &str = "https://shop.test/products/a";
+
+    #[derive(Default)]
+    struct FakeStore {
+        fail: bool,
+        input: Option<&'static str>,
+        stored: Mutex<Vec<(Uuid, Value)>>,
+    }
+
+    impl FakeStore {
+        fn with_input() -> Self {
+            Self {
+                input: Some(r#"{"title":"offer"}"#),
+                ..Self::default()
+            }
+        }
+    }
+
+    impl Store for FakeStore {
+        fn normalized_offer(
+            &self,
+            offer_id: Uuid,
+            _storage: Option<PlatformObjectStorageOfferStorageMetadata>,
+        ) -> Result<Option<NormalizedOffer>, StoreError> {
+            Ok(self.input.map(|input| NormalizedOffer {
+                object_storage_id: UuidUuid::now_v7(),
+                offer_id,
+                document: serde_json_from_str(input).unwrap(),
+            }))
+        }
+
+        fn store_structuralized_offer(
+            &self,
+            entity: &StructuralizedOffer,
+        ) -> Result<OfferStorageMetadata, StoreError> {
+            if self.fail {
+                return Err(StoreError::ObjectStorage(
+                    PlatformObjectStorageError2::InvalidRecord,
+                ));
+            }
+
+            self.stored
+                .lock()
+                .unwrap()
+                .push((entity.offer_id, entity.document.clone()));
+            Ok(OfferStorageMetadata {
+                scraped_at: entity.scraped_at,
+                object_storage_id: Uuid::from_u128(1),
+                external_id: Uuid::from_u128(2),
+                content_size: entity.document.to_string().len() as u64,
+            })
+        }
+    }
+
+    /// Returns one output, or fails every call.
+    struct FakeStep(Option<Option<&'static str>>);
+
+    impl Structuralize for FakeStep {
+        fn structuralize(&self, _: RetailerCode, _: &str) -> Result<Option<String>, String> {
+            self.0
+                .map(|output| output.map(str::to_string))
+                .ok_or_else(|| "broken".to_string())
+        }
+    }
+
+    fn command() -> StructuralizeOffer {
+        StructuralizeOffer {
+            storage: None,
+            scraped_at: None,
+            offer_id: Uuid::now_v7(),
+            consolidated_sitemap_id: Uuid::now_v7(),
+            retailer_code: RetailerCode::AnkerAu,
+            url: URL.to_string(),
+        }
+    }
+
+    #[test]
+    fn structuralizes_and_stores_the_offer() {
+        let handler = Handler::new(
+            FakeStore::with_input(),
+            FakeStep(Some(Some(r#"{"variations":[]}"#))),
+        );
+        let command = command();
+
+        let events = handler.handle(command.clone()).unwrap();
+
+        assert_eq!(
+            events,
+            vec![OfferWasStructuralized {
+                scraped_at: None,
+                offer_id: command.offer_id,
+                consolidated_sitemap_id: command.consolidated_sitemap_id,
+                retailer_code: RetailerCode::AnkerAu,
+                url: URL.to_string(),
+                storage: Some(OfferStorageMetadata {
+                    scraped_at: None,
+                    object_storage_id: Uuid::from_u128(1),
+                    external_id: Uuid::from_u128(2),
+                    content_size: 17,
+                }),
+            }]
+        );
+        assert_eq!(
+            *handler.store.stored.lock().unwrap(),
+            vec![(
+                command.offer_id,
+                serde_json_from_str::<Value>(r#"{"variations":[]}"#).unwrap()
+            )]
+        );
+    }
+
+    #[test]
+    fn fails_when_the_input_is_missing() {
+        let handler = Handler::new(
+            FakeStore::default(),
+            FakeStep(Some(Some(r#"{"variations":[]}"#))),
+        );
+        let command = command();
+
+        let error = handler.handle(command.clone()).unwrap_err();
+
+        assert!(matches!(error, HandlerError::MissingInput(id) if id == command.offer_id));
+        assert!(handler.store.stored.lock().unwrap().is_empty());
+    }
+
+    #[test]
+    fn fails_when_the_retailer_step_fails() {
+        let handler = Handler::new(FakeStore::with_input(), FakeStep(None));
+
+        let error = handler.handle(command()).unwrap_err();
+
+        assert!(matches!(error, HandlerError::Step { ref message, .. } if message == "broken"));
+        assert!(handler.store.stored.lock().unwrap().is_empty());
+    }
+
+    #[test]
+    fn fails_when_the_output_is_not_json() {
+        let handler = Handler::new(FakeStore::with_input(), FakeStep(Some(Some("not json"))));
+
+        let error = handler.handle(command()).unwrap_err();
+
+        assert!(matches!(error, HandlerError::NotJson { .. }));
+        assert!(handler.store.stored.lock().unwrap().is_empty());
+    }
+
+    #[test]
+    fn completes_without_an_event_when_the_retailer_produces_nothing() {
+        let handler = Handler::new(FakeStore::with_input(), FakeStep(Some(None)));
+
+        let events = handler.handle(command()).unwrap();
+
+        assert!(events.is_empty());
+        assert!(handler.store.stored.lock().unwrap().is_empty());
+    }
+
+    #[test]
+    fn storage_failure_prevents_success_events() {
+        let mut store = FakeStore::with_input();
+        store.fail = true;
+        let handler = Handler::new(store, FakeStep(Some(Some("{}"))));
+        assert!(handler.handle(command()).is_err());
+    }
+    #[test]
+    fn source_time_survives_processing_and_inconsistent_provenance_fails() {
+        let handler = Handler::new(
+            FakeStore::with_input(),
+            FakeStep(Some(Some(r#"{"variations":[]}"#))),
+        );
+        let mut command = command();
+        let mut json = to_value(&command).unwrap();
+        json.as_object_mut().unwrap().remove("scraped_at");
+        let old: StructuralizeOffer = from_value(json.clone()).unwrap();
+        assert!(old.scraped_at.is_none());
+        json["scraped_at"] = serde_json_json!("bad");
+        assert!(from_value::<StructuralizeOffer>(json).is_err());
+        let time = DateTime::from_timestamp_micros(1_700_000_000_123_456).unwrap();
+        command.scraped_at = Some(time);
+        assert!(handler.handle(command.clone()).is_err());
+        command.storage = Some(PlatformObjectStorageOfferStorageMetadata {
+            scraped_at: Some(time),
+            object_storage_id: Uuid::now_v7(),
+            external_id: Uuid::now_v7(),
+            content_size: 10,
+        });
+        let events = handler.handle(command.clone()).unwrap();
+        assert_eq!(events[0].scraped_at, Some(time));
+        assert_eq!(events[0].storage.unwrap().scraped_at, Some(time));
+        command.scraped_at = None;
+        assert!(handler.handle(command).is_err());
+    }
+}

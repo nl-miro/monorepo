@@ -90,21 +90,26 @@ src/
     bus_api.rs               POST /api/commands/run, /api/events/run and /api/outbox/run
     db.rs                    Postgres pool and embedded migrations
     http.rs                  blocking HTTP client
-  sitemap_discovery/         context: sitemaps → sorted URLs
-    retrieve_sitemap/        step 1, plus POST /api/sitemap-retrievals
-    process_sitemap/         step 2
-    consolidate_sitemap/     step 3
-  saga/                      placeholder for saga orchestration
-  steps/                     placeholder for workflow steps
-  offer_discovery/           context: product URLs → offer data
-    discover_offers/         step 4
-    download_offer_page/     step 5
-    extract_offer_page/      step 6
-    normalize_offer/         step 7
-    structuralize_offer/     step 8
-    processing_for_export/   step 9
-  offer_delivery/            context: completed exports → outbox messages
-    record_export_messages/  listener on OfferExportWasPrepared
+  saga/initial_fill/shopify_graphql/  Shopify GraphQL initial-fill entity and PostgreSQL repository
+  steps/
+    graphql/
+      request_initial_fill/       handles RequestInitialFill and publishes InitialFillRequested
+      acquire_storefront_token/   acquires the Shopify storefront token
+      product_catalog_ids/        collects product identifiers for a storefront locale
+      offer_details/              fetches and stores Shopify offer details
+    sitemap/                 sitemaps → sorted URLs
+      retrieve_sitemap/        step 1, plus POST /api/sitemap-retrievals
+      process_sitemap/         step 2
+      consolidate_sitemap/     step 3
+    html/
+      discover_offers/         step 4
+      download_offer_page/     step 5
+    processing-offers/
+      extract_offer_page/      step 6
+      normalize_offer/         step 7
+      structuralize_offer/     step 8
+      processing_for_export/   step 9
+      record_export_messages/  listener on OfferExportWasPrepared
 migrations/                  Mulac's tables, then each context's tables
 ```
 
@@ -116,6 +121,27 @@ rather than queueing a command, has a `listener.rs` registered with
 `Bus::listen`. Each context and slice exposes only its `prelude` module, with
 `register()`, any `routes()`, and the events others may use. Contexts talk to each other only
 through events.
+
+`Bus::listen_method(name, listener, method)` registers an inherent method on an
+`Arc`-shared listener. Each method accepts `&self`, its concrete event type and
+`&EventContext`, and returns a `Result`. For example:
+
+```rust
+let listener = Arc::new(ShopifyGraphQlListener::new(repository));
+bus.listen_method(
+    "shopify_graphql_initial_fill_requested",
+    Arc::clone(&listener),
+    ShopifyGraphQlListener::on_initial_fill_requested,
+);
+```
+
+Register additional named methods with clones of the same `Arc` to handle other
+event types on that object. Each subscription keeps a stable name; the event
+type is inferred from the method signature. The current saga listeners each
+handle `InitialFillRequested`; no completion event is defined yet. The existing
+`Bus::listen` API remains supported, with the same metadata validation, timing
+logs and error propagation. Shared ownership does not impose event ordering or
+serialize method calls.
 
 ## Running it
 
@@ -730,7 +756,7 @@ are immutable artifacts in the `offer_export` bucket, using the snapshot UUID
 as their idempotency key. Deploy the object-storage allowlist first.
 
 `OfferExportWasPrepared` references the completed snapshot and its source.
-`offer_discovery::prelude::ExportStore::load` reads a completed domain snapshot
+`steps::prelude::ExportStore::load` reads a completed domain snapshot
 and validates its object reference. Repeated events may reference the same
 export; downstream delivery must use the stable per-entry UUIDs to deduplicate.
 This stage produces no outbox rows or HTTP requests to offers itself.
@@ -745,7 +771,7 @@ See [ADR 19](../../docs/adr/0019-immutable-offer-export-preparation.md).
 
 ## Recording export messages
 
-`offer_delivery::record_export_messages` listens to `OfferExportWasPrepared`.
+`steps::processing_offers::record_export_messages` listens to `OfferExportWasPrepared`.
 It loads the completed snapshot the event names through `ExportStore::load`.
 It never uses the latest structuralized document or a pending preparation.
 The listener checks that the snapshot and event agree on export UUID, source
@@ -959,37 +985,18 @@ See ADR 45.
 
 ## Anker initial offer fill
 
-`src/v2/application/service/mod.rs` owns validation, run preparation and queueing.
-The application steps implement token acquisition, catalog pagination and offer details;
-`src/v2/infrastructure/` provides HTTP adapters. `src/v2/ui/http.rs` holds HTTP
-bodies and outcome mapping; `http/axum.rs` handles Axum extraction, responses and routes.
-The legacy `initial_offer_fill` module has been removed; unit, PostgreSQL and live
-initial-fill tests now exercise v2. See
-[ADR 79](../../docs/adr/0079-initial-fill-http-boundary.md).
+`POST /api/initial-fill` accepts a JSON array such as `["ankerau","ankerca"]`.
+The saga service dispatches one `RequestInitialFill` per retailer. The route
+returns an empty `202` after the dispatch attempts. A request body of the wrong
+JSON shape receives `422`. If the bus is unavailable, a well-formed array
+receives `503` with `{"error":"command bus is unavailable"}`. The response
+does not confirm durable queueing or contain run IDs. The command worker emits
+`InitialFillRequested` with the saga ID, retailer code and storefront strategy.
+See [ADR 90](../../docs/adr/0090-saga-initial-fill-startup.md).
 
 New command/event payloads serialize `retailer_code` as a lowercase slug, such
-as `ankerau`. Readers also accept historical `AnkerAu` payloads; existing rows
-are not rewritten. Detail-command identities remain stable across both formats.
-See [ADR 49](../../docs/adr/0049-lowercase-retailer-serialization.md) for rollout.
-
-`POST /api/initial-offer-fills` accepts `{"retailers":["ankerau","ankerca"]}`
-and returns `202` with `{"fills":[{"retailer":"ankerau","run_id":"..."},
-{"retailer":"ankerca","run_id":"..."}]}`. Each retailer gets its own
-run ID, in request order. Duplicate retailers within a request are rejected with `400`. The old singular `retailer` request format is no longer accepted;
-use a one-element `retailers` array to start a single store.
-
-The complete retailer list is validated before anything is queued. An empty list, unknown or unsupported
-code, Korea, or the retired `ankernordicscom` aggregate returns `400` without
-starting any runs; an unavailable bus returns `503`.
-
-Commands are queued sequentially. A dispatch failure stops the batch and
-returns `500` with `{"error":"<opaque error ID>","fills":[...]}` listing
-confirmed prior successes. Those runs remain queued; retry only the remaining
-retailers to avoid duplicate runs. `fills` is empty when no run was confirmed,
-which includes an unexpected queue task failure where enqueue outcomes are
-unknown; inspect the service logs and queue before retrying. Internal error details are logged under
-the error ID. This flow is independent of sitemap retrieval and does not start
-automatically. See [ADR 53](../../docs/adr/0053-anker-storefront-initial-fill-markets.md).
+as `ankerau`. Readers also accept historical `AnkerAu` payloads.
+See [ADR 49](../../docs/adr/0049-lowercase-retailer-serialization.md).
 
 Initial fill supports 48 retailer codes: 17 Anker, ten Minisforum and 21 Ugreen
 (including NAS). After token acquisition, or at start for storefronts that do not
@@ -1035,7 +1042,7 @@ an explicit network check. No public token is hardcoded in production.
 
 1. Where configured, `AcquireStorefrontToken` reads the selected token from the
    storefront/scripts or the Nordic environment override when configured.
-   `StorefrontTokenAcquired` carries the real public token, retailer/run identity and UTC acquisition time.
+   `StorefrontTokenAcquired` carries the real public token, retailer code and UTC acquisition time.
 2. The token event (or the start API, without a token step) queues one catalog
    command per unique optional-country/language pair from the entity locales.
    Contexts are read when the event is handled; replaying it after an inventory
@@ -1053,23 +1060,23 @@ an explicit network check. No public token is hardcoded in production.
    connection page. The assembled product and raw request/response pages are
    written as one JSON artifact to the existing `offer_details_raw` bucket.
 
-`OfferDetailsFetched` includes retailer, run ID, source, fetched time, and
+`OfferDetailsFetched` includes retailer, source, fetched time, and
 `OfferStorageMetadata` (`object_storage_id`, `external_id`, `content_size`,
 `scraped_at`). Its bucket is `offer_details_raw` (see
 [ADR 51](../../docs/adr/0051-initial-fill-raw-offer-bucket.md)). New artifacts have
 `schema_version: 2`, observed `context` (country, language, currency), `product`,
 and `pages`, each containing `request` and `response`. The fetched event carries
-the same observed context. Historical context-free schema-1 data remains readable.
-Authentication is excluded. The subscriber queues `ExtractOfferDetails`, which
-reads the raw artifact, runs the retailer’s v2 extractor, and stores the JSON
-in `offer_details_extracted`. After storage succeeds, `OfferDetailsExtracted`
-carries the original event in `fetched` and the extracted object reference in
-`storage`. This event queues `StructuralizeOfferDetails` for the pinned
-extracted object. The handler stores the retailer's v2 document in
-`offer_details_structuralized` and emits `OfferDetailsStructuralized` with its
-object reference. A listener records one outbox message per variant with a
-known price and storefront URL. The offers publisher submits those messages
-as `ImportOfferDetails` to the offers inbox when the outbox runs.
+the same observed context. The event envelope carries the run ID as its correlation ID.
+Historical context-free schema-1 data remains readable.
+Authentication is excluded.
+
+The saga queues `ExtractOfferDetails` on `OfferDetailsFetched`, then
+`StructuralizeOfferDetails` on `OfferDetailsExtracted`. Each command reads the
+pinned source object and stores its result in `offer_details_extracted` or
+`offer_details_structuralized`, preserving the scrape time. The
+`OfferDetailsStructuralized` listener records one offers outbox message per
+variant with a URL and a known price. Replaying these events reuses the command
+and message IDs.
 
 Command workers run as configured. Advance reactions with `/api/events/run`;
 use `/api/commands/run` when `COMMAND_WORKERS=0`. Repeat those explicit runners

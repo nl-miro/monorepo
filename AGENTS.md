@@ -56,6 +56,21 @@ continue to `[~]` as implementation begins.
 - Place submodule declarations (`mod xyz;`) after module documentation and
   before production imports.
 
+## Rust formatting and readability
+
+- Use the pinned toolchain's default `rustfmt` layout with four-space indentation
+  and a 100-column target. Let long function signatures wrap to one parameter
+  per line.
+- Review the formatted diff for readability even when `cargo fmt --check`
+  passes. Introduce a local binding when its name explains a step, such as
+  `contexts` for the locales to process or `commands` for the work to queue.
+- Keep a simple transformation in one iterator chain. Prefer a `for` loop when
+  it makes branching, mutation, or error handling easier to follow.
+- Use a blank line when the purpose of the code changes. Keep closely related
+  statements together, such as constructing a command and pushing it into a batch.
+- Reserve `#[rustfmt::skip]` for the smallest item whose layout conveys
+  information, such as a test matrix with columns aligned for comparison.
+
 ## Dependencies
 
 - Declare a dependency used by several crates in the same workspace once, under `[workspace.dependencies]`, and use it with `name.workspace = true`.
@@ -79,3 +94,28 @@ continue to `[~]` as implementation begins.
 ## Asking first
 
 - When a request has more than one reasonable reading, ask before acting.
+
+
+## Scope of work
+
+- Make the smallest change that fully satisfies the request. When I provide
+  a plan, implement that plan. Ask before expanding it.
+- Preserve existing behavior and interfaces except where the request requires
+  a change. Update callers and tests directly affected by the change.
+- Leave unrelated warnings, TODOs, unfinished code, comments, and formatting
+  alone. Finding a problem does not authorize fixing it.
+- Do not add dependencies, abstractions, migrations, documentation, tracking
+  entries, or standalone test harnesses unless requested or necessary for
+  the requested change. If you think one is necessary and it was not in the
+  agreed plan, explain why and ask first.
+- Treat the working tree as my work in progress. Check it before editing.
+  Preserve my staged and unstaged changes. Limit edits and formatting to
+  the files needed for the task.
+- Run the repository's required checks. Fix failures introduced by your
+  change. If an existing failure blocks verification, report the command
+  and the failure. Ask before fixing unrelated code or building a workaround.
+- When I ask a question or request a plan, answer it without editing files.
+  If two interpretations would produce materially different changes, ask
+  one focused question before editing.
+- Report what changed, what passed, and what remains unverified. Only
+  describe a check as passing if that check actually passed.

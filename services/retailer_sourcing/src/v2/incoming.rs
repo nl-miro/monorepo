@@ -1,13 +1,11 @@
 //! Sourcing's policy over types received from the retailer libraries.
 //!
 //! Which locale contexts an initial fill crawls is decided by sourcing, not by
-//! `retailer_sauce`; this moved here from `retailer_sauce::initial_fill` in 0.3.0.
+//! `retailer_sauce`; this moved here from `retailer_sauce::request_initial_fill` in 0.3.0.
 //! Every initial-fill storefront uses `retailer_sauce`'s shared Shopify engine,
 //! built from the retailer's storefront configuration.
 
 use retailer_data_extractor::get_storefront_config;
-use retailer_sauce::initial_fill::RequestedContext;
-use retailer_sauce::prelude::{Market, StorefrontConfig};
 use retailer_sauce::shopify::graphql::Engine;
 use shared::retailer::RetailerCode;
 
@@ -19,43 +17,12 @@ pub(crate) fn storefront_engine(retailer: RetailerCode) -> Result<Engine, String
         .ok_or_else(|| "initial fill is not configured".into())
 }
 
-/// Initial-fill request contexts derived from a storefront's supported locales.
-pub(crate) trait InitialFillContexts {
-    /// Snapshot the main-table locales in declaration order, collapsing request aliases.
-    fn initial_fill_contexts(&self) -> Result<Vec<RequestedContext>, String>;
-}
-impl InitialFillContexts for StorefrontConfig {
-    fn initial_fill_contexts(&self) -> Result<Vec<RequestedContext>, String> {
-        let mut contexts = Vec::new();
-        for locale in self.supported_locales() {
-            let country = match locale.country_region {
-                Some(Market::Country(country)) => Some(country.as_str().to_owned()),
-                Some(Market::Region(_)) => return Err("GraphQL country cannot be a region".into()),
-                None => None,
-            };
-            let context = RequestedContext {
-                country,
-                language: locale.language.as_str().to_owned(),
-                currency: None,
-                observed_country: None,
-            };
-            if !contexts.contains(&context) {
-                contexts.push(context);
-            }
-        }
-        if contexts.is_empty() {
-            return Err("retailer has no supported locales".into());
-        }
-        Ok(contexts)
-    }
-}
-
 #[cfg(test)]
 mod tests {
-    use super::*;
     use retailer_data_extractor::get_storefront_config;
     use retailer_sauce::prelude::{
-        Language, Locale, Region, RetailerCode, RetailerProfile, StorefrontAccess, SupportedLocales,
+        Language, Locale, Market, Region, RetailerCode, RetailerProfile, StorefrontAccess,
+        StorefrontConfig, StorefrontStrategy, SupportedLocales,
     };
 
     #[test]
@@ -108,6 +75,7 @@ mod tests {
                     supported_locales,
                 },
                 StorefrontAccess {
+                    preferred: StorefrontStrategy::ShopifyGraphQl,
                     shopify_shop: None,
                     storefront_graphql_api: None,
                     graphql_api_status: None,

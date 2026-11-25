@@ -5,7 +5,8 @@ use ugreen::get_storefront_config as ugreen_get_storefront_config;
 
 use crate::get_storefront_config;
 use retailer_sauce::prelude::{
-    Country, Language, Locale, Market, Region, RetailerCode, StorefrontConfig, SupportedLocales,
+    Country, Language, Locale, Market, Region, RetailerCode, StorefrontConfig, StorefrontStrategy,
+    SupportedLocales,
 };
 use retailers_anker::prelude as anker;
 use retailers_minisforum::prelude as minisforum;
@@ -14,7 +15,7 @@ use retailers_ugreen::prelude as ugreen;
 type Factory = fn(&str) -> Option<StorefrontConfig>;
 
 /// Documented retailers without a storefront integration, so without a record.
-const UNCONFIGURED: [&str; 2] = ["ankerkr", "ankernordicscom"];
+const UNCONFIGURED: [&str; 1] = ["ankernordicscom"];
 const FACTORIES: [Factory; 3] = [
     anker_get_storefront_config,
     minisforum_get_storefront_config,
@@ -136,7 +137,7 @@ fn factories_match_documented_inventory() {
         expected.sort_by_key(key);
         assert_eq!(actual, expected, "{code}");
     }
-    assert_eq!(counts, [17, 10, 21]);
+    assert_eq!(counts, [18, 10, 21]);
 }
 
 #[test]
@@ -314,7 +315,7 @@ fn locale_tags_round_trip_with_canonical_casing() {
 }
 
 #[test]
-fn inventory_retailers_have_48_storefront_configs() {
+fn inventory_retailers_have_49_storefront_configs() {
     let inventory = include_str!("../../../docs/retailer.md");
     let mut configured = 0;
     for line in inventory
@@ -325,6 +326,7 @@ fn inventory_retailers_have_48_storefront_configs() {
         let code = RetailerCode::from_str(code).unwrap();
         configured += usize::from(get_storefront_config(code).is_some());
     }
-    assert_eq!(configured, 48);
-    assert!(get_storefront_config(RetailerCode::AnkerKr).is_none());
+    assert_eq!(configured, 49);
+    let korea = get_storefront_config(RetailerCode::AnkerKr).unwrap();
+    assert_eq!(korea.access.preferred, StorefrontStrategy::Cafe24);
 }

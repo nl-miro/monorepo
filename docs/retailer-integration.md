@@ -101,8 +101,8 @@ filenames. For these markets, follow the source contract and fixtures in
 
 ```
 services/retailer_sourcing
-  sitemap_discovery/mod.rs   struct Retailers   (sitemap hooks)
-  offer_discovery/mod.rs     struct Retailers   (extract, normalize, structuralize; panics caught)
+  steps/sitemap/mod.rs       struct Retailers   (sitemap hooks)
+  steps/processing-offers/mod.rs     struct Retailers   (extract, normalize, structuralize; panics caught)
         │
         ▼
 lib/retailer_data_extractor/src/lib.rs          facade: <hook>_for(code, …)

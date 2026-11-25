@@ -62,6 +62,16 @@ pub fn get_storefront_config(code: RetailerCode) -> Option<StorefrontConfig> {
         .or_else(|| retailers_ugreen_get_storefront_config(&code))
 }
 
+/// Returns the storefront configuration or a `NotFound` error for an unconfigured retailer.
+pub fn load_storefront_config(code: RetailerCode) -> Result<StorefrontConfig, Error> {
+    get_storefront_config(code).ok_or_else(|| {
+        Error::new(
+            ErrorKind::NotFound,
+            format!("no storefront configuration for retailer {}", code.as_str()),
+        )
+    })
+}
+
 /// Returns the HTML extraction architecture for a retailer's offer details page:
 /// the selectors [`extract_offer_details_for`] runs over a downloaded page.
 ///
@@ -356,6 +366,10 @@ mod tests {
         assert!(offer_request_for(code, url).is_err());
         assert!(validate_offer_download(code, url, "{}").is_err());
         assert!(get_storefront_config(code).is_none());
+        assert_eq!(
+            load_storefront_config(code).unwrap_err().kind(),
+            StdIoErrorKind::NotFound
+        );
     }
 
     #[test]
@@ -485,7 +499,7 @@ mod migrated_wip_tests {
     #[test]
     fn experimental_ankerau_hooks_are_connected() {
         let code = RetailerCode::AnkerAu;
-        assert!(get_storefront_config(code).is_some());
+        assert_eq!(load_storefront_config(code).unwrap().retailer_code(), code);
         assert!(offer_details_architecture_for(code).is_ok());
         assert!(sitemap_config_for(&code).is_some());
         assert!(normalize_offer_details_for(code, "{}").is_some());

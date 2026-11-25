@@ -3,7 +3,6 @@
 //!
 //! Only [`prelude`] is public; other contexts reach this layer through it.
 
-#[allow(dead_code)] // Not mounted in v2 yet.
 mod http;
 
 pub mod prelude;

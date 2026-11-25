@@ -29,9 +29,9 @@ References describe existing behavior, not prescribed edit locations:
 
 - [Sourcing README](../../services/retailer_sourcing/README.md), particularly
   “Processing for export” and “HTTP outbox delivery.”
-- [Export contract](../../services/retailer_sourcing/src/offer_discovery/processing_for_export/entity.rs),
-  [event](../../services/retailer_sourcing/src/offer_discovery/processing_for_export/event.rs),
-  and [completed export storage](../../services/retailer_sourcing/src/offer_discovery/processing_for_export/store.rs).
+- [Export contract](../../services/retailer_sourcing/src/steps/processing-offers/processing_for_export/entity.rs),
+  [event](../../services/retailer_sourcing/src/steps/processing-offers/processing_for_export/event.rs),
+  and [completed export storage](../../services/retailer_sourcing/src/steps/processing-offers/processing_for_export/store.rs).
 - [Existing HTTP publisher](../../services/retailer_sourcing/src/platform/offers_publisher.rs)
   and [import fixture](../../services/retailer_sourcing/tests/fixtures/offer_export/import_payload.json).
 - [ADR 19](../adr/0019-immutable-offer-export-preparation.md) and

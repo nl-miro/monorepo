@@ -49,7 +49,7 @@ Grounded at monorepo `ed55cb1eb34740ef1e2ace2a8ba0174a8a078443`.
   during extraction, detaches the sidecar before strict retailer decoding,
   preserves it during normalization, and copies it into structuralized
   variations. Existing artifacts are not recalculated by these later stages.
-- [Export conversion](../../services/retailer_sourcing/src/offer_discovery/processing_for_export/conversion.rs)
+- [Export conversion](../../services/retailer_sourcing/src/steps/processing-offers/processing_for_export/conversion.rs)
   copies selected facts. The current export version is **v5**, localization
   was added in v4, and v1–v3 omit it. Offers already emits
   `OfferLocalizationChanged.v1`; both projections store market JSON and

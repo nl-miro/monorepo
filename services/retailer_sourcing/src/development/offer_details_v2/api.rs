@@ -26,7 +26,7 @@ const MAX_LIMIT: u32 = 1000;
 /// Read persisted terminal events regardless of consumer status. These artifacts
 /// have no legacy offer projection. Queue retention therefore bounds this listing.
 const SOURCES_QUERY: &str = "
-    SELECT id, (payload::jsonb ->> 'run_id')::uuid AS run_id,
+    SELECT id, COALESCE(payload::jsonb ->> 'run_id', meta ->> 'correlation_id')::uuid AS run_id,
            payload::jsonb #>> '{source,GraphQl,product_id}' AS product_id,
            (payload::jsonb -> 'retailer_code')::text AS retailer_code,
            payload::jsonb ->> 'fetched_at' AS fetched_at,
@@ -172,7 +172,7 @@ mod postgres_tests {
     use crate::app as imported_app;
     use crate::platform::auth::BEARER_TOKEN;
     use diesel::sql_query as diesel_sql_query;
-    use diesel::sql_types::Integer;
+    use diesel::sql_types::{Integer, Nullable};
     use serde_json::from_slice;
     use tokio::runtime::Runtime;
 
@@ -240,17 +240,24 @@ mod postgres_tests {
                 0,
             ),
         ] {
-            let mut payload = json!({"run_id":run_id,"retailer_code":retailer,"source":source,"fetched_at":time,"storage":storage});
+            let mut payload = json!({"retailer_code":retailer,"source":source,"fetched_at":time,"storage":storage});
             if id == newest || id == tied {
                 payload["context"] = json!({"country":"CA","language":if id==newest {"EN"} else {"FR"},"currency":"CAD"});
             }
+            let meta = if id == older {
+                payload["run_id"] = json!(run_id);
+                None
+            } else {
+                Some(json!({"correlation_id":run_id}))
+            };
             diesel_sql_query(
-                "INSERT INTO event_entries (id,event_type,payload,status) VALUES ($1,$2,$3,$4)",
+                "INSERT INTO event_entries (id,event_type,payload,status,meta) VALUES ($1,$2,$3,$4,$5)",
             )
             .bind::<SqlUuid, _>(id)
             .bind::<Text, _>(kind)
             .bind::<Text, _>(payload.to_string())
             .bind::<Integer, _>(status)
+            .bind::<Nullable<Jsonb>, _>(meta)
             .execute(&mut conn)
             .unwrap();
         }

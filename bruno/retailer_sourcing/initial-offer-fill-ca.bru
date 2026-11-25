@@ -5,13 +5,13 @@ meta {
 }
 
 post {
-  url: {{retailerSourcingBaseUrl}}/api/initial-offer-fills
+  url: {{retailerSourcingBaseUrl}}/api/initial-fill
   body: json
   auth: none
 }
 
 body:json {
-  { "retailers": ["ankerca"] }
+  ["ankerca","ankeritalycom"] 
 }
 
 docs {

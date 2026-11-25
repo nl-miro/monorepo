@@ -27,7 +27,6 @@ retailer_data_extractor = { path = "../../lib/retailer_data_extractor" }
 retailer_sauce.workspace = true
 serde.workspace = true
 serde_json.workspace = true
-sha1 = "0.10.7"
 shared.workspace = true
 sitemap = { version = "0.1.1", registry = "bodul" }
 strum = { version = "0.27", features = ["derive"] }
@@ -41,7 +40,7 @@ url.workspace = true
 utoipa = "6.0.0"
 utoipa-axum = "0.3.0"
 utoipa-swagger-ui.workspace = true
-uuid.workspace = true
+uuid = { workspace = true, features = ["v5"] }
 
 [dev-dependencies]
 commanding = { workspace = true, features = ["api-testing"] }

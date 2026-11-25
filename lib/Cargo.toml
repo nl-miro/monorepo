@@ -17,12 +17,13 @@ chrono = { version = "0.4.45", default-features = false, features = ["std", "ser
 everyday = { version = "0.1.1", registry = "bodul" }
 html-extractor = { version = "0.3.3-dev.2", registry = "null-labs-hq" }
 money = { version = "0.1.2", registry = "bodul" }
-retailer_sauce = { version = "0.3.7", registry = "bodul" }
-retailers_anker = { version = "0.5.2", registry = "bodul" }
-retailers_minisforum = { version = "0.5.2", registry = "bodul" }
-retailers_ugreen = { version = "0.5.2", registry = "bodul" }
+retailer_sauce = { path = "../../../space/bodul_hq/lib_retailer_sauce" }
 serde = { version = "1.0.229", features = ["derive"] }
 serde_json = "1.0.154"
-shared = { version = "0.1.1", registry = "bodul" }
+shared = { path = "../../../space/bodul_hq/lib_shared" }
 thiserror = "2.0.20"
 url = "2.5.8"
+
+[patch."sparse+https://bodul-hq.github.io/crates/"]
+retailer_sauce = { path = "../../../space/bodul_hq/lib_retailer_sauce" }
+shared = { path = "../../../space/bodul_hq/lib_shared" }

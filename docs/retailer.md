@@ -141,7 +141,7 @@ pricing-context decision is independent and remains unchanged.
 
 ## Anker South Korea
 
-Implementation: none. This retailer has no storefront integration, so it has no `StorefrontConfig` record; the inventory tests skip it.
+Anker South Korea has a `StorefrontConfig` with Cafe24 as its preferred strategy.
 
 | Field                  | Value                                            |
 | ---------------------- | ------------------------------------------------ |
@@ -151,7 +151,6 @@ Implementation: none. This retailer has no storefront integration, so it has no 
 | Storefront GraphQL API | Unknown                                          |
 | Target markets         | South Korea (KR)                                 |
 | Shipping countries     | Unknown                                          |
-| GraphQL API status     | Unknown; no endpoint established in the research |
 |                        |                                                  |
 |                        |                                                  |
 

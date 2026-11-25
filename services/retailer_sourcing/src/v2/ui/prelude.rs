@@ -1,3 +1,2 @@
-//! Everything other modules may use from the v2 UI layer. Nothing is
-//! re-exported yet.
+//! Initial-fill HTTP response types and v2 routes.
 pub use super::http::axum::routes;

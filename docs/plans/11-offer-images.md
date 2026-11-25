@@ -48,11 +48,11 @@ carousels, JavaScript and automatic queue workers are outside this item.
 ## Current behavior and constraints
 
 - [Structuralized offers](../../lib/retailer_sauce/src/structuralized.rs) already
-  contain images. [Export conversion](../../services/retailer_sourcing/src/offer_discovery/processing_for_export/conversion.rs)
+  contain images. [Export conversion](../../services/retailer_sourcing/src/steps/processing-offers/processing_for_export/conversion.rs)
   selects title, price and URL and drops images.
 - [ADR 19](../adr/0019-immutable-offer-export-preparation.md) fixes export v1's
   output and requires immutable bodies and stable snapshot/entry identities.
-  [Export storage](../../services/retailer_sourcing/src/offer_discovery/processing_for_export/store.rs)
+  [Export storage](../../services/retailer_sourcing/src/steps/processing-offers/processing_for_export/store.rs)
   and its record decoder currently accept one global schema version.
 - The [offers aggregate](../../services/offers/src/offers/aggregate.rs) replays
   creation, title and price events. [Stored event records](../../services/offers/src/infra/records.rs)
