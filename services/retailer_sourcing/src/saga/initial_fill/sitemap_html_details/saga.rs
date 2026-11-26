@@ -1,6 +1,6 @@
 //! Entities for the sitemap and HTML details initial-fill saga.
 
-use crate::saga::prelude::{RecordableSaga, SagaId};
+use crate::saga::prelude::RecordableSaga;
 use crate::saga::record::{DieselPgSagaRecord, SagaRecordError, SagaTypeMismatch};
 use crate::steps::prelude::{
     ConsolidateSitemap, DiscoverOffers, DownloadOfferPage, ExtractOfferPage, NormalizeOffer,
@@ -15,7 +15,7 @@ use uuid::Uuid;
 
 #[derive(Serialize, Deserialize, Clone, Debug, Eq, PartialEq)]
 pub(crate) struct SitemapHtmlDetailsInitialFillSaga {
-    saga_id: SagaId,
+    saga_id: Uuid,
     correlation_id: Uuid,
     retailer_code: RetailerCode,
 }
@@ -25,11 +25,11 @@ impl RecordableSaga for SitemapHtmlDetailsInitialFillSaga {}
 impl SitemapHtmlDetailsInitialFillSaga {
     pub(crate) const SAGA_TYPE: &'static str = "SitemapHtmlDetailsInitialFill";
 
-    pub(super) fn saga_id(&self) -> SagaId {
+    pub(super) fn saga_id(&self) -> Uuid {
         self.saga_id
     }
 
-    pub(crate) fn new(saga_id: SagaId, correlation_id: Uuid, retailer_code: RetailerCode) -> Self {
+    pub(crate) fn new(saga_id: Uuid, correlation_id: Uuid, retailer_code: RetailerCode) -> Self {
         Self {
             saga_id,
             correlation_id,

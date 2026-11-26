@@ -32,6 +32,22 @@ pub struct FetchOfferDetails {
     pub source: SourceType,
 }
 
+impl FetchOfferDetails {
+    pub fn new(
+        retailer_code: RetailerCode,
+        context: Option<RequestedContext>,
+        storefront_token: Option<StorefrontToken>,
+        source: SourceType,
+    ) -> Self {
+        Self {
+            context,
+            storefront_token,
+            retailer_code,
+            source,
+        }
+    }
+}
+
 impl Command for FetchOfferDetails {
     const NAME: &'static str = "FetchOfferDetails";
 }

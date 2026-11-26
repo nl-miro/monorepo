@@ -1,4 +1,4 @@
-//! Model for the Shopify GraphQL initial-fill saga.
+//! Saga identifiers.
 
 use serde::{Deserialize, Serialize};
 use thiserror::Error;

@@ -1,18 +1,16 @@
 //! Database records for saga entities.
 
+use super::schema::shopify_graphql_initial_fills;
 use diesel::{Insertable, Queryable, Selectable};
 use serde_json::{Error as JsonError, Value as Json};
 use thiserror::Error;
 use uuid::Uuid;
 
-use super::initial_fill::shopify_graphql::UuidV7;
-use super::schema::shopify_graphql_initial_fills;
-
 #[derive(Insertable, Queryable, Selectable)]
 #[diesel(table_name = shopify_graphql_initial_fills)]
 pub(crate) struct DieselPgSagaRecord {
     #[diesel(serialize_as = Uuid, deserialize_as = Uuid)]
-    pub(super) saga_id: UuidV7,
+    pub(super) saga_id: Uuid,
     #[diesel(serialize_as = Uuid, deserialize_as = Uuid)]
     pub(super) correlation_id: Uuid,
     pub(super) saga_type: String,

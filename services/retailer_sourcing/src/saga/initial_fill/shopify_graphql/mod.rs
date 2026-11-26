@@ -1,22 +1,21 @@
 //! Shopify GraphQL initial-fill saga.
 
-mod entity;
+mod builders;
 mod listener;
-mod model;
+mod saga;
 
-pub(crate) use entity::ShopifyGraphQlInitialFillSaga;
 pub(super) use listener::Listener;
-pub(crate) use model::{SagaId, UuidV7};
+pub(crate) use saga::ShopifyGraphQlInitialFillSaga;
 
 #[cfg(test)]
 mod tests {
-    use super::entity::StartingCommand;
-    use super::{SagaId, ShopifyGraphQlInitialFillSaga};
+    use super::ShopifyGraphQlInitialFillSaga;
+    use super::saga::StartingCommand;
     use crate::platform::bus::{Command, Event, EventCommand, EventContext};
     use crate::platform::object_storage::OfferStorageMetadata;
     use crate::steps::prelude::{
         ExtractOfferDetails, InitialFillRequested, OfferDetailsExtracted, OfferDetailsFetched,
-        SourceType, StorefrontTokenAcquired, StructuralizeOfferDetails,
+        SourceType, StructuralizeOfferDetails,
     };
     use chrono::Utc;
     use retailer_data_extractor::get_storefront_config;
@@ -27,7 +26,7 @@ mod tests {
 
     #[test]
     fn starting_envelopes_use_the_saga_id_as_correlation_and_event_id_as_causation() {
-        let id = SagaId::new();
+        let id = Uuid::now_v7();
         let request_id = Uuid::now_v7();
         let context = EventContext {
             event_id: Uuid::now_v7(),
@@ -41,10 +40,10 @@ mod tests {
             assert!(!commands.is_empty());
             for command in commands {
                 let envelope = command
-                    .into_envelope(saga.saga_id().into(), InitialFillRequested::NAME, &context)
+                    .into_envelope(saga.saga_id(), InitialFillRequested::NAME, &context)
                     .unwrap();
                 let metadata = envelope.metadata.unwrap();
-                assert_eq!(metadata.correlation_id, Some(Uuid::from(id)));
+                assert_eq!(metadata.correlation_id, Some(id));
                 assert_eq!(metadata.causation_id, Some(context.event_id));
             }
         }
@@ -52,7 +51,7 @@ mod tests {
 
     #[test]
     fn derived_commands_carry_offer_details_and_use_the_source_object_for_identity() {
-        let saga_id = SagaId::new();
+        let saga_id = Uuid::now_v7();
         let retailer = RetailerCode::AnkerAu;
         let saga = ShopifyGraphQlInitialFillSaga::new(saga_id, Uuid::now_v7(), retailer);
         let raw = OfferStorageMetadata {
@@ -82,7 +81,12 @@ mod tests {
         };
         for (command, event_name, name, payload, source_id) in [
             (
-                saga.on_offer_details_fetched(fetched.clone()),
+                saga.on_offer_details_fetched(
+                    fetched.retailer_code,
+                    fetched.source.clone(),
+                    fetched.storage,
+                    fetched.fetched_at,
+                ),
                 OfferDetailsFetched::NAME,
                 ExtractOfferDetails::NAME,
                 json!({
@@ -94,7 +98,12 @@ mod tests {
                 raw.object_storage_id,
             ),
             (
-                saga.on_offer_details_extracted(extracted.clone()),
+                saga.on_offer_details_extracted(
+                    extracted.retailer_code,
+                    extracted.source.clone(),
+                    extracted.storage,
+                    extracted.fetched_at,
+                ),
                 OfferDetailsExtracted::NAME,
                 StructuralizeOfferDetails::NAME,
                 json!(extracted),
@@ -103,12 +112,12 @@ mod tests {
         ] {
             let context = EventContext {
                 event_id: Uuid::now_v7(),
-                correlation_id: Some(saga_id.into()),
+                correlation_id: Some(saga_id),
                 causation_id: None,
                 source: None,
             };
             let envelope = command
-                .into_envelope(saga_id.into(), event_name, &context)
+                .into_envelope(saga_id, event_name, &context)
                 .unwrap();
             let meta = envelope.metadata.unwrap();
             assert_eq!(envelope.command.command_type, name);
@@ -118,7 +127,7 @@ mod tests {
             );
             assert_eq!(meta.command_id, Uuid::new_v5(&source_id, name.as_bytes()));
             assert_eq!(meta.causation_id, Some(context.event_id));
-            assert_eq!(meta.correlation_id, Some(saga_id.into()));
+            assert_eq!(meta.correlation_id, Some(saga_id));
             assert_eq!(meta.source, Some(format!("event:{event_name}")));
         }
     }
@@ -134,7 +143,7 @@ mod tests {
             if config.access.preferred != StorefrontStrategy::ShopifyGraphQl {
                 continue;
             }
-            let id = SagaId::new();
+            let id = Uuid::now_v7();
             let saga = ShopifyGraphQlInitialFillSaga::new(id, Uuid::now_v7(), retailer);
             let initial = saga.on_initial_fill_requested().unwrap();
             let (commands, token) = if config.attempts_token() {
@@ -145,13 +154,10 @@ mod tests {
                 assert_eq!(command.retailer_code, retailer);
                 assert_eq!(command.url, config.storefront_url());
                 let token = Some(StorefrontToken::new("test-token".into()).unwrap());
-                let event = StorefrontTokenAcquired {
-                    retailer_code: retailer,
-                    storefront_token: token.clone(),
-                    url: command.url.clone(),
-                    acquired_at: Utc::now(),
-                };
-                (saga.on_storefront_token_acquired(event).unwrap(), token)
+                (
+                    saga.on_storefront_token_acquired(token.clone()).unwrap(),
+                    token,
+                )
             } else {
                 tokenless_stores.push(retailer);
                 (initial, None)

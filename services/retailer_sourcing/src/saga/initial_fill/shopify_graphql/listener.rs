@@ -1,9 +1,9 @@
 //! Event listener for the Shopify GraphQL initial-fill saga.
 
-use super::entity::StartingCommand;
-use super::model::InvalidSagaId;
+use super::saga::StartingCommand;
 use crate::platform::bus::{Command, EventCommand, EventContext, event_command_envelope};
-use crate::saga::prelude::{DieselPgSagaRepository, SagaId, ShopifyGraphQlInitialFillSaga};
+use crate::saga::model::InvalidSagaId;
+use crate::saga::prelude::{DieselPgSagaRepository, ShopifyGraphQlInitialFillSaga};
 use crate::saga::repository::{RepositoryError, SagaRepository};
 use crate::steps::prelude::{
     ExtractOfferDetails, InitialFillRequested, OfferDetailsExtracted, OfferDetailsFetched,
@@ -50,7 +50,7 @@ pub(crate) enum ListenerError {
     #[error(transparent)]
     Repository(#[from] RepositoryError),
     #[error("initial fill request conflicts with the stored saga {0:?}")]
-    Conflict(SagaId),
+    Conflict(Uuid),
 }
 
 impl Listener {
@@ -100,7 +100,7 @@ impl Listener {
         context: &EventContext,
     ) -> Result<(Uuid, Vec<StartingCommand>), ListenerError> {
         let saga = self.load_saga(context)?;
-        let commands = saga.on_storefront_token_acquired(event)?;
+        let commands = saga.on_storefront_token_acquired(event.storefront_token)?;
 
         Ok((saga.saga_id().into(), commands))
     }
@@ -111,7 +111,11 @@ impl Listener {
         context: &EventContext,
     ) -> Result<(Uuid, Vec<StartingCommand>), ListenerError> {
         let saga = self.load_saga(context)?;
-        let commands = saga.on_product_catalog_ids_retrieved(event)?;
+        let commands = saga.on_product_catalog_ids_retrieved(
+            event.product_ids,
+            event.context,
+            event.storefront_token,
+        )?;
 
         Ok((saga.saga_id().into(), commands))
     }
@@ -122,7 +126,12 @@ impl Listener {
         context: &EventContext,
     ) -> Result<(Uuid, Vec<StartingCommand>), ListenerError> {
         let saga = self.load_saga(context)?;
-        let command = saga.on_offer_details_fetched(event);
+        let command = saga.on_offer_details_fetched(
+            event.retailer_code,
+            event.source,
+            event.storage,
+            event.fetched_at,
+        );
         Ok((saga.saga_id().into(), vec![command]))
     }
 
@@ -132,7 +141,12 @@ impl Listener {
         context: &EventContext,
     ) -> Result<(Uuid, Vec<StartingCommand>), ListenerError> {
         let saga = self.load_saga(context)?;
-        let command = saga.on_offer_details_extracted(event);
+        let command = saga.on_offer_details_extracted(
+            event.retailer_code,
+            event.source,
+            event.storage,
+            event.fetched_at,
+        );
         Ok((saga.saga_id().into(), vec![command]))
     }
 
@@ -143,8 +157,8 @@ impl Listener {
         let correlation_id = context
             .correlation_id
             .ok_or(ListenerError::MissingCorrelation)?;
-        let saga_id = SagaId::try_from(correlation_id)?;
-        Ok(self.repository.load(saga_id)?)
+
+        Ok(self.repository.load(correlation_id)?)
     }
 }
 

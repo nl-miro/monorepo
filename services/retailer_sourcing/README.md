@@ -113,7 +113,7 @@ src/
 migrations/                  Mulac's tables, then each context's tables
 ```
 
-A slice holds `command.rs`, `handler.rs`, `event.rs`, `entity.rs` (domain
+A slice holds `command.rs`, `handler.rs`, `event.rs`, `saga` (domain
 values), `store/record.rs` (PostgreSQL representations and conversions),
 `store.rs` (its own queries), and `reacts_to.rs` when a reaction starts it. A
 slice that consumes an event with its envelope metadata and writes state itself,
@@ -369,7 +369,7 @@ batch reservation, queued events, and shutdown while a command is running.
 
 All three sitemap discovery slices and all five offer discovery slices follow
 [ADR 7](../../docs/adr/0007-domain-entities-and-postgres-records.md). Each
-slice's `entity.rs` contains domain types; `store/record.rs` contains private
+slice's `saga` contains domain types; `store/record.rs` contains private
 Diesel types ending in `PgRecord` and their explicit conversions. Conversions
 that parse stored JSON or check integer bounds return errors. `PgStore` takes
 entities when writing and IDs when reading, and returns entities when loading.

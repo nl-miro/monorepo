@@ -9,7 +9,6 @@ use thiserror::Error;
 use uuid::Uuid;
 
 use super::RecordableSaga;
-use super::initial_fill::shopify_graphql::SagaId;
 use super::record::{DieselPgSagaRecord, SagaRecordError, SagaTypeMismatch};
 use super::schema::shopify_graphql_initial_fills::{correlation_id, payload, saga_type, table};
 use crate::platform::db::DbPool;
@@ -40,7 +39,7 @@ impl RepositoryError {
 
 pub(crate) trait SagaRepository {
     /// Returns a database not-found error if the saga has not been saved.
-    fn load<S>(&self, id: SagaId) -> Result<S, RepositoryError>
+    fn load<S>(&self, id: Uuid) -> Result<S, RepositoryError>
     where
         S: RecordableSaga + TryFrom<DieselPgSagaRecord, Error = SagaRecordError>;
     /// Inserts a new saga, returning a database error for a duplicate ID.
@@ -64,12 +63,12 @@ impl DieselPgSagaRepository {
 }
 
 impl SagaRepository for DieselPgSagaRepository {
-    fn load<S>(&self, id: SagaId) -> Result<S, RepositoryError>
+    fn load<S>(&self, id: Uuid) -> Result<S, RepositoryError>
     where
         S: RecordableSaga + TryFrom<DieselPgSagaRecord, Error = SagaRecordError>,
     {
         let record: DieselPgSagaRecord = table
-            .find(Uuid::from(id))
+            .find(id)
             .select(DieselPgSagaRecord::as_select())
             .first(&mut self.pool.get()?)?;
         S::try_from(record).map_err(|error| match error {

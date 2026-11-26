@@ -1,10 +1,9 @@
 //! Application service for initial-fill sagas.
 
-use shared::retailer::RetailerCodes;
-
-use super::shopify_graphql::SagaId;
 use crate::platform::bus::Dispatcher;
 use crate::steps::prelude::RequestInitialFill;
+use shared::retailer::RetailerCodes;
+use uuid::Uuid;
 
 pub(crate) struct Service {
     command_gateway: Dispatcher,
@@ -20,7 +19,7 @@ impl Service {
 
         for retailer_code in retailer_codes.0 {
             let cmd = RequestInitialFill {
-                saga_id: SagaId::new(),
+                saga_id: Uuid::now_v7(),
                 retailer_code,
             };
 

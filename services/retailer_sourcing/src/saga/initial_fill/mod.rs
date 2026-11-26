@@ -11,9 +11,7 @@ use crate::platform::Platform;
 use crate::platform::bus::Bus;
 use crate::saga::prelude::DieselPgSagaRepository;
 use shopify_graphql::Listener as ShopifyGraphQlListener;
-use sitemap_html_details::{
-    Listener as SitemapHtmlDetailsListener, ListenerError as SitemapListenerError,
-};
+use sitemap_html_details::Listener as SitemapHtmlDetailsListener;
 use std::sync::Arc;
 
 pub(crate) fn register_initial_fill_listeners(bus: &mut Bus, platform: &Platform) {

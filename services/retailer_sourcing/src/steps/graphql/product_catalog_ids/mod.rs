@@ -24,6 +24,21 @@ pub struct FetchProductCatalogIdentifiers {
     pub retailer_code: RetailerCode,
     pub storefront_token: Option<StorefrontToken>,
 }
+
+impl FetchProductCatalogIdentifiers {
+    pub fn new(
+        retailer_code: RetailerCode,
+        context: RequestedContext,
+        storefront_token: Option<StorefrontToken>,
+    ) -> Self {
+        Self {
+            retailer_code,
+            context: Some(context),
+            storefront_token,
+        }
+    }
+}
+
 impl Command for FetchProductCatalogIdentifiers {
     const NAME: &'static str = "FetchProductCatalogIdentifiers";
 }

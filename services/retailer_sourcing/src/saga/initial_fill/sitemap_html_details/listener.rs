@@ -1,9 +1,9 @@
 //! Event listener for the sitemap and HTML details initial-fill saga.
 
-use super::entity::StartingCommand;
+use super::saga::StartingCommand;
 use crate::platform::bus::{EventCommand, EventContext, event_command_envelope};
 use crate::saga::prelude::{
-    DieselPgSagaRepository, RepositoryError, SagaId, SagaRepository,
+    DieselPgSagaRepository, RepositoryError, SagaRepository,
     SitemapHtmlDetailsInitialFillSaga,
 };
 use crate::steps::prelude::InitialFillRequested;
@@ -160,9 +160,7 @@ impl Listener {
         let correlation_id = context
             .correlation_id
             .ok_or(ListenerError::MissingCorrelation)?;
-        let saga_id =
-            SagaId::try_from(correlation_id).map_err(|_| ListenerError::InvalidCorrelation)?;
-        Ok(self.repository.load(saga_id)?)
+        Ok(self.repository.load(correlation_id)?)
     }
 }
 
@@ -175,7 +173,7 @@ pub(crate) enum ListenerError {
     #[error(transparent)]
     Repository(#[from] RepositoryError),
     #[error("initial fill request conflicts with the stored saga {0:?}")]
-    Conflict(SagaId),
+    Conflict(Uuid),
 }
 
 impl ListenerError {

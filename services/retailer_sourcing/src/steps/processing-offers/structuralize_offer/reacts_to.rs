@@ -1,9 +1,6 @@
 use crate::steps::prelude::{OfferWasNormalized, StructuralizeOffer};
 
 /// Structuralizes every offer as soon as it is normalized.
-pub fn on(event: &OfferWasNormalized) -> Option<StructuralizeOffer> {
-    Some(event.clone().into())
-}
 
 impl From<OfferWasNormalized> for StructuralizeOffer {
     fn from(event: OfferWasNormalized) -> Self {
@@ -36,16 +33,14 @@ mod tests {
             url: "https://shop.test/products/a".to_string(),
         };
 
-        assert_eq!(
-            on(&event),
-            Some(StructuralizeOffer {
-                storage: event.storage,
-                scraped_at: event.scraped_at,
-                offer_id: event.offer_id,
-                consolidated_sitemap_id: event.consolidated_sitemap_id,
-                retailer_code: RetailerCode::AnkerAu,
-                url: event.url.clone(),
-            })
-        );
+        let expected = StructuralizeOffer {
+            storage: event.storage,
+            scraped_at: event.scraped_at,
+            offer_id: event.offer_id,
+            consolidated_sitemap_id: event.consolidated_sitemap_id,
+            retailer_code: RetailerCode::AnkerAu,
+            url: event.url.clone(),
+        };
+        assert_eq!(StructuralizeOffer::from(event), expected);
     }
 }

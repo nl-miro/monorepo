@@ -1,15 +1,15 @@
 //! Accepts a storefront's initial-fill request and publishes it as an event.
 
 use crate::platform::bus::{Bus, Command, Event, Handle};
-use crate::saga::prelude::SagaId;
 use retailer_data_extractor::load_storefront_config;
 use retailer_sauce::prelude::StorefrontStrategy;
 use serde::{Deserialize, Serialize};
 use shared::retailer::RetailerCode;
+use uuid::Uuid;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub(crate) struct RequestInitialFill {
-    pub(crate) saga_id: SagaId,
+    pub(crate) saga_id: Uuid,
     pub(crate) retailer_code: RetailerCode,
 }
 
@@ -19,13 +19,13 @@ impl Command for RequestInitialFill {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub(crate) struct InitialFillRequested {
-    saga_id: SagaId,
+    saga_id: Uuid,
     retailer_code: RetailerCode,
     strategy: StorefrontStrategy,
 }
 
 impl InitialFillRequested {
-    pub fn saga_id(&self) -> SagaId {
+    pub fn saga_id(&self) -> Uuid {
         self.saga_id
     }
 

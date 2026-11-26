@@ -1,7 +1,6 @@
 use super::SitemapHtmlDetailsInitialFillSaga;
-use super::entity::StartingCommand;
+use super::saga::StartingCommand;
 use crate::platform::bus::{EventCommand, EventContext};
-use crate::saga::prelude::SagaId;
 use crate::steps::prelude::{SitemapConsolidated, SitemapProcessed, SitemapRetrieved};
 use serde_json::{Value, from_str, from_value, json};
 use shared::retailer::RetailerCode;
@@ -26,7 +25,7 @@ fn assert_command(command: StartingCommand, name: &str, payload: Value) {
 #[test]
 fn advances_sitemaps_and_discovers_only_when_products_exist() {
     let saga = SitemapHtmlDetailsInitialFillSaga::new(
-        SagaId::new(),
+        Uuid::now_v7(),
         Uuid::now_v7(),
         RetailerCode::AnkerAu,
     );
@@ -79,7 +78,7 @@ fn advances_sitemaps_and_discovers_only_when_products_exist() {
 #[test]
 fn advances_individual_offers_with_current_and_legacy_artifact_metadata() {
     let saga = SitemapHtmlDetailsInitialFillSaga::new(
-        SagaId::new(),
+        Uuid::now_v7(),
         Uuid::now_v7(),
         RetailerCode::AnkerAu,
     );

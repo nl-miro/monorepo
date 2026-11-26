@@ -16,7 +16,6 @@ use crate::platform::bus::Bus;
 pub use super::extract_offer_page::prelude::{ExtractOfferPage, OfferPageWasExtracted};
 pub use super::normalize_offer::prelude::{NormalizeOffer, OfferWasNormalized};
 pub use super::processing_for_export::prelude::{OfferExportWasPrepared, ProcessOfferForExport};
-pub(crate) use super::structuralize_offer::prelude::structuralize_offer as on_offer_was_normalized;
 pub use super::structuralize_offer::prelude::{OfferWasStructuralized, StructuralizeOffer};
 
 pub(crate) use super::processing_for_export::prelude::shopify_imports;

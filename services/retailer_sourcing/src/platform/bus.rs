@@ -137,25 +137,25 @@ impl Bus {
     /// Registers one typed method on a shared listener. Register other methods
     /// on the same `Arc` to handle additional event types. Keep subscription
     /// names stable; sharing a listener does not serialize event processing.
-    pub fn listen_method<L, E, Err>(
-        &mut self,
-        name: &'static str,
-        listener: Arc<L>,
-        method: fn(&L, E, &EventContext) -> Result<(), Err>,
-    ) where
-        L: Send + Sync + 'static,
-        E: Event,
-        Err: Display + 'static,
-    {
-        let port: Arc<dyn EventSubscriberPort> = Arc::new(MethodListener {
-            name,
-            listener,
-            method,
-        });
-        self.registrations.push(Box::new(move |kernel| {
-            kernel.event_subscriber(E::NAME, name, port)
-        }));
-    }
+    // pub fn listen_method<L, E, Err>(
+    //     &mut self,
+    //     name: &'static str,
+    //     listener: Arc<L>,
+    //     method: fn(&L, E, &EventContext) -> Result<(), Err>,
+    // ) where
+    //     L: Send + Sync + 'static,
+    //     E: Event,
+    //     Err: Display + 'static,
+    // {
+    //     let port: Arc<dyn EventSubscriberPort> = Arc::new(MethodListener {
+    //         name,
+    //         listener,
+    //         method,
+    //     });
+    //     self.registrations.push(Box::new(move |kernel| {
+    //         kernel.event_subscriber(E::NAME, name, port)
+    //     }));
+    // }
 
     /// Registers a method whose successful result may enqueue a batch of commands.
     pub(crate) fn listen_command_method<L, E, C, Err>(
@@ -184,38 +184,38 @@ impl Bus {
 
     /// Registers a command method on an event also produced by standalone work.
     /// Keep the original reaction's subscription name and metadata on that path.
-    pub(crate) fn listen_command_method_or_react<L, E, C, R, Err>(
-        &mut self,
-        reaction: fn(&E) -> Option<R>,
-        listener: Arc<L>,
-        method: CommandMethod<L, E, C, Err>,
-        is_standalone: fn(&Err) -> bool,
-    ) where
-        L: Send + Sync + 'static,
-        E: Event,
-        C: EventCommand + 'static,
-        R: Command,
-        Err: Display + 'static,
-    {
-        self.registrations.push(Box::new(move |kernel| {
-            kernel.event_subscriber_with_command_gateway(E::NAME, R::NAME, move |gateway| {
-                let standalone = StandaloneReaction {
-                    is_standalone,
-                    subscriber: Arc::new(Reaction {
-                        gateway: Arc::clone(&gateway),
-                        reaction,
-                    }),
-                };
-                Arc::new(CommandMethodListener {
-                    name: R::NAME,
-                    listener: Arc::clone(&listener),
-                    method,
-                    gateway,
-                    standalone: Some(standalone),
-                }) as Arc<dyn EventSubscriberPort>
-            })
-        }));
-    }
+    // pub(crate) fn listen_command_method_or_react<L, E, C, R, Err>(
+    //     &mut self,
+    //     reaction: fn(&E) -> Option<R>,
+    //     listener: Arc<L>,
+    //     method: CommandMethod<L, E, C, Err>,
+    //     is_standalone: fn(&Err) -> bool,
+    // ) where
+    //     L: Send + Sync + 'static,
+    //     E: Event,
+    //     C: EventCommand + 'static,
+    //     R: Command,
+    //     Err: Display + 'static,
+    // {
+    //     self.registrations.push(Box::new(move |kernel| {
+    //         kernel.event_subscriber_with_command_gateway(E::NAME, R::NAME, move |gateway| {
+    //             let standalone = StandaloneReaction {
+    //                 is_standalone,
+    //                 subscriber: Arc::new(Reaction {
+    //                     gateway: Arc::clone(&gateway),
+    //                     reaction,
+    //                 }),
+    //             };
+    //             Arc::new(CommandMethodListener {
+    //                 name: R::NAME,
+    //                 listener: Arc::clone(&listener),
+    //                 method,
+    //                 gateway,
+    //                 standalone: Some(standalone),
+    //             }) as Arc<dyn EventSubscriberPort>
+    //         })
+    //     }));
+    // }
 
     /// Builds the bus over `pool`. Queued work runs only through the returned
     /// handle.
@@ -454,24 +454,24 @@ impl<L: Listen> EventSubscriberPort for Listener<L> {
     }
 }
 
-struct MethodListener<L, E, Err> {
-    name: &'static str,
-    listener: Arc<L>,
-    method: fn(&L, E, &EventContext) -> Result<(), Err>,
-}
-
-impl<L, E, Err> EventSubscriberPort for MethodListener<L, E, Err>
-where
-    L: Send + Sync + 'static,
-    E: Event,
-    Err: Display + 'static,
-{
-    fn handle(&self, envelope: &NewEventEnvelope) -> Result<(), EventError> {
-        dispatch_listener(self.name, envelope, |event, context| {
-            (self.method)(&self.listener, event, context)
-        })
-    }
-}
+// struct MethodListener<L, E, Err> {
+//     name: &'static str,
+//     listener: Arc<L>,
+//     method: fn(&L, E, &EventContext) -> Result<(), Err>,
+// }
+//
+// impl<L, E, Err> EventSubscriberPort for MethodListener<L, E, Err>
+// where
+//     L: Send + Sync + 'static,
+//     E: Event,
+//     Err: Display + 'static,
+// {
+//     fn handle(&self, envelope: &NewEventEnvelope) -> Result<(), EventError> {
+//         dispatch_listener(self.name, envelope, |event, context| {
+//             (self.method)(&self.listener, event, context)
+//         })
+//     }
+// }
 
 pub(crate) trait EventCommand {
     fn into_envelope(
@@ -672,41 +672,57 @@ mod tests {
         const NAME: &'static str = "Finished";
     }
 
+    impl EventCommand for Ping {
+        fn into_envelope(
+            self,
+            correlation_id: Uuid,
+            event_name: &str,
+            context: &EventContext,
+        ) -> Result<NewCommandEnvelope, SerdeJsonError> {
+            event_command_envelope(&self, Uuid::now_v7(), correlation_id, event_name, context)
+        }
+    }
+
     impl Record {
-        fn on_ponged(&self, event: Ponged, context: &EventContext) -> Result<(), String> {
-            self.listen(event, context)
+        fn on_ponged(
+            &self,
+            event: Ponged,
+            context: &EventContext,
+        ) -> Result<(Uuid, Vec<Ping>), String> {
+            self.listen(event, context)?;
+            Ok((context.event_id, Vec::new()))
         }
 
-        fn on_finished(&self, event: Finished, context: &EventContext) -> Result<(), String> {
+        fn on_finished(
+            &self,
+            event: Finished,
+            context: &EventContext,
+        ) -> Result<(Uuid, Vec<Ping>), String> {
             self.0.lock().unwrap().push((event.total, context.clone()));
-            Ok(())
+            Ok((context.event_id, Vec::new()))
         }
     }
 
     #[test]
     fn methods_on_one_listener_handle_different_event_types() {
         let record = Arc::new(Record(Default::default()));
-        let pong_listener = MethodListener {
-            name: "RecordPonged",
-            listener: Arc::clone(&record),
-            method: Record::on_ponged,
-        };
-        let finished_listener = MethodListener {
-            name: "RecordFinished",
-            listener: Arc::clone(&record),
-            method: Record::on_finished,
-        };
         let metadata = metadata();
-        pong_listener
-            .handle(&ponged(7, Some(metadata.clone())))
-            .unwrap();
-        finished_listener
-            .handle(&NewEventEnvelope {
+        dispatch_listener(
+            "RecordPonged",
+            &ponged(7, Some(metadata.clone())),
+            |event, context| record.on_ponged(event, context).map(|_| ()),
+        )
+        .unwrap();
+        dispatch_listener(
+            "RecordFinished",
+            &NewEventEnvelope {
                 event_type: Finished::NAME.into(),
                 payload: serde_json_to_string2(&Finished { total: 42 }).unwrap(),
                 metadata: Some(metadata.clone()),
-            })
-            .unwrap();
+            },
+            |event, context| record.on_finished(event, context).map(|_| ()),
+        )
+        .unwrap();
 
         let calls = record.0.lock().unwrap();
         assert_eq!(
@@ -724,21 +740,21 @@ mod tests {
     #[test]
     fn method_listeners_report_errors_without_recording_invalid_events() {
         let record = Arc::new(Record(Default::default()));
-        let listener = MethodListener {
-            name: "RecordPonged",
-            listener: Arc::clone(&record),
-            method: Record::on_ponged,
+        let handle = |envelope: &NewEventEnvelope| {
+            dispatch_listener("RecordPonged", envelope, |event, context| {
+                record.on_ponged(event, context).map(|_| ())
+            })
         };
-        let missing = listener.handle(&ponged(7, None)).unwrap_err();
+        let missing = handle(&ponged(7, None)).unwrap_err();
         assert!(matches!(missing, EventError::SubscriberExecution(message)
             if message.contains("no envelope metadata")));
-        let failed = listener.handle(&ponged(0, Some(metadata()))).unwrap_err();
+        let failed = handle(&ponged(0, Some(metadata()))).unwrap_err();
         assert!(matches!(failed, EventError::SubscriberExecution(message)
             if message == "id must not be zero"));
         let mut malformed = ponged(7, Some(metadata()));
         malformed.payload = "not json".into();
         assert!(matches!(
-            listener.handle(&malformed),
+            handle(&malformed),
             Err(EventError::SubscriberExecution(_))
         ));
         assert!(record.0.lock().unwrap().is_empty());
@@ -748,23 +764,22 @@ mod tests {
     async fn method_registrations_preserve_event_types_and_subscription_names() {
         let record = Arc::new(Record(Default::default()));
         let mut bus = Bus::default();
-        bus.listen_method("Record", Arc::clone(&record), Record::on_ponged);
-        bus.listen_method("Record", Arc::clone(&record), Record::on_finished);
+        bus.listen_command_method("Record", Arc::clone(&record), Record::on_ponged);
+        bus.listen_command_method("Record", Arc::clone(&record), Record::on_finished);
         let kernel = bus
             .registrations
             .into_iter()
             .fold(boot(KernelConfig::default()), |kernel, register| {
                 register(kernel)
             });
-        // Both subscriptions validate; only the deliberately omitted inbox store is missing.
-        assert!(matches!(
-            kernel.start().await,
-            Err(KernelError::InboxStoreRequired)
-        ));
+        // Distinct subscriptions pass duplicate validation before persistence is checked.
+        assert!(
+            matches!(kernel.start().await, Err(KernelError::CommandGatewaySubscriberRequiresPersistence { event_type, subscriber }) if event_type == "Ponged" && subscriber == "Record")
+        );
 
         let mut bus = Bus::default();
-        bus.listen_method("Record", Arc::clone(&record), Record::on_ponged);
-        bus.listen_method("Record", record, Record::on_ponged);
+        bus.listen_command_method("Record", Arc::clone(&record), Record::on_ponged);
+        bus.listen_command_method("Record", record, Record::on_ponged);
         let kernel = bus
             .registrations
             .into_iter()
@@ -791,8 +806,8 @@ mod tests {
             let db = Database::new();
             let record = Arc::new(Record(Default::default()));
             let mut bus = Bus::default();
-            bus.listen_method("RecordPonged", Arc::clone(&record), Record::on_ponged);
-            bus.listen_method("RecordFinished", Arc::clone(&record), Record::on_finished);
+            bus.listen_command_method("RecordPonged", Arc::clone(&record), Record::on_ponged);
+            bus.listen_command_method("RecordFinished", Arc::clone(&record), Record::on_finished);
             let bus = bus.start(db.pool.clone()).unwrap();
             let first_metadata = metadata();
             let second_metadata = metadata();

@@ -9,7 +9,7 @@ use uuid::Uuid;
 
 use crate::platform::test_db::Database;
 use crate::saga::prelude::{
-    DieselPgSagaRepository, RecordableSaga, RepositoryError, SagaId, SagaRepository,
+    DieselPgSagaRepository, RecordableSaga, RepositoryError, SagaRepository,
     ShopifyGraphQlInitialFillSaga, SitemapHtmlDetailsInitialFillSaga,
 };
 use crate::saga::record::{DieselPgSagaRecord, SagaRecordError, SagaTypeMismatch};
@@ -25,10 +25,10 @@ where
     let db = Database::new();
     let writer = DieselPgSagaRepository::new(db.pool.clone());
     let reader = DieselPgSagaRepository::new(db.pool.clone());
-    let id = SagaId::new();
+    let id = Uuid::now_v7();
     let original = json!({
         "saga_id": id,
-        "correlation_id": SagaId::new(),
+        "correlation_id": Uuid::now_v7(),
         "retailer_code": "ugreenca"
     });
     assert!(matches!(
@@ -49,7 +49,7 @@ where
         .unwrap();
     assert_eq!(to_value(reader.load::<S>(id).unwrap()).unwrap(), original);
     let mut changed = original.clone();
-    changed["correlation_id"] = to_value(SagaId::new()).unwrap();
+    changed["correlation_id"] = to_value(Uuid::now_v7()).unwrap();
     changed["retailer_code"] = json!("ugreenus");
     for duplicate in [&original, &changed] {
         assert!(matches!(
@@ -62,7 +62,7 @@ where
         assert_eq!(to_value(reader.load::<S>(id).unwrap()).unwrap(), original);
     }
 
-    let other_id = SagaId::new();
+    let other_id = Uuid::now_v7();
     let mut other = original.clone();
     other["saga_id"] = to_value(other_id).unwrap();
     writer
@@ -79,7 +79,7 @@ where
         );
     }
 
-    let row = table.find(Uuid::from(id));
+    let row = table.find(id);
     let mut conn = db.pool.get().unwrap();
     assert_eq!(
         row.select(payload).first::<Value>(&mut conn).unwrap(),
@@ -114,16 +114,16 @@ fn inserts_and_updates_sitemap_sagas_across_repository_instances() {
 fn neither_saga_type_can_load_or_update_the_other() {
     let db = Database::new();
     let repository = DieselPgSagaRepository::new(db.pool.clone());
-    let shopify_id = SagaId::new();
-    let sitemap_id = SagaId::new();
+    let shopify_id = Uuid::now_v7();
+    let sitemap_id = Uuid::now_v7();
     let shopify = json!({
         "saga_id": shopify_id,
-        "correlation_id": SagaId::new(),
+        "correlation_id": Uuid::now_v7(),
         "retailer_code": "ugreenca"
     });
     let sitemap = json!({
         "saga_id": sitemap_id,
-        "correlation_id": SagaId::new(),
+        "correlation_id": Uuid::now_v7(),
         "retailer_code": "ugreenus"
     });
     repository

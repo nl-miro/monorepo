@@ -1,10 +1,9 @@
 //! Sitemap and HTML details initial-fill saga.
 
-mod entity;
 mod listener;
-mod model;
+mod saga;
 #[cfg(test)]
 mod tests;
 
-pub(crate) use entity::SitemapHtmlDetailsInitialFillSaga;
-pub(super) use listener::{Listener, ListenerError};
+pub(super) use listener::Listener;
+pub(crate) use saga::SitemapHtmlDetailsInitialFillSaga;

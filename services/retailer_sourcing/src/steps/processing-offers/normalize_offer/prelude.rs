@@ -3,7 +3,7 @@
 use handler::Handler;
 use store::PgStore;
 
-use super::{handler, reacts_to, store};
+use super::{handler, store};
 use crate::platform::Platform;
 use crate::platform::bus::Bus;
 use crate::steps::processing_offers::Retailers;

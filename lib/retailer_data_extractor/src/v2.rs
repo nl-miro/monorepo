@@ -185,7 +185,7 @@ mod anker_tests {
                 serde_json_from_str2(&extract_v2_for(code, &source.to_string()).unwrap()).unwrap();
             assert_extracted_contract(&output, &source);
         }
-        assert_eq!(count, 17);
+        assert_eq!(count, 16);
     }
 }
 

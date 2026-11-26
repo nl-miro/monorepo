@@ -132,7 +132,7 @@ fn postgres_shopify_offer_details_reach_the_outbox_once_on_replay() {
     let server = Server::new();
     let storage = server.client();
     let app = initial_fill_saga_app(&db, &server);
-    let saga_id = SagaId::new();
+    let saga_id = Uuid::now_v7();
     let retailer = RetailerCode::AnkerAu;
     DieselPgSagaRepository::new(db.pool.clone())
         .insert(ShopifyGraphQlInitialFillSaga::new(

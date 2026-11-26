@@ -9,5 +9,6 @@ pub(crate) use super::initial_fill::{
     register_initial_fill_listeners,
 };
 
-pub(crate) use super::initial_fill::shopify_graphql::{SagaId, ShopifyGraphQlInitialFillSaga};
+pub(crate) use super::initial_fill::shopify_graphql::ShopifyGraphQlInitialFillSaga;
+pub(crate) use super::model::SagaId;
 pub(crate) use super::repository::{DieselPgSagaRepository, RepositoryError, SagaRepository};
