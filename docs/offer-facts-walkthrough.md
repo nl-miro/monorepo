@@ -1,13 +1,14 @@
-# Verify offer scrape time, localization and identifiers
+# Verify offer acquisition time, localization and identifiers
 
 Start customer-facing, offers, then retailer sourcing with their own databases.
 Use a Mulac checkout containing the optional-sequence prerequisite. Run migrations
-at startup and check each `/api/health`. Newly generated sourcing exports use v5;
-queued v1–v4 commands keep their own format.
+at startup and check each `/api/health`. Sourcing exports have one payload shape
+(ADR 91); start from empty offer data as the
+[cutover runbook](process/offer-acquired-at-cutover.md) describes.
 
-The shared contract fixtures are in
-`services/retailer_sourcing/tests/fixtures/offer_export/import_payload_v{3,4,5}.json`.
-Submit a fixture as the `payload` of an offers `/api/inbox` message with routing
+The shared contract fixture is
+`services/retailer_sourcing/tests/fixtures/offer_export/import_payload.json`.
+Submit the fixture as the `payload` of an offers `/api/inbox` message with routing
 key `ImportOfferDetails`. Use an explicit unique `message_id` and source. The
 Bruno `Import via inbox` example shows all the fields.
 
@@ -21,8 +22,9 @@ Finish event processing before submitting another import of the same retailer/UR
 identity lookup still depends on the projection. Browse customer-facing
 `/api/offers` and `/graphql`. The Bruno GraphQL request selects all new fields.
 
-Repeat the same import with a newer scrape time: only `OfferScrapedAtUpdated`
+Repeat the same import with a newer `acquired_at`: only `OfferAcquiredAtUpdated`
 should appear. Repeat with an older time: time must stay at the newer value.
+Omit `acquired_at`, as a manual import may: the known time stays.
 Change only localization, then explicitly set both facts to null. Both observations
 must reach the projection. Omit localization in a legacy import: known facts stay.
 Change only SKU: one identifier event must retain the other identifiers. Omit/null

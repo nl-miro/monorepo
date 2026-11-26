@@ -97,10 +97,10 @@ fn advances_individual_offers_with_current_and_legacy_artifact_metadata() {
             offer.clone(),
         );
 
-        offer["scraped_at"] = Value::Null;
+        offer["acquired_at"] = json!("2026-11-25T12:00:00.123456Z");
         if item == "a" {
-            offer["scraped_at"] = json!("2026-11-25T12:00:00Z");
             offer["storage"] = json!({
+                "acquired_at": "2026-11-25T12:00:00.123456Z",
                 "content_size": 123,
                 "external_id": Uuid::now_v7(),
                 "object_storage_id": Uuid::now_v7(),
@@ -192,7 +192,8 @@ fn sitemap_and_offer_page_commands_use_their_own_wire_type_and_event_metadata() 
 
     let offer = json!({
         "offer_id": Uuid::now_v7(), "consolidated_sitemap_id": Uuid::now_v7(),
-        "retailer_code": "ankerau", "url": "https://example.com/item", "scraped_at": null,
+        "retailer_code": "ankerau", "url": "https://example.com/item",
+        "acquired_at": "2026-11-25T12:00:00.123456Z",
     });
     check(
         SitemapHtmlDetailsCommand::ExtractOfferPage(from_value(offer.clone()).unwrap()),

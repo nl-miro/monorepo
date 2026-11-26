@@ -100,7 +100,7 @@ async fn receipt_progression_fidelity_updates_and_replay_survive_restart() {
         "price_amount":payload["price"]["amount"], "currency":"AUD",
         "was_price_amount":null,"was_price_currency":null,"availability":null,"item_condition":null,"description":null,
         "content":[{"language":null,"title":payload["title"],"description":null}],
-        "gtin":null,"sku":null,"external_identifiers":{"shopify_product_gid":null,"shopify_product_variation_gid":null,"shopify_handle":null},"target_market":null, "language":null, "scraped_at":null, "url":payload["url"], "created_at":"2026-10-24T12:00:00.123456+00:00"
+        "gtin":null,"sku":null,"external_identifiers":{"shopify_product_gid":null,"shopify_product_variation_gid":null,"shopify_handle":null},"target_market":null, "language":null, "acquired_at":null, "url":payload["url"], "created_at":"2026-10-24T12:00:00.123456+00:00"
     });
     assert_eq!(offer(&pool), expected);
     let title_message = apply(
@@ -693,48 +693,48 @@ async fn creation_images_commit_with_parent_and_receipt_then_updates_append() {
 
 #[tokio::test]
 #[ignore = "requires DATABASE_URL_TEST with CREATE SCHEMA permission"]
-async fn scrape_time_is_monotonic_with_atomic_receipts_and_public_api_parity() {
+async fn acquisition_time_is_monotonic_with_atomic_receipts_and_public_api_parity() {
     let (_schema, pool) = database(true);
     let (_kernel, state) = start_mulac(pool.clone()).unwrap();
     let client = TestClient::new(app(state));
     let id = Uuid::now_v7();
     let mut initial = created(id);
-    initial["scraped_at"] = json!("2026-10-26T14:00:00.123456+02:00");
+    initial["acquired_at"] = json!("2026-10-26T14:00:00.123456+02:00");
     apply(&client, "OfferCreated", &initial).await;
     for time in [
         "2026-10-26T12:00:01.123456Z",
         "2026-10-26T12:00:00.123456Z",
         "2026-10-26T12:00:01.123456Z",
     ] {
-        let change = json!({"id":id,"scraped_at":time});
-        let message = apply(&client, "OfferScrapedAtUpdated", &change).await;
+        let change = json!({"id":id,"acquired_at":time});
+        let message = apply(&client, "OfferAcquiredAtUpdated", &change).await;
         replay_inbox(&pool, message);
         advance(&client, "inbox", 1).await;
         advance(&client, "commands", 1).await;
         assert_eq!(
-            offer(&pool)["scraped_at"],
+            offer(&pool)["acquired_at"],
             "2026-10-26T12:00:01.123456+00:00"
         );
     }
     let response = client.get("/api/offers").send().await;
     let page: Value = response.json().await.value().deserialize();
     assert_eq!(
-        page["items"][0]["scraped_at"],
+        page["items"][0]["acquired_at"],
         "2026-10-26T12:00:01.123456Z"
     );
     let response = client
         .post("/graphql")
-        .body_json(&json!({"query":"{ offers { items { scrapedAt } } }"}))
+        .body_json(&json!({"query":"{ offers { items { acquiredAt } } }"}))
         .send()
         .await;
     let graph: Value = response.json().await.value().deserialize();
     assert_eq!(
-        graph["data"]["offers"]["items"][0]["scrapedAt"],
-        page["items"][0]["scraped_at"]
+        graph["data"]["offers"]["items"][0]["acquiredAt"],
+        page["items"][0]["acquired_at"]
     );
     let before = projection_counts(&pool);
-    let missing = json!({"id":Uuid::now_v7(),"scraped_at":"2026-10-26T12:00:01Z"});
-    submit(&client, "OfferScrapedAtUpdated", &missing, Uuid::now_v7()).await;
+    let missing = json!({"id":Uuid::now_v7(),"acquired_at":"2026-10-26T12:00:01Z"});
+    submit(&client, "OfferAcquiredAtUpdated", &missing, Uuid::now_v7()).await;
     advance(&client, "inbox", 1).await;
     assert!(
         !run(&client, "commands", 100).await["errors"]

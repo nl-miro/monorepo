@@ -172,7 +172,10 @@ fn content_migration_preserves_multilingual_data_and_refuses_lossy_downgrade() {
         after["content"]["entries"],
         with_urls(before["content"].clone(), &before["url"])
     );
-    assert_eq!(logical_offer(after.clone()), before);
+    assert_eq!(
+        logical_offer(after.clone()),
+        with_acquired_at_column(before.clone())
+    );
     revert_to(&pool, "20261027000009");
     assert_eq!(
         snapshot(&pool, "SELECT to_jsonb(o) AS data FROM offers o"),

@@ -1,6 +1,6 @@
 use serde_json::from_str;
 
-use diesel::sql_types::{Integer, Jsonb, Nullable, Text, Uuid as SqlUuid};
+use diesel::sql_types::{Jsonb, Nullable, Text, Uuid as SqlUuid};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -33,8 +33,6 @@ pub(super) struct OfferExportPgRecord {
     pub offer_id: Uuid,
     #[diesel(sql_type = SqlUuid)]
     pub source_object_id: Uuid,
-    #[diesel(sql_type = Integer)]
-    pub schema_version: i32,
     #[diesel(sql_type = Jsonb)]
     pub source: Json<ExportSource>,
     #[diesel(sql_type = Jsonb)]
@@ -49,7 +47,6 @@ impl OfferExportPgRecord {
     pub fn into_prepared(self, body: String) -> Result<PreparedExport, StoreError> {
         let snapshot: OfferExport = from_str(&body)?;
         if !snapshot.valid_schema()
-            || self.schema_version != snapshot.schema_version as i32
             || snapshot.id != self.id
             || snapshot.source != self.source.0
             || snapshot.source.offer_id != self.offer_id

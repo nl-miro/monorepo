@@ -79,14 +79,14 @@ impl ShopifyGraphQlInitialFillSaga {
         build_fetch_offer_details(self.retailer_code, product_ids, context, token)
     }
 
-    pub(super) fn on_offer_details_fetched(&self, retailer_code: RetailerCode, source: SourceType, storage: OfferStorageMetadata, fetched_at: DateTime<Utc>) -> ShopifyGraphQlCommand {
+    pub(super) fn on_offer_details_fetched(&self, retailer_code: RetailerCode, source: SourceType, storage: OfferStorageMetadata, acquired_at: DateTime<Utc>) -> ShopifyGraphQlCommand {
 
-        build_extract_offer_details(retailer_code, source, storage, fetched_at)
+        build_extract_offer_details(retailer_code, source, storage, acquired_at)
     }
 
-    pub(super) fn on_offer_details_extracted(&self, retailer_code: RetailerCode, source: SourceType, storage: OfferStorageMetadata, fetched_at: DateTime<Utc>) -> ShopifyGraphQlCommand {
+    pub(super) fn on_offer_details_extracted(&self, retailer_code: RetailerCode, source: SourceType, storage: OfferStorageMetadata, acquired_at: DateTime<Utc>) -> ShopifyGraphQlCommand {
 
-        build_structuralize_offer_details(retailer_code, source, storage, fetched_at)
+        build_structuralize_offer_details(retailer_code, source, storage, acquired_at)
     }
 }
 

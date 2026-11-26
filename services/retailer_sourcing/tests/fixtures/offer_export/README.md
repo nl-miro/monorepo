@@ -4,10 +4,8 @@ Small synthetic examples preserve the structuralized document shapes emitted by
 Anker AU, Ugreen CA and Minisforum US. They cover variant URLs, unrelated fields,
 optional prices and unavailable stock without relying on downloaded retailer data.
 
-`import_payload.json` is the expected first Anker export payload. Sourcing checks
-its serialized result against this fixture; offers deserializes the same fixture
-through its actual `ImportOfferDetailsCommand`. Run both services' `make ci` checks
-when changing this contract.
-
-`import_payload_v2.json` adds the first Anker variation's image array. Both
-fixtures are consumed by offers and sourcing tests. The v1 fixture stays unchanged.
+`import_payload.json` is the current export payload for the first Anker
+variation, including its `acquired_at`. Sourcing checks its serialized result
+against this fixture, offers deserializes it through its actual
+`ImportOfferDetailsCommand`, and Customer Facing projects it. Run all three
+services' `make ci` checks when changing this contract.

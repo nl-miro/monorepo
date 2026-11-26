@@ -15,7 +15,7 @@ pub(crate) struct StructuralizeOfferDetails {
     pub retailer_code: RetailerCode,
     pub source: SourceType,
     pub storage: OfferStorageMetadata,
-    pub fetched_at: DateTime<Utc>,
+    pub acquired_at: DateTime<Utc>,
 }
 
 impl Command for StructuralizeOfferDetails {
@@ -27,7 +27,7 @@ pub(crate) struct OfferDetailsStructuralized {
     pub retailer_code: RetailerCode,
     pub source: SourceType,
     pub storage: OfferStorageMetadata,
-    pub fetched_at: DateTime<Utc>,
+    pub acquired_at: DateTime<Utc>,
 }
 
 impl Event for OfferDetailsStructuralized {
@@ -59,7 +59,7 @@ impl Handle for Handler {
         let evt = OfferDetailsStructuralized {
             retailer_code: cmd.retailer_code,
             source: cmd.source,
-            fetched_at: cmd.fetched_at,
+            acquired_at: cmd.acquired_at,
             storage,
         };
 

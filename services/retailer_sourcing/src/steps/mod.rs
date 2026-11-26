@@ -18,6 +18,12 @@ use self::graphql::prepare_offer_imports::Listener as PrepareOfferImportsListene
 use self::graphql::product_catalog_ids::Handler as ProductCatalogIdsHandler;
 use self::graphql::structuralize_offer_details::Handler as StructuralizeOfferDetailsHandler;
 use crate::platform::{Platform, bus::Bus};
+use chrono::{DateTime, SubsecRound, Utc};
+
+/// The acquisition instant recorded for an offer fetched at `instant`.
+pub(crate) fn acquired_at(instant: DateTime<Utc>) -> DateTime<Utc> {
+    instant.trunc_subsecs(6)
+}
 
 pub(crate) fn register_shopify_steps(bus: &mut Bus, platform: &Platform) {
     bus.handle(AcquireStorefrontTokenHandler {
@@ -27,6 +33,7 @@ pub(crate) fn register_shopify_steps(bus: &mut Bus, platform: &Platform) {
         fetcher: platform.offer_http.clone(),
     });
     bus.handle(OfferDetailsHandler {
+        clock: Utc::now,
         fetcher: platform.offer_http.clone(),
         store: platform.object_storage.clone(),
     });

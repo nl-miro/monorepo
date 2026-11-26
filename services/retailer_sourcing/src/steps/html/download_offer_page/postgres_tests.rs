@@ -1,10 +1,13 @@
+use chrono::{DateTime, Utc};
 use serde_json::from_value;
 use std::sync::Barrier;
 use std::thread::scope as std_thread_scope;
 
+use super::command::DownloadOfferPage;
 use super::entity::RawOffer;
-use super::handler::Store;
+use super::handler::{FetchOfferPage, Handler, Store};
 use super::store::PgStore;
+use crate::platform::http::FetchError;
 use crate::platform::object_storage::{ObjectStorage, OfferStorageMetadata, RAW_OFFERS_BUCKET};
 use crate::platform::test_db::{Database, json_query};
 use crate::platform::test_objects::Server;
@@ -15,7 +18,7 @@ use uuid::Uuid;
 const ROW: &str = "SELECT to_jsonb(o) AS value FROM offer_details_raw o";
 fn entity() -> RawOffer {
     RawOffer {
-        scraped_at: None,
+        acquired_at: "2020-01-01T00:00:00.000001Z".parse().unwrap(),
         offer_id: Uuid::now_v7(),
         retailer_code: RetailerCode::AnkerAu,
         url: "https://shop.test/a".into(),
@@ -41,6 +44,7 @@ pub(super) fn verify_round_trip(db: &Database, objects: ObjectStorage) {
     );
     entity.body = "replacement 🔎".into();
     entity.retailer_code = RetailerCode::UgreenCa;
+    entity.acquired_at = "2021-01-01T00:00:00.000002Z".parse().unwrap();
     store.store_raw_offer(&entity).unwrap();
     let after = json_query(&mut conn, ROW);
     assert_eq!(after["id"], before["id"]);
@@ -57,6 +61,11 @@ pub(super) fn verify_round_trip(db: &Database, objects: ObjectStorage) {
     );
     let storage: OfferStorageMetadata = from_value(after["storage"].clone()).unwrap();
     assert_eq!(storage.content_size, entity.body.len() as u64);
+    assert_eq!(storage.acquired_at, entity.acquired_at);
+    assert_eq!(
+        from_value::<DateTime<Utc>>(after["acquired_at"].clone()).unwrap(),
+        entity.acquired_at
+    );
     assert_eq!(
         objects.get_offer(RAW_OFFERS_BUCKET, &storage).unwrap(),
         entity.body
@@ -133,4 +142,58 @@ fn postgres_concurrent_updates_keep_identity_and_complete_references() {
     let body = objects.get_offer(RAW_OFFERS_BUCKET, &storage).unwrap();
     assert!(["left", "right"].contains(&body.as_str()));
     assert_eq!(server.data.lock().unwrap().records.len(), 3);
+}
+
+struct Page;
+
+impl FetchOfferPage for Page {
+    fn fetch(&self, _: &str) -> Result<String, FetchError> {
+        Ok("<html>offer</html>".into())
+    }
+}
+
+#[test]
+#[ignore = "requires DATABASE_URL_TEST; run make test-postgres"]
+fn postgres_download_records_one_acquisition_time_per_write() {
+    let db = Database::new();
+    let server = Server::new();
+    let objects = server.client();
+    let mut handler = Handler::new(PgStore::new(db.pool.clone(), objects.clone()), Page);
+    let command = DownloadOfferPage {
+        offer_id: Uuid::now_v7(),
+        consolidated_sitemap_id: Uuid::now_v7(),
+        retailer_code: RetailerCode::UgreenCa,
+        url: "https://shop.test/products/a".into(),
+    };
+    // Both times precede the database clock, so a column default or now() would differ.
+    let clocks: [fn() -> DateTime<Utc>; 2] = [
+        || "2020-01-01T00:00:00.000001999Z".parse().unwrap(),
+        || "2021-02-03T04:05:06.123456999Z".parse().unwrap(),
+    ];
+    let times = ["2020-01-01T00:00:00.000001Z", "2021-02-03T04:05:06.123456Z"];
+    let mut previous = None;
+    for (clock, time) in clocks.into_iter().zip(times) {
+        handler.clock = clock;
+        let events = handler.handle_with_sleep(command.clone(), |_| {}).unwrap();
+        let event = &events[0];
+        let row = json_query(
+            &mut db.pool.get().unwrap(),
+            "SELECT to_jsonb(o) AS value FROM offer_details_raw o",
+        );
+        let storage: OfferStorageMetadata = from_value(row["storage"].clone()).unwrap();
+        let time: DateTime<Utc> = time.parse().unwrap();
+        assert_eq!(event.acquired_at, time);
+        assert_eq!(event.storage, Some(storage));
+        assert_eq!(storage.acquired_at, time);
+        assert_eq!(
+            from_value::<DateTime<Utc>>(row["acquired_at"].clone()).unwrap(),
+            time
+        );
+        assert_eq!(
+            objects.get_offer(RAW_OFFERS_BUCKET, &storage).unwrap(),
+            "<html>offer</html>"
+        );
+        assert_ne!(Some(storage.object_storage_id), previous);
+        previous = Some(storage.object_storage_id);
+    }
 }

@@ -14,6 +14,7 @@ pub mod subscribers;
 #[cfg(test)]
 mod postgres_tests;
 
+use crate::offers::event::OFFER_ACQUIRED_AT_UPDATED_EVENT;
 use crate::offers::event::OFFER_AVAILABILITY_CHANGED_EVENT;
 use crate::offers::event::OFFER_CONTENT_CHANGED_EVENT;
 use crate::offers::event::OFFER_CONTENTS_CHANGED_EVENT;
@@ -21,7 +22,6 @@ use crate::offers::event::OFFER_IDENTIFIERS_CHANGED_EVENT;
 use crate::offers::event::OFFER_ITEM_CONDITION_CHANGED_EVENT;
 use crate::offers::event::OFFER_LOCALIZATION_CHANGED_EVENT;
 use crate::offers::event::OFFER_PRICING_CHANGED_EVENT;
-use crate::offers::event::OFFER_SCRAPED_AT_UPDATED_EVENT;
 use bootstrap::database_pool;
 use env::VarError as EnvVarError;
 use env::var;
@@ -215,12 +215,12 @@ pub fn start_mulac(pool: DbPool) -> Result<(Arc<PersistentKernelHandle>, AppStat
             offer_projector.clone(),
         )
         .event_subscriber(
-            OFFER_SCRAPED_AT_UPDATED_EVENT,
+            OFFER_ACQUIRED_AT_UPDATED_EVENT,
             "read_offer",
             offer_projector.clone(),
         )
         .event_subscriber(
-            OFFER_SCRAPED_AT_UPDATED_EVENT,
+            OFFER_ACQUIRED_AT_UPDATED_EVENT,
             "customer_facing",
             customer_facing.clone(),
         )

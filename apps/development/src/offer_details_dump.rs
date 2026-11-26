@@ -1,6 +1,5 @@
 //! Shared v1 HTML and v2 GraphQL source dumping. JSON payloads are pretty-printed; HTML is written unchanged.
 
-use chrono::DateTime;
 use env::args;
 use env::var;
 use fs::create_dir_all;
@@ -11,7 +10,6 @@ use reqwest::retry::never;
 use retailer_data_extractor::pretty_json;
 use serde_json::Value;
 use serde_json::from_str;
-use serde_json::to_string as serde_json_to_string;
 use std::error::Error;
 use std::str::from_utf8;
 
@@ -97,7 +95,10 @@ enum Location {
     },
     GraphQl {
         product_id: String,
-        fetched_at: String,
+        // Required so a listing without its acquisition time is rejected; the
+        // dumped raw artifact already carries the same time at its root.
+        #[allow(dead_code)]
+        acquired_at: String,
     },
 }
 
@@ -280,30 +281,10 @@ async fn write_source(
         return Err("object storage record does not match its source reference".into());
     }
     create_dir_all(&dir).map_err(|e| format!("{}: {e}", dir.display()))?;
-    let payload = source_payload(source, &record.payload)?;
-    write(&path, formatted_payload(payload.as_bytes()))
+    write(&path, formatted_payload(record.payload.as_bytes()))
         .map_err(|e| format!("{}: {e}", path.display()))?;
     written_urls.insert(path.clone(), identity.to_owned());
     Ok(Written::Newest(path))
-}
-
-/// Carry event metadata into v2 dumps without rewriting source numeric values.
-fn source_payload(source: &Source, payload: &str) -> Result<String, String> {
-    let Location::GraphQl { fetched_at, .. } = &source.location else {
-        return Ok(payload.to_owned());
-    };
-    let fetched_at = fetched_at.as_str();
-    DateTime::parse_from_rfc3339(fetched_at).map_err(|e| format!("invalid fetched_at: {e}"))?;
-    let document: Value = from_str(payload).map_err(|e| e.to_string())?;
-    let object = document
-        .as_object()
-        .ok_or("source artifact must be an object")?;
-    if object.contains_key("acquired_at") {
-        return Err("source artifact already contains acquired_at".into());
-    }
-    let timestamp = serde_json_to_string(fetched_at).map_err(|e| e.to_string())?;
-    let separator = if object.is_empty() { "" } else { "," };
-    Ok(payload.replacen('{', &format!("{{\"acquired_at\":{timestamp}{separator}"), 1))
 }
 
 /// The decoded URL path with `/` replaced by `-`, as `export_offer_sources`
@@ -375,10 +356,10 @@ mod tests {
     }
 
     #[test]
-    fn graphql_sources_require_fetch_time() {
+    fn graphql_sources_require_acquisition_time() {
         for value in [
             serde_json_json!({"product_id": "gid://shopify/Product/123"}),
-            serde_json_json!({"product_id": "gid://shopify/Product/123", "fetched_at": null}),
+            serde_json_json!({"product_id": "gid://shopify/Product/123", "acquired_at": null}),
         ] {
             assert!(from_value::<Location>(value).is_err());
         }
@@ -388,7 +369,7 @@ mod tests {
     fn graphql_product_ids_have_safe_stable_json_names() {
         let source = Location::GraphQl {
             product_id: "gid://shopify/Product/123".into(),
-            fetched_at: "2026-11-10T00:00:00Z".into(),
+            acquired_at: "2026-11-10T00:00:00Z".into(),
         };
         assert_eq!(
             source.destination().unwrap(),
@@ -409,7 +390,7 @@ mod tests {
             assert!(
                 Location::GraphQl {
                     product_id: id.into(),
-                    fetched_at: "2026-11-10T00:00:00Z".into()
+                    acquired_at: "2026-11-10T00:00:00Z".into()
                 }
                 .destination()
                 .is_err()

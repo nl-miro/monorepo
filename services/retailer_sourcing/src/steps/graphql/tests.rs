@@ -471,13 +471,18 @@ impl Store for FakeStore {
         }
         self.bodies.lock().unwrap().push(body.into());
         Ok(OfferStorageMetadata {
-            scraped_at: Some(at),
+            acquired_at: at,
             content_size: body.len() as u64,
             object_storage_id: Uuid::now_v7(),
             external_id: Uuid::now_v7(),
         })
     }
 }
+/// A fetch clock with sub-microsecond digits that capture must truncate.
+pub(super) fn test_clock() -> DateTime<Utc> {
+    "2026-11-12T09:10:11.123456789Z".parse().unwrap()
+}
+
 pub(super) fn detail_command(id: &str) -> FetchOfferDetails {
     FetchOfferDetails {
         context: None,
@@ -505,6 +510,7 @@ fn detail_handler_preserves_raw_evidence_and_emits_only_after_storage() {
     let id = "gid://shopify/Product/1";
     let raw = json!({"data":{"product":product(id)},"extensions":{"unexpected":"preserved"}});
     let handler = OfferDetailsHandler {
+        clock: test_clock,
         fetcher: FakeHttp::from(vec![raw.clone()]),
         store: FakeStore {
             bodies: Mutex::new(vec![]),
@@ -517,9 +523,14 @@ fn detail_handler_preserves_raw_evidence_and_emits_only_after_storage() {
     assert_eq!(artifact["pages"][0]["response"], raw);
     assert_eq!(artifact["product"]["id"], id);
     assert_eq!(event.storage.content_size, bodies[0].len() as u64);
-    assert_eq!(event.storage.scraped_at, Some(event.fetched_at));
+    let acquired_at: DateTime<Utc> = "2026-11-12T09:10:11.123456Z".parse().unwrap();
+    assert_eq!(event.acquired_at, acquired_at);
+    assert_eq!(event.storage.acquired_at, acquired_at);
+    assert_eq!(artifact["acquired_at"], "2026-11-12T09:10:11.123456Z");
+    assert!(bodies[0].starts_with(r#"{"acquired_at":"2026-11-12T09:10:11.123456Z","#));
     assert!(!bodies[0].contains("synthetic-au-token"));
     let failing = OfferDetailsHandler {
+        clock: test_clock,
         fetcher: FakeHttp::from(vec![raw]),
         store: FakeStore {
             bodies: Mutex::new(vec![]),
@@ -539,6 +550,7 @@ fn details_fail_for_missing_wrong_product_currency_or_unsupported_html() {
         json!({"data":{"product":wrong_currency}}),
     ] {
         let handler = OfferDetailsHandler {
+            clock: test_clock,
             fetcher: FakeHttp::from(vec![raw]),
             store: FakeStore {
                 bodies: Mutex::new(vec![]),
@@ -549,6 +561,7 @@ fn details_fail_for_missing_wrong_product_currency_or_unsupported_html() {
         assert!(handler.store.bodies.lock().unwrap().is_empty());
     }
     let handler = OfferDetailsHandler {
+        clock: test_clock,
         fetcher: FakeHttp::default(),
         store: FakeStore {
             bodies: Mutex::new(vec![]),
@@ -727,6 +740,7 @@ fn canada_acquires_its_token_batches_500_and_stores_english_cad_details() {
     let mut cad_product = product("gid://shopify/Product/1");
     cad_product = from_str(&cad_product.to_string().replace("AUD", "CAD")).unwrap();
     let handler = OfferDetailsHandler {
+        clock: test_clock,
         fetcher: FakeHttp {
             expected_token,
             ..FakeHttp::from(vec![json!({"data":{"product":cad_product}})])
@@ -797,6 +811,7 @@ fn canada_rejects_french_token_urls_and_wrong_currency_before_storage() {
         let mut value = product("gid://shopify/Product/1");
         value["priceRange"]["minVariantPrice"]["currencyCode"] = json!(currency);
         let handler = OfferDetailsHandler {
+            clock: test_clock,
             fetcher: FakeHttp::from(vec![json!({"data":{"product":value}})]),
             store: FakeStore {
                 bodies: Mutex::new(vec![]),
@@ -880,6 +895,7 @@ fn every_market_preserves_its_token_policy_through_catalog_and_storage() {
         assert_eq!((batch.product_count, batch.loop_count), (500, 1));
         let value = product("gid://shopify/Product/1");
         let handler = OfferDetailsHandler {
+            clock: test_clock,
             fetcher: FakeHttp {
                 expected_token,
                 ..FakeHttp::from(vec![json!({"data":{"product":value}})])
@@ -1152,6 +1168,7 @@ fn countryless_inventory_context_survives_catalog_batches_and_detail_pagination(
     let mut p = product(id);
     p["images"] = connection(vec![], true, Some("next"));
     let details = OfferDetailsHandler {
+        clock: test_clock,
         fetcher: FakeHttp {
             expected_token: None,
             ..FakeHttp::from(vec![

@@ -369,25 +369,25 @@ are emitted only by updates, while already queued legacy additions remain
 supported. Deploy this consumer before the new offers producer; see
 [ADR 25](../../docs/adr/0025-initial-images-in-offer-created.md).
 
-## Scrape time
+## Acquisition time
 
-The successful download instant travels with immutable artifact references through
-v3 and newer exports to `OfferCreated` and `OfferScrapedAtUpdated`. Old imports/events retain
-unknown time. Newer times advance the aggregate and both projections even when
-content is unchanged; absent, equal and older times never erase or regress it.
-Customer-facing returns nullable `scraped_at` (REST) and `scrapedAt` (GraphQL),
-independent of creation time. See [ADR 26](../../docs/adr/0026-offer-scrape-provenance.md)
-for provenance, compatibility and deployment order.
+`acquired_at` is the UTC instant when sourcing finished fetching the offer from
+the retailer. Sourced imports always carry it; a manual REST import may omit
+it, and Offers never synthesizes one. It travels in `OfferCreated` and
+`OfferAcquiredAtUpdated`. Newer times advance the aggregate and both
+projections even when content is unchanged; absent, equal and older times never
+erase or regress it. Customer-facing returns nullable `acquired_at` (REST) and
+`acquiredAt` (GraphQL), independent of creation time. See
+[ADR 91](../../docs/adr/0091-offer-acquired-at.md) and the
+[cutover runbook](../../docs/process/offer-acquired-at-cutover.md).
 
 ## Localization, identifiers and revisions
 
-New sourcing exports use schema v5: v3 added scrape time, v4 added a localization
-observation, and v5 adds GTIN, SKU and the three Shopify identifiers. Prepared
-v1–v4 snapshots keep their original payload shapes and IDs. Missing localization
+Sourcing exports carry a localization observation, GTIN, SKU and the three
+Shopify identifiers. Missing localization
 means no observation; an explicit object replaces both facts, including unknowns.
 Missing/null identifiers retain known values; supplied fields enrich or correct
-them. Historical `OfferCreated.v5` and earlier records remain readable; current
-creation history uses `OfferCreated.v9` with localized content.
+them. Creation carries localized content.
 Localization-only and identifier-only changes have their own domain events.
 
 Offers preserves each Testimony revision in Mulac event and outbox metadata;

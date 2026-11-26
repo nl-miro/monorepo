@@ -59,7 +59,7 @@ fn fixture(index: u128) -> Offer {
         } else {
             Default::default()
         },
-        scraped_at: None,
+        acquired_at: None,
         images: Vec::new(),
         id: Uuid::from_u128(index).to_string(),
         retailer_code: "ankerau".into(),
@@ -98,7 +98,7 @@ async fn pagination_defaults_boundaries_and_transport_parity() {
         assert_eq!(page["items"].as_array().unwrap().len(), count);
         assert_eq!(page["has_more"], more);
         let query = format!(
-            "{{ offers(limit:{limit}, offset:{offset}) {{ limit offset hasMore items {{ id retailerCode title price {{ amount currency }} wasPrice {{ amount currency }} availability {{ kind raw }} itemCondition {{ kind raw }} content {{ language title description url }} gtin sku externalIdentifiers {{ shopifyProductGid shopifyProductVariationGid shopifyHandle }} url images createdAt scrapedAt localization {{ targetMarket {{ kind code label }} language }} }} }} }}"
+            "{{ offers(limit:{limit}, offset:{offset}) {{ limit offset hasMore items {{ id retailerCode title price {{ amount currency }} wasPrice {{ amount currency }} availability {{ kind raw }} itemCondition {{ kind raw }} content {{ language title description url }} gtin sku externalIdentifiers {{ shopifyProductGid shopifyProductVariationGid shopifyHandle }} url images createdAt acquiredAt localization {{ targetMarket {{ kind code label }} language }} }} }} }}"
         );
         for get in [false, true] {
             let response = if get {
@@ -148,7 +148,7 @@ async fn pagination_defaults_boundaries_and_transport_parity() {
                     ("item_condition", "itemCondition"),
                     ("retailer_code", "retailerCode"),
                     ("created_at", "createdAt"),
-                    ("scraped_at", "scrapedAt"),
+                    ("acquired_at", "acquiredAt"),
                 ] {
                     let value = item.remove(from).unwrap();
                     item.insert(to.into(), value);

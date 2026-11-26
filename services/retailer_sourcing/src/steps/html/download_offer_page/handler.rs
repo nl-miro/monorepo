@@ -16,6 +16,7 @@ use super::event::OfferPageWasDownloaded;
 use super::store::StoreError;
 use crate::platform::bus::Handle;
 use crate::platform::http::{self, FetchError};
+use crate::steps::acquired_at;
 
 const DOWNLOAD_OFFER_PAGE_DELAY: Duration = Duration::from_secs(6);
 
@@ -58,11 +59,16 @@ pub enum DownloadOfferPageError {
 pub struct Handler<S, F> {
     store: S,
     fetcher: F,
+    pub(super) clock: fn() -> DateTime<Utc>,
 }
 
 impl<S, F> Handler<S, F> {
     pub fn new(store: S, fetcher: F) -> Self {
-        Self { store, fetcher }
+        Self {
+            store,
+            fetcher,
+            clock: Utc::now,
+        }
     }
 }
 
@@ -80,7 +86,7 @@ impl<S: Store, F: FetchOfferPage> Handle for Handler<S, F> {
 }
 
 impl<S: Store, F: FetchOfferPage> Handler<S, F> {
-    fn handle_with_sleep(
+    pub(super) fn handle_with_sleep(
         &self,
         command: DownloadOfferPage,
         sleep: impl FnOnce(Duration),
@@ -110,9 +116,9 @@ impl<S: Store, F: FetchOfferPage> Handler<S, F> {
             }
         })?;
 
-        let scraped_at = DateTime::from_timestamp_micros(Utc::now().timestamp_micros());
+        let acquired_at = acquired_at((self.clock)());
         let entity = RawOffer {
-            scraped_at,
+            acquired_at,
             offer_id: command.offer_id,
             retailer_code: command.retailer_code,
             url: command.url.clone(),
@@ -129,7 +135,7 @@ impl<S: Store, F: FetchOfferPage> Handler<S, F> {
 
         Ok(vec![OfferPageWasDownloaded {
             storage: Some(stored),
-            scraped_at,
+            acquired_at,
             offer_id: command.offer_id,
             consolidated_sitemap_id: command.consolidated_sitemap_id,
             retailer_code: command.retailer_code,
@@ -269,7 +275,7 @@ mod tests {
                 entity.retailer_code, entity.url, entity.body
             ))?;
             Ok(PlatformObjectStorageOfferStorageMetadata {
-                scraped_at: entity.scraped_at,
+                acquired_at: entity.acquired_at,
                 content_size: 0,
                 external_id: Uuid::nil(),
                 object_storage_id: Uuid::nil(),
@@ -404,22 +410,20 @@ mod tests {
 
     #[test]
     fn downloads_and_stores_the_page() {
-        let handler = Handler::new(FakeStore::default(), Page(Some("<html>offer</html>")));
+        let mut handler = Handler::new(FakeStore::default(), Page(Some("<html>offer</html>")));
         let command = command();
 
-        let before = ChronoUtc::now();
+        handler.clock = || "2026-10-26T12:00:00.123456789Z".parse().unwrap();
         let events = handler.handle_with_sleep(command.clone(), |_| {}).unwrap();
-        let time = events[0].scraped_at.unwrap();
-        assert!(time.timestamp_micros() >= before.timestamp_micros());
-        assert!(time <= ChronoUtc::now());
-        assert_eq!(time.timestamp_subsec_nanos() % 1000, 0);
-        assert_eq!(events[0].storage.unwrap().scraped_at, Some(time));
+        let time: DateTime<ChronoUtc> = "2026-10-26T12:00:00.123456Z".parse().unwrap();
+        assert_eq!(events[0].acquired_at, time);
+        assert_eq!(events[0].storage.unwrap().acquired_at, time);
 
         assert_eq!(
             events,
             vec![OfferPageWasDownloaded {
                 storage: events[0].storage,
-                scraped_at: events[0].scraped_at,
+                acquired_at: time,
                 offer_id: command.offer_id,
                 consolidated_sitemap_id: command.consolidated_sitemap_id,
                 retailer_code: RetailerCode::UgreenCa,

@@ -25,7 +25,7 @@ impl Listen for Listener {
             .storage
             .get_offer(STRUCTURALIZED_OFFERS_BUCKET, source)
             .map_err(|e| e.to_string())?;
-        let imports = shopify_imports(&body, event.retailer_code, source.scraped_at)
+        let imports = shopify_imports(&body, event.retailer_code, source.acquired_at)
             .map_err(|e| e.to_string())?;
         let mut messages = Vec::with_capacity(imports.len());
         for (variant_id, import) in imports {

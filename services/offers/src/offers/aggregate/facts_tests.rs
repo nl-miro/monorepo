@@ -139,10 +139,8 @@ fn legacy_price_event_changes_only_price_during_replay() {
 }
 
 #[test]
-fn event_records_keep_all_versions_and_do_not_confuse_nullable_events() {
-    use super::super::event::OfferFacts as EventOfferFacts;
+fn event_records_reject_retired_creation_tags_and_do_not_confuse_nullable_events() {
     use super::tests::aggregate as tests_aggregate;
-    use offer_content::singleton as offer_content_singleton;
     use serde_json::Value;
     use serde_json::from_value;
     use serde_json::json as serde_json_json;
@@ -161,23 +159,11 @@ fn event_records_keep_all_versions_and_do_not_confuse_nullable_events() {
         assert_eq!(parsed.event_type(), envelope.event().event_type());
     }
     let created = to_value(OfferEventRecord::from(offer.uncommitted_events[0].event())).unwrap();
-    for version in 1..=8 {
-        let mut old = created.clone();
-        old["type"] = serde_json_json!(format!("OfferCreated.v{version}"));
-        for field in ["was_price", "availability", "item_condition", "content"] {
-            old["data"].as_object_mut().unwrap().remove(field);
-        }
-        let parsed: OfferEventRecord = from_value(old).unwrap();
-        let RetailerOfferEvent::OfferCreated(parsed) = RetailerOfferEvent::from(parsed) else {
-            panic!("expected creation")
-        };
-        assert_eq!(
-            parsed.facts,
-            EventOfferFacts {
-                content: offer_content_singleton("Charger".into(), None, None),
-                ..Default::default()
-            }
-        );
+    assert_eq!(created["type"], "OfferCreated");
+    for version in 1..=10 {
+        let mut retired = created.clone();
+        retired["type"] = serde_json_json!(format!("OfferCreated.v{version}"));
+        assert!(from_value::<OfferEventRecord>(retired).is_err());
     }
     for (event_type, field) in [
         ("OfferPricingChanged.v1", "pricing"),
@@ -199,7 +185,7 @@ fn state_snapshot(state: &RetailerOfferState) -> SerdeJsonValue {
     serde_json_json2!({
         "id":state.id(), "retailer_code":state.retailer_code(), "url":state.url(),
         "title":state.title(), "price":state.price(), "images":state.images(),
-        "created_at":state.created_at(), "scraped_at":state.scraped_at(),
+        "created_at":state.created_at(), "acquired_at":state.acquired_at(),
         "identifiers":state.identifiers, "localization":state.localization, "facts":state.facts
     })
 }
@@ -217,7 +203,7 @@ fn populated_offer() -> RetailerOfferAggregate {
             }))
             .unwrap(),
         ),
-        scraped_at: Some("2026-10-27T12:00:00Z".parse().unwrap()),
+        acquired_at: Some("2026-10-27T12:00:00Z".parse().unwrap()),
         ..observed()
     };
     RetailerOfferAggregate::create_with_observation(

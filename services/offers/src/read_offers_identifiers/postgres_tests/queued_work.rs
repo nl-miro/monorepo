@@ -27,16 +27,17 @@ const LEGACY_ID: Uuid = Uuid::from_u128(101);
 const LEGACY_URL: &str = "https://example.com/Legacy?Variant=001#details";
 
 fn seed_legacy_offer(pool: &DbPool) -> Value {
-    // v5 predates the fact and identity-column migrations. Store its original shape.
+    // The read row predates the identity-column migrations; the event uses the current shape.
     let record = json!({
-        "type":"OfferCreated.v5",
+        "type":"OfferCreated",
         "data":{
             "id":LEGACY_ID,"retailer_code":"AnkerAu","url":LEGACY_URL,
             "title":"Legacy charger","price":{"amount":1999,"currency":"AUD"},
-            "created_at":"2026-10-26T12:00:00Z","scraped_at":null,"images":[],
+            "created_at":"2026-10-26T12:00:00Z","acquired_at":null,"images":[],
             "localization":{"target_market":null,"language":null},
             "gtin":"0012345678905","sku":" original ",
-            "external_identifiers":{"shopify_product_gid":"001","shopify_product_variation_gid":"002","shopify_handle":" Exact Ž "}
+            "external_identifiers":{"shopify_product_gid":"001","shopify_product_variation_gid":"002","shopify_handle":" Exact Ž "},
+            "content":[{"language":null,"title":"Legacy charger","description":null}]
         }
     });
     let _: OfferEventRecord = from_value(record.clone()).unwrap();

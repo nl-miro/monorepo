@@ -21,7 +21,7 @@ pub struct RetailerOfferState {
     url: String,
     images: Vec<String>,
     created_at: DateTime<Utc>,
-    scraped_at: Option<DateTime<Utc>>,
+    acquired_at: Option<DateTime<Utc>>,
 }
 
 impl RetailerOfferState {
@@ -56,17 +56,17 @@ impl RetailerOfferState {
             price,
             url: url.into(),
             images: Vec::new(),
-            scraped_at: None,
+            acquired_at: None,
             created_at,
         }
     }
 
-    pub fn scraped_at(&self) -> Option<DateTime<Utc>> {
-        self.scraped_at
+    pub fn acquired_at(&self) -> Option<DateTime<Utc>> {
+        self.acquired_at
     }
 
-    pub(super) fn observe_scrape(&mut self, time: Option<DateTime<Utc>>) {
-        self.scraped_at = self.scraped_at.max(time);
+    pub(super) fn observe_acquisition(&mut self, time: Option<DateTime<Utc>>) {
+        self.acquired_at = self.acquired_at.max(time);
     }
 
     pub fn images(&self) -> &[String] {

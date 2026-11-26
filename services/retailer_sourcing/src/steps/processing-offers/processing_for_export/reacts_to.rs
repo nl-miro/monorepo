@@ -1,11 +1,8 @@
-use super::entity::SCHEMA_VERSION;
-
 use crate::steps::prelude::{OfferWasStructuralized, ProcessOfferForExport};
 
 pub fn on(event: &OfferWasStructuralized) -> Option<ProcessOfferForExport> {
     Some(ProcessOfferForExport {
-        scraped_at: event.scraped_at,
-        schema_version: SCHEMA_VERSION,
+        acquired_at: event.acquired_at,
         offer_id: event.offer_id,
         consolidated_sitemap_id: event.consolidated_sitemap_id,
         retailer_code: event.retailer_code,

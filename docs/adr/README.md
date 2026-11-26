@@ -20,17 +20,17 @@
 | [16](0016-offers-rabbitmq-outbox.md)                           | Application-owned offers inbox and RabbitMQ outbox delivery     | Accepted                                                                                                                           |
 | [17](0017-retailer-sourcing-local-mulac.md)                    | Local Mulac adapters for retailer sourcing                      | Accepted                                                                                                                           |
 | [18](0018-customer-facing-mulac-queues.md)                     | Customer facing persistent Mulac queues                         | Accepted                                                                                                                           |
-| [19](0019-immutable-offer-export-preparation.md)               | Immutable offer export preparation                              | Accepted; supersedes ADR 12 for structuralization event pinning and export upload preparation                                      |
+| [19](0019-immutable-offer-export-preparation.md)               | Immutable offer export preparation                              | Accepted; supersedes ADR 12 for structuralization event pinning and export upload preparation; version clauses superseded by ADR 91 |
 | [20](0020-temporary-http-outbox-delivery.md)                   | Temporary HTTP outbox delivery to offers                        | Accepted                                                                                                                           |
 | [21](0021-offers-http-outbox-to-customer-facing.md)            | Temporary HTTP outbox delivery from offers to customer-facing   | Accepted; supersedes ADR 16's RabbitMQ delivery for the offers to customer-facing hop                                              |
 | [22](0022-customer-facing-offer-projection.md)                 | Customer-facing offer projection with original-message receipts | Accepted; supersedes ADR 18's bootstrap-only handler policy                                                                        |
 | [23](0023-offer-browsing-and-customers-homepage.md)            | Customer-facing offer browsing and the customers homepage       | Accepted                                                                                                                           |
-| [24](0024-append-only-offer-images.md)                         | Append-only offer images with compatible v2 exports             | Accepted; supersedes only ADR 19 image exclusion and ADR 21/22 three-event restrictions                                            |
-| [25](0025-initial-images-in-offer-created.md)                  | Initial images in OfferCreated                                  | Accepted; supersedes ADR 24 creation-event behavior                                                                                |
-| [26](0026-offer-scrape-provenance.md)                          | Immutable scrape provenance and monotonic scrape time           | Accepted                                                                                                                           |
+| [24](0024-append-only-offer-images.md)                         | Append-only offer images with compatible v2 exports             | Accepted; supersedes only ADR 19 image exclusion and ADR 21/22 three-event restrictions; version clauses superseded by ADR 91      |
+| [25](0025-initial-images-in-offer-created.md)                  | Initial images in OfferCreated                                  | Accepted; supersedes ADR 24 creation-event behavior; version clauses superseded by ADR 91                                          |
+| [26](0026-offer-scrape-provenance.md)                          | Immutable scrape provenance and monotonic scrape time           | Superseded by ADR 91                                                                                                               |
 | [27](0027-offer-revision-metadata.md)                          | Preserve Testimony revisions through Mulac                      | Accepted                                                                                                                           |
-| [28](0028-source-backed-offer-localization.md)                 | Source-backed target market and language                        | Accepted                                                                                                                           |
-| [29](0029-offer-product-identifiers.md)                        | Offer product identifiers                                       | Accepted                                                                                                                           |
+| [28](0028-source-backed-offer-localization.md)                 | Source-backed target market and language                        | Accepted; version clauses superseded by ADR 91                                                                                     |
+| [29](0029-offer-product-identifiers.md)                        | Offer product identifiers                                       | Accepted; version clauses superseded by ADR 91                                                                                     |
 
 | [30](0030-offer-title-search.md) | PostgreSQL fuzzy title search | Accepted; extends ADR 23 |
 
@@ -40,11 +40,11 @@
 
 | [33](0033-european-union-locale-market.md) | European Union locale market | Accepted; partially supersedes ADR 31 |
 
-| [34](0034-source-comparison-pricing.md) | Source comparison pricing | Accepted; extends ADRs 19, 21, 22 and 23 |
-| [35](0035-source-availability-and-condition.md) | Source availability and item condition | Accepted; extends ADRs 19, 21 and 22 |
-| [36](0036-offer-content.md) | Offer description content | Accepted; extends ADRs 19, 21, 22 and 23 |
+| [34](0034-source-comparison-pricing.md) | Source comparison pricing | Accepted; extends ADRs 19, 21, 22 and 23; version clauses superseded by ADR 91 |
+| [35](0035-source-availability-and-condition.md) | Source availability and item condition | Accepted; extends ADRs 19, 21 and 22; version clauses superseded by ADR 91 |
+| [36](0036-offer-content.md) | Offer description content | Accepted; extends ADRs 19, 21, 22 and 23; version clauses superseded by ADR 91 |
 | [37](0037-identity-product-identifiers.md) | Product identifiers in the offer identity projection | Accepted; extends ADR 29 |
-| [38](0038-localized-offer-content.md) | Localized offer content lists | Accepted; supersedes ADR 36's single-content model in offers and downstream |
+| [38](0038-localized-offer-content.md) | Localized offer content lists | Accepted; supersedes ADR 36's single-content model in offers and downstream; version clauses superseded by ADR 91 |
 | [39](0039-sourcing-command-workers.md) | Background command workers in retailer sourcing | Accepted; supersedes ADR 17's prohibition on background command workers |
 
 To add a decision, copy the structure of an existing ADR (Status, Date, Context,
@@ -52,7 +52,7 @@ Decision, Consequences) and give it the next number.
 
 - [ADR 41: Customer-facing content storage and selected-language search](0041-customer-facing-content-storage.md)
 
-- [ADR 40: Canonical regional market codes](0040-region-market-codes.md)
+- [ADR 40: Canonical regional market codes](0040-region-market-codes.md); version clauses superseded by ADR 91
 
 - [ADR 42: Published Mulac crates](0042-published-mulac-crates.md)
 
@@ -153,3 +153,5 @@ Decision, Consequences) and give it the next number.
 - [89: Back Office sessions](0089-back-office-sessions.md)
 
 - [90: Deliver v2 structuralized variants through the offers outbox](0090-v2-structuralized-offer-delivery.md)
+
+- [91: One offer acquisition time, without versioned timestamp contracts](0091-offer-acquired-at.md)

@@ -152,15 +152,15 @@ impl RetailerOfferRepository for InMemoryRetailerOfferRepository {
         entity.localization = localization.clone();
         Ok(())
     }
-    fn update_scraped_at(
+    fn update_acquired_at(
         &self,
         id: &ImportedRetailerOfferId,
-        scraped_at: DateTime<Utc>,
+        acquired_at: DateTime<Utc>,
     ) -> Result<(), RetailerOfferRepositoryError> {
         let id = Uuid::parse_str(id.value()).map_err(err_update)?;
         let mut entries = self.entries.lock().map_err(err_update)?;
         let entity = entries.get_mut(&id).ok_or_else(err_offer_missing)?;
-        entity.scraped_at = entity.scraped_at.max(Some(scraped_at));
+        entity.acquired_at = entity.acquired_at.max(Some(acquired_at));
         Ok(())
     }
 
@@ -279,7 +279,7 @@ mod tests {
             },
             identifiers: Default::default(),
             localization: Default::default(),
-            scraped_at: None,
+            acquired_at: None,
             images: Vec::new(),
             id: RetailerOfferId::new(Uuid::new_v4().to_string()),
             retailer_code: RetailerCode::from_str("ankerau").unwrap(),
@@ -328,13 +328,13 @@ mod localized_content_tests {
         let created: OfferCreatedEvent = from_value(json!({
             "id":id,"retailer_code":"AnkerCom","title":" English ","price":{"amount":1999,"currency":"USD"},"url":"https://example.com/localized","created_at":"2020-01-02T03:04:05Z",
             "localization":{"target_market":null,"language":"en-US"},
-            "content":{"description":" Exact legacy "}
+            "content":[{"language":"en-US","title":" English ","description":" Exact legacy "}]
         })).unwrap();
         let entity = RetailerOffer {
             facts: created.facts,
             identifiers: created.identifiers,
             localization: created.localization,
-            scraped_at: created.scraped_at,
+            acquired_at: created.acquired_at,
             id: created.id,
             retailer_code: created.retailer_code,
             title: created.title,

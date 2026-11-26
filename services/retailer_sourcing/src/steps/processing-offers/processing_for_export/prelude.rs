@@ -38,32 +38,25 @@ pub(crate) mod testing {
     pub fn stored_source(objects: &ObjectStorage, document: &str) -> ExportSource {
         let mut source = source();
         source.storage = objects
-            .create_offer(STRUCTURALIZED_OFFERS_BUCKET, document)
+            .create_offer(
+                STRUCTURALIZED_OFFERS_BUCKET,
+                document,
+                source.storage.acquired_at,
+            )
             .unwrap();
         source
     }
 
     /// Prepares and completes the export of `source`.
     pub fn completed(db: &DbPool, objects: ObjectStorage, source: ExportSource) -> OfferExport {
-        completed_version(db, objects, source, 1)
-    }
-
-    pub fn completed_version(
-        db: &DbPool,
-        objects: ObjectStorage,
-        source: ExportSource,
-        version: u32,
-    ) -> OfferExport {
         let store = PgStore::new(db.clone(), objects);
-        store
-            .complete(store.prepare(source, version).unwrap())
-            .unwrap()
+        store.complete(store.prepare(source).unwrap()).unwrap()
     }
 
     /// Prepares the export of `source` without completing it.
     pub fn pending(db: &DbPool, objects: ObjectStorage, source: ExportSource) -> OfferExport {
         PgStore::new(db.clone(), objects)
-            .prepare(source, 1)
+            .prepare(source)
             .unwrap()
             .snapshot
     }
@@ -71,7 +64,6 @@ pub(crate) mod testing {
     pub fn event(export: &OfferExport) -> OfferExportWasPrepared {
         OfferExportWasPrepared {
             export_id: export.id,
-            schema_version: export.schema_version,
             source: export.source.clone(),
         }
     }

@@ -249,7 +249,7 @@ queues the command and `/api/commands/run` executes it through
 input returns `400`; inbox storage failures return `500` with `inbox message
 could not be stored`. The generated offer UUID is new for every import:
 identity deduplication, update commands, and receipts are not wired yet.
-Stored records use `OfferCreated.v2` (also reading legacy `OfferCreated.v1`), `OfferTitleChanged.v1`,
+Stored records use `OfferCreated` (unversioned, see ADR 91), `OfferTitleChanged.v1`,
 and `OfferPriceChanged.v1`. Existing records in earlier formats are not migrated.
 
 Other active routes are `/api/health`, `/api/openapi.json`, `/api/docs/`, and
@@ -521,9 +521,8 @@ Updates retain title-then-price ordering and append only unseen images. Importin
 `[B,C]` into `[A,B]` produces `[A,B,C]`. Empty, reordered or repeated lists never
 remove images. The raw image event is
 `{"id":"<offer UUID>","image_url":"https://shop.example/front.jpg","position":0}`;
-the update event's Testimony tag is `OfferImageAdded.v1`. New creation records
-use `OfferCreated.v5`; readers also accept v1–v4, including v1 without images.
-Missing images in old creation payloads mean `[]`. History replay initializes
+the update event's Testimony tag is `OfferImageAdded.v1`. Creation records use
+the unversioned `OfferCreated` tag. Missing images in a creation payload mean `[]`. History replay initializes
 images from creation before applying any subsequent additions.
 
 Migration `2026-10-25-000001_offer_images` adds `read_offer_images`. Positions
@@ -545,24 +544,25 @@ binary that cannot deserialize stored image events. See
 [ADR 25](../../docs/adr/0025-initial-images-in-offer-created.md) and the
 [image walkthrough](../../docs/offer-images-walkthrough.md).
 
-## Scrape time
+## Acquisition time
 
-The successful download instant travels with immutable artifact references through
-v3 and newer exports to `OfferCreated` and `OfferScrapedAtUpdated`. Old imports/events retain
-unknown time. Newer times advance the aggregate and both projections even when
-content is unchanged; absent, equal and older times never erase or regress it.
-Customer-facing returns nullable `scraped_at` (REST) and `scrapedAt` (GraphQL),
-independent of creation time. See [ADR 26](../../docs/adr/0026-offer-scrape-provenance.md)
-for provenance, compatibility and deployment order.
+`acquired_at` is the UTC instant when sourcing finished fetching the offer from
+the retailer. Sourced imports always carry it; a manual REST import may omit
+it, and Offers never synthesizes one. It travels in `OfferCreated` and
+`OfferAcquiredAtUpdated`. Newer times advance the aggregate and both
+projections even when content is unchanged; absent, equal and older times never
+erase or regress it. Customer-facing returns nullable `acquired_at` (REST) and
+`acquiredAt` (GraphQL), independent of creation time. See
+[ADR 91](../../docs/adr/0091-offer-acquired-at.md) and the
+[cutover runbook](../../docs/process/offer-acquired-at-cutover.md).
 
 ## Localization, identifiers and revisions
 
-New sourcing exports use schema v5: v3 added scrape time, v4 added a localization
-observation, and v5 adds GTIN, SKU and the three Shopify identifiers. Prepared
-v1–v4 snapshots keep their original payload shapes and IDs. Missing localization
+Sourcing exports carry a localization observation, GTIN, SKU and the three
+Shopify identifiers. Missing localization
 means no observation; an explicit object replaces both facts, including unknowns.
 Missing/null identifiers retain known values; supplied fields enrich or correct
-them. New creation history uses `OfferCreated.v5` with v1–v4 readers retained.
+them.
 Localization-only and identifier-only changes have their own domain events.
 
 Offers preserves each Testimony revision in Mulac event and outbox metadata;
@@ -592,7 +592,8 @@ makes it incompatible. New price changes emit `OfferPricingChanged` with
 with the corresponding required field. These events project to `read_offers`
 and publish to customer-facing with the same message identity and sequence.
 
-New creation records are `OfferCreated.v10`; explicit legacy readers retain v1–v9. The nullable
+Creation records use the unversioned `OfferCreated` tag; `OfferCreated.v1`–`.v10`
+records are rejected (ADR 91). The nullable
 comparison pair, JSONB statuses and TEXT description are additive migrations.
 The identity projection also gains five nullable identifier columns, preserving
 lookup by retailer/URL. It backfills only matching ID/retailer/URL rows from
@@ -600,8 +601,7 @@ lookup by retailer/URL. It backfills only matching ID/retailer/URL rows from
 It applies complete identifier changes atomically.
 
 Stop event runners during identity migration, apply migrations, then restart.
-Deploy customer-facing and offers readers before sourcing's v9 writer. No old
-snapshots or event history are rewritten. See [ADRs 34–37](../../docs/adr/README.md)
+No old snapshots or event history are rewritten. See [ADRs 34–37](../../docs/adr/README.md)
 and [verification](../../docs/plans/24-27-offer-facts-verification.md).
 
 ### Localized offer content
@@ -610,8 +610,8 @@ Offers store `content` as a nonempty list of
 `{language: string|null, title: string, description: string|null}`. Exact language
 keys are unique; the unknown bucket comes first, followed by lexical tag order.
 `title` and `localization.language` select the compatibility view, and the SQL
-`description` column mirrors that selected entry. Source/export v1–v9 and
-`ImportOfferDetails` retain their singular description object.
+`description` column mirrors that selected entry. Source exports and
+`ImportOfferDetails` keep a singular description object.
 
 Imports upsert the observed language and preserve all other buckets. Omitted
 localization selects the current language; a present localization with missing

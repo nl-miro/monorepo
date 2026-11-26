@@ -1,3 +1,4 @@
+use chrono::{DateTime, Utc};
 use diesel::sql_query;
 use serde_json::Value;
 use serde_json::from_value;
@@ -15,10 +16,11 @@ use crate::platform::test_db::{Database, json_query};
 use crate::platform::test_objects::Server;
 use diesel::connection::SimpleConnection;
 use diesel::prelude::*;
-use diesel::sql_types::{Jsonb, Uuid as SqlUuid};
+use diesel::sql_types::{Jsonb, Timestamptz, Uuid as SqlUuid};
 use serde_json::json;
 use uuid::Uuid;
 
+const ACQUIRED_AT: DateTime<Utc> = DateTime::from_timestamp_nanos(1_761_480_000_123_456_000);
 const ROW: &str = "SELECT to_jsonb(o) AS value FROM offer_details_extracted o";
 
 pub(super) fn verify_round_trip(db: &Database, objects: ObjectStorage) {
@@ -29,17 +31,17 @@ pub(super) fn verify_round_trip(db: &Database, objects: ObjectStorage) {
     let input_value = json!("<html>ž 🔎</html>");
     let input_body = input_value.as_str().unwrap().to_owned();
     let input_storage = objects
-        .create_offer(RAW_OFFERS_BUCKET, &input_body)
+        .create_offer(RAW_OFFERS_BUCKET, &input_body, ACQUIRED_AT)
         .unwrap();
-    sql_query("INSERT INTO offer_details_raw (id,offer_id,storage,url,retailer_code) VALUES ($1,$2,$3,'https://shop.test/a','ankerau')")
+    sql_query("INSERT INTO offer_details_raw (id,offer_id,storage,url,retailer_code,acquired_at) VALUES ($1,$2,$3,'https://shop.test/a','ankerau',$4)")
         .bind::<SqlUuid,_>(Uuid::now_v7()).bind::<SqlUuid,_>(offer_id)
-        .bind::<Jsonb,_>(Json(input_storage)).execute(&mut conn).unwrap();
+        .bind::<Jsonb,_>(Json(input_storage)).bind::<Timestamptz,_>(ACQUIRED_AT).execute(&mut conn).unwrap();
     let input = store.raw_offer(offer_id, None).unwrap().unwrap();
     assert_eq!(input.offer_id, offer_id);
     assert_eq!(input.object_storage_id, input_storage.object_storage_id);
     assert_eq!(json!(input.body), input_value);
     let replacement = objects
-        .create_offer(RAW_OFFERS_BUCKET, "replacement")
+        .create_offer(RAW_OFFERS_BUCKET, "replacement", ACQUIRED_AT)
         .unwrap();
     sql_query("UPDATE offer_details_raw SET storage = $1 WHERE offer_id = $2")
         .bind::<Jsonb, _>(Json(replacement))
@@ -60,7 +62,7 @@ pub(super) fn verify_round_trip(db: &Database, objects: ObjectStorage) {
         replacement.object_storage_id
     );
     let mut entity = ExtractedOffer {
-        scraped_at: None,
+        acquired_at: ACQUIRED_AT,
         offer_id,
         document: json!({"value":"first ž"}),
     };
@@ -130,7 +132,7 @@ fn postgres_failures_preserve_local_state() {
     let store = PgStore::new(db.pool.clone(), objects.clone());
     let mut conn = db.pool.get().unwrap();
     let entity = ExtractedOffer {
-        scraped_at: None,
+        acquired_at: ACQUIRED_AT,
         offer_id: Uuid::now_v7(),
         document: json!({"a":"ž"}),
     };
@@ -153,10 +155,12 @@ fn postgres_failures_preserve_local_state() {
         conn.batch_execute("ALTER TABLE offer_details_extracted DROP CONSTRAINT reject_write")
             .unwrap();
     }
-    let storage = objects.create_offer(RAW_OFFERS_BUCKET, "null").unwrap();
-    sql_query("INSERT INTO offer_details_raw (id,offer_id,storage,url,retailer_code) VALUES ($1,$2,$3,'https://shop.test/a','ankerau')")
+    let storage = objects
+        .create_offer(RAW_OFFERS_BUCKET, "null", ACQUIRED_AT)
+        .unwrap();
+    sql_query("INSERT INTO offer_details_raw (id,offer_id,storage,url,retailer_code,acquired_at) VALUES ($1,$2,$3,'https://shop.test/a','ankerau',$4)")
         .bind::<SqlUuid,_>(Uuid::now_v7()).bind::<SqlUuid,_>(entity.offer_id)
-        .bind::<Jsonb,_>(Json(storage)).execute(&mut conn).unwrap();
+        .bind::<Jsonb,_>(Json(storage)).bind::<Timestamptz,_>(ACQUIRED_AT).execute(&mut conn).unwrap();
     for (status, body) in [(404, "{}"), (503, "{}"), (200, "malformed")] {
         server.data.lock().unwrap().get_response = Some((status, body.into()));
         assert!(store.raw_offer(entity.offer_id, None).is_err());
@@ -175,7 +179,7 @@ fn postgres_concurrent_updates_keep_identity_and_complete_references() {
     let objects = server.client();
     let store = PgStore::new(db.pool.clone(), objects.clone());
     let entity = ExtractedOffer {
-        scraped_at: None,
+        acquired_at: ACQUIRED_AT,
         offer_id: Uuid::now_v7(),
         document: json!({"initial":true}),
     };

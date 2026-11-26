@@ -29,13 +29,13 @@ const SOURCES_QUERY: &str = "
     SELECT id, COALESCE(payload::jsonb ->> 'run_id', meta ->> 'correlation_id')::uuid AS run_id,
            payload::jsonb #>> '{source,GraphQl,product_id}' AS product_id,
            (payload::jsonb -> 'retailer_code')::text AS retailer_code,
-           payload::jsonb ->> 'fetched_at' AS fetched_at,
+           payload::jsonb ->> 'acquired_at' AS acquired_at,
            NULLIF(payload::jsonb -> 'context', 'null'::jsonb) AS context,
            payload::jsonb -> 'storage' AS storage
     FROM event_entries
     WHERE event_type = 'OfferDetailsFetched'
       AND payload::jsonb #>> '{source,GraphQl,product_id}' IS NOT NULL
-    ORDER BY (payload::jsonb ->> 'fetched_at')::timestamptz DESC, id
+    ORDER BY (payload::jsonb ->> 'acquired_at')::timestamptz DESC, id
     LIMIT $1 OFFSET $2";
 
 #[derive(Deserialize, IntoParams)]
@@ -72,8 +72,8 @@ pub struct OfferSourceV2 {
     /// The retailer the offer belongs to.
     #[schema(value_type = String)]
     retailer_code: RetailerCode,
-    /// When the artifact was fetched (RFC 3339).
-    fetched_at: String,
+    /// When sourcing acquired the artifact (RFC 3339).
+    acquired_at: String,
     /// Reference to the complete GraphQL JSON in object storage's `offer_details_raw` bucket.
     storage: OfferStorageMetadata,
     #[schema(value_type = Option<Object>)]
@@ -93,7 +93,7 @@ struct SourceRecord {
     #[diesel(sql_type = Text)]
     retailer_code: String,
     #[diesel(sql_type = Text)]
-    fetched_at: String,
+    acquired_at: String,
     #[diesel(sql_type = Jsonb)]
     storage: DbJson<OfferStorageMetadata>,
     #[diesel(sql_type = diesel::sql_types::Nullable<Jsonb>)]
@@ -155,7 +155,7 @@ fn load_sources(db: &DbPool, page: &PageV2) -> Result<Vec<OfferSourceV2>, String
                 retailer_code: from_str(&record.retailer_code).map_err(|error| {
                     format!("Invalid retailer code in event {}: {error}", record.id)
                 })?,
-                fetched_at: record.fetched_at,
+                acquired_at: record.acquired_at,
                 storage: record.storage.0,
                 context: record.context.map(|v| v.0),
             })
@@ -188,7 +188,7 @@ mod postgres_tests {
     fn sources_include_terminal_events_in_time_order_and_normalize_historical_codes() {
         let db = Database::new();
         let storage = OfferStorageMetadata {
-            scraped_at: None,
+            acquired_at: "2026-11-01T10:00:00Z".parse().unwrap(),
             content_size: 123,
             object_storage_id: Uuid::now_v7(),
             external_id: Uuid::now_v7(),
@@ -240,7 +240,7 @@ mod postgres_tests {
                 0,
             ),
         ] {
-            let mut payload = json!({"retailer_code":retailer,"source":source,"fetched_at":time,"storage":storage});
+            let mut payload = json!({"retailer_code":retailer,"source":source,"acquired_at":time,"storage":storage});
             if id == newest || id == tied {
                 payload["context"] = json!({"country":"CA","language":if id==newest {"EN"} else {"FR"},"currency":"CAD"});
             }

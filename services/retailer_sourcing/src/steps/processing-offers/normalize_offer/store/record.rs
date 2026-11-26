@@ -18,6 +18,7 @@ pub(super) struct ExtractedOfferPgRecord {
 impl ExtractedOfferPgRecord {
     pub fn into_entity(self, body: String) -> Result<ExtractedOffer, StoreError> {
         Ok(ExtractedOffer {
+            acquired_at: self.storage.0.acquired_at,
             offer_id: self.offer_id,
             object_storage_id: self.storage.0.object_storage_id,
             document: from_str(&body)?,

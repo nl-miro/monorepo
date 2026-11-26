@@ -16,7 +16,9 @@ use poem::test::TestClient;
 use serde_json::json;
 use uuid::Uuid;
 
-use super::{inbox_test_database, inbox_test_snapshot as snapshot, run_queue};
+use super::{
+    inbox_test_database, inbox_test_snapshot as snapshot, run_queue, with_acquired_at_column,
+};
 use crate::{
     bootstrap::MIGRATIONS,
     offers::retailer_offer_id::RetailerOfferId,
@@ -75,7 +77,7 @@ fn localized_migration_preserves_exact_values_and_pending_work_through_round_tri
         );
         let mut scalars = new.clone();
         scalars.as_object_mut().unwrap().remove("content");
-        assert_eq!(&scalars, old);
+        assert_eq!(scalars, with_acquired_at_column(old.clone()));
     }
     for sql in [
         "UPDATE read_offers SET content=NULL",

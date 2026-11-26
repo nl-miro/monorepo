@@ -26,7 +26,7 @@ use axum::{
     http::{Request, StatusCode},
 };
 use catalog::FetchProductCatalogIdentifiers;
-use chrono::Utc;
+use chrono::{DateTime, Utc};
 use diesel::sql_query;
 use diesel::{
     prelude::*,
@@ -147,16 +147,16 @@ fn postgres_shopify_offer_details_reach_the_outbox_once_on_replay() {
     ))
     .unwrap();
     let context = json!({"country":"AU","language":"EN","currency":"AUD"});
-    let artifact = json!({"schema_version":2, "context":context, "product":product, "pages":[]});
-    let fetched_at = Utc::now();
+    let acquired_at: DateTime<Utc> = "2026-11-12T09:10:11.123456Z".parse().unwrap();
+    let artifact = json!({"acquired_at":acquired_at, "schema_version":2, "context":context, "product":product, "pages":[]});
     let fetched = OfferDetailsFetched {
         context: Some(from_value(context).unwrap()),
         retailer_code: retailer,
         source: SourceType::GraphQl {
             product_id: product["id"].as_str().unwrap().into(),
         },
-        fetched_at,
-        storage: storage.store(&artifact.to_string(), fetched_at).unwrap(),
+        acquired_at,
+        storage: storage.store(&artifact.to_string(), acquired_at).unwrap(),
     };
     let event_id = Uuid::now_v7();
     sql_query(
@@ -185,21 +185,22 @@ fn postgres_shopify_offer_details_reach_the_outbox_once_on_replay() {
         from_str(terminal["payload"].as_str().unwrap()).unwrap();
     assert_eq!(event.retailer_code, fetched.retailer_code);
     assert_eq!(event.source, fetched.source);
-    assert_eq!(event.fetched_at, fetched.fetched_at);
+    assert_eq!(event.acquired_at, acquired_at);
     assert_eq!(event.storage.external_id, fetched.storage.object_storage_id);
     assert_eq!(event.storage.external_id, event.storage.object_storage_id);
-    assert_eq!(event.storage.scraped_at, Some(fetched_at));
-    assert_eq!(event.storage.scraped_at, Some(fetched_at));
+    assert_eq!(event.storage.acquired_at, acquired_at);
     let extracted = storage
         .get_offer("offer_details_extracted", &event.storage)
         .unwrap();
     let extracted: Value = from_str(&extracted).unwrap();
     assert_eq!(extracted["context"], artifact["context"]);
+    assert_eq!(extracted["acquired_at"], json!(acquired_at));
     let structuralized = storage
         .get_offer("offer_details_structuralized", &event.storage)
         .unwrap();
     let structuralized: Value = from_str(&structuralized).unwrap();
     let variant = &structuralized["variations"][0];
+    assert_eq!(variant["timeline"]["acquired_at"], json!(acquired_at));
 
     let outbox = rows(&db, "outbox_entries");
     let [message] = outbox.as_array().unwrap().as_slice() else {
@@ -218,7 +219,7 @@ fn postgres_shopify_offer_details_reach_the_outbox_once_on_replay() {
     assert_eq!(message["meta"]["routing_key"], "offers");
     let payload: Value = from_str(message["payload"].as_str().unwrap()).unwrap();
     assert_eq!(payload["retailer_code"], "ankerau");
-    assert_eq!(payload["scraped_at"], json!(fetched_at));
+    assert_eq!(payload["acquired_at"], json!(acquired_at));
     assert_eq!(payload["url"], variant["content"]["url"]);
     assert_eq!(payload["price"], json!({"amount":10995,"currency":"AUD"}));
 
@@ -405,7 +406,7 @@ fn sitemap_saga_and_standalone_retrievals_queue_one_command_per_transition() {
             "retailer_code": "ankerau", "document_count": 1, "url_count": 1,
             "product_count": 1, "content_count": 0, "catalog_count": 0,
             "unknown_count": 0, "not_interested_count": 0, "offer_id": Uuid::now_v7(),
-            "url": "https://shop.test/product", "scraped_at": null,
+            "url": "https://shop.test/product", "acquired_at": "2026-11-25T12:00:00.123456Z",
         });
         for (event, command) in [
             ("SitemapRetrieved", "ProcessSitemap"),
@@ -440,9 +441,7 @@ fn sitemap_saga_and_standalone_retrievals_queue_one_command_per_transition() {
         assert_eq!(row["meta"]["source"], format!("event:{event}"));
         let payload: Value = from_str(row["payload"].as_str().unwrap()).unwrap();
         for (key, value) in payload.as_object().unwrap() {
-            if key != "schema_version" {
-                assert_eq!(value, &fact[key], "{command}.{key}");
-            }
+            assert_eq!(value, &fact[key], "{command}.{key}");
         }
     }
 }

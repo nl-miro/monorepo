@@ -7,7 +7,7 @@ use uuid::Uuid;
 
 #[derive(Debug, Clone)]
 pub(super) struct RawOffer {
-    pub scraped_at: Option<DateTime<Utc>>,
+    pub acquired_at: DateTime<Utc>,
     pub offer_id: Uuid,
     pub retailer_code: RetailerCode,
     pub url: String,

@@ -34,9 +34,8 @@ pub struct Stored<T> {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, utoipa::ToSchema)]
 #[serde(deny_unknown_fields)]
 pub struct OfferStorageMetadata {
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[schema(value_type = Option<String>)]
-    pub scraped_at: Option<DateTime<Utc>>,
+    #[schema(value_type = String, format = "date-time")]
+    pub acquired_at: DateTime<Utc>,
     pub content_size: u64,
     #[schema(value_type = String, format = "uuid")]
     pub object_storage_id: Uuid,
@@ -101,8 +100,13 @@ impl ObjectStorage {
         Ok(id)
     }
 
-    pub fn create_offer(&self, bucket: &str, body: &str) -> Result<OfferStorageMetadata, Error> {
-        self.create_offer_with_key(bucket, body, Uuid::now_v7(), None)
+    pub fn create_offer(
+        &self,
+        bucket: &str,
+        body: &str,
+        acquired_at: DateTime<Utc>,
+    ) -> Result<OfferStorageMetadata, Error> {
+        self.create_offer_with_key(bucket, body, Uuid::now_v7(), acquired_at)
     }
 
     /// Retry an immutable derived artifact using its source object as the bucket-scoped key.
@@ -112,7 +116,7 @@ impl ObjectStorage {
         source: &OfferStorageMetadata,
         body: &str,
     ) -> Result<OfferStorageMetadata, Error> {
-        self.create_offer_with_key(bucket, body, source.object_storage_id, source.scraped_at)
+        self.create_offer_with_key(bucket, body, source.object_storage_id, source.acquired_at)
     }
 
     fn create_offer_with_key(
@@ -120,11 +124,11 @@ impl ObjectStorage {
         bucket: &str,
         body: &str,
         external_id: Uuid,
-        scraped_at: Option<DateTime<Utc>>,
+        acquired_at: DateTime<Utc>,
     ) -> Result<OfferStorageMetadata, Error> {
         let object_storage_id = self.create(bucket, external_id, body)?;
         Ok(OfferStorageMetadata {
-            scraped_at,
+            acquired_at,
             content_size: body.len() as u64,
             object_storage_id,
             external_id,

@@ -88,19 +88,7 @@ fn empty_images() -> SerdeJsonValue {
 #[error("offer export conversion failed: {0}")]
 pub struct ConversionError(String);
 
-pub(super) fn convert(
-    source: ExportSource,
-    body: &str,
-    schema_version: u32,
-) -> Result<OfferExport, ConversionError> {
-    if !matches!(schema_version, 1..=9) {
-        return Err(ConversionError("unsupported schema version".into()));
-    }
-    if schema_version < 3 && source.storage.scraped_at.is_some() {
-        return Err(ConversionError(
-            "legacy export source cannot carry scrape time".into(),
-        ));
-    }
+pub(super) fn convert(source: ExportSource, body: &str) -> Result<OfferExport, ConversionError> {
     let input: StructuralizedDocument =
         from_str(body).map_err(|error| ConversionError(error.to_string()))?;
     let mut entries = Vec::new();
@@ -115,8 +103,7 @@ pub(super) fn convert(
         let url = variation.url.clone();
         match variation.import(
             source.retailer_code,
-            source.storage.scraped_at,
-            schema_version,
+            source.storage.acquired_at,
             variation_index,
         )? {
             Some(payload) => entries.push(ExportEntry {
@@ -133,7 +120,6 @@ pub(super) fn convert(
     }
     Ok(OfferExport {
         id: Uuid::now_v7(),
-        schema_version,
         source,
         entries,
         exclusions,
@@ -144,69 +130,30 @@ impl Variation {
     fn import(
         self,
         retailer_code: RetailerCode,
-        scraped_at: Option<DateTime<Utc>>,
-        schema_version: u32,
+        acquired_at: DateTime<Utc>,
         variation_index: usize,
     ) -> Result<Option<OfferImport>, ConversionError> {
         self.guard(variation_index)?;
-        let localization = if schema_version >= 9 {
-            self.localization.for_write().map_err(ConversionError)?
-        } else {
-            self.localization.legacy()
-        };
-        let images = if schema_version >= 2 {
-            let (images, skipped) = filter(
-                from_value(self.images).map_err(|error| ConversionError(error.to_string()))?,
-            );
-            info!(skipped_images = skipped, "filtered offer images");
-            Some(images)
-        } else {
-            None
-        };
+        let localization = self.localization.for_write().map_err(ConversionError)?;
+        let (images, skipped) =
+            filter(from_value(self.images).map_err(|error| ConversionError(error.to_string()))?);
+        info!(skipped_images = skipped, "filtered offer images");
         let identifiers = self.identifiers.into_identifiers();
         identifiers.guard().map_err(ConversionError)?;
         let Some(price) = self.price else {
             return Ok(None);
         };
         let payload = OfferImport {
-            was_price: if schema_version >= 6 {
-                self.was_price
-            } else {
-                Observation::Missing
-            },
-            availability: if schema_version >= 7 {
-                self.availability
-            } else {
-                Observation::Missing
-            },
-            item_condition: if schema_version >= 7 {
-                self.item_condition
-            } else {
-                Observation::Missing
-            },
-            content: if schema_version >= 8 {
-                self.content
-            } else {
-                None
-            },
-            gtin: if schema_version >= 5 {
-                identifiers.gtin
-            } else {
-                None
-            },
-            sku: if schema_version >= 5 {
-                identifiers.sku
-            } else {
-                None
-            },
-            external_identifiers: (schema_version >= 5).then_some(identifiers.external_identifiers),
-            localization: (schema_version >= 4).then_some(localization),
-            scraped_at: if schema_version >= 3 {
-                scraped_at
-            } else {
-                None
-            },
-            images,
+            was_price: self.was_price,
+            availability: self.availability,
+            item_condition: self.item_condition,
+            content: self.content,
+            gtin: identifiers.gtin,
+            sku: identifiers.sku,
+            external_identifiers: Some(identifiers.external_identifiers),
+            localization: Some(localization),
+            acquired_at,
+            images: Some(images),
             retailer_code,
             title: self.title,
             price,
@@ -262,7 +209,7 @@ impl Variation {
 #[cfg(test)]
 fn canonical_fixture(json: &str) -> SerdeJsonValue {
     let mut fixture: SerdeJsonValue = from_str(json).unwrap();
-    // Keep historical fixture bytes intact; newly serialized typed exports canonicalize.
+    // Keep the shared fixture bytes intact; newly serialized typed exports canonicalize.
     assert_eq!(fixture["retailer_code"], "AnkerAu");
     fixture["retailer_code"] = serde_json_json!("ankerau");
     fixture
@@ -270,8 +217,10 @@ fn canonical_fixture(json: &str) -> SerdeJsonValue {
 
 #[cfg(test)]
 pub(super) mod tests {
+    use serde_json::from_slice;
     use serde_json::from_str as serde_json_from_str;
     use serde_json::to_value;
+    use serde_json::to_vec;
 
     use super::*;
     use crate::platform::object_storage::OfferStorageMetadata;
@@ -284,6 +233,8 @@ pub(super) mod tests {
         include_str!("../../../../tests/fixtures/offer_export/ugreenca.json");
     pub(crate) const MINISFORUM: &str =
         include_str!("../../../../tests/fixtures/offer_export/minisforumus.json");
+    const IMPORT_PAYLOAD: &str =
+        include_str!("../../../../tests/fixtures/offer_export/import_payload.json");
 
     pub(crate) fn source() -> ExportSource {
         ExportSource {
@@ -292,7 +243,7 @@ pub(super) mod tests {
             retailer_code: RetailerCode::AnkerAu,
             url: "https://shop.example/Charger".into(),
             storage: OfferStorageMetadata {
-                scraped_at: None,
+                acquired_at: "2026-10-26T12:00:00.123456Z".parse().unwrap(),
                 object_storage_id: Uuid::now_v7(),
                 external_id: Uuid::now_v7(),
                 content_size: ANKER.len() as u64,
@@ -300,13 +251,46 @@ pub(super) mod tests {
         }
     }
 
+    /// A structuralized document whose one variation exports as the shared fixture.
+    fn document() -> Value {
+        let payload: Value = serde_json_from_str(IMPORT_PAYLOAD).unwrap();
+        let mut variation = payload.clone();
+        variation["identifiers"] = json!({"gtin":payload["gtin"],"sku":payload["sku"],"shopify_product_gid":payload["external_identifiers"]["shopify_product_gid"],"shopify_product_variation_gid":payload["external_identifiers"]["shopify_product_variation_gid"],"shopify_handle":payload["external_identifiers"]["shopify_handle"]});
+        json!({"variations":[variation]})
+    }
+
     #[test]
-    fn preserves_priced_variations_and_matches_the_offers_contract_fixture() {
-        let output = convert(source(), ANKER, 1).unwrap();
-        let expected = canonical_fixture(include_str!(
-            "../../../../tests/fixtures/offer_export/import_payload.json"
-        ));
-        assert_eq!(to_value(&output.entries[0].payload).unwrap(), expected);
+    fn matches_the_shared_import_fixture_and_round_trips() {
+        let snapshot = convert(source(), &document().to_string()).unwrap();
+        assert!(snapshot.valid_schema());
+        assert_eq!(
+            to_value(&snapshot.entries[0].payload).unwrap(),
+            canonical_fixture(IMPORT_PAYLOAD)
+        );
+        let bytes = to_vec(&snapshot).unwrap();
+        let restored: OfferExport = from_slice(&bytes).unwrap();
+        assert_eq!(to_vec(&restored).unwrap(), bytes);
+    }
+
+    #[test]
+    fn every_entry_carries_the_source_acquisition_time() {
+        let source = source();
+        let snapshot = convert(source.clone(), ANKER).unwrap();
+        assert!(snapshot.valid_schema());
+        for entry in &snapshot.entries {
+            assert_eq!(entry.payload.acquired_at, source.storage.acquired_at);
+        }
+        let mut invalid = snapshot.clone();
+        invalid.entries[0].payload.acquired_at = "2026-10-26T12:00:00.123457Z".parse().unwrap();
+        assert!(!invalid.valid_schema());
+        let mut json = to_value(&snapshot.entries[0].payload).unwrap();
+        json.as_object_mut().unwrap().remove("acquired_at");
+        assert!(from_value::<OfferImport>(json).is_err());
+    }
+
+    #[test]
+    fn preserves_priced_variations() {
+        let output = convert(source(), ANKER).unwrap();
         assert_eq!(output.entries.len(), 2);
         assert_eq!(output.entries[1].payload.price.amount(), 0);
         assert_eq!(output.entries[1].variation_index, 1);
@@ -324,7 +308,7 @@ pub(super) mod tests {
     fn records_missing_price_and_keeps_unavailable_priced_variations() {
         let mut source = source();
         source.retailer_code = RetailerCode::UgreenCa;
-        let output = convert(source, UGREEN, 1).unwrap();
+        let output = convert(source, UGREEN).unwrap();
         assert_eq!(output.entries.len(), 1);
         assert_eq!(
             output.entries[0].payload.retailer_code,
@@ -340,7 +324,7 @@ pub(super) mod tests {
         );
         let mut source = output.source;
         source.retailer_code = RetailerCode::MinisForumUs;
-        let output = convert(source, MINISFORUM, 1).unwrap();
+        let output = convert(source, MINISFORUM).unwrap();
         assert_eq!(output.entries[0].payload.price.amount(), 59900);
         assert_eq!(
             output.entries[0].payload.retailer_code,
@@ -350,7 +334,7 @@ pub(super) mod tests {
 
     #[test]
     fn supports_empty_exports_and_missing_price_fields() {
-        let output = convert(source(), r#"{"variations":[]}"#, 1).unwrap();
+        let output = convert(source(), r#"{"variations":[]}"#).unwrap();
         assert!(output.entries.is_empty());
         assert!(output.exclusions.is_empty());
         let mut input: Value = serde_json_from_str(MINISFORUM).unwrap();
@@ -358,7 +342,7 @@ pub(super) mod tests {
             .as_object_mut()
             .unwrap()
             .remove("price");
-        let output = convert(source(), &input.to_string(), 1).unwrap();
+        let output = convert(source(), &input.to_string()).unwrap();
         assert!(output.entries.is_empty());
         assert_eq!(output.exclusions.len(), 1);
     }
@@ -369,7 +353,7 @@ pub(super) mod tests {
             for amount in [0, 1, i64::MAX] {
                 let mut input: Value = serde_json_from_str(MINISFORUM).unwrap();
                 input["variations"][0]["price"] = json!({"amount":amount,"currency":currency});
-                let output = convert(source(), &input.to_string(), 1).unwrap();
+                let output = convert(source(), &input.to_string()).unwrap();
                 assert_eq!(
                     to_value(&output.entries[0].payload.price).unwrap(),
                     json!({"amount":amount,"currency":currency})
@@ -381,7 +365,7 @@ pub(super) mod tests {
     #[test]
     fn rejects_invalid_input_before_any_preparation() {
         for input in ["{}", "null", "[]", r#"{"variations":null}"#, "not JSON"] {
-            assert!(convert(source(), input, 1).is_err(), "{input}");
+            assert!(convert(source(), input).is_err(), "{input}");
         }
         for (field, value) in [
             ("title", json!("  ")),
@@ -402,12 +386,12 @@ pub(super) mod tests {
         ] {
             let mut input: Value = serde_json_from_str(MINISFORUM).unwrap();
             input["variations"][0][field] = value;
-            assert!(convert(source(), &input.to_string(), 1).is_err(), "{input}");
+            assert!(convert(source(), &input.to_string()).is_err(), "{input}");
         }
         let mut input: Value = serde_json_from_str(ANKER).unwrap();
         input["variations"][1]["url"] = input["variations"][0]["url"].clone();
         assert!(
-            convert(source(), &input.to_string(), 1)
+            convert(source(), &input.to_string())
                 .unwrap_err()
                 .to_string()
                 .contains("repeats")
@@ -415,27 +399,20 @@ pub(super) mod tests {
     }
 
     #[test]
-    fn v2_images_are_ordered_filtered_and_v1_shape_is_immutable() {
+    fn images_are_ordered_and_filtered() {
         let mut input: Value = serde_json_from_str(ANKER).unwrap();
         let a = "https://shop.example/A?q=1&x=2#front";
         let b = "http://shop.example/B";
         input["variations"][0]["images"] =
             json!([a, a, "/relative", b, "https://user@shop.example/a"]);
-        let legacy = convert(source(), &input.to_string(), 1).unwrap();
-        assert!(
-            to_value(&legacy.entries[0].payload)
-                .unwrap()
-                .get("images")
-                .is_none()
-        );
-        let current = convert(source(), &input.to_string(), 2).unwrap();
+        let current = convert(source(), &input.to_string()).unwrap();
         assert_eq!(current.entries[0].payload.images.as_ref().unwrap(), &[a, b]);
         assert_eq!(current.entries[1].payload.images, Some(vec![]));
         assert!(current.valid_schema());
         for images in [json!([]), json!(["/invalid", "javascript:alert(1)"])] {
             input["variations"][0]["images"] = images;
             assert_eq!(
-                convert(source(), &input.to_string(), 2).unwrap().entries[0]
+                convert(source(), &input.to_string()).unwrap().entries[0]
                     .payload
                     .images,
                 Some(vec![])
@@ -448,143 +425,35 @@ pub(super) mod tests {
             json!({}),
         ] {
             input["variations"][0]["images"] = images;
-            assert!(convert(source(), &input.to_string(), 2).is_err());
-            assert!(convert(source(), &input.to_string(), 1).is_ok());
+            assert!(convert(source(), &input.to_string()).is_err());
         }
         input["variations"][0]
             .as_object_mut()
             .unwrap()
             .remove("images");
         assert_eq!(
-            convert(source(), &input.to_string(), 2).unwrap().entries[0]
+            convert(source(), &input.to_string()).unwrap().entries[0]
                 .payload
                 .images,
             Some(vec![])
         );
-        assert!(convert(source(), ANKER, 99).is_err());
     }
 
     #[test]
-    fn v2_matches_shared_import_fixture() {
-        let output = convert(source(), ANKER, 2).unwrap();
-        let fixture = canonical_fixture(include_str!(
-            "../../../../tests/fixtures/offer_export/import_payload_v2.json"
-        ));
-        assert_eq!(to_value(&output.entries[0].payload).unwrap(), fixture);
-    }
-}
-
-#[cfg(test)]
-mod scrape_tests {
-    use chrono::DateTime;
-    use serde_json::to_value as serde_json_to_value;
-    use tests::ANKER as TestsANKER;
-    use tests::source as tests_source;
-
-    use super::*;
-    #[test]
-    fn v3_preserves_time_while_legacy_versions_preserve_their_shape() {
-        let mut source = tests_source();
-        for version in [1, 2] {
-            let snapshot = convert(source.clone(), TestsANKER, version).unwrap();
-            let json = serde_json_to_value(&snapshot).unwrap();
-            assert!(json["source"]["storage"].get("scraped_at").is_none());
-            for entry in json["entries"].as_array().unwrap() {
-                assert!(entry["payload"].get("scraped_at").is_none());
-            }
-            assert!(snapshot.valid_schema());
-        }
-        source.storage.scraped_at =
-            Some(DateTime::from_timestamp_micros(1_700_000_000_123_456).unwrap());
-        let snapshot = convert(source.clone(), TestsANKER, 3).unwrap();
-        assert!(snapshot.valid_schema());
-        for entry in &snapshot.entries {
-            assert_eq!(entry.payload.scraped_at, source.storage.scraped_at);
-        }
-        assert!(convert(source, TestsANKER, 2).is_err());
-        let mut invalid = snapshot.clone();
-        invalid.entries[0].payload.scraped_at = None;
-        assert!(!invalid.valid_schema());
-    }
-}
-
-#[cfg(test)]
-mod extended_contract_tests {
-    use serde_json::Value as SerdeJsonValue2;
-    use serde_json::from_slice;
-    use serde_json::from_str as serde_json_from_str2;
-    use serde_json::json as serde_json_json2;
-    use serde_json::to_value as serde_json_to_value2;
-    use serde_json::to_vec;
-    use tests::ANKER as TestsANKER2;
-    use tests::MINISFORUM as TestsMINISFORUM;
-    use tests::UGREEN as TestsUGREEN;
-    use tests::source as tests_source2;
-
-    use super::*;
-    #[test]
-    fn localization_policy_is_not_reapplied_to_exports() {
-        for localization in [
-            serde_json_json2!({"target_market":null,"language":"it-IT"}),
-            serde_json_json2!({"target_market":{"kind":"country","code":"IT"},"language":"it"}),
-            serde_json_json2!({"target_market":null,"language":"en-EU"}),
-            serde_json_json2!({"target_market":{"kind":"region","label":"European Union"},"language":"en"}),
-        ] {
-            let mut body: SerdeJsonValue2 = serde_json_from_str2(TestsANKER2).unwrap();
-            for variation in body["variations"].as_array_mut().unwrap() {
-                variation["localization"] = localization.clone();
-            }
-            let export = convert(tests_source2(), &body.to_string(), 5).unwrap();
-            assert!(!export.entries.is_empty());
-            for entry in &export.entries {
-                assert_eq!(
-                    serde_json_to_value2(&entry.payload.localization).unwrap(),
-                    localization
-                );
-            }
-            let bytes = to_vec(&export).unwrap();
-            let replay: OfferExport = from_slice(&bytes).unwrap();
-            assert_eq!(to_vec(&replay).unwrap(), bytes);
-        }
-    }
-
-    #[test]
-    fn v5_keeps_exact_identifiers_and_legacy_exports_omit_new_fields() {
-        let body = serde_json_json2!({"variations":[{"title":" USB charger ž ","url":"https://shop.example/Charger?q=red&variant=1#details","price":{"amount":1999,"currency":"AUD"},"images":["https://example.com/a.png"],"localization":{"target_market":{"kind":"country","code":"AU"},"language":"en-AU"},"identifiers":{"gtin":"0012345678905","sku":"A1-BLACK","shopify_product_gid":"gid://shopify/Product/1","shopify_product_variation_gid":"gid://shopify/ProductVariant/2","shopify_handle":"usb-charger"}}]});
-        let mut source = tests_source2();
-        source.storage.scraped_at = Some("2026-10-26T12:00:00.123456Z".parse().unwrap());
-        let snapshot = convert(source.clone(), &body.to_string(), 5).unwrap();
-        assert!(snapshot.valid_schema());
-        assert_eq!(
-            serde_json_to_value2(&snapshot.entries[0].payload).unwrap(),
-            canonical_fixture(include_str!(
-                "../../../../tests/fixtures/offer_export/import_payload_v5.json"
-            ))
-        );
-        for version in [1, 2, 3, 4] {
-            let mut source = source.clone();
-            if version < 3 {
-                source.storage.scraped_at = None;
-            }
-            let snapshot = convert(source, &body.to_string(), version).unwrap();
-            assert!(snapshot.valid_schema());
-            let json = serde_json_to_value2(&snapshot.entries[0].payload).unwrap();
-            for field in ["gtin", "sku", "external_identifiers"] {
-                assert!(json.get(field).is_none());
-            }
-        }
+    fn keeps_exact_identifiers_and_rejects_malformed_ones() {
+        let body = document();
         for value in [
-            serde_json_json2!(null),
-            serde_json_json2!({"gtin":""}),
-            serde_json_json2!({"sku":123}),
-            serde_json_json2!({"shopify_handle":"\0"}),
+            json!(null),
+            json!({"gtin":""}),
+            json!({"sku":123}),
+            json!({"shopify_handle":"\0"}),
         ] {
             let mut invalid = body.clone();
             invalid["variations"][0]["identifiers"] = value;
-            assert!(convert(source.clone(), &invalid.to_string(), 5).is_err());
+            assert!(convert(source(), &invalid.to_string()).is_err());
         }
-        for fixture in [TestsANKER2, TestsUGREEN, TestsMINISFORUM] {
-            let snapshot = convert(source.clone(), fixture, 5).unwrap();
+        for fixture in [ANKER, UGREEN, MINISFORUM] {
+            let snapshot = convert(source(), fixture).unwrap();
             assert!(snapshot.valid_schema());
             assert!(
                 snapshot
@@ -593,74 +462,60 @@ mod extended_contract_tests {
                     .all(|entry| entry.payload.external_identifiers.is_some())
             );
         }
-    }
-}
-
-#[cfg(test)]
-mod facts_tests {
-    use serde_json::from_slice as serde_json_from_slice;
-    use serde_json::from_str as serde_json_from_str3;
-    use serde_json::to_value as serde_json_to_value3;
-    use serde_json::to_vec as serde_json_to_vec;
-    use tests::ANKER as TestsANKER3;
-    use tests::source as tests_source3;
-
-    use super::*;
-    use serde_json::{Value, json};
-
-    fn document() -> Value {
-        let payload: Value = serde_json_from_str3(include_str!(
-            "../../../../tests/fixtures/offer_export/import_payload_v8.json"
-        ))
-        .unwrap();
-        let mut variation = payload.clone();
-        variation["identifiers"] = json!({"gtin":payload["gtin"],"sku":payload["sku"],"shopify_product_gid":payload["external_identifiers"]["shopify_product_gid"],"shopify_product_variation_gid":payload["external_identifiers"]["shopify_product_variation_gid"],"shopify_handle":payload["external_identifiers"]["shopify_handle"]});
-        json!({"variations":[variation]})
+        let mut invalid = convert(source(), ANKER).unwrap();
+        invalid.entries[0].payload.external_identifiers = None;
+        assert!(!invalid.valid_schema());
     }
 
     #[test]
-    fn new_export_contracts_preserve_values_and_versioned_shapes() {
-        let mut source = tests_source3();
-        source.storage.scraped_at = Some("2026-10-26T12:00:00.123456Z".parse().unwrap());
-        for (version, fixture) in [
-            (
-                6,
-                include_str!("../../../../tests/fixtures/offer_export/import_payload_v6.json"),
-            ),
-            (
-                7,
-                include_str!("../../../../tests/fixtures/offer_export/import_payload_v7.json"),
-            ),
-            (
-                8,
-                include_str!("../../../../tests/fixtures/offer_export/import_payload_v8.json"),
-            ),
+    fn localization_policy_is_not_reapplied_to_exports() {
+        for localization in [
+            json!({"target_market":null,"language":"it-IT"}),
+            json!({"target_market":{"kind":"country","code":"IT"},"language":"it"}),
+            json!({"target_market":null,"language":"en-EU"}),
         ] {
-            let snapshot = convert(source.clone(), &document().to_string(), version).unwrap();
-            assert!(snapshot.valid_schema());
-            let payload = serde_json_to_value3(&snapshot.entries[0].payload).unwrap();
-            assert_eq!(payload, canonical_fixture(fixture));
-            let bytes = serde_json_to_vec(&snapshot).unwrap();
-            let restored: OfferExport = serde_json_from_slice(&bytes).unwrap();
-            assert_eq!(serde_json_to_vec(&restored).unwrap(), bytes);
-        }
-        for version in 1..=5 {
-            let mut source = source.clone();
-            if version < 3 {
-                source.storage.scraped_at = None;
+            let mut body: Value = serde_json_from_str(ANKER).unwrap();
+            for variation in body["variations"].as_array_mut().unwrap() {
+                variation["localization"] = localization.clone();
             }
-            let old = convert(source, &document().to_string(), version).unwrap();
-            assert!(old.valid_schema());
-            let payload = serde_json_to_value3(&old.entries[0].payload).unwrap();
-            for field in ["was_price", "availability", "item_condition", "content"] {
-                assert!(payload.get(field).is_none());
+            let export = convert(source(), &body.to_string()).unwrap();
+            assert!(!export.entries.is_empty());
+            for entry in &export.entries {
+                assert_eq!(to_value(&entry.payload.localization).unwrap(), localization);
             }
+            let bytes = to_vec(&export).unwrap();
+            let replay: OfferExport = from_slice(&bytes).unwrap();
+            assert_eq!(to_vec(&replay).unwrap(), bytes);
         }
     }
 
     #[test]
-    fn new_exports_distinguish_legacy_omission_from_explicit_unknown() {
-        let missing = convert(tests_source3(), TestsANKER3, 8).unwrap();
+    fn regional_markets_are_written_as_codes() {
+        let mut body: Value = serde_json_from_str(ANKER).unwrap();
+        for variation in body["variations"].as_array_mut().unwrap() {
+            variation["localization"] =
+                json!({"target_market":{"kind":"region","label":"European Union"},"language":"en"});
+        }
+        let snapshot = convert(source(), &body.to_string()).unwrap();
+        assert!(snapshot.valid_schema());
+        for entry in &snapshot.entries {
+            let value = to_value(&entry.payload.localization).unwrap();
+            assert_eq!(value["target_market"], json!({"kind":"region","code":"eu"}));
+        }
+        let mut invalid = snapshot;
+        for entry in &mut invalid.entries {
+            let localization = entry.payload.localization.as_mut().unwrap();
+            localization.target_market = localization
+                .target_market
+                .as_ref()
+                .map(|market| market.legacy());
+        }
+        assert!(!invalid.valid_schema());
+    }
+
+    #[test]
+    fn distinguishes_omitted_facts_from_explicit_unknown() {
+        let missing = convert(source(), ANKER).unwrap();
         assert!(missing.valid_schema());
         let payload = &missing.entries[0].payload;
         assert!(payload.was_price.is_missing());
@@ -672,16 +527,13 @@ mod facts_tests {
             body["variations"][0][key] = Value::Null;
         }
         body["variations"][0]["content"] = json!({"description":null});
-        let snapshot = convert(tests_source3(), &body.to_string(), 8).unwrap();
+        let snapshot = convert(source(), &body.to_string()).unwrap();
         assert!(snapshot.valid_schema());
         let payload = &snapshot.entries[0].payload;
         assert_eq!(payload.was_price, Observation::Observed(None));
         assert_eq!(payload.availability, Observation::Observed(None));
         assert_eq!(payload.item_condition, Observation::Observed(None));
         assert_eq!(payload.content.as_ref().unwrap().description, None);
-        let mut legacy = snapshot;
-        legacy.schema_version = 5;
-        assert!(!legacy.valid_schema());
     }
 
     #[test]
@@ -700,54 +552,7 @@ mod facts_tests {
         ] {
             let mut body = document();
             body["variations"][0][field] = invalid;
-            assert!(
-                convert(tests_source3(), &body.to_string(), 8).is_err(),
-                "{body}"
-            );
-        }
-    }
-}
-
-#[cfg(test)]
-mod regional_versions {
-    use serde_json::Value as SerdeJsonValue3;
-    use serde_json::from_str as serde_json_from_str4;
-    use serde_json::json as serde_json_json3;
-    use serde_json::to_value as serde_json_to_value4;
-    use tests::ANKER as TestsANKER4;
-    use tests::source as tests_source4;
-
-    use super::*;
-    #[test]
-    fn old_export_versions_keep_labels_and_v9_writes_codes() {
-        let mut body: SerdeJsonValue3 = serde_json_from_str4(TestsANKER4).unwrap();
-        for variation in body["variations"].as_array_mut().unwrap() {
-            variation["localization"] = serde_json_json3!({"target_market":{"kind":"region","label":"European Union"},"language":"en"});
-        }
-        for version in 4..=9 {
-            let snapshot = convert(tests_source4(), &body.to_string(), version).unwrap();
-            assert!(snapshot.valid_schema());
-            let mut invalid = snapshot.clone();
-            for entry in &mut invalid.entries {
-                let localization = entry.payload.localization.as_mut().unwrap();
-                localization.target_market = localization.target_market.as_ref().map(|market| {
-                    if version == 9 {
-                        market.legacy()
-                    } else {
-                        market.canonicalized()
-                    }
-                });
-            }
-            assert!(!invalid.valid_schema());
-            for entry in snapshot.entries {
-                let value = serde_json_to_value4(entry.payload.localization).unwrap();
-                let expected = if version == 9 {
-                    serde_json_json3!({"kind":"region","code":"eu"})
-                } else {
-                    serde_json_json3!({"kind":"region","label":"European Union"})
-                };
-                assert_eq!(value["target_market"], expected);
-            }
+            assert!(convert(source(), &body.to_string()).is_err(), "{body}");
         }
     }
 }

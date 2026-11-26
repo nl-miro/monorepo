@@ -8,7 +8,9 @@ use poem::{http::StatusCode, test::TestClient};
 use serde_json::{Value, json};
 use testimony_infra::prelude::DbPool;
 
-use super::{inbox_test_database, inbox_test_snapshot as snapshot, run_queue};
+use super::{
+    inbox_test_database, inbox_test_snapshot as snapshot, run_queue, with_acquired_at_column,
+};
 use crate::bootstrap::MIGRATIONS;
 
 fn before_fact_migrations(pool: &DbPool) {
@@ -53,7 +55,7 @@ fn fact_migrations_preserve_legacy_rows_and_pending_work_through_round_trip() {
             Some(Value::Null)
         );
     }
-    assert_eq!(upgraded, legacy);
+    assert_eq!(upgraded, with_acquired_at_column(legacy.clone()));
     pool.get().unwrap().batch_execute("UPDATE read_offers SET was_price_amount=2999,was_price_currency='AUD',availability='{\"other\":\"http://schema.org/OutOfStock\"}',item_condition='\"new\"',description=' <p>Exact ž &amp; source</p> '").unwrap();
     before_fact_migrations(&pool);
     assert_eq!(
@@ -68,7 +70,7 @@ fn fact_migrations_preserve_legacy_rows_and_pending_work_through_round_trip() {
         .unwrap()
         .run_pending_migrations(MIGRATIONS)
         .unwrap();
-    let mut restored = legacy;
+    let mut restored = with_acquired_at_column(legacy);
     restored["content"] = content;
     for column in [
         "was_price_amount",
@@ -207,7 +209,7 @@ async fn independent_fact_imports_preserve_neighbors_and_replay_exact_outbox_mes
         "retailer_code":"ankerau","title":"Charger","price_amount":1999,"currency":"AUD",
         "url":"https://example.com/independent-facts","images":["https://example.com/image.png"],
         "gtin":"0012345678905","sku":" exact ž ","external_identifiers":{"shopify_handle":"charger"},
-        "scraped_at":"2026-10-27T12:00:00Z","localization":{"target_market":{"kind":"country","code":"AU"},"language":"en"}
+        "acquired_at":"2026-10-27T12:00:00Z","localization":{"target_market":{"kind":"country","code":"AU"},"language":"en"}
     });
     let mut initial = legacy.clone();
     initial.as_object_mut().unwrap().extend(

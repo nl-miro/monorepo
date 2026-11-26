@@ -1,3 +1,4 @@
+use super::event::OfferAcquiredAtUpdatedEvent;
 use super::event::OfferAvailabilityChangedEvent;
 use super::event::OfferContentsChangedEvent;
 use super::event::OfferFacts;
@@ -5,7 +6,6 @@ use super::event::OfferIdentifiersChangedEvent;
 use super::event::OfferItemConditionChangedEvent;
 use super::event::OfferLocalizationChangedEvent;
 use super::event::OfferPricingChangedEvent;
-use super::event::OfferScrapedAtUpdatedEvent;
 use super::event::Pricing;
 use super::event::guard_images;
 use super::event::guard_was_price;
@@ -75,20 +75,20 @@ impl RetailerOfferAggregate {
         url: String,
         images: Vec<String>,
     ) -> Result<Self, RetailerOfferError> {
-        Self::create_with_scrape(id, retailer_code, title, price, url, images, None)
+        Self::create_with_acquisition(id, retailer_code, title, price, url, images, None)
     }
 
-    pub fn create_with_scrape(
+    pub fn create_with_acquisition(
         id: RetailerOfferId,
         retailer_code: RetailerCode,
         title: String,
         price: Money,
         url: String,
         images: Vec<String>,
-        scraped_at: Option<DateTime<Utc>>,
+        acquired_at: Option<DateTime<Utc>>,
     ) -> Result<Self, RetailerOfferError> {
         let observation = OfferObservation {
-            scraped_at,
+            acquired_at,
             ..Default::default()
         };
         Self::create_with_observation(id, retailer_code, title, price, url, images, observation)
@@ -107,7 +107,7 @@ impl RetailerOfferAggregate {
             .map_err(RetailerOfferError::InvalidObservation)?;
         guard_was_price(&price, observation.was_price.value())
             .map_err(RetailerOfferError::InvalidObservation)?;
-        let scraped_at = observation.scraped_at;
+        let acquired_at = observation.acquired_at;
         let (images, skipped) = shared_images_filter(images);
         if skipped > 0 {
             eprintln!("skipped invalid offer images: {skipped}");
@@ -130,7 +130,7 @@ impl RetailerOfferAggregate {
             },
             identifiers: observation.identifiers,
             localization,
-            scraped_at,
+            acquired_at,
             images,
             id,
             retailer_code,
@@ -153,7 +153,7 @@ impl RetailerOfferAggregate {
         state.facts = event.facts.clone();
         state.identifiers = event.identifiers.clone();
         state.localization = event.localization.clone();
-        state.observe_scrape(event.scraped_at);
+        state.observe_acquisition(event.acquired_at);
         let sequence = 1;
 
         Ok(Self {
@@ -196,18 +196,18 @@ impl RetailerOfferAggregate {
         price: Money,
         images: Vec<String>,
     ) -> Result<(), RetailerOfferError> {
-        self.update_with_scrape(title, price, images, None)
+        self.update_with_acquisition(title, price, images, None)
     }
 
-    pub fn update_with_scrape(
+    pub fn update_with_acquisition(
         &mut self,
         title: String,
         price: Money,
         images: Vec<String>,
-        scraped_at: Option<DateTime<Utc>>,
+        acquired_at: Option<DateTime<Utc>>,
     ) -> Result<(), RetailerOfferError> {
         let observation = OfferObservation {
-            scraped_at,
+            acquired_at,
             ..Default::default()
         };
         self.update_with_observation(title, price, images, observation)
@@ -224,7 +224,7 @@ impl RetailerOfferAggregate {
             .map_err(RetailerOfferError::InvalidObservation)?;
         guard_was_price(&price, observation.was_price.value())
             .map_err(RetailerOfferError::InvalidObservation)?;
-        let scraped_at = observation.scraped_at;
+        let acquired_at = observation.acquired_at;
         let identifiers = self.state.identifiers.enriched(&observation.identifiers);
         let identifiers_changed = identifiers != self.state.identifiers;
         let localization = observation
@@ -256,7 +256,7 @@ impl RetailerOfferAggregate {
             .into_iter()
             .filter(|image| !self.state.images().contains(image))
             .collect();
-        let scrape_changed = scraped_at.is_some() && scraped_at > self.state.scraped_at();
+        let acquisition_changed = acquired_at.is_some() && acquired_at > self.state.acquired_at();
         let facts = OfferFacts {
             was_price: observation
                 .was_price
@@ -281,7 +281,7 @@ impl RetailerOfferAggregate {
             self.state.images().len() as u64,
             images.len() as u64,
             u64::from(price_changed)
-                + u64::from(scrape_changed)
+                + u64::from(acquisition_changed)
                 + u64::from(localization_changed)
                 + u64::from(identifiers_changed)
                 + u64::from(availability_changed)
@@ -333,15 +333,15 @@ impl RetailerOfferAggregate {
                 self.sequence,
             ));
         }
-        if let Some(scraped_at) = scraped_at.filter(|_| scrape_changed) {
-            let event = OfferScrapedAtUpdatedEvent {
+        if let Some(acquired_at) = acquired_at.filter(|_| acquisition_changed) {
+            let event = OfferAcquiredAtUpdatedEvent {
                 id: self.state.id().clone(),
-                scraped_at,
+                acquired_at,
             };
-            self.state.observe_scrape(Some(scraped_at));
+            self.state.observe_acquisition(Some(acquired_at));
             self.sequence += 1;
             self.uncommitted_events.push(EventEnvelope::new(
-                RetailerOfferEvent::OfferScrapedAtUpdated(event),
+                RetailerOfferEvent::OfferAcquiredAtUpdated(event),
                 self.sequence,
             ));
         }
@@ -459,7 +459,7 @@ impl Aggregate for RetailerOfferAggregate {
         aggregate.state.facts = created.facts;
         aggregate.state.identifiers = created.identifiers;
         aggregate.state.localization = created.localization;
-        aggregate.state.observe_scrape(created.scraped_at);
+        aggregate.state.observe_acquisition(created.acquired_at);
         for image in created.images {
             aggregate.state.add_image(image);
         }
@@ -568,9 +568,9 @@ impl Aggregate for RetailerOfferAggregate {
                     .expect("invalid legacy title history");
                     aggregate.state.change_title(event.title);
                 }
-                RetailerOfferEvent::OfferScrapedAtUpdated(event) => {
+                RetailerOfferEvent::OfferAcquiredAtUpdated(event) => {
                     assert_eq!(event.id, id, "offer history ID must match the requested ID");
-                    aggregate.state.observe_scrape(Some(event.scraped_at));
+                    aggregate.state.observe_acquisition(Some(event.acquired_at));
                 }
                 RetailerOfferEvent::OfferPriceChanged(event) => {
                     assert_eq!(event.id, id, "offer history ID must match the requested ID");
@@ -631,7 +631,7 @@ mod tests {
             sku: None,
             external_identifiers: Default::default(),
             localization: None,
-            scraped_at: None,
+            acquired_at: None,
             images: Vec::new(),
             retailer_code: RetailerCode::AnkerCom,
             title: "Charger".into(),
@@ -852,7 +852,7 @@ mod tests {
             },
             identifiers: Default::default(),
             localization: Default::default(),
-            scraped_at: None,
+            acquired_at: None,
             images: Vec::new(),
             id: RetailerOfferId::new("offer-1"),
             retailer_code: RetailerCode::AnkerCom,
@@ -1043,7 +1043,7 @@ mod tests {
             offer.uncommitted_events[0].event(),
         ))
         .unwrap();
-        assert_eq!(serialized["type"], "OfferCreated.v10");
+        assert_eq!(serialized["type"], "OfferCreated");
         assert_eq!(serialized["data"]["images"], serde_json_json2!([a, b]));
         let replay =
             RetailerOfferAggregate::from_history(id.clone(), offer.uncommitted_events.clone());
@@ -1077,20 +1077,18 @@ mod tests {
     }
 
     #[test]
-    fn old_created_records_without_images_replay_with_legacy_image_events() {
+    fn created_records_without_images_replay_with_image_events() {
         let original = aggregate();
         let mut record = serde_json_to_value(InfraRecordsOfferEventRecord::from(
             original.uncommitted_events[0].event(),
         ))
         .unwrap();
-        record["type"] = serde_json_json2!("OfferCreated.v1");
         record["data"].as_object_mut().unwrap().remove("images");
-        record["data"].as_object_mut().unwrap().remove("content");
         let decoded: InfraRecordsOfferEventRecord = from_value(record.clone()).unwrap();
         let id = original.state.id().clone();
         let image = OfferImageAddedEvent {
             id: id.clone(),
-            image_url: "https://shop.example/legacy".into(),
+            image_url: "https://shop.example/added".into(),
             position: 0,
         };
         let history = vec![
@@ -1098,7 +1096,7 @@ mod tests {
             EventEnvelope::new(RetailerOfferEvent::OfferImageAdded(image), 2),
         ];
         let replay = RetailerOfferAggregate::from_history(id.clone(), history);
-        assert_eq!(replay.state.images(), &["https://shop.example/legacy"]);
+        assert_eq!(replay.state.images(), &["https://shop.example/added"]);
         assert!(replay.uncommitted_events.is_empty());
         for images in [
             serde_json_json2!(["/bad"]),
@@ -1119,18 +1117,18 @@ mod tests {
 }
 
 #[cfg(test)]
-mod scrape_tests {
+mod acquisition_tests {
     use chrono::DateTime as ChronoDateTime;
     use chrono::Duration;
     use money::Currency as MoneyCurrency;
 
     use super::*;
     #[test]
-    fn scrape_only_updates_are_monotonic_replayable_and_atomic() {
+    fn acquisition_only_updates_are_monotonic_replayable_and_atomic() {
         let t1 = ChronoDateTime::from_timestamp_micros(1_700_000_000_123_456).unwrap();
         let t2 = t1 + Duration::seconds(1);
-        let id = RetailerOfferId::new("scrape");
-        let mut offer = RetailerOfferAggregate::create_with_scrape(
+        let id = RetailerOfferId::new("acquired");
+        let mut offer = RetailerOfferAggregate::create_with_acquisition(
             id.clone(),
             RetailerCode::AnkerAu,
             "Charger".into(),
@@ -1140,9 +1138,9 @@ mod scrape_tests {
             Some(t1),
         )
         .unwrap();
-        assert_eq!(offer.state.scraped_at(), Some(t1));
+        assert_eq!(offer.state.acquired_at(), Some(t1));
         offer
-            .update_with_scrape(
+            .update_with_acquisition(
                 "Charger".into(),
                 Money::new(100, MoneyCurrency::AUD),
                 vec![],
@@ -1152,11 +1150,11 @@ mod scrape_tests {
         assert_eq!(offer.sequence, 2);
         assert!(matches!(
             offer.uncommitted_events[1].event(),
-            RetailerOfferEvent::OfferScrapedAtUpdated(_)
+            RetailerOfferEvent::OfferAcquiredAtUpdated(_)
         ));
         for time in [None, Some(t1), Some(t2)] {
             offer
-                .update_with_scrape(
+                .update_with_acquisition(
                     "Charger".into(),
                     Money::new(100, MoneyCurrency::AUD),
                     vec![],
@@ -1164,14 +1162,14 @@ mod scrape_tests {
                 )
                 .unwrap();
             assert_eq!(offer.sequence, 2);
-            assert_eq!(offer.state.scraped_at(), Some(t2));
+            assert_eq!(offer.state.acquired_at(), Some(t2));
         }
         let replay = RetailerOfferAggregate::from_history(id, offer.uncommitted_events.clone());
         assert_eq!(replay.state, offer.state);
         offer.sequence = u64::MAX - 1;
         let before = format!("{:?}", offer.state);
         assert_eq!(
-            offer.update_with_scrape(
+            offer.update_with_acquisition(
                 "Changed".into(),
                 Money::new(100, MoneyCurrency::AUD),
                 vec![],

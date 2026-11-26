@@ -20,12 +20,6 @@ use uuid::Uuid;
 
 use crate::platform::object_storage::{ObjectStorageMetadata, OfferStorageMetadata};
 
-pub const SCHEMA_VERSION: u32 = 9;
-
-pub fn legacy_schema_version() -> u32 {
-    1
-}
-
 /// The complete immutable input, independent of the latest pipeline metadata row.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -74,8 +68,7 @@ pub struct OfferImport {
         deserialize_with = "retailer_sauce::prelude::localization::observation"
     )]
     pub localization: Option<Localization>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub scraped_at: Option<DateTime<Utc>>,
+    pub acquired_at: DateTime<Utc>,
     #[serde(
         default,
         skip_serializing_if = "Option::is_none",
@@ -121,7 +114,6 @@ pub struct ExportExclusion {
 #[serde(deny_unknown_fields)]
 pub struct OfferExport {
     pub id: Uuid,
-    pub schema_version: u32,
     pub source: ExportSource,
     pub entries: Vec<ExportEntry>,
     pub exclusions: Vec<ExportExclusion>,
@@ -129,93 +121,55 @@ pub struct OfferExport {
 
 impl OfferExport {
     pub fn valid_schema(&self) -> bool {
-        matches!(self.schema_version, 1..=9)
-            && (self.schema_version >= 3 || self.source.storage.scraped_at.is_none())
-            && self.entries.iter().all(|entry| {
-                let market = entry
-                    .payload
-                    .localization
-                    .as_ref()
-                    .and_then(|value| value.target_market.as_ref());
-                match market {
-                    Some(TargetMarket::Region { .. }) if self.schema_version < 9 => {
-                        return false;
-                    }
-                    Some(TargetMarket::LegacyRegion { .. }) if self.schema_version >= 9 => {
-                        return false;
-                    }
-                    _ => {}
-                }
-                let payload = &entry.payload;
-                if (self.schema_version < 6 && !payload.was_price.is_missing())
-                    || (self.schema_version < 7
-                        && (!payload.availability.is_missing()
-                            || !payload.item_condition.is_missing()))
-                    || (self.schema_version < 8 && payload.content.is_some())
-                    || payload.was_price.value().is_some_and(|was| {
-                        was.currency() != payload.price.currency()
-                            || was.amount() <= payload.price.amount()
-                    })
-                    || payload
-                        .availability
-                        .value()
-                        .is_some_and(|v| v.guard().is_err())
-                    || payload
-                        .item_condition
-                        .value()
-                        .is_some_and(|v| v.guard().is_err())
-                    || payload.content.as_ref().is_some_and(|v| v.guard().is_err())
-                {
-                    return false;
-                }
+        self.entries.iter().all(|entry| {
+            let payload = &entry.payload;
+            let market = payload
+                .localization
+                .as_ref()
+                .and_then(|value| value.target_market.as_ref());
+            if matches!(market, Some(TargetMarket::LegacyRegion { .. }))
+                || payload.was_price.value().is_some_and(|was| {
+                    was.currency() != payload.price.currency()
+                        || was.amount() <= payload.price.amount()
+                })
+                || payload
+                    .availability
+                    .value()
+                    .is_some_and(|v| v.guard().is_err())
+                || payload
+                    .item_condition
+                    .value()
+                    .is_some_and(|v| v.guard().is_err())
+                || payload.content.as_ref().is_some_and(|v| v.guard().is_err())
+            {
+                return false;
+            }
 
-                if entry.payload.external_identifiers.is_some() != (self.schema_version >= 5)
-                    || (self.schema_version < 5
-                        && (entry.payload.gtin.is_some() || entry.payload.sku.is_some()))
-                {
-                    return false;
-                }
-                let identifiers = ProductIdentifiers {
-                    gtin: entry.payload.gtin.clone(),
-                    sku: entry.payload.sku.clone(),
-                    external_identifiers: entry
-                        .payload
-                        .external_identifiers
-                        .clone()
-                        .unwrap_or_default(),
-                };
-                if identifiers.guard().is_err() {
-                    return false;
-                }
-                if entry
-                    .payload
-                    .localization
-                    .as_ref()
-                    .is_some_and(|value| value.guard().is_err())
-                {
-                    return false;
-                }
-                if entry.payload.localization.is_some() != (self.schema_version >= 4) {
-                    return false;
-                }
-                if entry.payload.scraped_at
-                    != (if self.schema_version >= 3 {
-                        self.source.storage.scraped_at
-                    } else {
-                        None
-                    })
-                {
-                    return false;
-                }
-                if self.schema_version == 1 {
-                    entry.payload.images.is_none()
-                } else {
-                    entry.payload.images.as_ref().is_some_and(|images| {
-                        let (filtered, skipped) = filter(images.clone());
-                        skipped == 0 && &filtered == images
-                    })
-                }
+            let Some(external_identifiers) = payload.external_identifiers.clone() else {
+                return false;
+            };
+            let identifiers = ProductIdentifiers {
+                gtin: payload.gtin.clone(),
+                sku: payload.sku.clone(),
+                external_identifiers,
+            };
+            if identifiers.guard().is_err() {
+                return false;
+            }
+            let Some(localization) = &payload.localization else {
+                return false;
+            };
+            if localization.guard().is_err() {
+                return false;
+            }
+            if payload.acquired_at != self.source.storage.acquired_at {
+                return false;
+            }
+            payload.images.as_ref().is_some_and(|images| {
+                let (filtered, skipped) = filter(images.clone());
+                skipped == 0 && &filtered == images
             })
+        })
     }
 }
 
@@ -241,6 +195,7 @@ mod tests {
             "../../../../tests/fixtures/offer_export/import_payload.json"
         ))
         .unwrap();
+        value.as_object_mut().unwrap().remove("images");
         assert!(
             from_value::<OfferImport>(value.clone())
                 .unwrap()

@@ -11,3 +11,5 @@ Status follows the [TODO workflow](AGENTS.md#todo-workflow):
 | `[x]`  | Implemented                |
 
 Flow: `[ ]` → `[.]` → `[>]` → `[~]` → `[x]`.
+
+- [x] [Standardize offer acquisition time](docs/plans/offer-acquired-at.md)

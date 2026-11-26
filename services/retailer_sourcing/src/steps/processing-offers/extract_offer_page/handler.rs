@@ -81,16 +81,16 @@ impl<S: Store, R: Extract> Handle for Handler<S, R> {
         &self,
         command: ExtractOfferPage,
     ) -> Result<Vec<OfferPageWasExtracted>, HandlerError> {
-        let scraped_at = command.storage.and_then(|storage| storage.scraped_at);
-        if command.scraped_at != scraped_at {
-            return Err(HandlerError::Store(StoreError::ObjectStorage(
-                PlatformObjectStorageError::InvalidRecord,
-            )));
-        }
         let input = self
             .store
             .raw_offer(command.offer_id, command.storage)?
             .ok_or(HandlerError::MissingInput(command.offer_id))?;
+        // The input must be the artifact acquired at the time the command carries.
+        if input.acquired_at != command.acquired_at {
+            return Err(HandlerError::Store(StoreError::ObjectStorage(
+                PlatformObjectStorageError::InvalidRecord,
+            )));
+        }
 
         // A failure fails the command, so the bus retries it later.
         debug!(object_storage_id = %input.object_storage_id, "input object loaded");
@@ -108,7 +108,7 @@ impl<S: Store, R: Extract> Handle for Handler<S, R> {
         })?;
 
         let stored = self.store.store_extracted_offer(&ExtractedOffer {
-            scraped_at,
+            acquired_at: command.acquired_at,
             offer_id: input.offer_id,
             document,
         })?;
@@ -122,7 +122,7 @@ impl<S: Store, R: Extract> Handle for Handler<S, R> {
 
         Ok(vec![OfferPageWasExtracted {
             storage: Some(stored),
-            scraped_at,
+            acquired_at: command.acquired_at,
             offer_id: command.offer_id,
             consolidated_sitemap_id: command.consolidated_sitemap_id,
             retailer_code: command.retailer_code,
@@ -135,7 +135,7 @@ impl<S: Store, R: Extract> Handle for Handler<S, R> {
 mod tests {
     use crate::platform::object_storage::Error as PlatformObjectStorageError2;
     use crate::platform::object_storage::OfferStorageMetadata as PlatformObjectStorageOfferStorageMetadata;
-    use chrono::DateTime;
+    use chrono::{DateTime, Utc};
     use serde_json::from_str as serde_json_from_str;
     use serde_json::from_value;
     use serde_json::json as serde_json_json;
@@ -147,6 +147,7 @@ mod tests {
     use super::*;
 
     const URL: &str = "https://shop.test/products/a";
+    const ACQUIRED_AT: DateTime<Utc> = DateTime::from_timestamp_nanos(1_761_480_000_123_456_000);
 
     #[derive(Default)]
     struct FakeStore {
@@ -168,9 +169,10 @@ mod tests {
         fn raw_offer(
             &self,
             offer_id: Uuid,
-            _storage: Option<PlatformObjectStorageOfferStorageMetadata>,
+            storage: Option<PlatformObjectStorageOfferStorageMetadata>,
         ) -> Result<Option<RawOffer>, StoreError> {
             Ok(self.input.map(|input| RawOffer {
+                acquired_at: storage.map_or(ACQUIRED_AT, |storage| storage.acquired_at),
                 object_storage_id: UuidUuid::now_v7(),
                 offer_id,
                 body: input.to_string(),
@@ -192,7 +194,7 @@ mod tests {
                 .unwrap()
                 .push((entity.offer_id, entity.document.clone()));
             Ok(PlatformObjectStorageOfferStorageMetadata {
-                scraped_at: entity.scraped_at,
+                acquired_at: entity.acquired_at,
                 content_size: 0,
                 external_id: Uuid::nil(),
                 object_storage_id: Uuid::nil(),
@@ -214,7 +216,7 @@ mod tests {
     fn command() -> ExtractOfferPage {
         ExtractOfferPage {
             storage: None,
-            scraped_at: None,
+            acquired_at: ACQUIRED_AT,
             offer_id: Uuid::now_v7(),
             consolidated_sitemap_id: Uuid::now_v7(),
             retailer_code: RetailerCode::AnkerAu,
@@ -236,7 +238,7 @@ mod tests {
             events,
             vec![OfferPageWasExtracted {
                 storage: events[0].storage,
-                scraped_at: events[0].scraped_at,
+                acquired_at: ACQUIRED_AT,
                 offer_id: command.offer_id,
                 consolidated_sitemap_id: command.consolidated_sitemap_id,
                 retailer_code: RetailerCode::AnkerAu,
@@ -291,31 +293,28 @@ mod tests {
         assert!(handler.handle(command()).is_err());
     }
     #[test]
-    fn source_time_survives_processing_and_inconsistent_provenance_fails() {
+    fn acquisition_time_survives_processing_and_inconsistent_provenance_fails() {
         let handler = Handler::new(
             FakeStore::with_input(),
             FakeStep(Some(r#"{"name":"offer"}"#)),
         );
         let mut command = command();
         let mut json = to_value(&command).unwrap();
-        json.as_object_mut().unwrap().remove("scraped_at");
-        let old: ExtractOfferPage = from_value(json.clone()).unwrap();
-        assert!(old.scraped_at.is_none());
-        json["scraped_at"] = serde_json_json!("bad");
+        json.as_object_mut().unwrap().remove("acquired_at");
+        assert!(from_value::<ExtractOfferPage>(json.clone()).is_err());
+        json["acquired_at"] = serde_json_json!("bad");
         assert!(from_value::<ExtractOfferPage>(json).is_err());
         let time = DateTime::from_timestamp_micros(1_700_000_000_123_456).unwrap();
-        command.scraped_at = Some(time);
-        assert!(handler.handle(command.clone()).is_err());
         command.storage = Some(PlatformObjectStorageOfferStorageMetadata {
-            scraped_at: Some(time),
+            acquired_at: time,
             object_storage_id: Uuid::now_v7(),
             external_id: Uuid::now_v7(),
             content_size: 10,
         });
+        assert!(handler.handle(command.clone()).is_err());
+        command.acquired_at = time;
         let events = handler.handle(command.clone()).unwrap();
-        assert_eq!(events[0].scraped_at, Some(time));
-        assert_eq!(events[0].storage.unwrap().scraped_at, Some(time));
-        command.scraped_at = None;
-        assert!(handler.handle(command).is_err());
+        assert_eq!(events[0].acquired_at, time);
+        assert_eq!(events[0].storage.unwrap().acquired_at, time);
     }
 }

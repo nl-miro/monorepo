@@ -36,8 +36,6 @@ use crate::steps::prelude::export_testing::{
 };
 use crate::steps::prelude::{OfferExport, OfferExportWasPrepared};
 
-const IMPORT_FIXTURE: &str =
-    include_str!("../../../../tests/fixtures/offer_export/import_payload.json");
 /// One priced variation, one without a price and one priced but unavailable.
 const MIXED: &str = r#"{"variations":[
     {"title":"Charger","url":"https://shop.example/Charger?variant=1","price":{"amount":1999,"currency":"AUD"}},
@@ -422,9 +420,7 @@ fn postgres_unavailable_or_invalid_exports_fail_visibly_and_retry() {
     let stored = export(&db, &server, ANKER);
     let mut other_source = event(&stored);
     other_source.source.url = "https://shop.example/Other".into();
-    let mut unsupported = event(&stored);
-    unsupported.schema_version = 10;
-    for payload in [missing, event(&pending), other_source, unsupported] {
+    for payload in [missing, event(&pending), other_source] {
         seed_event(
             &db,
             OfferExportWasPrepared::NAME,
@@ -440,14 +436,9 @@ fn postgres_unavailable_or_invalid_exports_fail_visibly_and_retry() {
     );
 
     let report = run_events(&server, &app);
-    assert_batch_errors(&report, 5);
+    assert_batch_errors(&report, 4);
     let errors = event_rows(&db).to_string();
-    for expected in [
-        "is not completed",
-        "does not match",
-        "unsupported schema version",
-        "no envelope metadata",
-    ] {
+    for expected in ["is not completed", "does not match", "no envelope metadata"] {
         assert!(errors.contains(expected), "{expected}: {errors}");
     }
     let events = event_rows(&db);
@@ -536,9 +527,6 @@ fn postgres_recorded_messages_are_accepted_by_the_offers_inbox_and_not_reset_by_
         "SELECT jsonb_agg(to_jsonb(t) ORDER BY id) AS value FROM inbox_entries t",
     );
     assert_eq!(accepted.as_array().unwrap().len(), 2);
-    let mut fixture: Value = from_str(IMPORT_FIXTURE).unwrap();
-    // Keep the historical fixture intact; newly serialized exports use slugs.
-    fixture["retailer_code"] = json!("ankerau");
     let first_entry = &export.entries[0];
     let row = accepted
         .as_array()
@@ -548,7 +536,11 @@ fn postgres_recorded_messages_are_accepted_by_the_offers_inbox_and_not_reset_by_
         .unwrap();
     assert_eq!(
         from_str::<Value>(row["payload"].as_str().unwrap()).unwrap(),
-        fixture
+        to_value(&first_entry.payload).unwrap()
+    );
+    assert_eq!(
+        from_str::<Value>(row["payload"].as_str().unwrap()).unwrap()["acquired_at"],
+        json!(export.source.storage.acquired_at)
     );
     assert_eq!(row["meta"]["routing_key"], "ImportOfferDetails");
     assert_eq!(row["meta"]["correlation_id"], json!(first.correlation_id));
@@ -572,88 +564,46 @@ fn postgres_recorded_messages_are_accepted_by_the_offers_inbox_and_not_reset_by_
 
 #[test]
 #[ignore = "requires DATABASE_URL_TEST; run make test-postgres"]
-fn both_export_versions_replay_with_stable_message_ids_and_payload_shapes() {
-    use serde_json::from_str as serde_json_from_str;
-    use serde_json::to_value as serde_json_to_value;
-
-    use crate::steps::prelude::export_testing::completed_version;
-    let db = Database::new();
-    let server = Server::new();
-    let source = stored_source(&server.client(), ANKER);
-    let listener = Listener::new(PgStore::new(db.pool.clone(), server.client()));
-    for version in [1, 2] {
-        let export = completed_version(&db.pool, server.client(), source.clone(), version);
-        let context = context();
-        listener.listen(event(&export), &context).unwrap();
-        let before = outbox_rows(&db);
-        listener.listen(event(&export), &context).unwrap();
-        assert_eq!(outbox_rows(&db), before);
-        for entry in &export.entries {
-            let row = before
-                .as_array()
-                .unwrap()
-                .iter()
-                .find(|row| row["id"] == entry.id.to_string())
-                .unwrap();
-            let payload: Value = serde_json_from_str(row["payload"].as_str().unwrap()).unwrap();
-            assert_eq!(payload, serde_json_to_value(&entry.payload).unwrap());
-            assert_eq!(payload.get("images").is_some(), version == 2);
-        }
-    }
-}
-
-#[test]
-#[ignore = "requires DATABASE_URL_TEST; run make test-postgres"]
-fn fact_versions_keep_exact_delivery_payloads_and_ids_across_replayed_events() {
+fn facts_keep_exact_delivery_payloads_and_ids_across_replayed_events() {
     use serde_json::from_str as serde_json_from_str2;
     use serde_json::to_string as serde_json_to_string2;
     use serde_json::to_value as serde_json_to_value2;
 
-    use crate::steps::prelude::export_testing::{
-        assert_fact_payloads, completed_version, fact_document,
-    };
+    use crate::steps::prelude::export_testing::{assert_fact_payloads, fact_document};
     let db = Database::new();
     let server = Server::new();
     let source = stored_source(&server.client(), &fact_document().to_string());
     let app = app(&db, &server);
-    let mut expected_count = 0;
-    for version in [1, 6, 7, 8] {
-        let export = completed_version(&db.pool, server.client(), source.clone(), version);
-        assert_fact_payloads(&export, &fact_document());
-        let previous = outbox_rows(&db);
-        let first_context = context();
-        seed_export_event(&db, &export, &first_context);
+    let export = completed(&db.pool, server.client(), source);
+    assert_fact_payloads(&export, &fact_document());
+    let first_context = context();
+    seed_export_event(&db, &export, &first_context);
+    assert_eq!(
+        run_events(&server, &app),
+        json!({"processed":1,"errors":[]})
+    );
+    let recorded = outbox_rows(&db);
+    let rows = recorded.as_array().unwrap();
+    assert_eq!(rows.len(), export.entries.len());
+    for entry in &export.entries {
+        let row = rows
+            .iter()
+            .find(|row| row["id"] == json!(entry.id))
+            .unwrap();
+        assert_eq!(row["meta"]["message_id"], json!(entry.id));
+        assert_eq!(row["meta"]["event_id"], json!(first_context.event_id));
         assert_eq!(
-            run_events(&server, &app),
-            json!({"processed":1,"errors":[]})
+            row["payload"],
+            serde_json_to_string2(&entry.payload).unwrap()
         );
-        expected_count += export.entries.len();
-        let recorded = outbox_rows(&db);
-        let rows = recorded.as_array().unwrap();
-        assert_eq!(rows.len(), expected_count);
-        for old in previous.as_array().unwrap() {
-            assert_eq!(rows.iter().find(|row| row["id"] == old["id"]).unwrap(), old);
-        }
-        for entry in &export.entries {
-            let row = rows
-                .iter()
-                .find(|row| row["id"] == json!(entry.id))
-                .unwrap();
-            assert_eq!(row["meta"]["message_id"], json!(entry.id));
-            assert_eq!(row["meta"]["event_id"], json!(first_context.event_id));
-            assert_eq!(
-                row["payload"],
-                serde_json_to_string2(&entry.payload).unwrap()
-            );
-            let payload: Value = serde_json_from_str2(row["payload"].as_str().unwrap()).unwrap();
-            assert_eq!(payload, serde_json_to_value2(&entry.payload).unwrap());
-        }
-        // A new export notification must preserve the original payload text, identity and metadata.
-        seed_export_event(&db, &export, &context());
-        assert_eq!(
-            run_events(&server, &app),
-            json!({"processed":1,"errors":[]})
-        );
-        assert_eq!(outbox_rows(&db), recorded);
+        let payload: Value = serde_json_from_str2(row["payload"].as_str().unwrap()).unwrap();
+        assert_eq!(payload, serde_json_to_value2(&entry.payload).unwrap());
     }
+    // A new export notification must preserve the original payload text, identity and metadata.
+    seed_export_event(&db, &export, &context());
+    assert_eq!(
+        run_events(&server, &app),
+        json!({"processed":1,"errors":[]})
+    );
+    assert_eq!(outbox_rows(&db), recorded);
 }

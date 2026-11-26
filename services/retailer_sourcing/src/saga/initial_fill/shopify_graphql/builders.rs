@@ -62,13 +62,13 @@ pub fn build_extract_offer_details(
     retailer_code: RetailerCode,
     source: SourceType,
     storage: OfferStorageMetadata,
-    fetched_at: DateTime<Utc>,
+    acquired_at: DateTime<Utc>,
 ) -> ShopifyGraphQlCommand {
     let cmd = ExtractOfferDetails {
         retailer_code,
         source,
         storage,
-        fetched_at,
+        acquired_at,
     };
 
     ShopifyGraphQlCommand::ExtractOfferDetails(cmd)
@@ -78,13 +78,13 @@ pub fn build_structuralize_offer_details(
     retailer_code: RetailerCode,
     source: SourceType,
     storage: OfferStorageMetadata,
-    fetched_at: DateTime<Utc>,
+    acquired_at: DateTime<Utc>,
 ) -> ShopifyGraphQlCommand {
     let cmd = StructuralizeOfferDetails {
         retailer_code,
         source,
         storage,
-        fetched_at,
+        acquired_at,
     };
 
     ShopifyGraphQlCommand::StructuralizeOfferDetails(cmd)

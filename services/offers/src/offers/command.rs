@@ -51,7 +51,7 @@ pub struct ImportOfferDetailsCommand {
     )]
     pub localization: Option<Localization>,
     #[serde(default)]
-    pub scraped_at: Option<DateTime<Utc>>,
+    pub acquired_at: Option<DateTime<Utc>>,
     #[serde(default)]
     pub images: Vec<String>,
     pub retailer_code: RetailerCode,
@@ -92,14 +92,41 @@ mod export_contract_tests {
             command.url,
             "https://shop.example/Charger?q=red&variant=1#details"
         );
+        assert_eq!(
+            command.acquired_at,
+            Some("2026-10-26T12:00:00.123456Z".parse().unwrap())
+        );
+        assert_eq!(command.images, ["https://example.com/a.png"]);
+        let localization = command.localization.unwrap();
+        assert_eq!(localization.language.as_deref(), Some("en-AU"));
+        assert_eq!(command.gtin.unwrap().value, "0012345678905");
+        assert_eq!(command.sku.unwrap().value, "A1-BLACK");
+        assert_eq!(command.was_price.value().unwrap().amount(), 2999);
+        assert!(!command.availability.is_missing());
+        assert!(!command.item_condition.is_missing());
+        assert!(command.content.is_some());
     }
 
     #[test]
-    fn legacy_and_v2_imports_have_strict_array_types() {
+    fn a_manual_import_may_omit_the_acquisition_time() {
         let mut input: Value = from_str(include_str!(
             "../../../retailer_sourcing/tests/fixtures/offer_export/import_payload.json"
         ))
         .unwrap();
+        input.as_object_mut().unwrap().remove("acquired_at");
+        let command: ImportOfferDetailsCommand = from_value(input.clone()).unwrap();
+        assert!(command.acquired_at.is_none());
+        input["acquired_at"] = serde_json_json!("yesterday");
+        assert!(from_value::<ImportOfferDetailsCommand>(input).is_err());
+    }
+
+    #[test]
+    fn imports_have_strict_array_types() {
+        let mut input: Value = from_str(include_str!(
+            "../../../retailer_sourcing/tests/fixtures/offer_export/import_payload.json"
+        ))
+        .unwrap();
+        input.as_object_mut().unwrap().remove("images");
         assert!(
             from_value::<ImportOfferDetailsCommand>(input.clone())
                 .unwrap()
@@ -123,15 +150,6 @@ mod export_contract_tests {
             assert!(from_value::<ImportOfferDetailsCommand>(input.clone()).is_err());
         }
     }
-
-    #[test]
-    fn accepts_sourcing_v2_fixture() {
-        let command: ImportOfferDetailsCommand = from_str(include_str!(
-            "../../../retailer_sourcing/tests/fixtures/offer_export/import_payload_v2.json"
-        ))
-        .unwrap();
-        assert_eq!(command.images, ["https://example.com/a.png"]);
-    }
 }
 
 #[derive(Default)]
@@ -141,7 +159,7 @@ pub struct OfferObservation {
     pub item_condition: Observation<ItemCondition>,
     pub content: Option<StructuralizedContent>,
     pub identifiers: ProductIdentifiers,
-    pub scraped_at: Option<DateTime<Utc>>,
+    pub acquired_at: Option<DateTime<Utc>>,
     pub localization: Option<Localization>,
 }
 impl OfferObservation {
@@ -160,71 +178,5 @@ impl OfferObservation {
             localization.guard()?;
         }
         Ok(())
-    }
-}
-
-#[cfg(test)]
-mod extended_contract_tests {
-    use serde_json::from_str as serde_json_from_str;
-
-    use super::*;
-    #[test]
-    fn shared_v3_to_v5_fixtures_preserve_fields_and_validate_before_mutation() {
-        for fixture in [
-            include_str!(
-                "../../../retailer_sourcing/tests/fixtures/offer_export/import_payload_v3.json"
-            ),
-            include_str!(
-                "../../../retailer_sourcing/tests/fixtures/offer_export/import_payload_v4.json"
-            ),
-            include_str!(
-                "../../../retailer_sourcing/tests/fixtures/offer_export/import_payload_v5.json"
-            ),
-        ] {
-            let command: ImportOfferDetailsCommand = serde_json_from_str(fixture).unwrap();
-            assert!(command.scraped_at.is_some());
-            if let Some(localization) = command.localization {
-                assert_eq!(localization.language.as_deref(), Some("en-AU"));
-            }
-            if let Some(gtin) = command.gtin {
-                assert_eq!(gtin.value, "0012345678905");
-                assert_eq!(command.sku.unwrap().value, "A1-BLACK");
-            }
-        }
-    }
-}
-
-#[cfg(test)]
-mod facts_contract_tests {
-    use serde_json::from_str as serde_json_from_str2;
-
-    use super::*;
-    #[test]
-    fn accepts_new_sourcing_versions_without_losing_observation_semantics() {
-        for (version, fixture) in [
-            (
-                6,
-                include_str!(
-                    "../../../retailer_sourcing/tests/fixtures/offer_export/import_payload_v6.json"
-                ),
-            ),
-            (
-                7,
-                include_str!(
-                    "../../../retailer_sourcing/tests/fixtures/offer_export/import_payload_v7.json"
-                ),
-            ),
-            (
-                8,
-                include_str!(
-                    "../../../retailer_sourcing/tests/fixtures/offer_export/import_payload_v8.json"
-                ),
-            ),
-        ] {
-            let command: ImportOfferDetailsCommand = serde_json_from_str2(fixture).unwrap();
-            assert_eq!(command.was_price.value().unwrap().amount(), 2999);
-            assert_eq!(!command.availability.is_missing(), version >= 7);
-            assert_eq!(command.content.is_some(), version >= 8);
-        }
     }
 }

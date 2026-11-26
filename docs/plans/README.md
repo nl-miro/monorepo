@@ -5,6 +5,10 @@ clarification extends item 22. Status markers follow the
 [TODO workflow](../../AGENTS.md#todo-workflow): `[ ]` pending, `[.]` planning,
 `[>]` planned, `[~]` implementing, and `[x]` implemented.
 
+## Offer acquisition
+
+- [Standardize offer acquisition time](offer-acquired-at.md) — `[x]` implemented.
+
 ## Service foundation plans
 
 - [Products service foundation](products-service-foundation.md): `[x]` implemented and validated.

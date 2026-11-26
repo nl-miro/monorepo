@@ -40,7 +40,8 @@ pub(crate) fn envelope() -> OutboundMessageEnvelope {
             "id":Uuid::now_v7(), "created_at":"2026-10-24T12:00:00Z",
             "retailer_code":"AnkerAu", "title":" USB charger ž ",
             "price":{"amount":9007199254740993_i64,"currency":"AUD"},
-            "url":"https://shop.example/Charger?variant=2#offer"
+            "url":"https://shop.example/Charger?variant=2#offer",
+            "content":[{"language":null,"title":" USB charger ž ","description":null}]
         }))
         .unwrap(),
         metadata: OutboxEntryMetadata {
@@ -255,7 +256,7 @@ fn fact_event_submissions_preserve_nulls_and_raw_text_and_reject_partial_updates
 }
 
 #[test]
-fn old_and_current_creation_and_contents_keep_raw_json_and_delivery_metadata() {
+fn creation_and_contents_keep_raw_json_and_delivery_metadata() {
     use super::testing::envelope as testing_envelope2;
     use serde_json::from_slice as serde_json_from_slice;
     use serde_json::to_value;
@@ -263,14 +264,19 @@ fn old_and_current_creation_and_contents_keep_raw_json_and_delivery_metadata() {
 
     use crate::offers::event::OFFER_CONTENTS_CHANGED_EVENT;
     let old_message = envelope();
-    let old: Value = serde_json_from_slice(&old_message.payload).unwrap();
-    let mut new = old.clone();
-    new["content"] =
-        json!([{"language":null,"title":old["title"],"description":" <p>Exact ž</p>\n"}]);
-    let contents = json!({"id":old["id"],"content":[{"language":null,"title":" Unknown ","description":""},{"language":"en-US","title":" English ","description":null}],"language":"en-US"});
+    let created: Value = serde_json_from_slice(&old_message.payload).unwrap();
+    let mut described = created.clone();
+    described["content"] =
+        json!([{"language":null,"title":created["title"],"description":" <p>Exact ž</p>\n"}]);
+    let contents = json!({"id":created["id"],"content":[{"language":null,"title":" Unknown ","description":""},{"language":"en-US","title":" English ","description":null}],"language":"en-US"});
+    // A creation without its content list was a retired version and is now rejected.
+    let mut retired = created.clone();
+    retired.as_object_mut().unwrap().remove("content");
+    let message = testing_envelope2(OFFER_CREATED_EVENT, &retired);
+    assert!(CustomerFacingPublisher::submission(message).is_err());
     for (kind, payload) in [
-        (OFFER_CREATED_EVENT, old),
-        (OFFER_CREATED_EVENT, new),
+        (OFFER_CREATED_EVENT, created),
+        (OFFER_CREATED_EVENT, described),
         (OFFER_CONTENTS_CHANGED_EVENT, contents.clone()),
     ] {
         let mut message = old_message.clone();

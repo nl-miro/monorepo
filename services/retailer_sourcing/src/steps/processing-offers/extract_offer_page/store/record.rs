@@ -16,6 +16,7 @@ pub(super) struct RawOfferPgRecord {
 impl RawOfferPgRecord {
     pub fn into_entity(self, body: String) -> Result<RawOffer, StoreError> {
         Ok(RawOffer {
+            acquired_at: self.storage.0.acquired_at,
             offer_id: self.offer_id,
             object_storage_id: self.storage.0.object_storage_id,
             body,

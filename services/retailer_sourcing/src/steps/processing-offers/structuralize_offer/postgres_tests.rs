@@ -1,4 +1,5 @@
 use super::store::StoreError;
+use chrono::{DateTime, Utc};
 use diesel::sql_query;
 use serde_json::Value;
 use serde_json::from_value;
@@ -20,6 +21,7 @@ use diesel::sql_types::{Jsonb, Uuid as SqlUuid};
 use serde_json::json;
 use uuid::Uuid;
 
+const ACQUIRED_AT: DateTime<Utc> = DateTime::from_timestamp_nanos(1_761_480_000_123_456_000);
 const ROW: &str = "SELECT to_jsonb(o) AS value FROM offer_details_structuralized o";
 
 pub(super) fn verify_round_trip(db: &Database, objects: ObjectStorage) {
@@ -30,7 +32,7 @@ pub(super) fn verify_round_trip(db: &Database, objects: ObjectStorage) {
     let input_value = json!({"input":"ž 🔎"});
     let input_body = input_value.to_string();
     let input_storage = objects
-        .create_offer(NORMALIZED_OFFERS_BUCKET, &input_body)
+        .create_offer(NORMALIZED_OFFERS_BUCKET, &input_body, ACQUIRED_AT)
         .unwrap();
     sql_query("INSERT INTO offer_details_normalized (id,offer_id,storage) VALUES ($1,$2,$3)")
         .bind::<SqlUuid, _>(Uuid::now_v7())
@@ -43,7 +45,11 @@ pub(super) fn verify_round_trip(db: &Database, objects: ObjectStorage) {
     assert_eq!(input.object_storage_id, input_storage.object_storage_id);
     assert_eq!(json!(input.document), input_value);
     let replacement = objects
-        .create_offer(NORMALIZED_OFFERS_BUCKET, r#"{"replacement":true}"#)
+        .create_offer(
+            NORMALIZED_OFFERS_BUCKET,
+            r#"{"replacement":true}"#,
+            ACQUIRED_AT,
+        )
         .unwrap();
     sql_query("UPDATE offer_details_normalized SET storage = $1 WHERE offer_id = $2")
         .bind::<Jsonb, _>(Json(replacement))
@@ -64,7 +70,7 @@ pub(super) fn verify_round_trip(db: &Database, objects: ObjectStorage) {
         replacement.object_storage_id
     );
     let mut entity = StructuralizedOffer {
-        scraped_at: None,
+        acquired_at: ACQUIRED_AT,
         offer_id,
         document: json!({"value":"first ž"}),
     };
@@ -131,7 +137,7 @@ fn postgres_failures_preserve_local_state() {
     let store = PgStore::new(db.pool.clone(), objects.clone());
     let mut conn = db.pool.get().unwrap();
     let entity = StructuralizedOffer {
-        scraped_at: None,
+        acquired_at: ACQUIRED_AT,
         offer_id: Uuid::now_v7(),
         document: json!({"a":"ž"}),
     };
@@ -155,7 +161,7 @@ fn postgres_failures_preserve_local_state() {
             .unwrap();
     }
     let storage = objects
-        .create_offer(NORMALIZED_OFFERS_BUCKET, "not json")
+        .create_offer(NORMALIZED_OFFERS_BUCKET, "not json", ACQUIRED_AT)
         .unwrap();
     sql_query("INSERT INTO offer_details_normalized (id,offer_id,storage) VALUES ($1,$2,$3)")
         .bind::<SqlUuid, _>(Uuid::now_v7())
@@ -185,7 +191,7 @@ fn postgres_concurrent_updates_keep_identity_and_complete_references() {
     let objects = server.client();
     let store = PgStore::new(db.pool.clone(), objects.clone());
     let entity = StructuralizedOffer {
-        scraped_at: None,
+        acquired_at: ACQUIRED_AT,
         offer_id: Uuid::now_v7(),
         document: json!({"initial":true}),
     };

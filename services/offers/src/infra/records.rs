@@ -1,4 +1,3 @@
-use crate::offers::event::LegacyOfferCreatedEvent;
 use crate::offers::event::OfferAvailabilityChangedEvent;
 use crate::offers::event::OfferContentChangedEvent;
 use crate::offers::event::OfferContentsChangedEvent;
@@ -10,8 +9,9 @@ use serde::{Deserialize, Serialize};
 use testimony::prelude::HasAggregateId;
 
 use crate::offers::event::{
-    OfferCreatedEvent, OfferImageAddedEvent, OfferLocalizationChangedEvent, OfferPriceChangedEvent,
-    OfferScrapedAtUpdatedEvent, OfferTitleChangedEvent, RetailerOfferEvent,
+    OfferAcquiredAtUpdatedEvent, OfferCreatedEvent, OfferImageAddedEvent,
+    OfferLocalizationChangedEvent, OfferPriceChangedEvent, OfferTitleChangedEvent,
+    RetailerOfferEvent,
 };
 
 #[derive(Serialize, Deserialize)]
@@ -27,27 +27,8 @@ pub enum OfferEventRecord {
     AvailabilityChanged(OfferAvailabilityChangedEvent),
     #[serde(rename = "OfferPricingChanged.v1")]
     PricingChanged(OfferPricingChangedEvent),
-    #[serde(
-        rename = "OfferCreated.v8",
-        alias = "OfferCreated.v7",
-        alias = "OfferCreated.v6",
-        alias = "OfferCreated.v5",
-        alias = "OfferCreated.v4",
-        alias = "OfferCreated.v3",
-        alias = "OfferCreated.v1",
-        alias = "OfferCreated.v2"
-    )]
-    LegacyCreated(Box<LegacyOfferCreatedEvent>),
-    #[serde(rename = "OfferCreated.v9")]
-    LegacyRegionCreated(
-        #[serde(deserialize_with = "crate::offers::event::current_creation")]
-        Box<OfferCreatedEvent>,
-    ),
-    #[serde(rename = "OfferCreated.v10")]
-    Created(
-        #[serde(deserialize_with = "crate::offers::event::current_creation")]
-        Box<OfferCreatedEvent>,
-    ),
+    #[serde(rename = "OfferCreated")]
+    Created(Box<OfferCreatedEvent>),
     #[serde(rename = "OfferIdentifiersChanged.v1")]
     IdentifiersChanged(OfferIdentifiersChangedEvent),
     #[serde(rename = "OfferLocalizationChanged.v1")]
@@ -60,8 +41,8 @@ pub enum OfferEventRecord {
     TitleChanged(OfferTitleChangedEvent),
     #[serde(rename = "OfferPriceChanged.v1")]
     PriceChanged(OfferPriceChangedEvent),
-    #[serde(rename = "OfferScrapedAtUpdated.v1")]
-    ScrapedAtUpdated(OfferScrapedAtUpdatedEvent),
+    #[serde(rename = "OfferAcquiredAtUpdated")]
+    AcquiredAtUpdated(OfferAcquiredAtUpdatedEvent),
 }
 
 impl From<&RetailerOfferEvent> for OfferEventRecord {
@@ -75,8 +56,8 @@ impl From<&RetailerOfferEvent> for OfferEventRecord {
                 event.localization = event.localization.canonicalized();
                 Self::LocalizationChanged(event)
             }
-            RetailerOfferEvent::OfferScrapedAtUpdated(event) => {
-                Self::ScrapedAtUpdated(event.clone())
+            RetailerOfferEvent::OfferAcquiredAtUpdated(event) => {
+                Self::AcquiredAtUpdated(event.clone())
             }
             RetailerOfferEvent::OfferImageAdded(event) => Self::ImageAdded(event.clone()),
             RetailerOfferEvent::OfferPricingChanged(event) => Self::PricingChanged(event.clone()),
@@ -105,16 +86,13 @@ impl From<OfferEventRecord> for RetailerOfferEvent {
             OfferEventRecord::IdentifiersChanged(event) => Self::OfferIdentifiersChanged(event),
             OfferEventRecord::LegacyLocalizationChanged(event)
             | OfferEventRecord::LocalizationChanged(event) => Self::OfferLocalizationChanged(event),
-            OfferEventRecord::ScrapedAtUpdated(event) => Self::OfferScrapedAtUpdated(event),
+            OfferEventRecord::AcquiredAtUpdated(event) => Self::OfferAcquiredAtUpdated(event),
             OfferEventRecord::ImageAdded(event) => Self::OfferImageAdded(event),
             OfferEventRecord::PricingChanged(event) => Self::OfferPricingChanged(event),
             OfferEventRecord::AvailabilityChanged(event) => Self::OfferAvailabilityChanged(event),
             OfferEventRecord::ItemConditionChanged(event) => Self::OfferItemConditionChanged(event),
             OfferEventRecord::ContentChanged(event) => Self::OfferContentChanged(event),
-            OfferEventRecord::LegacyRegionCreated(event) | OfferEventRecord::Created(event) => {
-                Self::OfferCreated(event)
-            }
-            OfferEventRecord::LegacyCreated(event) => Self::OfferCreated(Box::new((*event).into())),
+            OfferEventRecord::Created(event) => Self::OfferCreated(event),
             OfferEventRecord::ContentsChanged(event) => Self::OfferContentsChanged(event),
             OfferEventRecord::TitleChanged(event) => Self::OfferTitleChanged(event),
             OfferEventRecord::PriceChanged(event) => Self::OfferPriceChanged(event),
@@ -129,14 +107,13 @@ impl HasAggregateId for OfferEventRecord {
             Self::LegacyLocalizationChanged(event) | Self::LocalizationChanged(event) => {
                 event.id.to_string()
             }
-            Self::ScrapedAtUpdated(event) => event.id.to_string(),
+            Self::AcquiredAtUpdated(event) => event.id.to_string(),
             Self::ImageAdded(event) => event.id.to_string(),
             Self::PricingChanged(event) => event.id.to_string(),
             Self::AvailabilityChanged(event) => event.id.to_string(),
             Self::ItemConditionChanged(event) => event.id.to_string(),
             Self::ContentChanged(event) => event.id.to_string(),
-            Self::LegacyRegionCreated(event) | Self::Created(event) => event.id.to_string(),
-            Self::LegacyCreated(event) => event.id.to_string(),
+            Self::Created(event) => event.id.to_string(),
             Self::ContentsChanged(event) => event.id.to_string(),
             Self::TitleChanged(event) => event.id.to_string(),
             Self::PriceChanged(event) => event.id.to_string(),
@@ -153,7 +130,7 @@ mod regional_versions {
     use serde_json::json;
 
     #[test]
-    fn historical_region_records_keep_their_encoding_and_new_records_are_versioned() {
+    fn historical_region_records_keep_their_encoding_and_creations_are_unversioned() {
         let localization =
             json!({"target_market":{"kind":"region","label":"European Union"},"language":"en"});
         let change = json!({"type":"OfferLocalizationChanged.v1","data":{"id":"example","localization":localization}});
@@ -169,22 +146,23 @@ mod regional_versions {
             new["data"]["localization"]["target_market"],
             json!({"kind":"region","code":"eu"})
         );
-        let created = json!({"type":"OfferCreated.v9","data":{
+        let data = json!({
             "id":"example","retailer_code":"AnkerAu","title":"Charger","url":"https://example.com/a",
             "price":{"amount":100,"currency":"AUD"},"created_at":"2026-10-29T00:00:00Z",
             "localization":localization,"content":[{"language":"en","title":"Charger","description":null}]
-        }});
-        let old: OfferEventRecord = from_value(created).unwrap();
-        let old_json = to_value(&old).unwrap();
-        assert_eq!(old_json["type"], "OfferCreated.v9");
+        });
+        for version in 1..=10 {
+            let tag = format!("OfferCreated.v{version}");
+            assert!(from_value::<OfferEventRecord>(json!({"type":tag,"data":data})).is_err());
+        }
+        let created: OfferEventRecord =
+            from_value(json!({"type":"OfferCreated","data":data})).unwrap();
+        let event: RetailerOfferEvent = created.into();
+        let record = to_value(OfferEventRecord::from(&event)).unwrap();
+        assert_eq!(record["type"], "OfferCreated");
         assert_eq!(
-            old_json["data"]["localization"]["target_market"]["label"],
-            "European Union"
-        );
-        let event: RetailerOfferEvent = old.into();
-        assert_eq!(
-            to_value(OfferEventRecord::from(&event)).unwrap()["type"],
-            "OfferCreated.v10"
+            record["data"]["localization"]["target_market"],
+            json!({"kind":"region","code":"eu"})
         );
     }
 }

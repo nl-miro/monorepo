@@ -17,7 +17,6 @@ mod tests {
         ExtractOfferDetails, InitialFillRequested, OfferDetailsExtracted, OfferDetailsFetched,
         SourceType, StructuralizeOfferDetails,
     };
-    use chrono::Utc;
     use retailer_data_extractor::get_storefront_config;
     use retailer_sauce::prelude::{StorefrontStrategy, StorefrontToken};
     use serde_json::{Value, from_str, json};
@@ -55,7 +54,7 @@ mod tests {
         let retailer = RetailerCode::AnkerAu;
         let saga = ShopifyGraphQlInitialFillSaga::new(saga_id, Uuid::now_v7(), retailer);
         let raw = OfferStorageMetadata {
-            scraped_at: None,
+            acquired_at: "2026-11-12T00:00:00.123456Z".parse().unwrap(),
             content_size: 10,
             object_storage_id: Uuid::now_v7(),
             external_id: Uuid::now_v7(),
@@ -63,7 +62,7 @@ mod tests {
         let fetched = OfferDetailsFetched {
             context: None,
             retailer_code: retailer,
-            fetched_at: Utc::now(),
+            acquired_at: raw.acquired_at,
             storage: raw,
             source: SourceType::GraphQl {
                 product_id: "gid://shopify/Product/1".into(),
@@ -77,7 +76,7 @@ mod tests {
                 external_id: raw.object_storage_id,
                 ..raw
             },
-            fetched_at: fetched.fetched_at,
+            acquired_at: fetched.acquired_at,
         };
         for (command, event_name, name, payload, source_id) in [
             (
@@ -85,7 +84,7 @@ mod tests {
                     fetched.retailer_code,
                     fetched.source.clone(),
                     fetched.storage,
-                    fetched.fetched_at,
+                    fetched.acquired_at,
                 ),
                 OfferDetailsFetched::NAME,
                 ExtractOfferDetails::NAME,
@@ -93,7 +92,7 @@ mod tests {
                     "retailer_code": fetched.retailer_code,
                     "source": fetched.source,
                     "storage": fetched.storage,
-                    "fetched_at": fetched.fetched_at,
+                    "acquired_at": fetched.acquired_at,
                 }),
                 raw.object_storage_id,
             ),
@@ -102,7 +101,7 @@ mod tests {
                     extracted.retailer_code,
                     extracted.source.clone(),
                     extracted.storage,
-                    extracted.fetched_at,
+                    extracted.acquired_at,
                 ),
                 OfferDetailsExtracted::NAME,
                 StructuralizeOfferDetails::NAME,

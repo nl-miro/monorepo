@@ -8,18 +8,14 @@ use super::store::StoreError;
 use crate::platform::bus::Handle;
 
 pub(super) trait Store: Send + Sync + 'static {
-    fn prepare(
-        &self,
-        source: ExportSource,
-        schema_version: u32,
-    ) -> Result<PreparedExport, StoreError>;
+    fn prepare(&self, source: ExportSource) -> Result<PreparedExport, StoreError>;
     fn complete(&self, prepared: PreparedExport) -> Result<OfferExport, StoreError>;
 }
 
 #[derive(Debug, thiserror::Error)]
 pub enum HandlerError {
-    #[error("scrape time disagrees with the pinned structuralized artifact")]
-    ConflictingScrapeTime,
+    #[error("acquisition time disagrees with the pinned structuralized artifact")]
+    ConflictingAcquisitionTime,
     #[error(
         "offer {0} has no pinned structuralized source; run fresh structuralization before exporting"
     )]
@@ -47,8 +43,8 @@ impl<S: Store> Handle for Handler<S> {
         let storage = command
             .storage
             .ok_or(HandlerError::UnpinnedSource(command.offer_id))?;
-        if command.scraped_at != storage.scraped_at {
-            return Err(HandlerError::ConflictingScrapeTime);
+        if command.acquired_at != storage.acquired_at {
+            return Err(HandlerError::ConflictingAcquisitionTime);
         }
         let source = ExportSource {
             offer_id: command.offer_id,
@@ -57,7 +53,7 @@ impl<S: Store> Handle for Handler<S> {
             url: command.url,
             storage,
         };
-        let prepared = self.store.prepare(source, command.schema_version)?;
+        let prepared = self.store.prepare(source)?;
         let snapshot = self.store.complete(prepared)?;
         info!(
             export_id = %snapshot.id,
@@ -68,7 +64,6 @@ impl<S: Store> Handle for Handler<S> {
         );
         Ok(vec![OfferExportWasPrepared {
             export_id: snapshot.id,
-            schema_version: snapshot.schema_version,
             source: snapshot.source,
         }])
     }
@@ -94,15 +89,11 @@ mod tests {
     }
 
     impl Store for FakeStore {
-        fn prepare(
-            &self,
-            source: ExportSource,
-            schema_version: u32,
-        ) -> Result<PreparedExport, StoreError> {
+        fn prepare(&self, source: ExportSource) -> Result<PreparedExport, StoreError> {
             if self.fail_prepare {
                 return Err(StoreError::Incomplete);
             }
-            let snapshot = convert(source, ANKER, schema_version)?;
+            let snapshot = convert(source, ANKER)?;
             Ok(PreparedExport {
                 body: serde_json_to_string(&snapshot)?,
                 snapshot,
@@ -120,8 +111,7 @@ mod tests {
     fn command() -> ProcessOfferForExport {
         let source = source();
         ProcessOfferForExport {
-            scraped_at: None,
-            schema_version: 2,
+            acquired_at: source.storage.acquired_at,
             offer_id: source.offer_id,
             consolidated_sitemap_id: source.consolidated_sitemap_id,
             retailer_code: source.retailer_code,
@@ -157,10 +147,10 @@ mod tests {
             fail_complete: true,
         });
         let mut command = command();
-        command.scraped_at = Some("2026-10-26T12:00:00Z".parse().unwrap());
+        command.acquired_at = "2026-10-26T12:00:00Z".parse().unwrap();
         assert!(matches!(
             handler.handle(command),
-            Err(HandlerError::ConflictingScrapeTime)
+            Err(HandlerError::ConflictingAcquisitionTime)
         ));
     }
 
@@ -178,15 +168,5 @@ mod tests {
         let error = handler.handle(command).unwrap_err();
         assert!(matches!(error, HandlerError::UnpinnedSource(id) if id == legacy.offer_id));
         assert!(error.to_string().contains("fresh structuralization"));
-    }
-
-    #[test]
-    fn queued_commands_without_a_version_stay_v1_and_new_commands_select_v9() {
-        let mut value = to_value(command()).unwrap();
-        value.as_object_mut().unwrap().remove("schema_version");
-        let legacy: ProcessOfferForExport = from_value(value.clone()).unwrap();
-        assert_eq!(legacy.schema_version, 1);
-        let source: OfferWasStructuralized = from_value(value).unwrap();
-        assert_eq!(on(&source).unwrap().schema_version, 9);
     }
 }

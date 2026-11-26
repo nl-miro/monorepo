@@ -206,7 +206,7 @@ async fn localized_migration_preserves_exact_scalars_receipts_and_pending_comman
         );
         let mut scalars = new.clone();
         scalars.as_object_mut().unwrap().remove("content");
-        assert_eq!(&scalars, old);
+        assert_eq!(scalars, with_acquired_at_column(old.clone()));
     }
     for sql in [
         "UPDATE offers SET content=NULL",

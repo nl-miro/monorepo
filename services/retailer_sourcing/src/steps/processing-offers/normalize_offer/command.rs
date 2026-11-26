@@ -11,8 +11,7 @@ use crate::platform::bus::Command;
 /// Normalizes an offer's extracted JSON.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct NormalizeOffer {
-    #[serde(default)]
-    pub scraped_at: Option<DateTime<Utc>>,
+    pub acquired_at: DateTime<Utc>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub storage: Option<OfferStorageMetadata>,
 

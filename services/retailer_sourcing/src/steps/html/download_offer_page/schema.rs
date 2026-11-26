@@ -7,7 +7,7 @@ table! {
         id -> Uuid,
         offer_id -> Uuid,
         url -> Text,
-        fetched_at -> Timestamptz,
+        acquired_at -> Timestamptz,
         retailer_code -> Text,
         storage -> Jsonb,
     }

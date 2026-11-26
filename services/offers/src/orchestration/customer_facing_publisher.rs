@@ -2,6 +2,7 @@
 //! acknowledges the same message UUID completes a row; Mulac's outbox service
 //! owns reservation, completion and retries.
 
+use crate::offers::event::OFFER_ACQUIRED_AT_UPDATED_EVENT;
 use crate::offers::event::OFFER_AVAILABILITY_CHANGED_EVENT;
 use crate::offers::event::OFFER_CONTENT_CHANGED_EVENT;
 use crate::offers::event::OFFER_CONTENTS_CHANGED_EVENT;
@@ -9,7 +10,7 @@ use crate::offers::event::OFFER_IDENTIFIERS_CHANGED_EVENT;
 use crate::offers::event::OFFER_ITEM_CONDITION_CHANGED_EVENT;
 use crate::offers::event::OFFER_LOCALIZATION_CHANGED_EVENT;
 use crate::offers::event::OFFER_PRICING_CHANGED_EVENT;
-use crate::offers::event::OFFER_SCRAPED_AT_UPDATED_EVENT;
+use crate::offers::event::OfferAcquiredAtUpdatedEvent;
 use crate::offers::event::OfferAvailabilityChangedEvent;
 use crate::offers::event::OfferContentChangedEvent;
 use crate::offers::event::OfferContentsChangedEvent;
@@ -17,7 +18,6 @@ use crate::offers::event::OfferIdentifiersChangedEvent;
 use crate::offers::event::OfferItemConditionChangedEvent;
 use crate::offers::event::OfferLocalizationChangedEvent;
 use crate::offers::event::OfferPricingChangedEvent;
-use crate::offers::event::OfferScrapedAtUpdatedEvent;
 use env::var;
 use io::Error as IoError;
 use io::Result as IoResult;
@@ -141,8 +141,8 @@ impl CustomerFacingPublisher {
             OFFER_LOCALIZATION_CHANGED_EVENT => {
                 from_value::<OfferLocalizationChangedEvent>(payload.clone()).map(|_| ())
             }
-            OFFER_SCRAPED_AT_UPDATED_EVENT => {
-                from_value::<OfferScrapedAtUpdatedEvent>(payload.clone()).map(|_| ())
+            OFFER_ACQUIRED_AT_UPDATED_EVENT => {
+                from_value::<OfferAcquiredAtUpdatedEvent>(payload.clone()).map(|_| ())
             }
             OFFER_IMAGE_ADDED_EVENT => from_value::<OfferImageAddedEvent>(payload.clone())
                 .and_then(|event| {
@@ -265,7 +265,8 @@ pub(crate) mod testing {
             "title": "USB charger",
             "price": {"amount": 1999, "currency": "AUD"},
             "url": "https://shop.example/Charger?variant=123#details",
-            "created_at": "2026-10-24T12:00:00Z"
+            "created_at": "2026-10-24T12:00:00Z",
+            "content": [{"language": null, "title": "USB charger", "description": null}]
         })
     }
 

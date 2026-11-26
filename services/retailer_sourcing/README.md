@@ -632,8 +632,8 @@ documents the bearer scheme.
 
 `GET /api/development/offer-details-v2/sources` lists GraphQL initial-fill
 artifacts from retained `OfferDetailsFetched` events. It returns `id` (event ID),
-`run_id`, `product_id` (full Shopify GID), lowercase `retailer_code`, `fetched_at`,
-and `storage`, newest first with event ID as a tie breaker. It uses the same
+`run_id`, `product_id` (full Shopify GID), lowercase `retailer_code`, `acquired_at`,
+and `storage`, newest first by `acquired_at` with event ID as a tie breaker. It uses the same
 bearer authentication, limit/offset bounds (1–1000) and status codes as the v1
 offer listing. HTML source events and unrelated events are excluded; consumer
 status does not affect visibility. Payloads remain in `offer_details_raw` and
@@ -738,15 +738,17 @@ No latest-snapshot fallback is performed.
 
 Each priced variation becomes an `ImportOfferDetails`-compatible payload with
 retailer code, title, exact variant URL and integer minor-unit price/currency.
-Schema v2 also carries filtered variation images; see the version contract below.
+It also carries filtered variation images and the source's required `acquired_at`.
 Missing prices are recorded under `exclusions` with the variation index, URL
 and `missing_price` reason. Unavailable stock is included when priced. Blank
 titles, malformed money, negative prices, invalid HTTP(S) URLs and repeated
 exact variation URLs fail preparation rather than producing ambiguous exports.
 Empty or wholly excluded documents produce a completed export with no entries.
 
-Migration `2026-10-24-000013_offer_export` adds only the export table. Its unique
-key is `(offer_id, source_object_id, schema_version)`. A preparation persists
+Migration `2026-10-24-000013_offer_export` adds only the export table. Since
+`2026-11-26-000001_offer_acquired_at` its unique key is
+`(offer_id, source_object_id)`: exports have one payload shape, so a source
+object has one snapshot. A preparation persists
 stable snapshot and entry UUIDs, typed source/stats metadata, and the exact
 pending body before upload. `status = 'prepared'` rows retain `prepared_body`
 when upload or completion fails. The next command attempt resumes those same
@@ -774,8 +776,8 @@ See [ADR 19](../../docs/adr/0019-immutable-offer-export-preparation.md).
 `steps::processing_offers::record_export_messages` listens to `OfferExportWasPrepared`.
 It loads the completed snapshot the event names through `ExportStore::load`.
 It never uses the latest structuralized document or a pending preparation.
-The listener checks that the snapshot and event agree on export UUID, source
-and schema version `1`. It then records one row in `outbox_entries` per
+The listener checks that the snapshot is valid and that it and the event agree
+on export UUID and source. It then records one row in `outbox_entries` per
 export entry, all in one transaction:
 
 | Column / metadata                                           | Value                                               |
@@ -854,13 +856,11 @@ export from a fresh structuralization. The stable entry UUIDs keep this safe.
 That inbox test shows HTTP acceptance only. Offers' import still needs its
 own inbox, command and event runs.
 
-## Offer images and export versions
+## Offer images
 
-New export commands explicitly use `schema_version: 2`; already queued commands
-without it retain v1. V1 snapshots and their outgoing messages omit `images`.
-V2 includes an ordered `images` array, including `[]`. Both versions may coexist
-for the same source, and pending bytes, snapshot IDs and entry message IDs are
-never rewritten during retries. Unknown or inconsistent versions fail visibly.
+Every export payload includes an ordered `images` array, including `[]`.
+Pending bytes, snapshot IDs and entry message IDs are never rewritten during
+retries.
 
 Images preserve exact source strings and order. Invalid absolute HTTP(S) URLs
 are skipped; URLs with credentials, padding, control characters or more than
@@ -880,25 +880,31 @@ extractions with the corrected retailer parsers; no re-extraction is required
 for these metadata/gallery fixes. Exhausted commands still require the existing
 queue retry procedure. This change does not reset queue statuses.
 
-## Scrape time
+## Acquisition time
 
-The successful download instant travels with immutable artifact references through
-v3 and newer exports to `OfferCreated` and `OfferScrapedAtUpdated`. Old imports/events retain
-unknown time. Newer times advance the aggregate and both projections even when
-content is unchanged; absent, equal and older times never erase or regress it.
-Customer-facing returns nullable `scraped_at` (REST) and `scrapedAt` (GraphQL),
-independent of creation time. See [ADR 26](../../docs/adr/0026-offer-scrape-provenance.md)
-for provenance, compatibility and deployment order.
+`acquired_at` is the UTC instant, truncated to microseconds, when a fetch of the
+offer from the retailer succeeds. The HTML download writes it to
+`offer_details_raw.acquired_at`, its storage metadata and
+`OfferPageWasDownloaded`. The GraphQL capture writes it at the start of the raw
+JSON root, keeping every other byte, and in its storage metadata and
+`OfferDetailsFetched`. Extraction rejects a raw body whose time is missing or
+differs. Every later artifact reference, command, event, export and import
+payload carries the same required time.
+
+Offers records it in `OfferCreated` and `OfferAcquiredAtUpdated`. Newer times
+advance the aggregate and both projections even when content is unchanged;
+equal and older times never regress it. Customer-facing returns nullable
+`acquired_at` (REST) and `acquiredAt` (GraphQL), because manual imports may
+omit it. See [ADR 91](../../docs/adr/0091-offer-acquired-at.md) and the
+[cutover runbook](../../docs/process/offer-acquired-at-cutover.md).
 
 ## Localization, identifiers and revisions
 
-New sourcing exports use schema v5: v3 added scrape time, v4 added a localization
-observation, and v5 adds GTIN, SKU and the three Shopify identifiers. Prepared
-v1–v4 snapshots keep their original payload shapes and IDs. Missing localization
+Exports carry a localization observation, GTIN, SKU and the three Shopify
+identifiers. Missing localization
 means no observation; an explicit object replaces both facts, including unknowns.
 Missing/null identifiers retain known values; supplied fields enrich or correct
-them. New creation history uses `OfferCreated.v5` with v1–v4 readers retained.
-Localization-only and identifier-only changes have their own domain events.
+them. Localization-only and identifier-only changes have their own domain events.
 
 Offers preserves each Testimony revision in Mulac event and outbox metadata;
 legacy metadata can omit it. Published Mulac 0.5.0 provides the optional-sequence
@@ -910,11 +916,9 @@ and ADRs [27](../../docs/adr/0027-offer-revision-metadata.md),
 
 ### Comparison price, availability, condition and descriptions
 
-New export commands select schema v9. Readers and immutable preparation support
-v1–v9: v6 adds same-variant `was_price`, v7 adds `availability` and
-`item_condition`, v8 adds `content: {description}`, and v9 uses canonical regional codes. Old pinned commands keep
-their requested version and serialization; retries do not regenerate completed
-snapshots or delivery identities.
+Exports carry same-variant `was_price`, `availability`, `item_condition`,
+`content: {description}` and canonical regional codes. Retries do not
+regenerate completed snapshots or delivery identities.
 
 Each implemented structuralizer emits these fields. Facts are source-backed:
 a purchase flag is `available`/`unavailable`, and explicit inventory evidence is
@@ -926,8 +930,7 @@ existing normalized primary product description, with exact text and markup.
 Legacy artifacts omitting fields produce omitted observations. Explicit null
 pricing/status and `{description:null}` survive conversion as clears. Reject
 malformed facts before saving a prepared export. Keep titles and images flat,
-and exclude variants lacking a payable price as before. Deploy downstream
-readers and migrations before enabling the v9 writer. See
+and exclude variants lacking a payable price as before. See
 [ADRs 34–36](../../docs/adr/README.md) and the
 [verification record](../../docs/plans/24-27-offer-facts-verification.md).
 
@@ -972,9 +975,8 @@ European Union target markets now use `{"kind":"region","code":"eu"}`.
 Historical labels remain readable; exact `European Union` labels canonicalize
 at current read/write boundaries. Countries and other historical labels are
 not reinterpreted. Deploy compatible readers before new producers and pause
-projection writers during the regional-code migrations (ADR 40). Source exports
-now write v9, Offers creation v10 and localization changes v2; old immutable
-versions retain their original readers and encodings.
+projection writers during the regional-code migrations (ADR 40). Offers writes
+localization changes as v2.
 
 Offer downloads rotate through direct access and the hardcoded `OFFER_PROXIES`
 list in `src/platform/http.rs`, initially `http://10.1.0.102:8888`.
@@ -1060,11 +1062,11 @@ an explicit network check. No public token is hardcoded in production.
    connection page. The assembled product and raw request/response pages are
    written as one JSON artifact to the existing `offer_details_raw` bucket.
 
-`OfferDetailsFetched` includes retailer, source, fetched time, and
+`OfferDetailsFetched` includes retailer, source, `acquired_at`, and
 `OfferStorageMetadata` (`object_storage_id`, `external_id`, `content_size`,
-`scraped_at`). Its bucket is `offer_details_raw` (see
+`acquired_at`). Its bucket is `offer_details_raw` (see
 [ADR 51](../../docs/adr/0051-initial-fill-raw-offer-bucket.md)). New artifacts have
-`schema_version: 2`, observed `context` (country, language, currency), `product`,
+`acquired_at` as their first root field, `schema_version: 2`, observed `context` (country, language, currency), `product`,
 and `pages`, each containing `request` and `response`. The fetched event carries
 the same observed context. The event envelope carries the run ID as its correlation ID.
 Historical context-free schema-1 data remains readable.
@@ -1073,9 +1075,10 @@ Authentication is excluded.
 The saga queues `ExtractOfferDetails` on `OfferDetailsFetched`, then
 `StructuralizeOfferDetails` on `OfferDetailsExtracted`. Each command reads the
 pinned source object and stores its result in `offer_details_extracted` or
-`offer_details_structuralized`, preserving the scrape time. The
+`offer_details_structuralized`, preserving the acquisition time. The
 `OfferDetailsStructuralized` listener records one offers outbox message per
-variant with a URL and a known price. Replaying these events reuses the command
+variant with a URL and a known price. It fails the whole batch if any variant's
+`acquired_at` differs from the storage metadata. Replaying these events reuses the command
 and message IDs.
 
 Command workers run as configured. Advance reactions with `/api/events/run`;

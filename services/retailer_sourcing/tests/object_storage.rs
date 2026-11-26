@@ -102,8 +102,13 @@ fn offer_replacements_get_distinct_external_ids_and_validate_typed_metadata() {
     use retailer_sourcing::object_storage::{OfferStorageMetadata, RAW_OFFERS_BUCKET};
     let server = Server::new();
     let client = server.client();
-    let first = client.create_offer(RAW_OFFERS_BUCKET, "first ž").unwrap();
-    let second = client.create_offer(RAW_OFFERS_BUCKET, "second 🔎").unwrap();
+    let acquired_at = "2026-10-26T12:00:00.123456Z".parse().unwrap();
+    let first = client
+        .create_offer(RAW_OFFERS_BUCKET, "first ž", acquired_at)
+        .unwrap();
+    let second = client
+        .create_offer(RAW_OFFERS_BUCKET, "second 🔎", acquired_at)
+        .unwrap();
     assert_ne!(first.external_id, second.external_id);
     assert_ne!(first.object_storage_id, second.object_storage_id);
     assert_eq!(
@@ -115,7 +120,6 @@ fn offer_replacements_get_distinct_external_ids_and_validate_typed_metadata() {
         "second 🔎"
     );
     let wrong_key = OfferStorageMetadata {
-        scraped_at: None,
         external_id: first.external_id,
         ..second
     };
@@ -124,7 +128,12 @@ fn offer_replacements_get_distinct_external_ids_and_validate_typed_metadata() {
         Err(Error::InvalidRecord)
     ));
     let json = to_value(second).unwrap();
-    for field in ["content_size", "object_storage_id", "external_id"] {
+    for field in [
+        "acquired_at",
+        "content_size",
+        "object_storage_id",
+        "external_id",
+    ] {
         let mut missing = json.clone();
         missing.as_object_mut().unwrap().remove(field);
         assert!(from_value::<OfferStorageMetadata>(missing).is_err());

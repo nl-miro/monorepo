@@ -61,6 +61,7 @@ impl Store for PgStore {
         if let Some(storage) = storage {
             let body = self.objects.get_offer(NORMALIZED_OFFERS_BUCKET, &storage)?;
             return Ok(Some(NormalizedOffer {
+                acquired_at: storage.acquired_at,
                 object_storage_id: storage.object_storage_id,
                 offer_id,
                 document: from_str(&body)?,
@@ -91,10 +92,9 @@ impl Store for PgStore {
         entity: &StructuralizedOffer,
     ) -> Result<OfferStorageMetadata, StoreError> {
         let body = to_string(&entity.document)?;
-        let mut storage = self
-            .objects
-            .create_offer(STRUCTURALIZED_OFFERS_BUCKET, &body)?;
-        storage.scraped_at = entity.scraped_at;
+        let storage =
+            self.objects
+                .create_offer(STRUCTURALIZED_OFFERS_BUCKET, &body, entity.acquired_at)?;
         let record = StructuralizedOfferPgRecord::new(entity, storage);
         insert_into(offer_details_structuralized_table)
             .values(&record)

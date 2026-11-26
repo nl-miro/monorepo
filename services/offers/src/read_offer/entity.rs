@@ -13,7 +13,7 @@ pub struct RetailerOffer {
     pub facts: OfferFacts,
     pub identifiers: ProductIdentifiers,
     pub localization: Localization,
-    pub scraped_at: Option<DateTime<Utc>>,
+    pub acquired_at: Option<DateTime<Utc>>,
     pub id: RetailerOfferId,
     pub retailer_code: RetailerCode,
     pub title: String,

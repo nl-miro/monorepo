@@ -695,6 +695,14 @@ struct InboxTestSnapshot {
     data: Value,
 }
 
+/// A `read_offers` row from before the latest migration, under its current column name.
+pub(crate) fn with_acquired_at_column(mut row: Value) -> Value {
+    let row_object = row.as_object_mut().unwrap();
+    let value = row_object.remove("scraped_at").unwrap();
+    row_object.insert("acquired_at".into(), value);
+    row
+}
+
 pub(crate) fn inbox_test_snapshot(pool: &DbPool, sql: &str) -> Value {
     use diesel::sql_query as diesel_sql_query4;
 
@@ -839,7 +847,7 @@ async fn inbox_submission_processes_offer_through_all_http_stages() {
         sku: None,
         external_identifiers: Default::default(),
         localization: None,
-        scraped_at: None,
+        acquired_at: None,
         images: Vec::new(),
         retailer_code: SharedRetailerRetailerCode::AnkerAu,
         title: "USB charger".into(),
@@ -940,7 +948,7 @@ async fn queue_endpoints_process_one_stage_and_preserve_unavailable_outbox() {
             sku: None,
             external_identifiers: Default::default(),
             localization: None,
-            scraped_at: None,
+            acquired_at: None,
             images: Vec::new(),
             retailer_code: SharedRetailerRetailerCode2::AnkerAu,
             title: "Charger".into(),
@@ -1256,7 +1264,7 @@ async fn commands_run_keeps_successful_commands_of_a_failed_batch() {
         sku: None,
         external_identifiers: Default::default(),
         localization: None,
-        scraped_at: None,
+        acquired_at: None,
         images: Vec::new(),
         retailer_code: SharedRetailerRetailerCode::AnkerAu,
         title: "Charger".into(),
@@ -1401,7 +1409,7 @@ fn image_projection_orders_and_rejects_conflicts_with_memory_parity() {
             },
             identifiers: Default::default(),
             localization: Default::default(),
-            scraped_at: None,
+            acquired_at: None,
             images: Vec::new(),
             id: RetailerOfferId::new(Uuid::now_v7().to_string()),
             retailer_code: SharedRetailerRetailerCode3::AnkerAu,
@@ -1557,7 +1565,7 @@ fn creation_projection_rolls_back_parent_and_images_together() {
         },
         identifiers: Default::default(),
         localization: Default::default(),
-        scraped_at: None,
+        acquired_at: None,
         id: RetailerOfferId::new(Uuid::now_v7().to_string()),
         retailer_code: SharedRetailerRetailerCode4::AnkerAu,
         title: "Charger".into(),
@@ -1594,17 +1602,17 @@ fn creation_projection_rolls_back_parent_and_images_together() {
 
 #[tokio::test]
 #[ignore = "requires DATABASE_URL_TEST with CREATE SCHEMA permission"]
-async fn scrape_only_import_persists_history_projection_and_outbox() {
+async fn acquisition_only_import_persists_history_projection_and_outbox() {
     let (_schema, pool) = inbox_test_database();
     let (_kernel, state) = start_mulac(pool.clone()).unwrap();
     let client = TestClient::new(app_with_reporting_token(state, "test".into()));
-    let mut input = json!({"retailer_code":"ankerau","title":"Charger","price_amount":100,"currency":"AUD","url":"https://shop.example/scrape", "scraped_at":"2026-10-26T14:00:00.123456+02:00"});
+    let mut input = json!({"retailer_code":"ankerau","title":"Charger","price_amount":100,"currency":"AUD","url":"https://shop.example/acquired", "acquired_at":"2026-10-26T14:00:00.123456+02:00"});
     for (time, events) in [
         ("2026-10-26T14:00:00.123456+02:00", 1),
         ("2026-10-26T12:00:01.123456Z", 1),
         ("2026-10-26T12:00:00.123456Z", 0),
     ] {
-        input["scraped_at"] = json!(time);
+        input["acquired_at"] = json!(time);
         client
             .post("/api/tmp-import")
             .body_json(&input)
@@ -1616,14 +1624,14 @@ async fn scrape_only_import_persists_history_projection_and_outbox() {
         run_queue(&client, "events", 100, events).await;
     }
     let row = inbox_test_snapshot(&pool, "SELECT to_jsonb(o) AS data FROM read_offers o");
-    assert_eq!(row["scraped_at"], "2026-10-26T12:00:01.123456+00:00");
+    assert_eq!(row["acquired_at"], "2026-10-26T12:00:01.123456+00:00");
     let count = inbox_test_snapshot(&pool, "SELECT to_jsonb(count(*)) AS data FROM event_store");
     assert_eq!(count, 2);
     let event = inbox_test_snapshot(
         &pool,
-        "SELECT payload::jsonb AS data FROM outbox_entries WHERE meta->>'event_type'='OfferScrapedAtUpdated'",
+        "SELECT payload::jsonb AS data FROM outbox_entries WHERE meta->>'event_type'='OfferAcquiredAtUpdated'",
     );
-    assert_eq!(event["scraped_at"], "2026-10-26T12:00:01.123456Z");
+    assert_eq!(event["acquired_at"], "2026-10-26T12:00:01.123456Z");
 }
 
 #[tokio::test]

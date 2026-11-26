@@ -18,6 +18,7 @@ pub(super) struct NormalizedOfferPgRecord {
 impl NormalizedOfferPgRecord {
     pub fn into_entity(self, body: String) -> Result<NormalizedOffer, StoreError> {
         Ok(NormalizedOffer {
+            acquired_at: self.storage.0.acquired_at,
             offer_id: self.offer_id,
             object_storage_id: self.storage.0.object_storage_id,
             document: from_str(&body)?,

@@ -3,10 +3,8 @@ use retailer_sauce::shopify::graphql::raw::RawOfferDetails;
 use retailers_anker::extracted::ExtractedOfferDetails;
 use retailers_anker::prelude::get_storefront_config as retailers_anker_get_storefront_config;
 use retailers_anker::prelude::structuralize_offer_details_v2_for as retailers_anker_structuralize_offer_details_v2_for;
-use retailers_minisforum::extracted::ExtractedOfferDetails as RetailersMinisforumExtractedExtractedOfferDetails;
 use retailers_minisforum::prelude::get_storefront_config as retailers_minisforum_get_storefront_config;
 use retailers_minisforum::prelude::structuralize_offer_details_v2_for as retailers_minisforum_structuralize_offer_details_v2_for;
-use retailers_ugreen::extracted::ExtractedOfferDetails as RetailersUgreenExtractedExtractedOfferDetails;
 use retailers_ugreen::prelude::get_storefront_config as retailers_ugreen_get_storefront_config;
 use retailers_ugreen::prelude::structuralize_offer_details_v2_for as retailers_ugreen_structuralize_offer_details_v2_for;
 use serde_json::from_str;
@@ -19,21 +17,32 @@ use shared::retailer::RetailerCode;
 /// The brand whose inventory holds the retailer's storefront owns its model.
 pub fn extract_v2_for(code: RetailerCode, json: &str) -> Result<String, String> {
     let slug = code.as_str();
-    if retailers_anker_get_storefront_config(&slug).is_some() {
-        let artifact: RawOfferDetails = from_str(json).map_err(|error| error.to_string())?;
-        let extracted = ExtractedOfferDetails::try_from(artifact)?;
-        return serde_json_to_string(&extracted).map_err(|error| error.to_string());
-    }
-    if retailers_minisforum_get_storefront_config(&slug).is_some() {
+
+    if retailers_anker_get_storefront_config(&slug).is_some()
+        || retailers_minisforum_get_storefront_config(&slug).is_some()
+        || retailers_ugreen_get_storefront_config(&slug).is_some()
+    {
         let raw = from_str::<RawOfferDetails>(json).map_err(|e| e.to_string())?;
-        let extracted = RetailersMinisforumExtractedExtractedOfferDetails::try_from(raw)?;
+        let extracted = ExtractedOfferDetails::try_from(raw)?;
         return serde_json_to_string(&extracted).map_err(|e| e.to_string());
     }
-    if retailers_ugreen_get_storefront_config(&slug).is_some() {
-        let raw = from_str::<RawOfferDetails>(json).map_err(|e| e.to_string())?;
-        let extracted = RetailersUgreenExtractedExtractedOfferDetails::try_from(raw)?;
-        return serde_json_to_string(&extracted).map_err(|e| e.to_string());
-    }
+
+    // if retailers_anker_get_storefront_config(&slug).is_some() {
+    //     let artifact: RawOfferDetails = from_str(json).map_err(|error| error.to_string())?;
+    //     let extracted = ExtractedOfferDetails::try_from(artifact)?;
+    //     return serde_json_to_string(&extracted).map_err(|error| error.to_string());
+    // }
+    // if retailers_minisforum_get_storefront_config(&slug).is_some() {
+    //     let raw = from_str::<RawOfferDetails>(json).map_err(|e| e.to_string())?;
+    //     let extracted = ExtractedOfferDetails::try_from(raw)?;
+    //     return serde_json_to_string(&extracted).map_err(|e| e.to_string());
+    // }
+    // if retailers_ugreen_get_storefront_config(&slug).is_some() {
+    //     let raw = from_str::<RawOfferDetails>(json).map_err(|e| e.to_string())?;
+    //     let extracted = ExtractedOfferDetails::try_from(raw)?;
+    //     return serde_json_to_string(&extracted).map_err(|e| e.to_string());
+    // }
+
     Err(format!("no v2 extractor for {code:?}"))
 }
 
@@ -112,23 +121,19 @@ mod tests {
             let source = json!({"schema_version":2,"acquired_at":"2026-11-12T09:10:11Z",
                 "context":{"country":"CA","language":"EN","currency":"CAD"},"product":product,"pages":[]});
             assert!(extract_v2_for(code, &source.to_string()).is_ok());
-            for field in ["acquired_at", "context"] {
-                for null in [false, true] {
-                    let mut changed = source.clone();
-                    if null {
-                        changed[field] = Value::Null;
-                    } else {
-                        changed.as_object_mut().unwrap().remove(field);
-                    }
-                    if field == "context" {
-                        changed["schema_version"] = json!(1);
-                    }
-                    assert!(
-                        extract_v2_for(code, &changed.to_string())
-                            .unwrap_err()
-                            .contains(field)
-                    );
+            for null in [false, true] {
+                let mut changed = source.clone();
+                if null {
+                    changed["context"] = Value::Null;
+                } else {
+                    changed.as_object_mut().unwrap().remove("context");
                 }
+                changed["schema_version"] = json!(1);
+                assert!(
+                    extract_v2_for(code, &changed.to_string())
+                        .unwrap_err()
+                        .contains("context")
+                );
             }
             for value in [json!(123), json!("yesterday")] {
                 let mut changed = source.clone();

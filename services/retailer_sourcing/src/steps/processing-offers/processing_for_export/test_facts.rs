@@ -57,20 +57,11 @@ pub(crate) fn assert_payloads(export: &OfferExport, document: &Value) {
         for field in ["title", "price", "url"] {
             assert_eq!(payload[field], source[field]);
         }
-        for (field, introduced) in [
-            ("was_price", 6),
-            ("availability", 7),
-            ("item_condition", 7),
-            ("content", 8),
-        ] {
-            let expected = (export.schema_version >= introduced)
-                .then(|| source.get(field))
-                .flatten();
+        for field in ["was_price", "availability", "item_condition", "content"] {
             assert_eq!(
                 payload.get(field),
-                expected,
-                "v{} variant {index} {field}",
-                export.schema_version
+                source.get(field),
+                "variant {index} {field}"
             );
         }
     }
@@ -79,12 +70,10 @@ pub(crate) fn assert_payloads(export: &OfferExport, document: &Value) {
 #[test]
 fn persistence_fixture_preserves_missing_null_raw_and_exact_fact_values() {
     let document = document();
-    for version in [1, 5, 6, 7, 8] {
-        let export = convert(conversion_tests_source(), &document.to_string(), version).unwrap();
-        assert_payloads(&export, &document);
-        let bytes = serde_json_to_string(&export).unwrap();
-        let restored: OfferExport = from_str(&bytes).unwrap();
-        assert_payloads(&restored, &document);
-        assert_eq!(serde_json_to_string(&restored).unwrap(), bytes);
-    }
+    let export = convert(conversion_tests_source(), &document.to_string()).unwrap();
+    assert_payloads(&export, &document);
+    let bytes = serde_json_to_string(&export).unwrap();
+    let restored: OfferExport = from_str(&bytes).unwrap();
+    assert_payloads(&restored, &document);
+    assert_eq!(serde_json_to_string(&restored).unwrap(), bytes);
 }

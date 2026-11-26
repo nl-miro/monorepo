@@ -47,7 +47,7 @@ pub struct Offer {
     pub external_identifiers: ExternalIdentifiers,
     pub localization: OfferLocalization,
     /// Latest known successful download, in UTC RFC3339 format.
-    pub scraped_at: Option<String>,
+    pub acquired_at: Option<String>,
     #[graphql(skip)]
     pub id: String,
     pub retailer_code: String,
@@ -107,7 +107,7 @@ struct Record {
     #[diesel(sql_type = diesel::sql_types::Nullable<Text>)]
     language: Option<String>,
     #[diesel(sql_type = diesel::sql_types::Nullable<Timestamptz>)]
-    scraped_at: Option<DateTime<Utc>>,
+    acquired_at: Option<DateTime<Utc>>,
     #[diesel(sql_type = SqlUuid)]
     id: Uuid,
     #[diesel(sql_type = Text)]
@@ -218,8 +218,8 @@ fn map_records(records: Vec<Record>) -> Result<Vec<Offer>, ()> {
                     record.target_market,
                     record.language,
                 )?,
-                scraped_at: record
-                    .scraped_at
+                acquired_at: record
+                    .acquired_at
                     .map(|time| time.to_rfc3339_opts(SecondsFormat::AutoSi, true)),
                 id: record.id.to_string(),
                 retailer_code: record.retailer_code,

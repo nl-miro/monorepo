@@ -4,6 +4,8 @@ use super::super::schema::offer_details_raw;
 use super::StoreError;
 use crate::platform::db::Json;
 use crate::platform::object_storage::OfferStorageMetadata;
+use chrono::DateTime;
+use chrono::Utc;
 use diesel::Insertable;
 use uuid::Uuid;
 
@@ -13,6 +15,7 @@ pub(super) struct RawOfferPgRecord<'a> {
     pub id: Uuid,
     pub offer_id: Uuid,
     pub url: &'a str,
+    pub acquired_at: DateTime<Utc>,
     pub storage: Json<OfferStorageMetadata>,
     pub retailer_code: String,
 }
@@ -23,6 +26,7 @@ impl<'a> RawOfferPgRecord<'a> {
             id: Uuid::now_v7(),
             offer_id: entity.offer_id,
             url: &entity.url,
+            acquired_at: entity.acquired_at,
             retailer_code: entity.retailer_code.as_str(),
             storage: Json(storage),
         }

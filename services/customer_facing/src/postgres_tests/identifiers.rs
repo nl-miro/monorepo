@@ -48,8 +48,17 @@ fn auxiliary_snapshot(pool: &DbPool) -> Value {
     ) AS data")
 }
 
-fn as_nested(mut rows: Value) -> Value {
-    for row in rows.as_array_mut().unwrap() {
+/// Rows from the identifier-column schema in the latest shape: nested identifiers and
+/// the renamed acquisition time.
+fn as_nested(rows: Value) -> Value {
+    let mut rows: Vec<Value> = rows
+        .as_array()
+        .unwrap()
+        .iter()
+        .cloned()
+        .map(with_acquired_at_column)
+        .collect();
+    for row in &mut rows {
         let object = row.as_object_mut().unwrap();
         let mut external = Map::new();
         for key in [
@@ -61,7 +70,7 @@ fn as_nested(mut rows: Value) -> Value {
         }
         object.insert("external_identifiers".into(), Value::Object(external));
     }
-    rows
+    Value::Array(rows)
 }
 
 #[tokio::test]

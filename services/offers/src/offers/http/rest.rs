@@ -31,7 +31,7 @@ mod model {
         pub sku: Option<String>,
         pub external_identifiers: PoemOpenapiTypesMaybeUndefined<Any<ExternalIdentifiers>>,
         pub localization: PoemOpenapiTypesMaybeUndefined<Any<Localization>>,
-        pub scraped_at: Option<String>,
+        pub acquired_at: Option<String>,
         #[oai(default)]
         pub images: Vec<String>,
         pub retailer_code: String,
@@ -71,8 +71,8 @@ mod conversion {
         "content must be an object".into()
     }
 
-    fn err_invalid_scraped_at(error: ParseError) -> String {
-        format!("invalid scraped_at: {error}")
+    fn err_invalid_acquired_at(error: ParseError) -> String {
+        format!("invalid acquired_at: {error}")
     }
 
     impl TryFrom<ImportOfferRequest> for InboxSubmitInboxRequest {
@@ -89,12 +89,12 @@ mod conversion {
             use retailer_sauce::prelude::observation::object as retailer_sauce_observation_object;
             use serde_json::Value as SerdeJsonValue;
 
-            let scraped_at = request
-                .scraped_at
+            let acquired_at = request
+                .acquired_at
                 .as_deref()
                 .map(str::parse::<DateTime<Utc>>)
                 .transpose()
-                .map_err(err_invalid_scraped_at)?;
+                .map_err(err_invalid_acquired_at)?;
             let retailer_code = RetailerCode::from_str(&request.retailer_code)?;
             let currency: Currency = request.currency.parse()?;
 
@@ -144,8 +144,8 @@ mod conversion {
                     payload["content"] = json!(value.0);
                 }
             }
-            if let Some(scraped_at) = scraped_at {
-                payload["scraped_at"] = json!(scraped_at);
+            if let Some(acquired_at) = acquired_at {
+                payload["acquired_at"] = json!(acquired_at);
             }
             match request.localization {
                 MaybeUndefined::Undefined => {}
@@ -343,7 +343,7 @@ mod tests {
                 sku: None,
                 external_identifiers: Default::default(),
                 localization: Default::default(),
-                scraped_at: None,
+                acquired_at: None,
                 images: Vec::new(),
                 retailer_code: "ankerau".into(),
                 title: " USB charger ".into(),

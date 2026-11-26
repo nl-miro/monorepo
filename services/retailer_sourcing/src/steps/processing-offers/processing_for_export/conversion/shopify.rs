@@ -1,6 +1,5 @@
 //! Project the nested v2 Shopify artifact onto the existing offers import contract.
 
-use super::super::entity::SCHEMA_VERSION;
 use super::{ConversionError, OfferImport, Variation, VariationIdentifiers};
 use chrono::{DateTime, Utc};
 use retailer_sauce::prelude::{
@@ -27,11 +26,17 @@ struct Image {
 
 #[derive(Deserialize)]
 struct ShopifyVariation {
+    timeline: Timeline,
     market: String,
     content: Content,
     identifiers: Identifiers,
     flags: Flags,
     pricing: Pricing,
+}
+
+#[derive(Deserialize)]
+struct Timeline {
+    acquired_at: DateTime<Utc>,
 }
 
 #[derive(Deserialize)]
@@ -59,12 +64,24 @@ struct Identifiers {
 }
 
 /// Offers identifies a listing by retailer and URL and requires a known price.
+///
+/// `acquired_at` comes from the storage metadata, which is authoritative: any variation that
+/// disagrees fails the whole batch, even one that would be skipped.
 pub(crate) fn shopify_imports(
     body: &str,
     retailer: RetailerCode,
-    scraped_at: Option<DateTime<Utc>>,
+    acquired_at: DateTime<Utc>,
 ) -> Result<Vec<(u64, OfferImport)>, ConversionError> {
     let document: Document = from_str(body).map_err(|error| ConversionError(error.to_string()))?;
+    if let Some(index) = document
+        .variations
+        .iter()
+        .position(|item| item.timeline.acquired_at != acquired_at)
+    {
+        return Err(ConversionError(format!(
+            "variation {index} timeline.acquired_at differs from its stored acquisition time"
+        )));
+    }
     let mut imports = Vec::new();
     let mut urls = HashSet::new();
     for (index, item) in document.variations.into_iter().enumerate() {
@@ -135,7 +152,7 @@ pub(crate) fn shopify_imports(
                 language: Some(language),
             },
         };
-        if let Some(payload) = variation.import(retailer, scraped_at, SCHEMA_VERSION, index)? {
+        if let Some(payload) = variation.import(retailer, acquired_at, index)? {
             imports.push((ids.id, payload));
         }
     }
@@ -152,8 +169,9 @@ mod tests {
         let price = json!({"amount": 1200, "currency":"CAD"});
         let comparison = json!({"amount": 1500, "currency":"CAD"});
         let url = "https://ca.example/products/hub?variant=3";
+        let acquired_at = "2026-11-12T00:00:00.123456Z";
         let variant = json!({
-            "market":"CA", "flags":{"available_for_sale":false},
+            "timeline":{"acquired_at":acquired_at}, "market":"CA", "flags":{"available_for_sale":false},
             "pricing":{"Discounted":[price,comparison]},
             "identifiers":{"id":3,"product_id":2,"handle":"hub","sku":"A3","barcode":"0012"},
             "content":{"url":url,"images":[1],"featured_image":1,"language":"FR","description":"Texte","title":"Hub"}
@@ -163,7 +181,8 @@ mod tests {
         let mut unlisted = variant.clone();
         unlisted["content"]["url"] = Value::Null;
         let doc = json!({"images":{"1":{"url":"https://ca.example/a.jpg"}}, "variations":[unknown, unlisted, variant]});
-        let entries = shopify_imports(&doc.to_string(), RetailerCode::AnkerCa, None).unwrap();
+        let time = acquired_at.parse().unwrap();
+        let entries = shopify_imports(&doc.to_string(), RetailerCode::AnkerCa, time).unwrap();
         assert_eq!(entries.len(), 1);
         assert_eq!(entries[0].0, 3);
         let payload = to_value(&entries[0].1).unwrap();
@@ -177,5 +196,33 @@ mod tests {
             "gid://shopify/ProductVariant/3"
         );
         assert_eq!(payload["images"], json!(["https://ca.example/a.jpg"]));
+        assert_eq!(payload["acquired_at"], acquired_at);
+    }
+
+    #[test]
+    fn a_skipped_variation_with_another_acquisition_time_fails_the_batch() {
+        let acquired_at = "2026-11-12T00:00:00.123456Z";
+        let variant = json!({
+            "timeline":{"acquired_at":acquired_at}, "market":"CA", "flags":{"available_for_sale":true},
+            "pricing":{"Standard":{"amount": 1200, "currency":"CAD"}},
+            "identifiers":{"id":3,"product_id":2,"handle":"hub","sku":null,"barcode":null},
+            "content":{"url":"https://ca.example/products/hub","images":[],"featured_image":null,"language":"EN","description":"Text","title":"Hub"}
+        });
+        let mut skipped = variant.clone();
+        skipped["pricing"] = json!("Unknown");
+        skipped["timeline"]["acquired_at"] = json!("2026-11-12T00:00:00.123457Z");
+        let doc = json!({"images":{}, "variations":[variant, skipped]});
+        let error = shopify_imports(
+            &doc.to_string(),
+            RetailerCode::AnkerCa,
+            acquired_at.parse().unwrap(),
+        )
+        .unwrap_err();
+        assert!(
+            error
+                .to_string()
+                .contains("variation 1 timeline.acquired_at"),
+            "{error}"
+        );
     }
 }

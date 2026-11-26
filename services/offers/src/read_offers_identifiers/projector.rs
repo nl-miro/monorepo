@@ -148,7 +148,7 @@ mod tests {
             facts: Default::default(),
             identifiers,
             localization: Default::default(),
-            scraped_at: None,
+            acquired_at: None,
             images: Vec::new(),
             id: RetailerOfferId::new(Uuid::new_v4().to_string()),
             retailer_code: RetailerCode::from_str("ankerau").unwrap(),

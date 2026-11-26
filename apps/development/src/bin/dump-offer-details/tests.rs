@@ -170,10 +170,10 @@ async fn failed_or_mismatched_objects_do_not_write_files() {
 
 #[tokio::test]
 async fn dumps_graphql_v2_pretty_printed_and_skips_older_product_copies() {
-    let body = "{\n  \"schema_version\":1, \"product\":{\"id\":\"gid://shopify/Product/123\",\"title\":\"ž 🔎\"}, \"pages\":[]\n}";
+    let body = "{\"acquired_at\":\"2026-11-10T00:00:00Z\",\n  \"schema_version\":1, \"product\":{\"id\":\"gid://shopify/Product/123\",\"title\":\"ž 🔎\"}, \"pages\":[]\n}";
     let (sourcing, sourcing_thread) = fixture(
         "/api/development/offer-details-v2/sources?limit=200&offset=0", "sourcing-token", 200,
-        json!({"sources":[{"id":"event-id","run_id":"run-id","product_id":"gid://shopify/Product/123", "retailer_code":"AnkerCa", "fetched_at":"2026-11-10T00:00:00Z", "storage":{
+        json!({"sources":[{"id":"event-id","run_id":"run-id","product_id":"gid://shopify/Product/123", "retailer_code":"AnkerCa", "acquired_at":"2026-11-10T00:00:00Z", "storage":{
             "object_storage_id":OBJECT_ID,"external_id":EXTERNAL_ID,"content_size":body.len()
         }}]}).to_string(),
     );
@@ -213,10 +213,7 @@ async fn dumps_graphql_v2_pretty_printed_and_skips_older_product_copies() {
     );
     assert_eq!(
         read_to_string(&path).unwrap(),
-        format!(
-            "{}\n",
-            pretty_json(&source_payload(&pages[0], body).unwrap())
-        )
+        format!("{}\n", pretty_json(body))
     );
     assert!(matches!(
         write_source(&dir, &pages[0], &mut written, &objects)

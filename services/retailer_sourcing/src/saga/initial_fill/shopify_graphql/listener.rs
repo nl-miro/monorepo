@@ -118,7 +118,7 @@ impl Listener {
             event.retailer_code,
             event.source,
             event.storage,
-            event.fetched_at,
+            event.acquired_at,
         );
         Ok((saga.saga_id().into(), vec![command]))
     }
@@ -130,7 +130,7 @@ impl Listener {
             event.retailer_code,
             event.source,
             event.storage,
-            event.fetched_at,
+            event.acquired_at,
         );
         Ok((saga.saga_id().into(), vec![command]))
     }

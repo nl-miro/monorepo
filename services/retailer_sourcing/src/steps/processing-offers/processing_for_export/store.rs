@@ -10,7 +10,7 @@ use serde_json::to_string;
 
 use diesel::prelude::*;
 use diesel::r2d2::PoolError;
-use diesel::sql_types::{Integer, Jsonb, Text, Uuid as SqlUuid};
+use diesel::sql_types::{Jsonb, Text, Uuid as SqlUuid};
 use uuid::Uuid;
 
 use self::record::{ExportStats, OfferExportPgRecord};
@@ -63,19 +63,14 @@ impl PgStore {
             .transpose()
     }
 
-    fn find(
-        &self,
-        source: &ExportSource,
-        schema_version: u32,
-    ) -> Result<Option<OfferExportPgRecord>, StoreError> {
-        Ok(sql_query(
-            "SELECT * FROM offer_export WHERE offer_id = $1 AND source_object_id = $2 AND schema_version = $3",
+    fn find(&self, source: &ExportSource) -> Result<Option<OfferExportPgRecord>, StoreError> {
+        Ok(
+            sql_query("SELECT * FROM offer_export WHERE offer_id = $1 AND source_object_id = $2")
+                .bind::<SqlUuid, _>(source.offer_id)
+                .bind::<SqlUuid, _>(source.storage.object_storage_id)
+                .get_result(&mut self.pool.get()?)
+                .optional()?,
         )
-        .bind::<SqlUuid, _>(source.offer_id)
-        .bind::<SqlUuid, _>(source.storage.object_storage_id)
-        .bind::<Integer, _>(schema_version as i32)
-        .get_result(&mut self.pool.get()?)
-        .optional()?)
     }
 
     fn hydrate(&self, record: OfferExportPgRecord) -> Result<PreparedExport, StoreError> {
@@ -104,44 +99,34 @@ impl PgStore {
 }
 
 impl Store for PgStore {
-    fn prepare(
-        &self,
-        source: ExportSource,
-        schema_version: u32,
-    ) -> Result<PreparedExport, StoreError> {
-        if !matches!(schema_version, 1..=9) {
-            return Err(StoreError::InvalidRecord);
-        }
-        if let Some(record) = self.find(&source, schema_version)? {
+    fn prepare(&self, source: ExportSource) -> Result<PreparedExport, StoreError> {
+        if let Some(record) = self.find(&source)? {
             return self.prepared_for(record, &source);
         }
 
         let input = self
             .objects
             .get_offer(STRUCTURALIZED_OFFERS_BUCKET, &source.storage)?;
-        let snapshot = convert(source.clone(), &input, schema_version)?;
+        let snapshot = convert(source.clone(), &input)?;
         let body = to_string(&snapshot)?;
         let stats = Json(ExportStats::from(&snapshot));
         let references = Json(source.clone());
         // Only the winning preparation's IDs and exact bytes are used, including
         // when another consumer raced this one after reading the same source.
         sql_query(
-            "INSERT INTO offer_export (id, offer_id, source_object_id, schema_version, source, stats, prepared_body)
-             VALUES ($1,$2,$3,$4,$5,$6,$7)
-             ON CONFLICT (offer_id, source_object_id, schema_version) DO NOTHING",
+            "INSERT INTO offer_export (id, offer_id, source_object_id, source, stats, prepared_body)
+             VALUES ($1,$2,$3,$4,$5,$6)
+             ON CONFLICT (offer_id, source_object_id) DO NOTHING",
         )
         .bind::<SqlUuid, _>(snapshot.id)
         .bind::<SqlUuid, _>(source.offer_id)
         .bind::<SqlUuid, _>(source.storage.object_storage_id)
-        .bind::<Integer, _>(schema_version as i32)
         .bind::<Jsonb, _>(references)
         .bind::<Jsonb, _>(stats)
         .bind::<Text, _>(body)
         .execute(&mut self.pool.get()?)?;
 
-        let record = self
-            .find(&source, schema_version)?
-            .ok_or(StoreError::Incomplete)?;
+        let record = self.find(&source)?.ok_or(StoreError::Incomplete)?;
         self.prepared_for(record, &source)
     }
 

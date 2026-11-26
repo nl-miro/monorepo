@@ -125,6 +125,14 @@ fn logical_offer(mut row: Value) -> Value {
     row
 }
 
+/// An `offers` row from before the latest migration, under its current column name.
+fn with_acquired_at_column(mut row: Value) -> Value {
+    let row_object = row.as_object_mut().unwrap();
+    let value = row_object.remove("scraped_at").unwrap();
+    row_object.insert("acquired_at".into(), value);
+    row
+}
+
 fn with_urls(mut entries: Value, url: &Value) -> Value {
     for entry in entries.as_array_mut().unwrap() {
         entry["url"] = url.clone();

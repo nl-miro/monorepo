@@ -66,10 +66,10 @@ pub trait RetailerOfferRepository: Send + Sync {
         id: &RetailerOfferId,
         localization: &Localization,
     ) -> Result<(), RetailerOfferRepositoryError>;
-    fn update_scraped_at(
+    fn update_acquired_at(
         &self,
         id: &RetailerOfferId,
-        scraped_at: DateTime<Utc>,
+        acquired_at: DateTime<Utc>,
     ) -> Result<(), RetailerOfferRepositoryError>;
     fn add_image(&self, event: &OfferImageAddedEvent) -> Result<(), RetailerOfferRepositoryError>;
     fn images(&self, id: &RetailerOfferId) -> Result<Vec<String>, RetailerOfferRepositoryError>;
@@ -147,7 +147,7 @@ pub(crate) mod tests {
             },
             identifiers: Default::default(),
             localization: Default::default(),
-            scraped_at: None,
+            acquired_at: None,
             images: vec![
                 "https://shop.example/A".into(),
                 "https://shop.example/B".into(),

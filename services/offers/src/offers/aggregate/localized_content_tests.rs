@@ -163,77 +163,60 @@ fn combined_market_change_follows_content_and_reserves_capacity_atomically() {
 }
 
 #[test]
-fn actual_old_creation_records_and_mixed_history_keep_exact_scalar_tuples() {
-    let data = json!({"id":"legacy","retailer_code":"AnkerCom","title":" Old ž ","price":{"amount":1999,"currency":"USD"},"url":"https://example.com/legacy","created_at":"2020-01-02T03:04:05Z"});
-    for version in 1..=8 {
-        let mut historical = data.clone();
-        if version >= 5 {
-            historical["localization"] = json!({"target_market":null,"language":"en-US"});
-        }
-        if version == 8 {
-            historical["content"] = json!({"description":" <p>old &amp; text</p>\n"});
-        }
-        let record: OfferEventRecord = from_value(
-            json!({"type":format!("OfferCreated.v{version}"),"data":historical.clone()}),
-        )
-        .unwrap();
-        let old: OfferCreatedEvent = from_value(historical).unwrap();
-        assert_eq!(
-            old.facts.content,
-            singleton(
-                " Old ž ".into(),
-                if version >= 5 {
-                    Some("en-US".into())
-                } else {
-                    None
-                },
-                if version == 8 {
-                    Some(" <p>old &amp; text</p>\n".into())
-                } else {
-                    None
-                }
-            )
-        );
-        let mut offer = RetailerOfferAggregate::from_history(
-            RetailerOfferId::new("legacy"),
-            vec![EventEnvelope::new(record.into(), 1)],
-        );
-        update(
-            &mut offer,
-            "Français",
-            observe(Some("fr"), Some(Some("French"))),
-        );
-        // Stitch the genuinely old creation to newly persisted changes.
-        let created = RetailerOfferEvent::OfferCreated(Box::new(old));
-        let mut history = vec![EventEnvelope::new(created, 1)];
-        history.extend(offer.uncommitted_events.clone());
-        for (index, payload) in [
-            json!({"type":"OfferTitleChanged.v1","data":{"id":"legacy","title":" Corrected "}}),
-            json!({"type":"OfferContentChanged.v1","data":{"id":"legacy","content":{"description":" Exact legacy "}}}),
-            json!({"type":"OfferLocalizationChanged.v1","data":{"id":"legacy","localization":{"target_market":null,"language":"en-US"}}}),
-        ].into_iter().enumerate() {
-            let record: OfferEventRecord = from_value(payload).unwrap();
-            history.push(EventEnvelope::new(record.into(), index as u64 + 3));
-        }
-        let replay = RetailerOfferAggregate::from_history(RetailerOfferId::new("legacy"), history);
-        let selected =
-            offer_content_selected(&replay.state.facts.content, &Some("en-US".into())).unwrap();
-        assert_eq!(selected.title, " Corrected ");
-        assert_eq!(selected.description.as_deref(), Some(" Exact legacy "));
-        assert!(
-            !replay
-                .state
-                .facts
-                .content
-                .iter()
-                .any(|entry| entry.language.as_deref() == Some("fr"))
-        );
-        assert_eq!(
-            replay.state.facts.content.len(),
-            if version >= 5 { 1 } else { 2 }
-        );
+fn creation_records_and_mixed_history_keep_exact_scalar_tuples() {
+    let data = json!({"id":"created","retailer_code":"AnkerCom","title":" Old ž ","price":{"amount":1999,"currency":"USD"},"url":"https://example.com/created","created_at":"2020-01-02T03:04:05Z",
+        "localization":{"target_market":null,"language":"en-US"},
+        "content":[{"language":"en-US","title":" Old ž ","description":" <p>old &amp; text</p>\n"}]});
+    for version in 1..=10 {
+        let tag = format!("OfferCreated.v{version}");
+        assert!(from_value::<OfferEventRecord>(json!({"type":tag,"data":data})).is_err());
     }
-    assert!(from_value::<OfferEventRecord>(json!({"type":"OfferCreated.v9","data":data})).is_err());
+    let record: OfferEventRecord =
+        from_value(json!({"type":"OfferCreated","data":data.clone()})).unwrap();
+    let created: OfferCreatedEvent = from_value(data).unwrap();
+    assert_eq!(
+        created.facts.content,
+        singleton(
+            " Old ž ".into(),
+            Some("en-US".into()),
+            Some(" <p>old &amp; text</p>\n".into())
+        )
+    );
+    let mut offer = RetailerOfferAggregate::from_history(
+        RetailerOfferId::new("created"),
+        vec![EventEnvelope::new(record.into(), 1)],
+    );
+    update(
+        &mut offer,
+        "Français",
+        observe(Some("fr"), Some(Some("French"))),
+    );
+    // Stitch the creation to newly persisted changes and change events that keep their versions.
+    let created = RetailerOfferEvent::OfferCreated(Box::new(created));
+    let mut history = vec![EventEnvelope::new(created, 1)];
+    history.extend(offer.uncommitted_events.clone());
+    for (index, payload) in [
+        json!({"type":"OfferTitleChanged.v1","data":{"id":"created","title":" Corrected "}}),
+        json!({"type":"OfferContentChanged.v1","data":{"id":"created","content":{"description":" Exact legacy "}}}),
+        json!({"type":"OfferLocalizationChanged.v1","data":{"id":"created","localization":{"target_market":null,"language":"en-US"}}}),
+    ].into_iter().enumerate() {
+        let record: OfferEventRecord = from_value(payload).unwrap();
+        history.push(EventEnvelope::new(record.into(), index as u64 + 3));
+    }
+    let replay = RetailerOfferAggregate::from_history(RetailerOfferId::new("created"), history);
+    let selected =
+        offer_content_selected(&replay.state.facts.content, &Some("en-US".into())).unwrap();
+    assert_eq!(selected.title, " Corrected ");
+    assert_eq!(selected.description.as_deref(), Some(" Exact legacy "));
+    assert!(
+        !replay
+            .state
+            .facts
+            .content
+            .iter()
+            .any(|entry| entry.language.as_deref() == Some("fr"))
+    );
+    assert_eq!(replay.state.facts.content.len(), 1);
 }
 
 #[test]

@@ -276,7 +276,13 @@ mod tests {
         let server = Server::new();
         let objects = server.client();
         let body = "<html>ž 🔎</html>";
-        let storage = objects.create_offer(RAW_OFFERS_BUCKET, body).unwrap();
+        let storage = objects
+            .create_offer(
+                RAW_OFFERS_BUCKET,
+                body,
+                "2026-10-26T12:00:00Z".parse().unwrap(),
+            )
+            .unwrap();
         let record = || PageRecord {
             id: Uuid::now_v7(),
             url: "https://shop.test/page".into(),

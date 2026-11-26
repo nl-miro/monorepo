@@ -165,18 +165,19 @@ impl RetailerOfferRepository for PostgresRetailerOfferRepository {
         )
     }
 
-    fn update_scraped_at(
+    fn update_acquired_at(
         &self,
         id: &RetailerOfferId,
-        scraped_at: DateTime<Utc>,
+        acquired_at: DateTime<Utc>,
     ) -> Result<(), RetailerOfferRepositoryError> {
         let id = UuidUuid::parse_str(id.value()).map_err(err_update)?;
-        let count =
-            sql_query("UPDATE read_offers SET scraped_at = GREATEST(scraped_at, $2) WHERE id = $1")
-                .bind::<SqlUuid, _>(id)
-                .bind::<Timestamptz, _>(scraped_at)
-                .execute(&mut self.pool.get().map_err(err_update)?)
-                .map_err(err_update)?;
+        let count = sql_query(
+            "UPDATE read_offers SET acquired_at = GREATEST(acquired_at, $2) WHERE id = $1",
+        )
+        .bind::<SqlUuid, _>(id)
+        .bind::<Timestamptz, _>(acquired_at)
+        .execute(&mut self.pool.get().map_err(err_update)?)
+        .map_err(err_update)?;
         require_updated_offer(count)
     }
 
@@ -253,7 +254,7 @@ impl RetailerOfferRepository for PostgresRetailerOfferRepository {
         connection
             .transaction::<_, Error, _>(|connection| {
                 sql_query(
-                    "INSERT INTO read_offers (id, retailer_code, url, title, price_amount, currency, created_at, scraped_at, target_market, language, gtin, sku, shopify_product_gid, shopify_product_variation_gid, shopify_handle, was_price_amount, was_price_currency, availability, item_condition, description, content)
+                    "INSERT INTO read_offers (id, retailer_code, url, title, price_amount, currency, created_at, acquired_at, target_market, language, gtin, sku, shopify_product_gid, shopify_product_variation_gid, shopify_handle, was_price_amount, was_price_currency, availability, item_condition, description, content)
                      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21)",
                 )
                 .bind::<SqlUuid, _>(id)
@@ -263,7 +264,7 @@ impl RetailerOfferRepository for PostgresRetailerOfferRepository {
                 .bind::<BigInt, _>(entity.price.amount())
                 .bind::<Text, _>(entity.price.currency().as_str())
                 .bind::<Timestamptz, _>(entity.created_at)
-                .bind::<Nullable<Timestamptz>, _>(entity.scraped_at)
+                .bind::<Nullable<Timestamptz>, _>(entity.acquired_at)
                 .bind::<Nullable<Jsonb>, _>(&market)
                 .bind::<Nullable<Text>, _>(&entity.localization.language)
                 .bind::<Nullable<Text>, _>(entity.identifiers.gtin.as_ref().map(|value| &value.value))

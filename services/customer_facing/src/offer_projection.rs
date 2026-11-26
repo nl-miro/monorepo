@@ -67,7 +67,7 @@ struct Created {
     #[serde(default)]
     localization: RetailerSauceLocalization,
     #[serde(default)]
-    scraped_at: Option<DateTime<Utc>>,
+    acquired_at: Option<DateTime<Utc>>,
     #[serde(default)]
     images: Vec<String>,
     id: Uuid,
@@ -131,9 +131,9 @@ struct ImageAdded {
 }
 
 #[derive(Deserialize)]
-struct ScrapedAtUpdated {
+struct AcquiredAtUpdated {
     id: Uuid,
-    scraped_at: DateTime<Utc>,
+    acquired_at: DateTime<Utc>,
 }
 
 #[derive(Deserialize)]
@@ -168,7 +168,7 @@ enum Change {
     Content(ContentChanged),
     Identifiers(IdentifiersChanged),
     Localization(LocalizationChanged),
-    ScrapedAt(ScrapedAtUpdated),
+    AcquiredAt(AcquiredAtUpdated),
     Image(ImageAdded),
     Created(Box<Created>),
     Title(TitleChanged),
@@ -225,7 +225,7 @@ impl Change {
             "OfferContentChanged" => Self::Content(from_value(payload).map_err(invalid)?),
             "OfferIdentifiersChanged" => Self::Identifiers(from_value(payload).map_err(invalid)?),
             "OfferLocalizationChanged" => Self::Localization(from_value(payload).map_err(invalid)?),
-            "OfferScrapedAtUpdated" => Self::ScrapedAt(from_value(payload).map_err(invalid)?),
+            "OfferAcquiredAtUpdated" => Self::AcquiredAt(from_value(payload).map_err(invalid)?),
             "OfferImageAdded" => Self::Image(from_value(payload).map_err(invalid)?),
             "OfferCreated" => Self::Created(from_value(payload).map_err(invalid)?),
             "OfferTitleChanged" => Self::Title(from_value(payload).map_err(invalid)?),
@@ -290,7 +290,7 @@ impl Change {
                 }
                 None
             }
-            Self::Price(_) | Self::ScrapedAt(_) | Self::Localization(_) | Self::Identifiers(_) => {
+            Self::Price(_) | Self::AcquiredAt(_) | Self::Localization(_) | Self::Identifiers(_) => {
                 None
             }
             Self::Image(change) => {
@@ -352,11 +352,11 @@ impl Change {
                     .bind::<Nullable<Jsonb>, _>(change.localization.target_market.as_ref().map(|market| to_value(market.canonicalized()).expect("serializable market")))
                     .execute(connection)?
             }
-            Self::ScrapedAt(change) => sql_query(
-                "UPDATE offers SET scraped_at = GREATEST(scraped_at, $2) WHERE id = $1",
+            Self::AcquiredAt(change) => sql_query(
+                "UPDATE offers SET acquired_at = GREATEST(acquired_at, $2) WHERE id = $1",
             )
             .bind::<SqlUuid, _>(change.id)
-            .bind::<Timestamptz, _>(change.scraped_at)
+            .bind::<Timestamptz, _>(change.acquired_at)
             .execute(connection)?,
             Self::Image(change) => sql_query(
                 "INSERT INTO offer_images (offer_id, image_url, position) VALUES ($1,$2,$3)
@@ -369,7 +369,7 @@ impl Change {
             .execute(connection)?,
             Self::Created(offer) => {
                 let count = sql_query(
-                    "INSERT INTO offers (id, retailer_code, price_amount, currency, created_at, scraped_at, target_market, gtin, sku, external_identifiers, was_price_amount, was_price_currency, availability, item_condition, content)
+                    "INSERT INTO offers (id, retailer_code, price_amount, currency, created_at, acquired_at, target_market, gtin, sku, external_identifiers, was_price_amount, was_price_currency, availability, item_condition, content)
                      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)",
                 )
                 .bind::<SqlUuid, _>(offer.id)
@@ -377,7 +377,7 @@ impl Change {
                 .bind::<BigInt, _>(offer.price.amount())
                 .bind::<Text, _>(offer.price.currency().as_str())
                 .bind::<Timestamptz, _>(offer.created_at)
-                .bind::<Nullable<Timestamptz>, _>(offer.scraped_at)
+                .bind::<Nullable<Timestamptz>, _>(offer.acquired_at)
                 .bind::<Nullable<Jsonb>, _>(offer.localization.target_market.as_ref().map(|market| to_value(market.canonicalized()).expect("serializable market")))
                 .bind::<Nullable<Text>, _>(offer.identifiers.gtin.as_ref().map(|value| &value.value))
                 .bind::<Nullable<Text>, _>(offer.identifiers.sku.as_ref().map(|value| &value.value))
@@ -510,47 +510,45 @@ mod tests {
     use serde_json::json;
 
     #[test]
-    fn source_fixtures_and_historical_creation_keep_the_producer_contract() {
-        let fixtures = [
-            include_str!(
-                "../../retailer_sourcing/tests/fixtures/offer_export/import_payload_v6.json"
-            ),
-            include_str!(
-                "../../retailer_sourcing/tests/fixtures/offer_export/import_payload_v7.json"
-            ),
-            include_str!(
-                "../../retailer_sourcing/tests/fixtures/offer_export/import_payload_v8.json"
-            ),
-        ];
-        for (version, fixture) in (6..=8).zip(fixtures) {
-            let mut payload: SerdeJsonValue = serde_json_from_str(fixture).unwrap();
-            payload["id"] = json!(Uuid::now_v7());
-            payload["created_at"] = json!("2026-10-27T00:00:00Z");
+    fn source_fixture_creation_keeps_the_producer_contract() {
+        let mut payload: SerdeJsonValue = serde_json_from_str(include_str!(
+            "../../retailer_sourcing/tests/fixtures/offer_export/import_payload.json"
+        ))
+        .unwrap();
+        payload["id"] = json!(Uuid::now_v7());
+        payload["created_at"] = json!("2026-10-27T00:00:00Z");
+        let Change::Created(offer) = Change::parse("OfferCreated", &payload.to_string()).unwrap()
+        else {
+            panic!("expected creation")
+        };
+        assert_eq!(offer.price.amount(), 1999);
+        let was = offer.was_price.unwrap();
+        assert_eq!((was.amount(), was.currency().as_str()), (2999, "AUD"));
+        assert_eq!(offer.availability, Some(Availability::Available));
+        assert_eq!(offer.item_condition, Some(ItemCondition::New));
+        assert_eq!(
+            offer.content[0].description.as_deref(),
+            Some(" <p>USB charger ž</p>\n")
+        );
+        assert_eq!(
+            offer.acquired_at,
+            Some("2026-10-26T12:00:00.123456Z".parse().unwrap())
+        );
+
+        // Replay preserves source facts, including an old comparison that
+        // no longer agrees with current-price policy. Read mapping hides it.
+        for (amount, currency) in [(1999, "AUD"), (1998, "AUD"), (2999, "EUR")] {
+            payload["was_price"] = json!({"amount":amount,"currency":currency});
             let Change::Created(offer) =
                 Change::parse("OfferCreated", &payload.to_string()).unwrap()
             else {
                 panic!("expected creation")
             };
-            assert_eq!(offer.was_price.unwrap().amount(), 2999);
-            assert_eq!(offer.availability.is_some(), version >= 7);
-            assert_eq!(offer.item_condition.is_some(), version >= 7);
-            assert_eq!(offer.content[0].description.is_some(), version >= 8);
-
-            // Replay preserves source facts, including an old comparison that
-            // no longer agrees with current-price policy. Read mapping hides it.
-            for (amount, currency) in [(1999, "AUD"), (1998, "AUD"), (2999, "EUR")] {
-                payload["was_price"] = json!({"amount":amount,"currency":currency});
-                let Change::Created(offer) =
-                    Change::parse("OfferCreated", &payload.to_string()).unwrap()
-                else {
-                    panic!("expected creation")
-                };
-                let was = offer.was_price.unwrap();
-                assert_eq!(was.amount(), amount);
-                assert_eq!(was.currency().as_str(), currency);
-                let new = json!({"id":payload["id"],"pricing":{"price":payload["price"],"was_price":payload["was_price"]}});
-                assert!(Change::parse("OfferPricingChanged", &new.to_string()).is_err());
-            }
+            let was = offer.was_price.unwrap();
+            assert_eq!(was.amount(), amount);
+            assert_eq!(was.currency().as_str(), currency);
+            let new = json!({"id":payload["id"],"pricing":{"price":payload["price"],"was_price":payload["was_price"]}});
+            assert!(Change::parse("OfferPricingChanged", &new.to_string()).is_err());
         }
     }
 

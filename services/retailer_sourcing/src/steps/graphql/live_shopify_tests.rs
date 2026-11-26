@@ -5,6 +5,7 @@ use super::{offer_details as details, product_catalog_ids as catalog};
 use crate::platform::{bus::Handle, http, object_storage::ObjectStorage};
 use catalog::FetchProductCatalogIdentifiers;
 use catalog::Handler as CatalogHandler;
+use chrono::Utc;
 use details::BUCKET;
 use details::Handler as OfferDetailsHandler;
 use details::{FetchOfferDetails, SourceType};
@@ -90,6 +91,7 @@ fn run(retailer: RetailerCode) {
         },
     };
     let event = OfferDetailsHandler {
+        clock: Utc::now,
         fetcher: http,
         store: objects.clone(),
     }

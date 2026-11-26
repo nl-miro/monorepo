@@ -2,11 +2,11 @@ mod record;
 
 use crate::platform::db::describe;
 use crate::platform::object_storage::OfferStorageMetadata;
-use diesel::dsl::now;
 use diesel::insert_into;
 use diesel::result::Error as DieselResultError;
+use diesel::upsert::excluded;
 use object_storage::Error;
-use offer_details_raw::fetched_at;
+use offer_details_raw::acquired_at;
 use offer_details_raw::offer_id;
 use offer_details_raw::retailer_code as offer_details_raw_retailer_code;
 use offer_details_raw::storage as offer_details_raw_storage;
@@ -52,8 +52,9 @@ impl PgStore {
 impl Store for PgStore {
     fn store_raw_offer(&self, entity: &RawOffer) -> Result<OfferStorageMetadata, StoreError> {
         validate(entity)?;
-        let mut storage = self.objects.create_offer(RAW_OFFERS_BUCKET, &entity.body)?;
-        storage.scraped_at = entity.scraped_at;
+        let storage =
+            self.objects
+                .create_offer(RAW_OFFERS_BUCKET, &entity.body, entity.acquired_at)?;
         let record = RawOfferPgRecord::new(entity, storage);
         insert_into(table)
             .values(&record)
@@ -62,7 +63,7 @@ impl Store for PgStore {
             .set((
                 offer_details_raw_retailer_code.eq(&record.retailer_code),
                 offer_details_raw_storage.eq(&record.storage),
-                fetched_at.eq(now),
+                acquired_at.eq(excluded(acquired_at)),
             ))
             .execute(&mut self.pool.get()?)?;
         Ok(storage)

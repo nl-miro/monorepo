@@ -1,3 +1,4 @@
+use crate::offers::event::OFFER_ACQUIRED_AT_UPDATED_EVENT;
 use crate::offers::event::OFFER_AVAILABILITY_CHANGED_EVENT;
 use crate::offers::event::OFFER_CONTENT_CHANGED_EVENT;
 use crate::offers::event::OFFER_CONTENTS_CHANGED_EVENT;
@@ -7,8 +8,8 @@ use crate::offers::event::OFFER_ITEM_CONDITION_CHANGED_EVENT;
 use crate::offers::event::OFFER_LOCALIZATION_CHANGED_EVENT;
 use crate::offers::event::OFFER_PRICE_CHANGED_EVENT;
 use crate::offers::event::OFFER_PRICING_CHANGED_EVENT;
-use crate::offers::event::OFFER_SCRAPED_AT_UPDATED_EVENT;
 use crate::offers::event::OFFER_TITLE_CHANGED_EVENT;
+use crate::offers::event::OfferAcquiredAtUpdatedEvent;
 use crate::offers::event::OfferAvailabilityChangedEvent;
 use crate::offers::event::OfferContentChangedEvent;
 use crate::offers::event::OfferContentsChangedEvent;
@@ -16,7 +17,6 @@ use crate::offers::event::OfferIdentifiersChangedEvent;
 use crate::offers::event::OfferItemConditionChangedEvent;
 use crate::offers::event::OfferLocalizationChangedEvent;
 use crate::offers::event::OfferPricingChangedEvent;
-use crate::offers::event::OfferScrapedAtUpdatedEvent;
 use serde_json::Error;
 use serde_json::from_str;
 
@@ -91,11 +91,11 @@ impl<R: RetailerOfferRepository> EventSubscriberPort for RetailerOfferProjector<
                     .update_localization(&event.id, &event.localization)
                     .map_err(err_projection_failed)
             }
-            OFFER_SCRAPED_AT_UPDATED_EVENT => {
-                let event: OfferScrapedAtUpdatedEvent =
+            OFFER_ACQUIRED_AT_UPDATED_EVENT => {
+                let event: OfferAcquiredAtUpdatedEvent =
                     from_str(&envelope.payload).map_err(err_invalid_event)?;
                 self.repository
-                    .update_scraped_at(&event.id, event.scraped_at)
+                    .update_acquired_at(&event.id, event.acquired_at)
                     .map_err(err_projection_failed)
             }
             OFFER_IMAGE_ADDED_EVENT => {
@@ -112,7 +112,7 @@ impl<R: RetailerOfferRepository> EventSubscriberPort for RetailerOfferProjector<
                     facts: event.facts,
                     identifiers: event.identifiers,
                     localization: event.localization,
-                    scraped_at: event.scraped_at,
+                    acquired_at: event.acquired_at,
                     images: event.images,
                     id: event.id,
                     retailer_code: event.retailer_code,
@@ -272,15 +272,15 @@ mod tests {
             entity.localization = localization.clone();
             Ok(())
         }
-        fn update_scraped_at(
+        fn update_acquired_at(
             &self,
             id: &RetailerOfferId,
-            scraped_at: DateTime<Utc>,
+            acquired_at: DateTime<Utc>,
         ) -> Result<(), RetailerOfferRepositoryError> {
             let mut state = self.0.lock().unwrap();
             let entity = state.as_mut().unwrap();
             assert_eq!(&entity.id, id);
-            entity.scraped_at = entity.scraped_at.max(Some(scraped_at));
+            entity.acquired_at = entity.acquired_at.max(Some(acquired_at));
             Ok(())
         }
 
@@ -326,7 +326,7 @@ mod tests {
             facts: Default::default(),
             identifiers: Default::default(),
             localization: Default::default(),
-            scraped_at: None,
+            acquired_at: None,
             images: Vec::new(),
             id: RetailerOfferId::new(Uuid::new_v4().to_string()),
             retailer_code: RetailerCode::from_str("ankerau").unwrap(),
@@ -354,7 +354,7 @@ mod tests {
             facts: Default::default(),
             identifiers: Default::default(),
             localization: Default::default(),
-            scraped_at: None,
+            acquired_at: None,
             images: Vec::new(),
             id: event.id.clone(),
             retailer_code: event.retailer_code,

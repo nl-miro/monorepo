@@ -6,10 +6,7 @@ use retailer_sauce::prelude::ProductIdentifiers;
 use retailer_sauce::prelude::StructuralizedContent;
 use retailer_sauce::prelude::offer_content::guard as retailer_sauce_offer_content_guard;
 use retailer_sauce::prelude::offer_content::selected as retailer_sauce_offer_content_selected;
-use retailer_sauce::prelude::offer_content::singleton;
 use retailer_sauce::prelude::offer_content::sort;
-use serde::Deserialize;
-use serde::Deserializer;
 use shared::images::filter;
 
 use chrono::{DateTime, Utc};
@@ -34,7 +31,7 @@ pub enum RetailerOfferEvent {
     OfferImageAdded(OfferImageAddedEvent),
     OfferTitleChanged(OfferTitleChangedEvent),
     OfferPriceChanged(OfferPriceChangedEvent),
-    OfferScrapedAtUpdated(OfferScrapedAtUpdatedEvent),
+    OfferAcquiredAtUpdated(OfferAcquiredAtUpdatedEvent),
 }
 
 impl ApplicationEvent for RetailerOfferEvent {
@@ -51,13 +48,13 @@ impl ApplicationEvent for RetailerOfferEvent {
             Self::OfferImageAdded(event) => event.event_type(),
             Self::OfferTitleChanged(event) => event.event_type(),
             Self::OfferPriceChanged(event) => event.event_type(),
-            Self::OfferScrapedAtUpdated(event) => event.event_type(),
+            Self::OfferAcquiredAtUpdated(event) => event.event_type(),
         }
     }
 }
 
 #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
-#[serde(from = "OfferCreatedWire")]
+#[serde(from = "CurrentOfferCreatedEvent")]
 pub struct OfferCreatedEvent {
     #[serde(flatten)]
     pub facts: OfferFacts,
@@ -66,7 +63,7 @@ pub struct OfferCreatedEvent {
     #[serde(default)]
     pub localization: Localization,
     #[serde(default)]
-    pub scraped_at: Option<DateTime<Utc>>,
+    pub acquired_at: Option<DateTime<Utc>>,
     #[serde(default)]
     pub images: Vec<String>,
     pub id: RetailerOfferId,
@@ -77,13 +74,7 @@ pub struct OfferCreatedEvent {
     pub created_at: DateTime<Utc>,
 }
 
-#[derive(serde::Deserialize)]
-#[serde(untagged)]
-enum OfferCreatedWire {
-    Current(CurrentOfferCreatedEvent),
-    Legacy(LegacyOfferCreatedEvent),
-}
-
+/// Deserialized creations keep their content in canonical order.
 #[derive(serde::Deserialize)]
 struct CurrentOfferCreatedEvent {
     #[serde(flatten)]
@@ -93,7 +84,7 @@ struct CurrentOfferCreatedEvent {
     #[serde(default)]
     pub localization: Localization,
     #[serde(default)]
-    pub scraped_at: Option<DateTime<Utc>>,
+    pub acquired_at: Option<DateTime<Utc>>,
     #[serde(default)]
     pub images: Vec<String>,
     pub id: RetailerOfferId,
@@ -104,46 +95,6 @@ struct CurrentOfferCreatedEvent {
     pub created_at: DateTime<Utc>,
 }
 
-/// Explicit historical DTO: versions 1–8 carried a singular description object.
-#[derive(Clone, serde::Serialize, serde::Deserialize)]
-pub struct LegacyOfferCreatedEvent {
-    #[serde(flatten)]
-    pub facts: LegacyOfferFacts,
-    #[serde(flatten)]
-    pub identifiers: ProductIdentifiers,
-    #[serde(default)]
-    pub localization: Localization,
-    #[serde(default)]
-    pub scraped_at: Option<DateTime<Utc>>,
-    #[serde(default)]
-    pub images: Vec<String>,
-    pub id: RetailerOfferId,
-    pub retailer_code: RetailerCode,
-    pub title: String,
-    pub price: Money,
-    pub url: String,
-    pub created_at: DateTime<Utc>,
-}
-
-#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
-pub struct LegacyOfferFacts {
-    #[serde(default, deserialize_with = "retailer_sauce::prelude::nullable_object")]
-    pub was_price: Option<Money>,
-    #[serde(default)]
-    pub availability: Option<Availability>,
-    #[serde(default)]
-    pub item_condition: Option<ItemCondition>,
-    #[serde(default)]
-    pub content: StructuralizedContent,
-}
-impl From<OfferCreatedWire> for OfferCreatedEvent {
-    fn from(value: OfferCreatedWire) -> Self {
-        match value {
-            OfferCreatedWire::Current(value) => value.into(),
-            OfferCreatedWire::Legacy(value) => value.into(),
-        }
-    }
-}
 impl From<CurrentOfferCreatedEvent> for OfferCreatedEvent {
     fn from(mut value: CurrentOfferCreatedEvent) -> Self {
         sort(&mut value.facts.content);
@@ -151,35 +102,7 @@ impl From<CurrentOfferCreatedEvent> for OfferCreatedEvent {
             facts: value.facts,
             identifiers: value.identifiers,
             localization: value.localization,
-            scraped_at: value.scraped_at,
-            images: value.images,
-            id: value.id,
-            retailer_code: value.retailer_code,
-            title: value.title,
-            price: value.price,
-            url: value.url,
-            created_at: value.created_at,
-        }
-    }
-}
-impl From<LegacyOfferCreatedEvent> for OfferCreatedEvent {
-    fn from(value: LegacyOfferCreatedEvent) -> Self {
-        let content = singleton(
-            value.title.clone(),
-            value.localization.language.clone(),
-            value.facts.content.description,
-        );
-        let facts = OfferFacts {
-            was_price: value.facts.was_price,
-            availability: value.facts.availability,
-            item_condition: value.facts.item_condition,
-            content,
-        };
-        Self {
-            facts,
-            identifiers: value.identifiers,
-            localization: value.localization,
-            scraped_at: value.scraped_at,
+            acquired_at: value.acquired_at,
             images: value.images,
             id: value.id,
             retailer_code: value.retailer_code,
@@ -208,14 +131,6 @@ impl OfferCreatedEvent {
 fn err_selected_title() -> String {
     "title must match selected content".into()
 }
-pub(crate) fn current_creation<'de, D>(deserializer: D) -> Result<Box<OfferCreatedEvent>, D::Error>
-where
-    D: Deserializer<'de>,
-{
-    let value = <CurrentOfferCreatedEvent as Deserialize>::deserialize(deserializer)?;
-    Ok(Box::new(value.into()))
-}
-
 #[derive(Clone, serde::Serialize, serde::Deserialize)]
 pub struct OfferTitleChangedEvent {
     pub id: RetailerOfferId,
@@ -242,7 +157,7 @@ impl HasAggregateId for RetailerOfferEvent {
             Self::OfferImageAdded(event) => event.id.to_string(),
             Self::OfferTitleChanged(event) => event.id.to_string(),
             Self::OfferPriceChanged(event) => event.id.to_string(),
-            Self::OfferScrapedAtUpdated(event) => event.id.to_string(),
+            Self::OfferAcquiredAtUpdated(event) => event.id.to_string(),
         }
     }
 }
@@ -297,14 +212,14 @@ fn err_invalid_images() -> String {
 }
 
 #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
-pub struct OfferScrapedAtUpdatedEvent {
+pub struct OfferAcquiredAtUpdatedEvent {
     pub id: RetailerOfferId,
-    pub scraped_at: DateTime<Utc>,
+    pub acquired_at: DateTime<Utc>,
 }
-pub const OFFER_SCRAPED_AT_UPDATED_EVENT: &str = "OfferScrapedAtUpdated";
-impl ApplicationEvent for OfferScrapedAtUpdatedEvent {
+pub const OFFER_ACQUIRED_AT_UPDATED_EVENT: &str = "OfferAcquiredAtUpdated";
+impl ApplicationEvent for OfferAcquiredAtUpdatedEvent {
     fn event_type(&self) -> &'static str {
-        OFFER_SCRAPED_AT_UPDATED_EVENT
+        OFFER_ACQUIRED_AT_UPDATED_EVENT
     }
 }
 
@@ -370,8 +285,8 @@ mod tests {
                 OFFER_LOCALIZATION_CHANGED_EVENT,
             ),
             (
-                json!({"scraped_at":"2026-10-26T12:00:00Z"}),
-                OFFER_SCRAPED_AT_UPDATED_EVENT,
+                json!({"acquired_at":"2026-10-26T12:00:00Z"}),
+                OFFER_ACQUIRED_AT_UPDATED_EVENT,
             ),
             (
                 json!({"gtin":null,"sku":null,"external_identifiers":{}}),

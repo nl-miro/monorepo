@@ -25,7 +25,7 @@ const MAX_LIMIT: u32 = 1000;
 const SOURCES_QUERY: &str = "
     SELECT r.id, r.offer_id, r.url, r.retailer_code, r.storage
     FROM offer_details_raw r
-    ORDER BY r.fetched_at DESC, r.id
+    ORDER BY r.acquired_at DESC, r.id
     LIMIT $1 OFFSET $2";
 
 #[derive(Deserialize, IntoParams)]
@@ -144,7 +144,9 @@ fn error(status: StatusCode, error: String) -> Response {
 mod postgres_tests {
     use crate::app as imported_app;
     use crate::platform::auth::BEARER_TOKEN;
+    use chrono::{DateTime, Utc};
     use diesel::sql_query as diesel_sql_query;
+    use diesel::sql_types::Timestamptz;
     use serde_json::from_slice;
     use tokio::runtime::Runtime;
 
@@ -158,28 +160,41 @@ mod postgres_tests {
 
     #[test]
     #[ignore = "requires DATABASE_URL_TEST; run make test-postgres"]
-    fn source_route_returns_storage_metadata_without_object_storage() {
+    fn source_route_returns_storage_metadata_newest_acquisition_first() {
         let db = Database::new();
         let runtime = Runtime::new().unwrap();
-        let id = Uuid::now_v7();
-        let offer = Uuid::now_v7();
         let body = "<html>ž 🔎</html>";
-        let storage = OfferStorageMetadata {
-            scraped_at: None,
-            content_size: body.len() as u64,
-            object_storage_id: Uuid::now_v7(),
-            external_id: Uuid::now_v7(),
+        let insert = |url: &str, acquired_at: DateTime<Utc>| {
+            let id = Uuid::now_v7();
+            let offer = Uuid::now_v7();
+            let storage = OfferStorageMetadata {
+                acquired_at,
+                content_size: body.len() as u64,
+                object_storage_id: Uuid::now_v7(),
+                external_id: Uuid::now_v7(),
+            };
+            diesel_sql_query("INSERT INTO offer_details_raw (id,offer_id,url,retailer_code,acquired_at,storage) VALUES ($1,$2,$3,'ankerau',$4,$5)")
+                .bind::<SqlUuid,_>(id).bind::<SqlUuid,_>(offer).bind::<Text,_>(url)
+                .bind::<Timestamptz,_>(acquired_at)
+                .bind::<Jsonb,_>(DbJson(storage)).execute(&mut db.pool.get().unwrap()).unwrap();
+            json!({"id":id,"offer_id":offer,"url":url,"retailer_code":"ankerau","storage":storage})
         };
-        diesel_sql_query("INSERT INTO offer_details_raw (id,offer_id,url,retailer_code,storage) VALUES ($1,$2,'https://shop.test/a','ankerau',$3)")
-            .bind::<SqlUuid,_>(id).bind::<SqlUuid,_>(offer)
-            .bind::<Jsonb,_>(DbJson(storage)).execute(&mut db.pool.get().unwrap()).unwrap();
+        // The older acquisition gets the smaller id, so only the time puts the newer first.
+        let older = insert(
+            "https://shop.test/a",
+            "2026-10-26T12:00:00.000001Z".parse().unwrap(),
+        );
+        let newer = insert(
+            "https://shop.test/b",
+            "2026-10-26T12:00:00.000002Z".parse().unwrap(),
+        );
         let app = imported_app(AppState {
             db: Some(db.pool.clone()),
             ..Default::default()
         });
         let request = || {
             Request::builder()
-                .uri("/api/development/offer-details/sources?limit=1")
+                .uri("/api/development/offer-details/sources?limit=2")
                 .header("authorization", format!("Bearer {}", BEARER_TOKEN))
                 .body(Body::empty())
                 .unwrap()
@@ -191,9 +206,6 @@ mod postgres_tests {
             .unwrap()
             .to_bytes();
         let value: Value = from_slice(&bytes).unwrap();
-        assert_eq!(
-            value,
-            json!({"sources":[{"id":id,"offer_id":offer,"url":"https://shop.test/a","retailer_code":"ankerau","storage":storage}]})
-        );
+        assert_eq!(value, json!({"sources":[newer, older]}));
     }
 }

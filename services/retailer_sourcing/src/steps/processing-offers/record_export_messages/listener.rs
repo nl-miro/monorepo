@@ -36,8 +36,6 @@ pub enum StoreError {
 pub enum ListenerError {
     #[error("offer export {0} is not completed")]
     NotCompleted(Uuid),
-    #[error("offer export {export_id} has unsupported schema version {version}")]
-    UnsupportedSchema { export_id: Uuid, version: u32 },
     #[error("offer export {0} does not match the event's source or schema")]
     Mismatch(Uuid),
     #[error("offer export {0} payload serialization failed: {1}")]
@@ -63,22 +61,12 @@ impl<S: Store> Listen for Listener<S> {
 
     fn listen(&self, event: Self::Event, context: &EventContext) -> Result<(), Self::Error> {
         let export_id = event.export_id;
-        if !matches!(event.schema_version, 1..=9) {
-            return Err(ListenerError::UnsupportedSchema {
-                export_id,
-                version: event.schema_version,
-            });
-        }
         // The event names an immutable snapshot; never the latest source data.
         let export = self
             .store
             .load(export_id)?
             .ok_or(ListenerError::NotCompleted(export_id))?;
-        if !export.valid_schema()
-            || export.id != export_id
-            || export.schema_version != event.schema_version
-            || export.source != event.source
-        {
+        if !export.valid_schema() || export.id != export_id || export.source != event.source {
             return Err(ListenerError::Mismatch(export_id));
         }
         let messages = export
@@ -165,10 +153,10 @@ mod tests {
                 content: None,
                 gtin: None,
                 sku: None,
-                external_identifiers: None,
-                localization: None,
-                scraped_at: None,
-                images: None,
+                external_identifiers: Some(Default::default()),
+                localization: Some(Default::default()),
+                acquired_at: source().storage.acquired_at,
+                images: Some(vec![]),
                 retailer_code: RetailerCode::AnkerAu,
                 title: "USB charger".into(),
                 price: from_value::<Money>(json!({"amount": amount, "currency": "AUD"})).unwrap(),
@@ -180,7 +168,6 @@ mod tests {
     fn export(entries: Vec<ExportEntry>, exclusions: Vec<ExportExclusion>) -> OfferExport {
         OfferExport {
             id: Uuid::now_v7(),
-            schema_version: 1,
             source: source(),
             entries,
             exclusions,
@@ -190,7 +177,6 @@ mod tests {
     fn event(export: &OfferExport) -> OfferExportWasPrepared {
         OfferExportWasPrepared {
             export_id: export.id,
-            schema_version: export.schema_version,
             source: export.source.clone(),
         }
     }
@@ -262,7 +248,11 @@ mod tests {
                 "retailer_code": "ankerau",
                 "title": "USB charger",
                 "price": {"amount": 1999, "currency": "AUD"},
-                "url": "https://shop.example/Charger?variant=0#details"
+                "url": "https://shop.example/Charger?variant=0#details",
+                "acquired_at": "2026-10-26T12:00:00.123456Z",
+                "external_identifiers": {"shopify_handle": null, "shopify_product_gid": null, "shopify_product_variation_gid": null},
+                "localization": {"target_market": null, "language": null},
+                "images": []
             })
         );
     }
@@ -297,20 +287,14 @@ mod tests {
     }
 
     #[test]
-    fn an_unsupported_schema_or_different_source_records_nothing() {
+    fn an_invalid_snapshot_or_different_source_records_nothing() {
         let export = export(vec![entry(0, 1999)], vec![]);
-        let mut unsupported = event(&export);
-        unsupported.schema_version = 10;
         let mut other_source = event(&export);
         other_source.source.offer_id = Uuid::now_v7();
         let mut other_snapshot = export.clone();
-        other_snapshot.schema_version = 3;
+        other_snapshot.entries[0].payload.acquired_at = "2026-10-26T12:00:01Z".parse().unwrap();
 
         let listener = listener(export.clone());
-        assert!(matches!(
-            listener.listen(unsupported, &context()).unwrap_err(),
-            ListenerError::UnsupportedSchema { .. }
-        ));
         assert!(matches!(
             listener.listen(other_source, &context()).unwrap_err(),
             ListenerError::Mismatch(_)

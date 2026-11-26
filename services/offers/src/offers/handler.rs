@@ -62,7 +62,7 @@ where
                 sku: command.sku,
                 external_identifiers: command.external_identifiers,
             },
-            scraped_at: command.scraped_at,
+            acquired_at: command.acquired_at,
             localization: command
                 .localization
                 .map(|value| value.for_write())

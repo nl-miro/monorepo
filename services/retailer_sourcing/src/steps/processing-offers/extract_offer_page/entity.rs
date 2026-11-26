@@ -7,6 +7,7 @@ use uuid::Uuid;
 
 #[derive(Debug, Clone, PartialEq)]
 pub(super) struct RawOffer {
+    pub acquired_at: DateTime<Utc>,
     pub object_storage_id: Uuid,
     pub offer_id: Uuid,
     pub body: String,
@@ -14,7 +15,7 @@ pub(super) struct RawOffer {
 
 #[derive(Debug, Clone, PartialEq)]
 pub(super) struct ExtractedOffer {
-    pub scraped_at: Option<DateTime<Utc>>,
+    pub acquired_at: DateTime<Utc>,
     pub offer_id: Uuid,
     pub document: Value,
 }
