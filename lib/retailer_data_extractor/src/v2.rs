@@ -4,9 +4,9 @@ use retailers_anker::extracted::ExtractedOfferDetails;
 use retailers_anker::prelude::get_storefront_config as retailers_anker_get_storefront_config;
 use retailers_anker::prelude::structuralize_offer_details_v2_for as retailers_anker_structuralize_offer_details_v2_for;
 use retailers_minisforum::prelude::get_storefront_config as retailers_minisforum_get_storefront_config;
-use retailers_minisforum::prelude::structuralize_offer_details_v2_for as retailers_minisforum_structuralize_offer_details_v2_for;
+use retailers_minisforum::prelude::structuralize_offer_details_graphql_v1_for as retailers_minisforum_structuralize_offer_details_v2_for;
 use retailers_ugreen::prelude::get_storefront_config as retailers_ugreen_get_storefront_config;
-use retailers_ugreen::prelude::structuralize_offer_details_v2_for as retailers_ugreen_structuralize_offer_details_v2_for;
+use retailers_ugreen::prelude::structuralize_offer_details_graphql_v1_for as retailers_ugreen_structuralize_offer_details_v2_for;
 use serde_json::from_str;
 use serde_json::to_string as serde_json_to_string;
 
