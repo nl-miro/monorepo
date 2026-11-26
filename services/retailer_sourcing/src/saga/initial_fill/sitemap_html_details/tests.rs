@@ -1,12 +1,12 @@
 use super::SitemapHtmlDetailsInitialFillSaga;
-use super::saga::StartingCommand;
+use super::saga::SitemapHtmlDetailsCommand;
 use crate::platform::bus::{EventCommand, EventContext};
 use crate::steps::prelude::{SitemapConsolidated, SitemapProcessed, SitemapRetrieved};
 use serde_json::{Value, from_str, from_value, json};
 use shared::retailer::RetailerCode;
 use uuid::Uuid;
 
-fn assert_command(command: StartingCommand, name: &str, payload: Value) {
+fn assert_command(command: SitemapHtmlDetailsCommand, name: &str, payload: Value) {
     let id = Uuid::now_v7();
     let context = EventContext {
         event_id: Uuid::now_v7(),
@@ -136,7 +136,7 @@ fn sitemap_and_offer_page_commands_use_their_own_wire_type_and_event_metadata() 
         causation_id: None,
         source: None,
     };
-    let check = |command: StartingCommand, name: &str, payload: &Value| {
+    let check = |command: SitemapHtmlDetailsCommand, name: &str, payload: &Value| {
         let envelope = command
             .into_envelope(saga_id, "TestEvent", &context)
             .unwrap();
@@ -154,19 +154,19 @@ fn sitemap_and_offer_page_commands_use_their_own_wire_type_and_event_metadata() 
 
     let retrieval = json!({"retrieval_id": Uuid::now_v7(), "retailer_code": "ankerau"});
     check(
-        StartingCommand::RetrieveSitemap(from_value(retrieval.clone()).unwrap()),
+        SitemapHtmlDetailsCommand::RetrieveSitemap(from_value(retrieval.clone()).unwrap()),
         "RetrieveSitemap",
         &retrieval,
     );
     check(
-        StartingCommand::ProcessSitemap(from_value(retrieval.clone()).unwrap()),
+        SitemapHtmlDetailsCommand::ProcessSitemap(from_value(retrieval.clone()).unwrap()),
         "ProcessSitemap",
         &retrieval,
     );
 
     let processed = json!({"processed_sitemap_id": Uuid::now_v7()});
     check(
-        StartingCommand::ConsolidateSitemap(from_value(processed.clone()).unwrap()),
+        SitemapHtmlDetailsCommand::ConsolidateSitemap(from_value(processed.clone()).unwrap()),
         "ConsolidateSitemap",
         &processed,
     );
@@ -175,7 +175,7 @@ fn sitemap_and_offer_page_commands_use_their_own_wire_type_and_event_metadata() 
         "consolidated_sitemap_id": Uuid::now_v7(), "retailer_code": "ankerau",
     });
     check(
-        StartingCommand::DiscoverOffers(from_value(discovery.clone()).unwrap()),
+        SitemapHtmlDetailsCommand::DiscoverOffers(from_value(discovery.clone()).unwrap()),
         "DiscoverOffers",
         &discovery,
     );
@@ -185,7 +185,7 @@ fn sitemap_and_offer_page_commands_use_their_own_wire_type_and_event_metadata() 
         "retailer_code": "ankerau", "url": "https://example.com/item",
     });
     check(
-        StartingCommand::DownloadOfferPage(from_value(download.clone()).unwrap()),
+        SitemapHtmlDetailsCommand::DownloadOfferPage(from_value(download.clone()).unwrap()),
         "DownloadOfferPage",
         &download,
     );
@@ -195,17 +195,17 @@ fn sitemap_and_offer_page_commands_use_their_own_wire_type_and_event_metadata() 
         "retailer_code": "ankerau", "url": "https://example.com/item", "scraped_at": null,
     });
     check(
-        StartingCommand::ExtractOfferPage(from_value(offer.clone()).unwrap()),
+        SitemapHtmlDetailsCommand::ExtractOfferPage(from_value(offer.clone()).unwrap()),
         "ExtractOfferPage",
         &offer,
     );
     check(
-        StartingCommand::NormalizeOffer(from_value(offer.clone()).unwrap()),
+        SitemapHtmlDetailsCommand::NormalizeOffer(from_value(offer.clone()).unwrap()),
         "NormalizeOffer",
         &offer,
     );
     check(
-        StartingCommand::StructuralizeOffer(from_value(offer.clone()).unwrap()),
+        SitemapHtmlDetailsCommand::StructuralizeOffer(from_value(offer.clone()).unwrap()),
         "StructuralizeOffer",
         &offer,
     );

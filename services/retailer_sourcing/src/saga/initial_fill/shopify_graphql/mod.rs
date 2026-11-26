@@ -10,7 +10,7 @@ pub(crate) use saga::ShopifyGraphQlInitialFillSaga;
 #[cfg(test)]
 mod tests {
     use super::ShopifyGraphQlInitialFillSaga;
-    use super::saga::StartingCommand;
+    use super::saga::ShopifyGraphQlCommand;
     use crate::platform::bus::{Command, Event, EventCommand, EventContext};
     use crate::platform::object_storage::OfferStorageMetadata;
     use crate::steps::prelude::{
@@ -148,7 +148,7 @@ mod tests {
             let initial = saga.on_initial_fill_requested().unwrap();
             let (commands, token) = if config.attempts_token() {
                 token_stores.push(retailer);
-                let [StartingCommand::Token(command)] = initial.as_slice() else {
+                let [ShopifyGraphQlCommand::Token(command)] = initial.as_slice() else {
                     panic!("expected one token command for {retailer:?}");
                 };
                 assert_eq!(command.retailer_code, retailer);
@@ -166,7 +166,7 @@ mod tests {
             let locales = config.initial_fill_contexts().unwrap();
             assert_eq!(commands.len(), locales.len());
             for (queued, locale) in commands.into_iter().zip(locales) {
-                let StartingCommand::CatalogProductIds(command) = queued else {
+                let ShopifyGraphQlCommand::CatalogProductIds(command) = queued else {
                     panic!("expected a catalog command for {retailer:?}");
                 };
                 assert_eq!(command.retailer_code, retailer);

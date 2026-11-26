@@ -1,6 +1,6 @@
 //! Event listener for the Shopify GraphQL initial-fill saga.
 
-use super::saga::StartingCommand;
+use super::saga::ShopifyGraphQlCommand;
 use crate::platform::bus::{Command, EventCommand, EventContext, event_command_envelope};
 use crate::saga::model::InvalidSagaId;
 use crate::saga::prelude::{DieselPgSagaRepository, ShopifyGraphQlInitialFillSaga};
@@ -53,16 +53,14 @@ pub(crate) enum ListenerError {
     Conflict(Uuid),
 }
 
+#[rustfmt::skip]
 impl Listener {
     pub(crate) fn new(repository: Arc<DieselPgSagaRepository>) -> Self {
         Self { repository }
     }
 
-    pub(crate) fn on_initial_fill_requested(
-        &self,
-        event: InitialFillRequested,
-        context: &EventContext,
-    ) -> Result<(Uuid, Vec<StartingCommand>), ListenerError> {
+    pub(crate) fn on_initial_fill_requested(&self, event: InitialFillRequested, context: &EventContext) -> Result<(Uuid, Vec<ShopifyGraphQlCommand>), ListenerError> {
+
         let saga_id = event.saga_id();
         if event.strategy() != StorefrontStrategy::ShopifyGraphQl {
             return Ok((saga_id.into(), Vec::new()));
@@ -94,22 +92,15 @@ impl Listener {
         Ok((saga_id.into(), commands))
     }
 
-    pub(crate) fn on_storefront_token_acquired(
-        &self,
-        event: StorefrontTokenAcquired,
-        context: &EventContext,
-    ) -> Result<(Uuid, Vec<StartingCommand>), ListenerError> {
+    pub(crate) fn on_storefront_token_acquired(&self, event: StorefrontTokenAcquired, context: &EventContext) -> Result<(Uuid, Vec<ShopifyGraphQlCommand>), ListenerError> {
         let saga = self.load_saga(context)?;
         let commands = saga.on_storefront_token_acquired(event.storefront_token)?;
 
         Ok((saga.saga_id().into(), commands))
     }
 
-    pub(crate) fn on_product_catalog_ids_retrieved(
-        &self,
-        event: ProductCatalogIdsRetrieved,
-        context: &EventContext,
-    ) -> Result<(Uuid, Vec<StartingCommand>), ListenerError> {
+    pub(crate) fn on_product_catalog_ids_retrieved(&self, event: ProductCatalogIdsRetrieved, context: &EventContext) -> Result<(Uuid, Vec<ShopifyGraphQlCommand>), ListenerError> {
+
         let saga = self.load_saga(context)?;
         let commands = saga.on_product_catalog_ids_retrieved(
             event.product_ids,
@@ -120,11 +111,8 @@ impl Listener {
         Ok((saga.saga_id().into(), commands))
     }
 
-    pub(crate) fn on_offer_details_fetched(
-        &self,
-        event: OfferDetailsFetched,
-        context: &EventContext,
-    ) -> Result<(Uuid, Vec<StartingCommand>), ListenerError> {
+    pub(crate) fn on_offer_details_fetched(&self, event: OfferDetailsFetched, context: &EventContext) -> Result<(Uuid, Vec<ShopifyGraphQlCommand>), ListenerError> {
+
         let saga = self.load_saga(context)?;
         let command = saga.on_offer_details_fetched(
             event.retailer_code,
@@ -135,11 +123,8 @@ impl Listener {
         Ok((saga.saga_id().into(), vec![command]))
     }
 
-    pub(crate) fn on_offer_details_extracted(
-        &self,
-        event: OfferDetailsExtracted,
-        context: &EventContext,
-    ) -> Result<(Uuid, Vec<StartingCommand>), ListenerError> {
+    pub(crate) fn on_offer_details_extracted(&self, event: OfferDetailsExtracted, context: &EventContext) -> Result<(Uuid, Vec<ShopifyGraphQlCommand>), ListenerError> {
+
         let saga = self.load_saga(context)?;
         let command = saga.on_offer_details_extracted(
             event.retailer_code,
@@ -162,7 +147,7 @@ impl Listener {
     }
 }
 
-impl EventCommand for StartingCommand {
+impl EventCommand for ShopifyGraphQlCommand {
     fn into_envelope(
         self,
         correlation_id: Uuid,

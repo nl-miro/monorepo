@@ -1,10 +1,9 @@
 //! Event listener for the sitemap and HTML details initial-fill saga.
 
-use super::saga::StartingCommand;
+use super::saga::SitemapHtmlDetailsCommand;
 use crate::platform::bus::{EventCommand, EventContext, event_command_envelope};
 use crate::saga::prelude::{
-    DieselPgSagaRepository, RepositoryError, SagaRepository,
-    SitemapHtmlDetailsInitialFillSaga,
+    DieselPgSagaRepository, RepositoryError, SagaRepository, SitemapHtmlDetailsInitialFillSaga,
 };
 use crate::steps::prelude::InitialFillRequested;
 use crate::steps::prelude::{
@@ -41,16 +40,14 @@ pub(crate) struct Listener {
     repository: Arc<DieselPgSagaRepository>,
 }
 
+#[rustfmt::skip]
 impl Listener {
     pub(crate) fn new(repository: Arc<DieselPgSagaRepository>) -> Self {
         Self { repository }
     }
 
-    pub(crate) fn on_initial_fill_requested(
-        &self,
-        event: InitialFillRequested,
-        context: &EventContext,
-    ) -> Result<(Uuid, Vec<StartingCommand>), ListenerError> {
+    pub(crate) fn on_initial_fill_requested(&self,event: InitialFillRequested,context: &EventContext) -> Result<(Uuid, Vec<SitemapHtmlDetailsCommand>), ListenerError> {
+
         let saga_id = event.saga_id();
 
         if event.strategy() != StorefrontStrategy::ShopifySitemapPlusHtml {
@@ -83,84 +80,56 @@ impl Listener {
         Ok((saga_id.into(), vec![next_step]))
     }
 
-    pub(crate) fn on_sitemap_retrieved(
-        &self,
-        event: SitemapRetrieved,
-        context: &EventContext,
-    ) -> Result<(Uuid, Vec<StartingCommand>), ListenerError> {
+    pub(crate) fn on_sitemap_retrieved(&self,event: SitemapRetrieved,context: &EventContext) -> Result<(Uuid, Vec<SitemapHtmlDetailsCommand>), ListenerError> {
         let saga = self.load_saga(context)?;
         let command = saga.on_sitemap_retrieved(event);
         Ok((saga.saga_id().into(), vec![command]))
     }
 
-    pub(crate) fn on_sitemap_processed(
-        &self,
-        event: SitemapProcessed,
-        context: &EventContext,
-    ) -> Result<(Uuid, Vec<StartingCommand>), ListenerError> {
+    pub(crate) fn on_sitemap_processed(&self,event: SitemapProcessed,context: &EventContext) -> Result<(Uuid, Vec<SitemapHtmlDetailsCommand>), ListenerError> {
         let saga = self.load_saga(context)?;
         let command = saga.on_sitemap_processed(event);
         Ok((saga.saga_id().into(), vec![command]))
     }
 
-    pub(crate) fn on_sitemap_consolidated(
-        &self,
-        event: SitemapConsolidated,
-        context: &EventContext,
-    ) -> Result<(Uuid, Vec<StartingCommand>), ListenerError> {
+    pub(crate) fn on_sitemap_consolidated(&self,event: SitemapConsolidated,context: &EventContext) -> Result<(Uuid, Vec<SitemapHtmlDetailsCommand>), ListenerError> {
         let saga = self.load_saga(context)?;
         let commands = saga.on_sitemap_consolidated(event);
         Ok((saga.saga_id().into(), commands))
     }
 
-    pub(crate) fn on_offer_discovered(
-        &self,
-        event: OfferDiscovered,
-        context: &EventContext,
-    ) -> Result<(Uuid, Vec<StartingCommand>), ListenerError> {
+    pub(crate) fn on_offer_discovered(&self,event: OfferDiscovered,context: &EventContext) -> Result<(Uuid, Vec<SitemapHtmlDetailsCommand>), ListenerError> {
         let saga = self.load_saga(context)?;
         let command = saga.on_offer_discovered(event);
         Ok((saga.saga_id().into(), vec![command]))
     }
 
-    pub(crate) fn on_offer_page_was_downloaded(
-        &self,
-        event: OfferPageWasDownloaded,
-        context: &EventContext,
-    ) -> Result<(Uuid, Vec<StartingCommand>), ListenerError> {
+    pub(crate) fn on_offer_page_was_downloaded(&self,event: OfferPageWasDownloaded,context: &EventContext) -> Result<(Uuid, Vec<SitemapHtmlDetailsCommand>), ListenerError> {
         let saga = self.load_saga(context)?;
         let command = saga.on_offer_page_was_downloaded(event);
         Ok((saga.saga_id().into(), vec![command]))
     }
 
-    pub(crate) fn on_offer_page_was_extracted(
-        &self,
-        event: OfferPageWasExtracted,
-        context: &EventContext,
-    ) -> Result<(Uuid, Vec<StartingCommand>), ListenerError> {
+    pub(crate) fn on_offer_page_was_extracted(&self,event: OfferPageWasExtracted,context: &EventContext) -> Result<(Uuid, Vec<SitemapHtmlDetailsCommand>), ListenerError> {
         let saga = self.load_saga(context)?;
         let command = saga.on_offer_page_was_extracted(event);
         Ok((saga.saga_id().into(), vec![command]))
     }
 
-    pub(crate) fn on_offer_was_normalized(
-        &self,
-        event: OfferWasNormalized,
-        context: &EventContext,
-    ) -> Result<(Uuid, Vec<StartingCommand>), ListenerError> {
+    pub(crate) fn on_offer_was_normalized(&self,event: OfferWasNormalized,context: &EventContext) -> Result<(Uuid, Vec<SitemapHtmlDetailsCommand>), ListenerError> {
         let saga = self.load_saga(context)?;
         let command = saga.on_offer_was_normalized(event);
         Ok((saga.saga_id().into(), vec![command]))
     }
 
-    fn load_saga(
-        &self,
-        context: &EventContext,
-    ) -> Result<SitemapHtmlDetailsInitialFillSaga, ListenerError> {
+    fn load_saga(&self,context: &EventContext) -> Result<SitemapHtmlDetailsInitialFillSaga, ListenerError> {
+
         let correlation_id = context
             .correlation_id
             .ok_or(ListenerError::MissingCorrelation)?;
-        Ok(self.repository.load(correlation_id)?)
+
+        let saga = self.repository.load(correlation_id)?;
+        Ok(saga)
     }
 }
 
@@ -187,71 +156,19 @@ impl ListenerError {
     }
 }
 
-impl EventCommand for StartingCommand {
-    fn into_envelope(
-        self,
-        correlation_id: Uuid,
-        event_name: &str,
-        context: &EventContext,
-    ) -> Result<NewCommandEnvelope, JsonError> {
+#[rustfmt::skip]
+impl EventCommand for SitemapHtmlDetailsCommand {
+    fn into_envelope(self, correlation_id: Uuid, event_name: &str, context: &EventContext) -> Result<NewCommandEnvelope, JsonError> {
         match self {
             // Each sitemap event yields at most one command. Reuse its ID on redelivery.
-            Self::RetrieveSitemap(command) => event_command_envelope(
-                &command,
-                context.event_id,
-                correlation_id,
-                event_name,
-                context,
-            ),
-            Self::ProcessSitemap(command) => event_command_envelope(
-                &command,
-                context.event_id,
-                correlation_id,
-                event_name,
-                context,
-            ),
-            Self::ConsolidateSitemap(command) => event_command_envelope(
-                &command,
-                context.event_id,
-                correlation_id,
-                event_name,
-                context,
-            ),
-            Self::DiscoverOffers(command) => event_command_envelope(
-                &command,
-                context.event_id,
-                correlation_id,
-                event_name,
-                context,
-            ),
-            Self::DownloadOfferPage(command) => event_command_envelope(
-                &command,
-                context.event_id,
-                correlation_id,
-                event_name,
-                context,
-            ),
-            Self::ExtractOfferPage(command) => event_command_envelope(
-                &command,
-                context.event_id,
-                correlation_id,
-                event_name,
-                context,
-            ),
-            Self::NormalizeOffer(command) => event_command_envelope(
-                &command,
-                context.event_id,
-                correlation_id,
-                event_name,
-                context,
-            ),
-            Self::StructuralizeOffer(command) => event_command_envelope(
-                &command,
-                context.event_id,
-                correlation_id,
-                event_name,
-                context,
-            ),
+            Self::RetrieveSitemap(command) =>    event_command_envelope(&command, context.event_id, correlation_id, event_name, context),
+            Self::ProcessSitemap(command) =>     event_command_envelope(&command, context.event_id, correlation_id, event_name, context),
+            Self::ConsolidateSitemap(command) => event_command_envelope(&command, context.event_id, correlation_id, event_name, context),
+            Self::DiscoverOffers(command) =>     event_command_envelope(&command, context.event_id, correlation_id, event_name, context),
+            Self::DownloadOfferPage(command) =>  event_command_envelope(&command, context.event_id, correlation_id, event_name, context),
+            Self::ExtractOfferPage(command) =>   event_command_envelope(&command, context.event_id, correlation_id, event_name, context),
+            Self::NormalizeOffer(command) =>     event_command_envelope(&command, context.event_id, correlation_id, event_name, context),
+            Self::StructuralizeOffer(command) => event_command_envelope(&command, context.event_id, correlation_id, event_name, context),
         }
     }
 }

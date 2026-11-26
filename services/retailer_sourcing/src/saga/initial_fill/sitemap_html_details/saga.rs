@@ -38,7 +38,7 @@ impl SitemapHtmlDetailsInitialFillSaga {
     }
 }
 
-pub(crate) enum StartingCommand {
+pub(crate) enum SitemapHtmlDetailsCommand {
     RetrieveSitemap(RetrieveSitemap),
     ProcessSitemap(ProcessSitemap),
     ConsolidateSitemap(ConsolidateSitemap),
@@ -49,58 +49,63 @@ pub(crate) enum StartingCommand {
     StructuralizeOffer(StructuralizeOffer),
 }
 
+#[rustfmt::skip]
 impl SitemapHtmlDetailsInitialFillSaga {
-    pub fn on_initial_fill_requested(&self) -> StartingCommand {
+    pub fn on_initial_fill_requested(&self) -> SitemapHtmlDetailsCommand {
         let cmd = RetrieveSitemap::new(self.retailer_code);
 
-        StartingCommand::RetrieveSitemap(cmd)
+        SitemapHtmlDetailsCommand::RetrieveSitemap(cmd)
     }
 
-    pub(super) fn on_sitemap_retrieved(&self, event: SitemapRetrieved) -> StartingCommand {
+    pub(super) fn on_sitemap_retrieved(&self, event: SitemapRetrieved) -> SitemapHtmlDetailsCommand {
         let command = ProcessSitemap::from(event);
-        StartingCommand::ProcessSitemap(command)
+
+        SitemapHtmlDetailsCommand::ProcessSitemap(command)
     }
 
-    pub(super) fn on_sitemap_processed(&self, event: SitemapProcessed) -> StartingCommand {
+    pub(super) fn on_sitemap_processed(&self, event: SitemapProcessed) -> SitemapHtmlDetailsCommand {
         let command = ConsolidateSitemap::from(event);
-        StartingCommand::ConsolidateSitemap(command)
+
+        SitemapHtmlDetailsCommand::ConsolidateSitemap(command)
     }
 
-    pub(super) fn on_sitemap_consolidated(
-        &self,
-        event: SitemapConsolidated,
-    ) -> Vec<StartingCommand> {
+    pub(super) fn on_sitemap_consolidated(&self, event: SitemapConsolidated) -> Vec<SitemapHtmlDetailsCommand> {
+
         if event.product_count == 0 {
             return Vec::new();
         }
+
         let command = DiscoverOffers::from(event);
-        vec![StartingCommand::DiscoverOffers(command)]
+
+        vec![SitemapHtmlDetailsCommand::DiscoverOffers(command)]
     }
 
-    pub(super) fn on_offer_discovered(&self, event: OfferDiscovered) -> StartingCommand {
+    pub(super) fn on_offer_discovered(&self, event: OfferDiscovered) -> SitemapHtmlDetailsCommand {
+
         let command = DownloadOfferPage::from(event);
-        StartingCommand::DownloadOfferPage(command)
+
+        SitemapHtmlDetailsCommand::DownloadOfferPage(command)
     }
 
-    pub(super) fn on_offer_page_was_downloaded(
-        &self,
-        event: OfferPageWasDownloaded,
-    ) -> StartingCommand {
+    pub(super) fn on_offer_page_was_downloaded(&self, event: OfferPageWasDownloaded) -> SitemapHtmlDetailsCommand {
+
         let command = ExtractOfferPage::from(event);
-        StartingCommand::ExtractOfferPage(command)
+
+        SitemapHtmlDetailsCommand::ExtractOfferPage(command)
     }
 
-    pub(super) fn on_offer_page_was_extracted(
-        &self,
-        event: OfferPageWasExtracted,
-    ) -> StartingCommand {
+    pub(super) fn on_offer_page_was_extracted(&self, event: OfferPageWasExtracted) -> SitemapHtmlDetailsCommand {
+
         let command = NormalizeOffer::from(event);
-        StartingCommand::NormalizeOffer(command)
+
+        SitemapHtmlDetailsCommand::NormalizeOffer(command)
     }
 
-    pub(super) fn on_offer_was_normalized(&self, event: OfferWasNormalized) -> StartingCommand {
+    pub(super) fn on_offer_was_normalized(&self, event: OfferWasNormalized) -> SitemapHtmlDetailsCommand {
+
         let command = StructuralizeOffer::from(event);
-        StartingCommand::StructuralizeOffer(command)
+
+        SitemapHtmlDetailsCommand::StructuralizeOffer(command)
     }
 }
 

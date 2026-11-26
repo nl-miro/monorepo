@@ -45,7 +45,7 @@ impl ShopifyGraphQlInitialFillSaga {
     }
 }
 
-pub(crate) enum StartingCommand {
+pub(crate) enum ShopifyGraphQlCommand {
     Token(AcquireStorefrontToken),
     CatalogProductIds(FetchProductCatalogIdentifiers),
     FetchOfferDetails(FetchOfferDetails),
@@ -53,8 +53,9 @@ pub(crate) enum StartingCommand {
     StructuralizeOfferDetails(StructuralizeOfferDetails),
 }
 
+#[rustfmt::skip]
 impl ShopifyGraphQlInitialFillSaga {
-    pub(crate) fn on_initial_fill_requested(&self) -> Result<Vec<StartingCommand>, std::io::Error> {
+    pub(crate) fn on_initial_fill_requested(&self) -> Result<Vec<ShopifyGraphQlCommand>, std::io::Error> {
         let cfg = load_storefront_config(self.retailer_code)?;
 
         if cfg.attempts_token() {
@@ -65,44 +66,26 @@ impl ShopifyGraphQlInitialFillSaga {
             build_fetch_identifiers(cfg, None)
         }
     }
-}
 
-impl ShopifyGraphQlInitialFillSaga {
-    pub(super) fn on_storefront_token_acquired(
-        &self,
-        storefront_token: Option<StorefrontToken>,
-    ) -> Result<Vec<StartingCommand>, std::io::Error> {
+    pub(super) fn on_storefront_token_acquired(&self, storefront_token: Option<StorefrontToken>) -> Result<Vec<ShopifyGraphQlCommand>, std::io::Error> {
+
         let cfg = load_storefront_config(self.retailer_code)?;
 
         build_fetch_identifiers(cfg, storefront_token)
     }
 
-    pub(super) fn on_product_catalog_ids_retrieved(
-        &self,
-        product_ids: Vec<String>,
-        context: Option<RequestedContext>,
-        token: Option<StorefrontToken>,
-    ) -> Result<Vec<StartingCommand>, std::io::Error> {
+    pub(super) fn on_product_catalog_ids_retrieved(&self, product_ids: Vec<String>, context: Option<RequestedContext>, token: Option<StorefrontToken>) -> Result<Vec<ShopifyGraphQlCommand>, std::io::Error> {
+
         build_fetch_offer_details(self.retailer_code, product_ids, context, token)
     }
 
-    pub(super) fn on_offer_details_fetched(
-        &self,
-        retailer_code: RetailerCode,
-        source: SourceType,
-        storage: OfferStorageMetadata,
-        fetched_at: DateTime<Utc>,
-    ) -> StartingCommand {
+    pub(super) fn on_offer_details_fetched(&self, retailer_code: RetailerCode, source: SourceType, storage: OfferStorageMetadata, fetched_at: DateTime<Utc>) -> ShopifyGraphQlCommand {
+
         build_extract_offer_details(retailer_code, source, storage, fetched_at)
     }
 
-    pub(super) fn on_offer_details_extracted(
-        &self,
-        retailer_code: RetailerCode,
-        source: SourceType,
-        storage: OfferStorageMetadata,
-        fetched_at: DateTime<Utc>,
-    ) -> StartingCommand {
+    pub(super) fn on_offer_details_extracted(&self, retailer_code: RetailerCode, source: SourceType, storage: OfferStorageMetadata, fetched_at: DateTime<Utc>) -> ShopifyGraphQlCommand {
+
         build_structuralize_offer_details(retailer_code, source, storage, fetched_at)
     }
 }
