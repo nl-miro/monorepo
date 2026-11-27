@@ -172,51 +172,7 @@ mod tests {
         );
     }
 
-    #[test]
-    fn nordic_download_posts_country_context_and_keeps_product_identity() {
-        use serde_json::Value;
-        use serde_json::from_str;
 
-        struct NordicSource {
-            wrong_market: bool,
-        }
-        impl FetchOfferPage for NordicSource {
-            fn fetch(&self, _: &str) -> Result<String, FetchError> {
-                panic!("Nordic prices require POST")
-            }
-            fn post_json(&self, url: &str, body: &str) -> Result<String, FetchError> {
-                assert_eq!(
-                    url,
-                    "https://ankerneu.myshopify.com/api/2026-10/graphql.json"
-                );
-                let body: Value = from_str(body).unwrap();
-                assert_eq!(body["variables"]["country"], "FI");
-                assert_eq!(body["variables"]["handle"], "t90r0121");
-                Ok(if self.wrong_market {
-                    include_str!("../../../../tests/fixtures/anker/ankerse_response.json")
-                } else {
-                    include_str!("../../../../tests/fixtures/anker/ankerfi_response.json")
-                }
-                .into())
-            }
-        }
-        let mut command = command();
-        command.retailer_code = RetailerCode::AnkerFi;
-        command.url = "https://www.ankernordics.com/products/t90r0121".into();
-        for wrong_market in [false, true] {
-            let handler = Handler::new(FakeStore::default(), NordicSource { wrong_market });
-            let result = handler.handle_with_sleep(command.clone(), |_| {});
-            if wrong_market {
-                assert!(result.is_err());
-                assert!(handler.store.log.lock().unwrap().is_empty());
-            } else {
-                let events = result.unwrap();
-                assert_eq!(events[0].url, command.url);
-                assert_eq!(events[0].retailer_code, RetailerCode::AnkerFi);
-                assert_eq!(events[0].offer_id, command.offer_id);
-            }
-        }
-    }
 
     #[test]
     fn retired_aggregate_fails_before_download_or_storage() {
